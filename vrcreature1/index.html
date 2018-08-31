@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<a-scene id="scene" background="color:black;" stats ticker mouseclick>
+<a-scene id="scene" background="color:#785359;" stats ticker mouseclick>
     <a-entity camera position="0 0 0"></a-entity>
 
     <a-entity
@@ -33,14 +33,12 @@
 
     <a-entity
             id="creature"
-            geometry="primitive:cylinder; radius: 0.25; height: 1;"
-            material="color:brown"
-            rotation="0 0 0"
-            position="-0 0 -5"
             agent
     ></a-entity>
 
-    <a-sphere id="sphere" radius="0.5" color="red" position="3 0 -5" visible="false"></a-sphere>
+    <a-sphere id="sphere" radius="0.5" segments-height="8" segments-width="8" color="#cc3311" position="3 0 -5" visible="false"
+              flat-shading="true"
+    ></a-sphere>
 
 
     <a-sphere id="bg" radius="10" color="green" position="0 0 0" side="double" material="visible:false"></a-sphere>
@@ -77,26 +75,27 @@
         const phases = [
             {
                 food:0,
-                color:'saddlebrown',
+                color:0x7A3E48,
                 scale: 1.0,
             },
             {
                 food:1,
-                color:'tan',
+                color:0xEECD86,
                 scale: 1.2,
             },
             {
                 food:2,
-                color:'orange',
+                color:0xE18942,
                 scale: 1.5,
             },
             {
                 food:3,
-                color:'yellow',
+                color:0xB95835,
                 scale: 2.0,
             }
         ]
-        creature.setAttribute('material','color',phases[0].color)
+        creature.components.agent.setColor(phases[0].color)
+        // creature.setAttribute('material','color',phases[0].color)
         function updateCreature() {
             const p2 = phases.filter(p => p.food <= food)
             const phase = p2.pop()
@@ -117,7 +116,9 @@
                 .delay(500)
                 .to({x:s2,y:s2,z:s2},1000)
                 .easing(t => Math.sin(t*100)) //jitter interpolator
-                .onComplete(()=> creature.setAttribute('material','color',phase.color))
+                .onComplete(()=> {
+                    creature.components.agent.setColor(phase.color)
+                })
                 .chain(new TWEEN.Tween(creature.object3D.scale).to({x:s, y:s, z:s},150))
                 .start()
 
