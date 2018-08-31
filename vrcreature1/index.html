@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--     <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script> -->
+    <!--     <script src="https://rawgit.com/aframevr/aframe/master/dist/aframe-master.min.js"></script> -->
+    <script src="https://rawgit.com/MozillaReality/aframe/bugfix/oculus-go-controller-reconnect-pre-e0c8ff7/dist/aframe-master.js"></script>
+
+    <script src="tween.js"></script>
+    <script src="TweenTicker.js"></script>
+    <script src="agent.js"></script>
+    <script src="mouseclick.js"></script>
+    <script>
+        //const deg2rad = (deg) => deg*Math.PI/180
+        // const rand = (min,max) => min + Math.random()*(max-min)
+        const $ = (sel) => document.querySelector(sel)
+        const on = (el,type,cb) => el.addEventListener(type,cb)
+    </script>
+</head>
+<body>
+
+<a-scene id="scene" background="color:black;" stats ticker mouseclick>
+    <a-entity camera position="0 0 0"></a-entity>
+
+    <a-entity
+            laser-controls="hand: right"
+            raycaster="showLine:true; recursive:true;"
+            line="opacity:1.0;"
+            id="controller"
+    ></a-entity>
+
+
+    <a-entity
+            id="creature"
+            geometry="primitive:cylinder; radius: 0.25; height: 1;"
+            material="color:brown"
+            rotation="0 0 0"
+            position="-0 0 -5"
+            agent
+    ></a-entity>
+
+    <a-sphere id="sphere" radius="0.5" color="red" position="3 0 -5" visible="false"></a-sphere>
+
+
+    <a-sphere id="bg" radius="10" color="green" position="0 0 0" side="double" material="visible:false"></a-sphere>
+</a-scene>
+
+
+<script>
+
+    const scene = $("#scene")
+    on(scene,'loaded',()=>{
+        const creature = $('#creature')
+        const sphere = $("#sphere")
+
+        function placeSphere(pt) {
+            const sphere = $("#sphere")
+            sphere.setAttribute('visible',true)
+            sphere.object3D.position.x = pt.x
+            sphere.object3D.position.y = pt.y
+            sphere.object3D.position.z = pt.z
+            const creature = $('#creature')
+            creature.components.agent.targeting = true
+        }
+
+
+        on($('#bg'),'click',(e)=>{
+            placeSphere(e.detail.intersection.point)
+
+        });
+        on($('#creature'),'click',(e)=>{
+            creature.setAttribute('visible',false)
+        });
+
+        let food = 0
+        const phases = [
+            {
+                food:0,
+                color:'saddlebrown',
+                scale: 1.0,
+            },
+            {
+                food:1,
+                color:'tan',
+                scale: 1.2,
+            },
+            {
+                food:2,
+                color:'orange',
+                scale: 1.5,
+            },
+            {
+                food:3,
+                color:'yellow',
+                scale: 2.0,
+            }
+        ]
+        creature.setAttribute('material','color',phases[0].color)
+        function updateCreature() {
+            const p2 = phases.filter(p => p.food <= food)
+            const phase = p2.pop()
+            const agent = creature.components.agent
+            new TWEEN.Tween(creature.components.agent)
+                .to({speed:0},500)
+                .chain(new TWEEN.Tween(creature.components.agent)
+                    .delay(1500)
+                    .to({speed:0.05},500)
+                )
+                .start()
+
+
+            //shake and change color
+            let s = phase.scale
+            let s2 = phase.scale*0.7
+            new TWEEN.Tween(creature.object3D.scale)
+                .delay(500)
+                .to({x:s2,y:s2,z:s2},1000)
+                .easing(t => Math.sin(t*100)) //jitter interpolator
+                .onComplete(()=> creature.setAttribute('material','color',phase.color))
+                .chain(new TWEEN.Tween(creature.object3D.scale).to({x:s, y:s, z:s},150))
+                .start()
+
+        }
+
+
+        on(creature,'collide',()=>{
+            //console.log("got collide")
+            sphere.setAttribute('visible',false)
+            food++
+            updateCreature()
+        })
+
+
+
+    })
+</script>
+
+</body>
+</html>
