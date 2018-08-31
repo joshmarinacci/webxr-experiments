@@ -16,6 +16,7 @@ AFRAME.registerComponent("agent",{
         this.currentRot = new THREE.Quaternion()
         this.currentRot.setFromAxisAngle(this.up, 0)
         this.targeting = false
+        this.target = null
         this.speed = 0.05
 
         const head_len = 1.0
@@ -95,7 +96,10 @@ AFRAME.registerComponent("agent",{
     },
 
     doTarget: function() {
-        const sphere = document.querySelector('#sphere')
+	    if(!this.target) return
+	    
+        //const sphere = document.querySelector('#sphere')
+        const sphere = this.target
         const targetPos = sphere.object3D.position
         const currentPos = this.head.position
         const dist = currentPos.distanceTo(targetPos)
