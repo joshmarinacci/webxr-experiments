@@ -70,9 +70,9 @@
     // nonogram.setCellState(1,0,STATES.EMPTY)
 
     const CELL_MATERIALS = []
-    CELL_MATERIALS[STATES.UNKNOWN] = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide})
-    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshBasicMaterial({color:0x00ff00, side:THREE.DoubleSide})
-    CELL_MATERIALS[STATES.EMPTY] = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.UNKNOWN]  = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshBasicMaterial({color:0x888888, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide})
 
     const CELL_TYPE = 'cell'
     const BUTTON_TYPE = 'button'
