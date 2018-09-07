@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <!--     <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script> -->
-    <!--     <script src="https://rawgit.com/aframevr/aframe/master/dist/aframe-master.min.js"></script> -->
+<!--         <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script> -->
+<!--         <script src="https://rawgit.com/aframevr/aframe/master/dist/aframe-master.min.js"></script> -->
     <script src="https://rawgit.com/MozillaReality/aframe/bugfix/oculus-go-controller-reconnect-pre-e0c8ff7/dist/aframe-master.js"></script>
 
     <script src="tween.js"></script>
@@ -36,7 +36,7 @@
             agent
     ></a-entity>
 
-    <a-sphere id="sphere" radius="0.5" segments-height="8" segments-width="8" color="#cc3311" position="3 0 -5" visible="false"
+    <a-sphere id="sphere" radius="0.5" segments-height="8" segments-width="8" color="#cc3311" position="0 0 -0" visible="false"
               flat-shading="true"
     ></a-sphere>
 
@@ -60,6 +60,7 @@
             sphere.object3D.position.z = pt.z
             const creature = $('#creature')
             creature.components.agent.targeting = true
+            creature.components.agent.target = sphere
         }
 
 
