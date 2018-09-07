@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>three.js webvr - ball shooter</title>
+    <title>Nonogram Game</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="./node_modules/three/build/three.js"></script>
@@ -22,6 +22,7 @@
 
 <script src="./WebVR.js"></script>
 <script src="nonogram.js" type="module"></script>
+<script src="tween.js" type="module"></script>
 
 <script type="module">
     function on(obj, type, cb) {
@@ -36,8 +37,7 @@
     }
 
     //TODO: create the numbers to the sides of the grid
-    //TODO: click cell to change the state
-    //BUTTON: check if you are correct
+    //TODO: 
 
     class MouseClicker {
         constructor(scene, canvas, camera) {
@@ -61,6 +61,7 @@
 
 
     import Nonogram, {STATES} from "./nonogram"
+    import {TWEEN} from "./tween"
     var camera, scene, renderer;
     var controller1, controller2;
     let clicker, font;
@@ -69,9 +70,9 @@
     // nonogram.setCellState(1,0,STATES.EMPTY)
 
     const CELL_MATERIALS = []
-    CELL_MATERIALS[STATES.UNKNOWN] = new THREE.MeshBasicMaterial({color:0xff0000})
-    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshBasicMaterial({color:0x00ff00})
-    CELL_MATERIALS[STATES.EMPTY] = new THREE.MeshBasicMaterial({color:0x000000})
+    CELL_MATERIALS[STATES.UNKNOWN] = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshBasicMaterial({color:0x00ff00, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.EMPTY] = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
 
     const CELL_TYPE = 'cell'
     const BUTTON_TYPE = 'button'
@@ -184,14 +185,12 @@
         renderer.setAnimationLoop( render );
     }
 
-    function render() {
+    function render(time) {
         handleController( controller1 );
         handleController( controller2 );
+        TWEEN.tick(time)
         renderer.render( scene, camera );
-
     }
-
-
 
     function makeCell(nonogram, x, y) {
         const geo = new THREE.PlaneGeometry(0.9,0.9)
@@ -201,7 +200,23 @@
         mesh.position.y = y
         on(mesh,'click',()=>{
             nonogram.rollCellState(x,y)
-            mesh.material = CELL_MATERIALS[nonogram.getCellState(x,y)]
+            TWEEN.make({
+                target:mesh.rotation,
+                property:'x',
+                from:0,
+                to:Math.PI/2,
+                duration:500,
+            })
+                .onEnd(()=>{
+                    mesh.material = CELL_MATERIALS[nonogram.getCellState(x,y)]
+                    TWEEN.make({
+                        target:mesh.rotation,
+                        property:'x',
+                        from:Math.PI/2,
+                        to:Math.PI,
+                        duration:500,
+                    })
+                })
         })
         return mesh
     }
