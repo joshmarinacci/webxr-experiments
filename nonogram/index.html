@@ -1,5 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
+<!---
+
+Dark Waves, bg audio
+
+https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
+
+
+--->
+
+
 <head>
     <title>Nonogram Game</title>
     <meta charset="utf-8">
@@ -16,9 +27,23 @@
         a {
             color: #48f;
         }
+        #overlay {
+            position: fixed;
+            padding-top: 20%;
+            font-size: 5vh;
+            text-align: center;
+            /*background-color: rgba(255,255,255,0.5);*/
+            width: 100vw;
+            height: 100vh;
+        }
     </style>
 </head>
 <body>
+<div id="overlay">
+    <h1>Lava Nonogram</h1>
+    <h3>click to play</h3>
+</div>
+<audio src="./dark_waves.mp3" id="bg-music"></audio>
 
 <script src="./WebVR.js"></script>
 <script src="./GLTFLoader.js"></script>
@@ -26,6 +51,9 @@
 <script src="tween.js" type="module"></script>
 
 <script type="module">
+    function $(sel) {
+        return document.querySelector(sel)
+    }
     function on(obj, type, cb) {
         if(!obj.listeners) obj.listeners = {}
         if(!obj.listeners[type]) obj.listeners[type] = []
@@ -70,7 +98,7 @@
     var controller1, controller2;
     let clicker, font;
     let rock_geometry;
-    const flat_geometry = new THREE.PlaneGeometry(0.9,0.9)
+    let mountain_geometry;
     let click_to_play;
     let you_win;
 
@@ -102,9 +130,9 @@
         document.body.appendChild( container );
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color( 0x505050 );
+        scene.background = new THREE.Color( 0x000000 );
 
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 10 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
 
         function makeRoomBackground() {
             const room = new THREE.Mesh(
@@ -114,7 +142,19 @@
             room.geometry.translate( 0, 3, 0 );
             return room
         }
-        scene.add(makeRoomBackground())
+        // scene.add(makeRoomBackground())
+
+        function makeBackground() {
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(25,25),
+                new THREE.MeshLambertMaterial({color:0xff3300, map:lava_texture})
+            )
+            floor.position.z = -12
+            floor.position.y = -2
+            floor.rotation.x = -Math.PI/2
+            return floor
+        }
+        scene.add(makeBackground())
 
         scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
@@ -192,6 +232,45 @@
                 }
             })
         })
+        gltf_loader.load('./rock3.glb', function(gltf) {
+            gltf.scene.traverse((ch)=>{
+                if(ch.isMesh) {
+                    console.log("ch",ch)
+                    mountain_geometry = ch.geometry
+                    mountain_geometry.scale(10,10,10)
+                    // rock_geometry.scale(0.4,0.4,0.4)
+                    // rock_geometry.rotateX(-Math.PI/2)
+                    // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
+                }
+            })
+
+
+            const mountain_material = new THREE.MeshLambertMaterial({color:0xff3300})
+            const mountain_1 = new THREE.Mesh(
+                mountain_geometry,
+                mountain_material
+            )
+            mountain_1.position.z = -15
+            mountain_1.rotation.y = -Math.PI/2
+            mountain_1.position.x = 5
+            scene.add(mountain_1)
+            const mountain_2 = new THREE.Mesh(
+                mountain_geometry,
+                mountain_material
+            )
+            mountain_2.rotation.y = Math.PI/2
+            mountain_2.rotation.z = -Math.PI/3
+            mountain_2.position.z = -15
+            mountain_2.position.x = -5
+            scene.add(mountain_2)
+        })
+
+        const overlay = $('#overlay')
+        overlay.addEventListener('click',()=>{
+            overlay.style.visibility = 'hidden'
+            $('#bg-music').play()
+        })
+
     }
 
     function onWindowResize() {
