@@ -21,6 +21,7 @@
 <body>
 
 <script src="./WebVR.js"></script>
+<script src="./GLTFLoader.js"></script>
 <script src="nonogram.js" type="module"></script>
 <script src="tween.js" type="module"></script>
 
@@ -50,9 +51,12 @@
                 mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
                 this.raycaster.setFromCamera(mouse, camera)
                 const intersects = this.raycaster.intersectObjects(scene.children, true)
+                let fired = false
                 intersects.forEach((it) => {
-                    console.log("intersection", it.object)
-                    fire(it.object,'click',{type:'click'})
+                    if(!fired) {
+                        fire(it.object, 'click', {type: 'click'})
+                        fired = true
+                    }
                 })
             })
         }
@@ -65,14 +69,24 @@
     var camera, scene, renderer;
     var controller1, controller2;
     let clicker, font;
+    let rock_geometry;
+    const flat_geometry = new THREE.PlaneGeometry(0.9,0.9)
+
     const nonogram = new Nonogram()
     // nonogram.setCellState(0,0,STATES.SELECTED)
     // nonogram.setCellState(1,0,STATES.EMPTY)
+    const texture_loader = new THREE.TextureLoader()
+    const lava_texture = texture_loader.load('./lava_texture.png')
 
     const CELL_MATERIALS = []
     CELL_MATERIALS[STATES.UNKNOWN]  = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
-    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshBasicMaterial({color:0x888888, side:THREE.DoubleSide})
-    CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshLambertMaterial({color:0x888888, side:THREE.DoubleSide})
+    CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide, map:lava_texture})
+
+    const CELL_GEOMETRIES = []
+    CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.PlaneGeometry(0.9, 0.9)
+    // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
+    CELL_GEOMETRIES[STATES.EMPTY] = new THREE.PlaneGeometry(0.5, 0.5)
 
     const CELL_TYPE = 'cell'
     const BUTTON_TYPE = 'button'
@@ -160,6 +174,21 @@
             font = fnt
             setupGame()
         })
+
+
+        const gltf_loader = new THREE.GLTFLoader()
+        gltf_loader.load('./rock1.glb', function(gltf) {
+            gltf.scene.traverse((ch)=>{
+                if(ch.isMesh) {
+                    // console.log("ch",ch)
+                    rock_geometry = ch.geometry
+                    rock_geometry.scale(0.4,0.4,0.4)
+                    rock_geometry.rotateX(-Math.PI/2)
+                    CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
+
+                }
+            })
+        })
     }
 
     function onWindowResize() {
@@ -199,21 +228,27 @@
         mesh.position.x = x
         mesh.position.y = y
         on(mesh,'click',()=>{
+            console.log("clicked")
             nonogram.rollCellState(x,y)
+            const state = nonogram.getCellState(x,y)
+            console.log("the new state is", state)
+            const r = mesh.rotation.x
             TWEEN.make({
                 target:mesh.rotation,
                 property:'x',
-                from:0,
-                to:Math.PI/2,
+                from:r,
+                to:r+Math.PI/2,
                 duration:500,
             })
                 .onEnd(()=>{
+                    mesh.geometry = CELL_GEOMETRIES[nonogram.getCellState(x,y)]
                     mesh.material = CELL_MATERIALS[nonogram.getCellState(x,y)]
+                    // mesh.material.wireframe = true
                     TWEEN.make({
                         target:mesh.rotation,
                         property:'x',
-                        from:Math.PI/2,
-                        to:Math.PI,
+                        from:r+Math.PI/2,
+                        to:r+Math.PI,
                         duration:500,
                     })
                 })
