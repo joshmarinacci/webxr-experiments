@@ -43,7 +43,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     <h1>Lava Nonogram</h1>
     <h3>click to play</h3>
 </div>
-<audio src="./dark_waves.mp3" id="bg-music"></audio>
+<audio src="./dark_waves.mp3" id="bg-music" loop></audio>
 
 <script src="./WebVR.js"></script>
 <script src="./GLTFLoader.js"></script>
@@ -108,6 +108,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     // nonogram.setCellState(1,0,STATES.EMPTY)
     const texture_loader = new THREE.TextureLoader()
     const lava_texture = texture_loader.load('./lava_texture.png')
+    const floor_lava_texture = texture_loader.load('./lava_texture.png')
+    const floor_lava_texture_bump = texture_loader.load('./lava_texture_bump.png')
+    let floor_material
 
     const CELL_MATERIALS = []
     CELL_MATERIALS[STATES.UNKNOWN]  = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
@@ -134,20 +137,14 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
 
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
 
-        function makeRoomBackground() {
-            const room = new THREE.Mesh(
-                new THREE.BoxBufferGeometry( 6, 6, 6, 8, 8, 8 ),
-                new THREE.MeshBasicMaterial( { color: 0x808080, wireframe: true } )
-            );
-            room.geometry.translate( 0, 3, 0 );
-            return room
-        }
-        // scene.add(makeRoomBackground())
-
         function makeBackground() {
+            floor_material = new THREE.MeshPhongMaterial({color:0xff3300, map:floor_lava_texture, normalMap: floor_lava_texture_bump, normalScale: new THREE.Vector2(0.5,0.5), emissive: new THREE.Color(0xff0000), emissiveIntensity:0.5, emissiveMap: floor_lava_texture_bump})
+            floor_material.map.wrapS = THREE.RepeatWrapping
+            floor_material.map.wrapT = THREE.RepeatWrapping
+            // floor_material.
             const floor = new THREE.Mesh(
                 new THREE.PlaneGeometry(25,25),
-                new THREE.MeshLambertMaterial({color:0xff3300, map:lava_texture})
+                floor_material,
             )
             floor.position.z = -12
             floor.position.y = -2
@@ -156,10 +153,10 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         }
         scene.add(makeBackground())
 
-        scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
+        // scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
         var light = new THREE.DirectionalLight( 0xffffff );
-        light.position.set( 1, 1, 1 ).normalize();
+        light.position.set( 0, 1, 1 ).normalize();
         scene.add( light );
 
         renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -223,7 +220,6 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         gltf_loader.load('./rock1.glb', function(gltf) {
             gltf.scene.traverse((ch)=>{
                 if(ch.isMesh) {
-                    // console.log("ch",ch)
                     rock_geometry = ch.geometry
                     rock_geometry.scale(0.4,0.4,0.4)
                     rock_geometry.rotateX(-Math.PI/2)
@@ -235,12 +231,8 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         gltf_loader.load('./rock3.glb', function(gltf) {
             gltf.scene.traverse((ch)=>{
                 if(ch.isMesh) {
-                    console.log("ch",ch)
                     mountain_geometry = ch.geometry
                     mountain_geometry.scale(10,10,10)
-                    // rock_geometry.scale(0.4,0.4,0.4)
-                    // rock_geometry.rotateX(-Math.PI/2)
-                    // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
                 }
             })
 
@@ -258,10 +250,11 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 mountain_geometry,
                 mountain_material
             )
-            mountain_2.rotation.y = Math.PI/2
-            mountain_2.rotation.z = -Math.PI/3
-            mountain_2.position.z = -15
-            mountain_2.position.x = -5
+            const deg2rad = (d) => d*Math.PI/180
+            mountain_2.rotation.z = deg2rad(-15)
+            mountain_2.rotation.y = deg2rad(15)
+            mountain_2.position.z = -20
+            mountain_2.position.x = -7
             scene.add(mountain_2)
         })
 
@@ -296,10 +289,13 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         renderer.setAnimationLoop( render );
     }
 
+    let old = 0
     function render(time) {
         handleController( controller1 );
         handleController( controller2 );
         TWEEN.tick(time)
+        old += 0.0001
+        floor_material.map.rotation = old
         renderer.render( scene, camera );
     }
 
@@ -341,10 +337,10 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     function makeNumber(str,x,y) {
         const geo = new THREE.TextGeometry(str,{
             font: font,
-            size: 0.8,
+            size: 0.5,
             height: 0.1,
         })
-        const mat = new THREE.MeshBasicMaterial({color:0xccccff})
+        const mat = new THREE.MeshLambertMaterial({color:0xcccccc})
         const mesh = new THREE.Mesh(geo,mat)
         mesh.position.x = x
         mesh.position.y = y
@@ -398,6 +394,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
             if(nonogram.checkFinished()) {
                 console.log("you won!")
                 you_win.visible = true
+                you_win.material.opacity = 0.1
             }
         })
         button.position.x = 4
