@@ -71,6 +71,9 @@
     let clicker, font;
     let rock_geometry;
     const flat_geometry = new THREE.PlaneGeometry(0.9,0.9)
+    let click_to_play;
+    let you_win;
+
 
     const nonogram = new Nonogram()
     // nonogram.setCellState(0,0,STATES.SELECTED)
@@ -270,7 +273,6 @@
         return mesh
     }
 
-
     function makeButton(color, cb) {
         const geo = new THREE.PlaneGeometry(0.9,0.9)
         const mat = new THREE.MeshBasicMaterial({color:color})
@@ -314,10 +316,28 @@
         const button = makeButton(0x5566ff,(e)=>{
             console.log("clicked the check button")
             console.log("valid =",nonogram.checkValid())
-            if(nonogram.checkFinished()) console.log("you won!")
+            if(nonogram.checkFinished()) {
+                console.log("you won!")
+                you_win.visible = true
+            }
         })
         button.position.x = 4
         board.add(button)
+
+
+
+        click_to_play = makeNumber('Click to Play',2,2)
+        click_to_play.material.color.set(0xff0000)
+        click_to_play.position.x = -1
+        click_to_play.visible = false
+        board.add(click_to_play)
+
+        you_win = makeNumber('You Win',2,2)
+        you_win.material.color.set(0xff0000)
+        you_win.position.x = 0
+        you_win.position.z = 0.5
+        you_win.visible = false
+        board.add(you_win)
     }
 
 </script>
