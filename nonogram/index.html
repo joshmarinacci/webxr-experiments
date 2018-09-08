@@ -65,14 +65,17 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         obj.listeners[type].forEach(cb => cb(payload))
     }
 
-    //TODO: create the numbers to the sides of the grid
-    //TODO: 
-
     class MouseClicker {
         constructor(scene, canvas, camera) {
             this.raycaster = new THREE.Raycaster()
             this.canvas = canvas
+            this.waitcb = null
             this.canvas.addEventListener('click', (e) => {
+                if(this.waitcb) {
+                    this.waitcb()
+                    this.waitcb = null
+                    return
+                }
                 const mouse = new THREE.Vector2()
                 const bounds = canvas.getBoundingClientRect()
                 mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
@@ -88,6 +91,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 })
             })
         }
+        waitSceneClick(cb) {
+            this.waitcb = cb
+        }
     }
 
 
@@ -101,11 +107,14 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     let mountain_geometry;
     let click_to_play;
     let you_win;
+    let notification_text;
+    let alert_text1;
+    let alert_text2;
+    let currentBoard;
 
 
-    const nonogram = new Nonogram()
-    // nonogram.setCellState(0,0,STATES.SELECTED)
-    // nonogram.setCellState(1,0,STATES.EMPTY)
+    const levels = [new Nonogram(),new Nonogram(), new Nonogram()]
+    let currentLevelIndex = 0
     const texture_loader = new THREE.TextureLoader()
     const lava_texture = texture_loader.load('./lava_texture.png')
     const floor_lava_texture = texture_loader.load('./lava_texture.png')
@@ -212,7 +221,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         const loader = new THREE.FontLoader()
         loader.load('node_modules/three/examples/fonts/optimer_regular.typeface.json',(fnt)=>{
             font = fnt
-            setupGame()
+            setupGame(levels[currentLevelIndex])
         })
 
 
@@ -357,7 +366,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         return mesh
     }
 
-    function setupGame() {
+    function setupGame(nonogram) {
         console.log("setting up the game", nonogram.width , ' x ', nonogram.height)
 
         const grid = new THREE.Object3D()
@@ -369,9 +378,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
 
         const board = new THREE.Object3D()
         board.position.z = -5
-        board.position.x = -1.5
         board.add(grid)
         scene.add(board)
+        currentBoard = board
 
 
         for(let i=0; i<nonogram.width; i++) {
@@ -391,10 +400,17 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         const button = makeButton(0x5566ff,(e)=>{
             console.log("clicked the check button")
             console.log("valid =",nonogram.checkValid())
+            console.log("invalid = ", nonogram.checkInvalid())
+            if(nonogram.checkInvalid() > 0) {
+                displayNotification(`${nonogram.checkInvalid()} invalid`)
+                return
+            }
             if(nonogram.checkFinished()) {
-                console.log("you won!")
-                you_win.visible = true
-                you_win.material.opacity = 0.1
+                if(isGameEnd()) {
+                    displayAlert("Game Complete","play again?").then(()=>restartGame()).catch(e=>console.log(e))
+                } else {
+                    displayAlert('Level complete',"next").then(() => loadNextLevel()).catch(e=>console.log(e))
+                }
             }
         })
         button.position.x = 4
@@ -414,7 +430,102 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         you_win.position.z = 0.5
         you_win.visible = false
         board.add(you_win)
+
+        notification_text = makeNumber('notification',2,2)
+        notification_text.material.color.set(0x00ff00)
+        notification_text.position.x = 0
+        notification_text.position.z = 0.5
+        notification_text.visible = false
+        board.add(notification_text)
+
+
+        alert_text1 = new THREE.Mesh(
+            new THREE.TextGeometry('alert 1',{
+                font: font,
+                size: 0.8,
+                height: 0.1,
+            }),
+            new THREE.MeshLambertMaterial({color:0x00ff00})
+        )
+        alert_text1.geometry.computeBoundingBox()
+        alert_text1.geometry.center()
+        alert_text1.position.z = 0.5
+        alert_text1.position.y = 3
+        alert_text1.visible = false
+        board.add(alert_text1)
+
+        alert_text2 = new THREE.Mesh(
+            new THREE.TextGeometry('alert 2',{
+                font: font,
+                size: 0.5,
+                height: 0.1,
+            }),
+            new THREE.MeshLambertMaterial({color:0x00ff00})
+        )
+        alert_text2.geometry.computeBoundingBox()
+        alert_text2.geometry.center()
+        alert_text2.position.z = 0.5
+        alert_text2.position.y = 1.5
+        alert_text2.visible = false
+        board.add(alert_text2)
     }
+
+
+    function displayNotification(str) {
+        notification_text.geometry = new THREE.TextGeometry(str,{
+            font: font,
+            size: 0.5,
+            height: 0.1,
+        })
+        notification_text.visible = true
+        setTimeout(()=>{
+            notification_text.visible = false
+        },1000)
+    }
+
+    function displayAlert(l1,l2) {
+        return new Promise((res,rej)=>{
+            alert_text1.geometry = new THREE.TextGeometry(l1,{
+                font: font,
+                size: 0.8,
+                height: 0.1,
+            })
+            alert_text1.geometry.computeBoundingBox()
+            alert_text1.geometry.center()
+            alert_text1.visible = true
+
+            alert_text2.geometry = new THREE.TextGeometry(l2,{ font: font, size: 0.5, height: 0.1 })
+            alert_text2.geometry.computeBoundingBox()
+            alert_text2.geometry.center()
+            alert_text2.visible = true
+            clicker.waitSceneClick(()=>{
+                alert_text1.visible = false
+                alert_text2.visible = false
+                res()
+            })
+        })
+    }
+
+    function isGameEnd() {
+        return (currentLevelIndex >= levels.length-1)
+    }
+
+    function restartGame() {
+        currentLevelIndex = 0
+        scene.remove(currentBoard)
+        const level = levels[currentLevelIndex]
+        level.reset()
+        setupGame(level)
+    }
+
+    function loadNextLevel() {
+        console.log("loading the next level",currentLevelIndex)
+        scene.remove(currentBoard)
+        const level = levels[currentLevelIndex]
+        level.reset()
+        setupGame(level)
+    }
+
 
 </script>
 </body>

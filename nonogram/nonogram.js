@@ -16,10 +16,13 @@ export default class Nonogram {
         this.height = this.data.length
 
         this.state = []
+        this.reset()
+    }
+
+    reset() {
         for(let j=0; j<this.height; j++) {
             this.state[j] = []
             for(let i=0; i<this.width; i++) {
-                // this.state[j][i] = this.data[j][i]
                 this.state[j][i] = STATES.UNKNOWN
             }
         }
@@ -49,6 +52,19 @@ export default class Nonogram {
             }
         }
         return correctCount
+    }
+
+    checkInvalid() {
+        let bad = 0
+        for(let j=0; j<this.height; j++) {
+            for (let i = 0; i < this.width; i++) {
+                const ans = this.data[j][i]
+                const cur = this.state[j][i]
+                if(ans === 1 && cur === STATES.EMPTY) bad++
+                if(ans === 0 && cur === STATES.SELECTED) bad++
+            }
+        }
+        return bad
     }
 
     checkFinished() {
