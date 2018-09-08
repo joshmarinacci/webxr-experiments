@@ -113,7 +113,23 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     let currentBoard;
 
 
-    const levels = [new Nonogram(),new Nonogram(), new Nonogram()]
+    const levels = [
+        new Nonogram([
+            [0,1,0,0,1],
+            [1,0,1,0,1],
+            [0,1,1,0,1],
+            [0,1,1,0,1],
+        ]),
+        new Nonogram([
+            [0,1,0],
+            [1,1,1],
+        ]),
+        new Nonogram([
+            [0,1,0],
+            [1,1,1],
+            [0,1,1],
+        ]),
+    ]
     let currentLevelIndex = 0
     const texture_loader = new THREE.TextureLoader()
     const lava_texture = texture_loader.load('./lava_texture.png')
@@ -353,7 +369,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         const mesh = new THREE.Mesh(geo,mat)
         mesh.position.x = x
         mesh.position.y = y
-        mesh.position.z = 0.1
+        mesh.position.z = 0
         return mesh
     }
 
@@ -376,25 +392,44 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
             }
         }
 
-        const board = new THREE.Object3D()
-        board.position.z = -5
-        board.add(grid)
-        scene.add(board)
-        currentBoard = board
+        var bbox = new THREE.Box3().setFromObject(grid);
+        const center = new THREE.Vector3()
+        bbox.getCenter(center)
+        grid.position.x = -center.x
 
+        const gboard = new THREE.Object3D()
+        gboard.position.z = 0
+        gboard.add(grid)
+
+
+
+
+        const nums = new THREE.Object3D()
 
         for(let i=0; i<nonogram.width; i++) {
             const counts = nonogram.calculateColumnCounts(i)
+            counts.reverse()
             counts.forEach((count,j) => {
-                board.add(makeNumber(''+count,+1*i, +1*j+3.5))
+                nums.add(makeNumber(''+count, +1*i-0.4, -1*j))
             })
         }
         for(let j=0; j<nonogram.height; j++) {
             const counts = nonogram.calculateRowCounts(j)
+            counts.reverse()
             counts.forEach((count,i) => {
-                board.add(makeNumber(''+count,-1 -1*i, +1*j -0.4))
+                nums.add(makeNumber(''+count,-1 -1*i, +1*j + 0.8))
             })
         }
+
+        nums.position.x = -center.x
+        nums.position.y = 0
+        gboard.position.z = 0
+        gboard.position.y = 1
+        const board = new THREE.Object3D()
+        board.position.z = -5
+        board.add(gboard)
+        board.add(nums)
+
 
 
         const button = makeButton(0x5566ff,(e)=>{
@@ -413,7 +448,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 }
             }
         })
-        button.position.x = 4
+        button.position.y = -1
         board.add(button)
 
 
@@ -468,6 +503,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         alert_text2.position.y = 1.5
         alert_text2.visible = false
         board.add(alert_text2)
+
+        scene.add(board)
+        currentBoard = board
     }
 
 
@@ -519,6 +557,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     }
 
     function loadNextLevel() {
+        currentLevelIndex++
         console.log("loading the next level",currentLevelIndex)
         scene.remove(currentBoard)
         const level = levels[currentLevelIndex]

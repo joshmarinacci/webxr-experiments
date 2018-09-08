@@ -5,13 +5,8 @@ export const STATES = {
 }
 
 export default class Nonogram {
-    constructor() {
-        this.data = [
-            [0,1,0,0],
-            [1,0,1,0],
-            [0,1,1,0],
-            [0,1,1,0],
-        ]
+    constructor(data) {
+        this.data = data
         this.width = this.data[0].length
         this.height = this.data.length
 
