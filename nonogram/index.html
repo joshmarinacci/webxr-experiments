@@ -7,6 +7,16 @@ Dark Waves, bg audio
 
 https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
 
+JM_FX_Hit 01a - Dark.wav
+
+https://freesound.org/people/Julien%20Matthey/sounds/201570/
+
+dark texture 3,  sound when invalid
+https://freesound.org/people/Dneproman/sounds/256829/
+
+dark movement 3, sound when valid
+
+https://freesound.org/people/fons/sounds/101369/
 
 --->
 
@@ -44,6 +54,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
     <h3>click to play</h3>
 </div>
 <audio src="./dark_waves.mp3" id="bg-music" loop></audio>
+<audio src="./thunk.mp3" id="fx-thunk"></audio>
+<audio src="./dark-texture.mp3" id="fx-texture"></audio>
+<audio src="./dark-movement3.mp3" id="fx-movement"></audio>
 
 <script src="./WebVR.js"></script>
 <script src="./GLTFLoader.js"></script>
@@ -70,6 +83,13 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
             this.raycaster = new THREE.Raycaster()
             this.canvas = canvas
             this.waitcb = null
+            this.canvas.addEventListener('mousemove',e=>{
+                const bounds = canvas.getBoundingClientRect()
+                const ry = ((e.clientX-bounds.left)/bounds.width)*2 - 1
+                const rx = 1-((e.clientY-bounds.top)/bounds.height)*2
+                camera.rotation.y = -ry
+                camera.rotation.x = +rx
+            })
             this.canvas.addEventListener('click', (e) => {
                 if(this.waitcb) {
                     this.waitcb()
@@ -190,7 +210,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         // scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
         var light = new THREE.DirectionalLight( 0xffffff );
-        light.position.set( 0, 1, 1 ).normalize();
+        light.position.set( 0, -1, 1 ).normalize();
         scene.add( light );
 
         renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -270,26 +290,16 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 }
             })
 
-
             const mountain_material = new THREE.MeshLambertMaterial({color:0xff3300})
-            const mountain_1 = new THREE.Mesh(
-                mountain_geometry,
-                mountain_material
-            )
-            mountain_1.position.z = -15
-            mountain_1.rotation.y = -Math.PI/2
-            mountain_1.position.x = 5
-            scene.add(mountain_1)
-            const mountain_2 = new THREE.Mesh(
-                mountain_geometry,
-                mountain_material
-            )
             const deg2rad = (d) => d*Math.PI/180
-            mountain_2.rotation.z = deg2rad(-15)
-            mountain_2.rotation.y = deg2rad(15)
-            mountain_2.position.z = -20
-            mountain_2.position.x = -7
-            scene.add(mountain_2)
+            const count = 10
+            for(let i=0; i<count; i++) {
+                const mtn = new THREE.Mesh(mountain_geometry, mountain_material)
+                mtn.position.z = Math.sin(i* Math.PI*2/count) * 30
+                mtn.position.x = Math.cos(i*Math.PI*2/count) * 30
+                mtn.rotation.y = deg2rad(i*100)
+                scene.add(mtn)
+            }
         })
 
         const overlay = $('#overlay')
@@ -340,10 +350,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
         mesh.position.x = x
         mesh.position.y = y
         on(mesh,'click',()=>{
-            console.log("clicked")
+            $('#fx-thunk').play()
             nonogram.rollCellState(x,y)
             const state = nonogram.getCellState(x,y)
-            console.log("the new state is", state)
             const r = mesh.rotation.x
             TWEEN.make({
                 target:mesh.rotation,
@@ -355,7 +364,6 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 .onEnd(()=>{
                     mesh.geometry = CELL_GEOMETRIES[nonogram.getCellState(x,y)]
                     mesh.material = CELL_MATERIALS[nonogram.getCellState(x,y)]
-                    // mesh.material.wireframe = true
                     TWEEN.make({
                         target:mesh.rotation,
                         property:'x',
@@ -446,6 +454,7 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
             console.log("valid =",nonogram.checkValid())
             console.log("invalid = ", nonogram.checkInvalid())
             if(nonogram.checkInvalid() > 0) {
+                $("#fx-texture").play()
                 displayNotification(`${nonogram.checkInvalid()} invalid`)
                 return
             }
@@ -455,6 +464,9 @@ https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
                 } else {
                     displayAlert('Level complete',"next").then(() => loadNextLevel()).catch(e=>console.log(e))
                 }
+                return
+            } else {
+                $("#fx-movement").play()
             }
         })
         button.position.y = -1
