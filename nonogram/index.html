@@ -18,6 +18,9 @@ dark movement 3, sound when valid
 
 https://freesound.org/people/fons/sounds/101369/
 
+
+https://freesound.org/people/neizvestnost/sounds/184464/
+
 --->
 
 
@@ -54,6 +57,7 @@ https://freesound.org/people/fons/sounds/101369/
     <h3>click to play</h3>
 </div>
 <audio src="./dark_waves.mp3" id="bg-music" loop></audio>
+<audio src="./music.mp3" id="win-music" loop></audio>
 <audio src="./thunk.mp3" id="fx-thunk"></audio>
 <audio src="./dark-texture.mp3" id="fx-texture"></audio>
 <audio src="./dark-movement3.mp3" id="fx-movement"></audio>
@@ -459,8 +463,18 @@ https://freesound.org/people/fons/sounds/101369/
                 return
             }
             if(nonogram.checkFinished()) {
-                if(isGameEnd()) {
-                    displayAlert("Game Complete","play again?").then(()=>restartGame()).catch(e=>console.log(e))
+                if(!isGameEnd()) {
+                    $("#bg-music").pause()
+                    $("#win-music").currentTime = 0
+                    $("#win-music").play()
+                    displayAlert("Game Complete","play again?")
+                        .then(()=>{
+                            $("#win-music").pause()
+                            $("#bg-music").currentTime = 0
+                            $("#bg-music").play()
+                            restartGame()
+                        })
+                        .catch(e=>console.log(e))
                 } else {
                     displayAlert('Level complete',"next").then(() => loadNextLevel()).catch(e=>console.log(e))
                 }
