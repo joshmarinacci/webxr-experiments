@@ -463,7 +463,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 return
             }
             if(nonogram.checkFinished()) {
-                if(!isGameEnd()) {
+                if(isGameEnd()) {
                     $("#bg-music").pause()
                     $("#win-music").currentTime = 0
                     $("#win-music").play()
