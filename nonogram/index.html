@@ -176,9 +176,9 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide, map:lava_texture})
 
     const CELL_GEOMETRIES = []
-    CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.BoxGeometry(0.6, 0.6, 0.3)
+    CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.BoxGeometry(0.6, 0.6, 0.2)
     // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
-    CELL_GEOMETRIES[STATES.EMPTY] = new THREE.PlaneGeometry(0.5, 0.5)
+    CELL_GEOMETRIES[STATES.EMPTY] = new THREE.BoxGeometry(0.6, 0.6, 0.2)
 
     const CELL_TYPE = 'cell'
     const BUTTON_TYPE = 'button'
@@ -400,16 +400,43 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         constructor(nonogram, x, y) {
             super()
 
+
+            var roundedRectShape = new THREE.Shape();
+            const size = 0.95;
+
+            ( function roundedRect( ctx, x, y, width, height, radius ) {
+
+                ctx.moveTo( x, y + radius );
+                ctx.lineTo( x, y + height - radius );
+                ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
+                ctx.lineTo( x + width - radius, y + height );
+                ctx.quadraticCurveTo( x + width, y + height, x + width, y + height - radius );
+                ctx.lineTo( x + width, y + radius );
+                ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
+                ctx.lineTo( x + radius, y );
+                ctx.quadraticCurveTo( x, y, x, y + radius );
+
+            } )( roundedRectShape, 0, 0, size, size, 0.2 );
+
+            const tilegeo = new THREE.ExtrudeBufferGeometry(roundedRectShape, {
+                depth:0.1,
+                bevelEnabled: false
+            })
+            tilegeo.translate(-size/2, -size/2,0)
+
+
+
             const tile = new THREE.Mesh(
-                new THREE.BoxGeometry(0.9, 0.9, 0.1),
+                // new THREE.BoxGeometry(0.9, 0.9, 0.1),
+                tilegeo,
                 new THREE.MeshLambertMaterial({color: 0x444444})
             )
             this.add(tile)
             let front = new THREE.Group()
-            front.position.z = 0.2
+            front.position.z = 0.15
             this.add(front)
             let back = new THREE.Group()
-            back.position.z = -0.2
+            back.position.z = -0.15
             this.add(back)
 
             function meshForState(state) {
