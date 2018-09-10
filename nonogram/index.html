@@ -237,7 +237,15 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 this.userData.isSelecting = true;
 
 	            console.log("clicking", e)
-	            const c = e.target
+
+                if(clicker.waitcb) {
+                    clicker.waitcb()
+                    clicker.waitcb = null
+                    return
+                }
+
+
+                const c = e.target
 	            const origin = c.position
 	            console.log("origin is", origin)
 	            const dir = new THREE.Vector3(0,0,-1)
