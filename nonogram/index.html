@@ -674,10 +674,30 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             size: 0.5,
             height: 0.1,
         })
+        notification_text.material.transparent = true
+        notification_text.material.opacity = 0
         notification_text.visible = true
-        setTimeout(()=>{
-            notification_text.visible = false
-        },1000)
+
+        TWEEN.make({
+            target: notification_text.material,
+            property: 'opacity',
+            from: 0,
+            to: 1.0,
+            duration: 500
+        }).onEnd(()=> {
+            setTimeout(() => {
+                TWEEN.make({
+                    target: notification_text.material,
+                    property: 'opacity',
+                    from: 1.0,
+                    to: 0,
+                    duration: 500
+                }).onEnd(()=>{
+                    notification_text.visible = false
+                })
+
+            }, 2000)
+        })
     }
 
     function displayAlert(l1,l2) {
@@ -689,16 +709,29 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             })
             alert_text1.geometry.computeBoundingBox()
             alert_text1.geometry.center()
+            alert_text1.material.transparent = true
+            alert_text1.material.opacity = 0
             alert_text1.visible = true
 
             alert_text2.geometry = new THREE.TextGeometry(l2,{ font: font, size: 0.5, height: 0.1 })
             alert_text2.geometry.computeBoundingBox()
             alert_text2.geometry.center()
+            alert_text2.material.transparent = true
+            alert_text2.material.opacity = 0
             alert_text2.visible = true
+
+
+            TWEEN.make({target:alert_text1.material,property:"opacity",from:0,to:1,duration:500})
+            TWEEN.make({target:alert_text2.material,property:"opacity",from:0,to:1,duration:500})
+
             clicker.waitSceneClick(()=>{
-                alert_text1.visible = false
-                alert_text2.visible = false
-                res()
+                TWEEN.make({target:alert_text1.material,property:"opacity",from:1,to:0,duration:500})
+                TWEEN.make({target:alert_text2.material,property:"opacity",from:1,to:0,duration:500})
+                    .onEnd(()=>{
+                        alert_text1.visible = false
+                        alert_text2.visible = false
+                        res()
+                    })
             })
         })
     }
