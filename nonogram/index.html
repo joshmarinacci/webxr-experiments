@@ -29,6 +29,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="./node_modules/three/build/three.js"></script>
+    <script src="./node_modules/three/examples/js/libs/stats.min.js"></script>
     <style>
         body {
             font-family: Monospace;
@@ -135,6 +136,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     let alert_text1;
     let alert_text2;
     let currentBoard;
+    const stats = new Stats()
 
 
     const levels = [
@@ -222,6 +224,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
+        container.appendChild(stats.dom)
 
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
@@ -387,6 +390,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         old += 0.0001
         floor_material.map.rotation = old
         renderer.render( scene, camera );
+        stats.update()
     }
 
 
