@@ -27,6 +27,7 @@ class Tween {
 
         if(this.current >= 1) {
             this.ended = true
+            this.target[this.property] = lerp(this.from,this.to,1)
             if(this._onEnd) {
                 this._onEnd()
             }

@@ -108,10 +108,10 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 const intersects = this.raycaster.intersectObjects(scene.children, true)
                 let fired = false
                 intersects.forEach((it) => {
-                    if(!fired) {
+                    // if(!fired) {
                         fire(it.object, 'click', {type: 'click'})
                         fired = true
-                    }
+                    // }
                 })
             })
         }
@@ -176,7 +176,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide, map:lava_texture})
 
     const CELL_GEOMETRIES = []
-    CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.PlaneGeometry(0.9, 0.9)
+    CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.BoxGeometry(0.6, 0.6, 0.3)
     // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
     CELL_GEOMETRIES[STATES.EMPTY] = new THREE.PlaneGeometry(0.5, 0.5)
 
@@ -291,10 +291,23 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
         window.addEventListener( 'resize', onWindowResize, false );
 
+        let fontLoaded = false
+        let rock1Loaded = false
+        let rock3Loaded = false
+
+        function doSetup() {
+            if(!fontLoaded) return console.log("still waitingh on the font")
+            if(!rock1Loaded) return console.log("still waiting on the rock1")
+            if(!rock3Loaded) return console.log("still waiting on the rock3")
+            console.log("really setting it up now")
+            setupGame(levels[currentLevelIndex])
+        }
+
         const loader = new THREE.FontLoader()
         loader.load('node_modules/three/examples/fonts/optimer_regular.typeface.json',(fnt)=>{
             font = fnt
-            setupGame(levels[currentLevelIndex])
+            fontLoaded = true
+            doSetup()
         })
 
 
@@ -303,10 +316,11 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             gltf.scene.traverse((ch)=>{
                 if(ch.isMesh) {
                     rock_geometry = ch.geometry
-                    rock_geometry.scale(0.4,0.4,0.4)
+                    rock_geometry.scale(0.3,0.3,0.3)
                     rock_geometry.rotateX(-Math.PI/2)
                     CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
-
+                    rock1Loaded = true
+                    doSetup()
                 }
             })
         })
@@ -315,6 +329,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 if(ch.isMesh) {
                     mountain_geometry = ch.geometry
                     mountain_geometry.scale(10,10,10)
+                    rock3Loaded = true
+                    doSetup()
                 }
             })
 
@@ -373,37 +389,69 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         renderer.render( scene, camera );
     }
 
-    function makeCell(nonogram, x, y) {
-        const geo = new THREE.PlaneGeometry(0.9,0.9)
-        const mesh = new THREE.Mesh(geo,CELL_MATERIALS[nonogram.getCellState(x,y)])
-        mesh.jtype = CELL_TYPE
-        mesh.position.x = x
-        mesh.position.y = y
-        on(mesh,'click',()=>{
-            $('#fx-thunk').play()
-            nonogram.rollCellState(x,y)
-            const state = nonogram.getCellState(x,y)
-            const r = mesh.rotation.x
-            TWEEN.make({
-                target:mesh.rotation,
-                property:'x',
-                from:r,
-                to:r+Math.PI/2,
-                duration:500,
-            })
-                .onEnd(()=>{
-                    mesh.geometry = CELL_GEOMETRIES[nonogram.getCellState(x,y)]
-                    mesh.material = CELL_MATERIALS[nonogram.getCellState(x,y)]
-                    TWEEN.make({
-                        target:mesh.rotation,
-                        property:'x',
-                        from:r+Math.PI/2,
-                        to:r+Math.PI,
-                        duration:500,
-                    })
+
+    class GridCell extends THREE.Group {
+        /*
+         grid cell has three children:
+            one for the tile itself
+            one for the front decoration
+            one for the back decoration
+         */
+        constructor(nonogram, x, y) {
+            super()
+
+            const tile = new THREE.Mesh(
+                new THREE.BoxGeometry(0.9, 0.9, 0.1),
+                new THREE.MeshLambertMaterial({color: 0x444444})
+            )
+            this.add(tile)
+            let front = new THREE.Group()
+            front.position.z = 0.2
+            this.add(front)
+            let back = new THREE.Group()
+            back.position.z = -0.2
+            this.add(back)
+
+            function meshForState(state) {
+                const mesh = new THREE.Mesh(CELL_GEOMETRIES[state],CELL_MATERIALS[state])
+                mesh.jtype = CELL_TYPE
+                return mesh
+            }
+
+            front.add(meshForState(STATES.UNKNOWN))
+            back.add(meshForState(STATES.SELECTED))
+
+            on(tile,'click',()=>{
+                //play the sound
+                $('#fx-thunk').play()
+                //update the state
+                nonogram.rollCellState(x,y)
+                const r = this.rotation.x
+                //set a new back geometry
+                back.remove(back.children[0])
+                back.add(meshForState(nonogram.getCellState(x,y)))
+                //flip
+                TWEEN.make({
+                    target:this.rotation,
+                    property:'x',
+                    from:r,
+                    to:r+Math.PI,
+                    duration:500,
+                }).onEnd(()=>{
+                    //swap the references to front and back
+                    const temp = front
+                    front = back
+                    back = temp
                 })
-        })
-        return mesh
+            })
+        }
+    }
+
+    function makeCell(nonogram, x, y) {
+        const cell = new GridCell(nonogram,x,y)
+        cell.position.x = x
+        cell.position.y = y
+        return cell
     }
 
     function makeNumber(str,x,y) {
