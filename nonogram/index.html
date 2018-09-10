@@ -507,13 +507,24 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         return mesh
     }
 
-    function makeButton(color, cb) {
-        const geo = new THREE.PlaneGeometry(0.9,0.9)
+    function makeButton(text,color, cb) {
+        const button = new THREE.Group()
+        const geo = new THREE.PlaneGeometry(1.2,0.6)
         const mat = new THREE.MeshBasicMaterial({color:color})
         const mesh = new THREE.Mesh(geo,mat)
         mesh.jtype = BUTTON_TYPE
         on(mesh,'click',cb)
-        return mesh
+        button.add(mesh)
+
+        const tgeo = new THREE.TextGeometry(text,{font:font, size:0.3, height:0.1})
+        tgeo.center()
+        const tnode = new THREE.Mesh(
+            tgeo,
+            new THREE.MeshLambertMaterial({color:0x444444})
+        )
+        button.add(tnode)
+
+        return button
     }
 
     function setupGame(nonogram) {
@@ -566,7 +577,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
 
 
-        const button = makeButton(0x5566ff,(e)=>{
+        const button = makeButton("check",0x5566ff,(e)=>{
             console.log("clicked the check button")
             console.log("valid =",nonogram.checkValid())
             console.log("invalid = ", nonogram.checkInvalid())
