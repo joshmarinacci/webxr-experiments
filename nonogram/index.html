@@ -252,11 +252,11 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 const intersects = rc.intersectObjects(scene.children, true)
                 let fired = false
                 intersects.forEach((it) => {
-                    if(!fired && it.object.jtype) {
+                    // if(!fired && it.object.jtype) {
 		                console.log(it)
                         fire(it.object, 'click', {type: 'click'})
                         fired = true
-                    }
+                    // }
                 })
             }
 
