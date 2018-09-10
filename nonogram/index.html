@@ -229,8 +229,32 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         function setupControllers() {
             // controllers
 
-            function onSelectStart() {
+			const rc = new THREE.Raycaster()
+            function onSelectStart(e) {
                 this.userData.isSelecting = true;
+
+	            console.log("clicking", e)
+	            const c = e.target
+	            const origin = c.position
+	            console.log("origin is", origin)
+	            const dir = new THREE.Vector3(0,0,-1)
+//	            dir.copy(c.up)
+	            dir.applyQuaternion(c.quaternion)
+	            console.log("dir is", dir)
+	            rc.set(c.position,dir)
+	            //controller1.position, controller.quaternion, controller.rotation, controller)
+	            //rc.setFromCamera(controller.position)
+                
+                
+                const intersects = rc.intersectObjects(scene.children, true)
+                let fired = false
+                intersects.forEach((it) => {
+                    if(!fired && it.object.jtype) {
+		                console.log(it)
+                        fire(it.object, 'click', {type: 'click'})
+                        fired = true
+                    }
+                })
             }
 
             function onSelectEnd() {
@@ -249,12 +273,12 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
             // helpers
             var geometry = new THREE.BufferGeometry();
-            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -1], 3));
-            geometry.addAttribute('color', new THREE.Float32BufferAttribute([0.5, 0.5, 0.5, 0, 0, 0], 3));
+            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
+            geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
 
             var material = new THREE.LineBasicMaterial({
-                vertexColors: true,
-                linewidth: 2,
+                vertexColors: false,
+                linewidth: 5,
                 blending: THREE.AdditiveBlending
             });
 
@@ -322,6 +346,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
     function handleController( controller ) {
         if ( controller.userData.isSelecting ) {
+	        /*
             var object = room.children[ 0 ];
             room.remove( object );
             object.position.copy( controller.position );
@@ -330,6 +355,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             object.userData.velocity.z = ( Math.random() * 0.02 - 0.1 );
             object.userData.velocity.applyQuaternion( controller.quaternion );
             room.add( object );
+            */
         }
     }
 
