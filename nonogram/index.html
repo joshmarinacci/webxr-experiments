@@ -186,7 +186,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
         pointer = new Pointer(scene,renderer,camera, {
-            intersectionFilter: ((o) => o.userData.type === 'tile')
+            intersectionFilter: ((o) => o.userData.type === 'tile' || o.userData.clickable)
         })
 
         window.addEventListener( 'resize', onWindowResize, false );
@@ -391,7 +391,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         const mat = new THREE.MeshBasicMaterial({color:color})
         const mesh = new THREE.Mesh(geo,mat)
         mesh.jtype = BUTTON_TYPE
-        on(mesh,'click',cb)
+        mesh.userData.clickable = true
+        on(mesh,POINTER_CLICK,cb)
         button.add(mesh)
 
         const tgeo = new THREE.TextGeometry(text,{font:font, size:0.3, height:0.1})
