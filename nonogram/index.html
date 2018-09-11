@@ -64,6 +64,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 <audio src="./dark-movement3.mp3" id="fx-movement"></audio>
 
 <script src="./WebVR.js"></script>
+<script src="./Pointer.js"></script>
 <script src="./GLTFLoader.js"></script>
 <script src="./nonogram.js" type="module"></script>
 <script src="./tween.js" type="module"></script>
@@ -77,54 +78,10 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         if(!obj.listeners[type]) obj.listeners[type] = []
         obj.listeners[type].push(cb)
     }
-    function fire(obj,type,payload) {
-        if(!obj.listeners) return
-        if(!obj.listeners[type]) return
-        obj.listeners[type].forEach(cb => cb(payload))
-    }
-
-    class MouseClicker {
-        constructor(scene, canvas, camera) {
-            this.raycaster = new THREE.Raycaster()
-            this.canvas = canvas
-            this.waitcb = null
-            this.canvas.addEventListener('mousemove',e=>{
-                const bounds = canvas.getBoundingClientRect()
-                const ry = ((e.clientX-bounds.left)/bounds.width)*2 - 1
-                const rx = 1-((e.clientY-bounds.top)/bounds.height)*2
-                camera.rotation.y = -ry
-                camera.rotation.x = +rx
-            })
-            this.canvas.addEventListener('click', (e) => {
-                if(this.waitcb) {
-                    this.waitcb()
-                    this.waitcb = null
-                    return
-                }
-                const mouse = new THREE.Vector2()
-                const bounds = canvas.getBoundingClientRect()
-                mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
-                mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
-                this.raycaster.setFromCamera(mouse, camera)
-                const intersects = this.raycaster.intersectObjects(scene.children, true)
-                let fired = false
-                intersects.forEach((it) => {
-                    // if(!fired) {
-                        fire(it.object, 'click', {type: 'click'})
-                        fired = true
-                    // }
-                })
-            })
-        }
-        waitSceneClick(cb) {
-            this.waitcb = cb
-        }
-    }
-
-
 
     import Nonogram, {STATES} from "./nonogram.js"
     import {TWEEN} from "./tween.js"
+    import Pointer from "./pointer.js"
     var camera, scene, renderer;
     var controller1, controller2;
     let clicker, font;
@@ -298,7 +255,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         }
         setupControllers()
 
-        clicker = new MouseClicker(scene,renderer.domElement,camera)
+        clicker = new Pointer(scene,renderer.domElement,camera)
 
         window.addEventListener( 'resize', onWindowResize, false );
 
