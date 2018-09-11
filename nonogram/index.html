@@ -345,6 +345,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             front.add(meshForState(STATES.UNKNOWN))
             back.add(meshForState(STATES.SELECTED))
 
+            this.flipping = false
+
             on(tile,POINTER_ENTER,()=>{
                 tile.material = highlighted_material
             })
@@ -352,6 +354,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 tile.material = normal_material
             })
             on(tile,POINTER_CLICK,()=>{
+                if(this.flipping) return
                 //play the sound
                 if(thunkSound.isPlaying) thunkSound.stop()
                 thunkSound.play()
@@ -362,6 +365,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 back.remove(back.children[0])
                 back.add(meshForState(nonogram.getCellState(x,y)))
                 //flip
+                this.flipping = true
                 TWEEN.make({
                     target:this.rotation,
                     property:'x',
@@ -373,6 +377,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                     const temp = front
                     front = back
                     back = temp
+                    this.flipping = false
                 })
             })
         }
