@@ -59,10 +59,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     <h3>click to play</h3>
 </div>
 <audio src="./dark_waves.mp3" id="bg-music" loop></audio>
-<audio src="./music.mp3" id="win-music" loop></audio>
-<audio src="./thunk.mp3" id="fx-thunk"></audio>
-<audio src="./dark-texture.mp3" id="fx-texture"></audio>
-<audio src="./dark-movement3.mp3" id="fx-movement"></audio>
 
 <script src="./WebVR.js"></script>
 <script src="./pointer.js" type="module"></script>
@@ -93,6 +89,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     let alert_text1;
     let alert_text2;
     let currentBoard;
+    let thunkSound, validSound, invalidSound, winSound;
     const stats = new Stats()
 
 
@@ -244,6 +241,24 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             }
         })
 
+        const audioListener = new THREE.AudioListener()
+        camera.add(audioListener)
+
+        thunkSound = new THREE.Audio(audioListener)
+        scene.add(thunkSound)
+        validSound = new THREE.Audio(audioListener)
+        scene.add(validSound)
+        invalidSound = new THREE.Audio(audioListener)
+        scene.add(invalidSound)
+        winSound = new THREE.Audio(audioListener)
+        scene.add(winSound)
+
+        const audioLoader = new THREE.AudioLoader()
+        audioLoader.load("./thunk.mp3", (buf)=> thunkSound.setBuffer(buf))
+        audioLoader.load("./dark-texture.mp3", (buf)=> invalidSound.setBuffer(buf))
+        audioLoader.load("./dark-movement3.mp3", (buf)=> validSound.setBuffer(buf))
+        audioLoader.load("./music.mp3", (buf) => winSound.setBuffer(buf))
+
         const overlay = $('#overlay')
         overlay.addEventListener('click',()=>{
             overlay.style.visibility = 'hidden'
@@ -338,7 +353,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             })
             on(tile,POINTER_CLICK,()=>{
                 //play the sound
-                $('#fx-thunk').play()
+                if(thunkSound.isPlaying) thunkSound.stop()
+                thunkSound.play()
                 //update the state
                 nonogram.rollCellState(x,y)
                 const r = this.rotation.x
@@ -459,18 +475,19 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             console.log("valid =",nonogram.checkValid())
             console.log("invalid = ", nonogram.checkInvalid())
             if(nonogram.checkInvalid() > 0) {
-                $("#fx-texture").play()
+                if(invalidSound.isPlaying) invalidSound.stop()
+                invalidSound.play()
                 displayNotification(`${nonogram.checkInvalid()} invalid`)
                 return
             }
             if(nonogram.checkFinished()) {
                 if(isGameEnd()) {
                     $("#bg-music").pause()
-                    $("#win-music").currentTime = 0
-                    $("#win-music").play()
+                    if(winSound.isPlaying) winSound.stop()
+                    winSound.play()
                     displayAlert("Game Complete","play again?")
                         .then(()=>{
-                            $("#win-music").pause()
+                            winSound.stop()
                             $("#bg-music").currentTime = 0
                             $("#bg-music").play()
                             restartGame()
@@ -481,7 +498,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 }
                 return
             } else {
-                $("#fx-movement").play()
+                if(validSound.isPlaying) validSound.stop()
+                validSound.play()
             }
         })
         button.position.y = -1
