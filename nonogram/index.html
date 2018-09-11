@@ -81,7 +81,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
     import Nonogram, {STATES} from "./nonogram.js"
     import {TWEEN} from "./tween.js"
-    import Pointer from "./pointer.js"
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
+
     var camera, scene, renderer;
     let pointer, font;
     let rock_geometry;
@@ -184,7 +185,9 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
-        pointer = new Pointer(scene,renderer,camera)
+        pointer = new Pointer(scene,renderer,camera, {
+            intersectionFilter: ((o) => o.userData.type === 'tile')
+        })
 
         window.addEventListener( 'resize', onWindowResize, false );
 
@@ -283,7 +286,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             super()
 
 
-            var roundedRectShape = new THREE.Shape();
+            const roundedRectShape = new THREE.Shape();
             const size = 0.95;
 
             ( function roundedRect( ctx, x, y, width, height, radius ) {
@@ -308,11 +311,10 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
 
 
-            const tile = new THREE.Mesh(
-                // new THREE.BoxGeometry(0.9, 0.9, 0.1),
-                tilegeo,
-                new THREE.MeshLambertMaterial({color: 0x444444})
-            )
+            const highlighted_material = new THREE.MeshLambertMaterial({color:0xffffff})
+            const normal_material = new THREE.MeshLambertMaterial({color:0x444444})
+            const tile = new THREE.Mesh(tilegeo,normal_material)
+            tile.userData.type = 'tile'
             this.add(tile)
             let front = new THREE.Group()
             front.position.z = 0.15
@@ -330,7 +332,13 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             front.add(meshForState(STATES.UNKNOWN))
             back.add(meshForState(STATES.SELECTED))
 
-            on(tile,'click',()=>{
+            on(tile,POINTER_ENTER,()=>{
+                tile.material = highlighted_material
+            })
+            on(tile,POINTER_EXIT,()=>{
+                tile.material = normal_material
+            })
+            on(tile,POINTER_CLICK,()=>{
                 //play the sound
                 $('#fx-thunk').play()
                 //update the state

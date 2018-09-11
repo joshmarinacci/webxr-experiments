@@ -1,5 +1,10 @@
-export default class Pointer {
-    constructor(scene, renderer, camera) {
+export const POINTER_ENTER = "enter"
+export const POINTER_EXIT = "exit"
+export const POINTER_CLICK = "click"
+
+export class Pointer {
+    constructor(scene, renderer, camera, opts) {
+        this.opts = opts || {}
         this.scene = scene
         this.renderer = renderer
         this.canvas = renderer.domElement
@@ -7,11 +12,17 @@ export default class Pointer {
 
         this.raycaster = new THREE.Raycaster()
         this.waitcb = null
+        this.hoverTarget = null
+
+        this.intersectionFilter = this.opts.intersectionFilter || ((o) => true)
 
 
 
         // setup the mouse
-        this.canvas.addEventListener('mousemove', this.cameraFollowMouse.bind(this))
+        this.canvas.addEventListener('mousemove', (e)=>{
+            this.mouseMove(e)
+            this.cameraFollowMouse(e)
+        })
         this.canvas.addEventListener('click', this.mouseClick.bind(this))
 
         // setup the VR controllers
@@ -43,6 +54,8 @@ export default class Pointer {
 
     //override this to do something w/ the controllers on every tick
     tick(time) {
+        this.controllerMove(this.controller1)
+        this.controllerMove(this.controller2)
     }
 
 
@@ -61,6 +74,43 @@ export default class Pointer {
         this.camera.rotation.x = +rx
     }
 
+    mouseMove(e) {
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        this._processMove()
+    }
+
+    controllerMove(controller) {
+        const c = controller
+        const dir = new THREE.Vector3(0, 0, -1)
+        dir.applyQuaternion(c.quaternion)
+        this.raycaster.set(c.position, dir)
+        this._processMove()
+    }
+
+    _processMove() {
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+        intersects.forEach((it) => {
+            const obj = it.object
+            if(!obj) return
+            const valid = this.intersectionFilter(obj)
+            // const valid = false
+            if(valid) {
+                if (obj === this.hoverTarget) {
+                    //still inside
+                } else {
+                    if (this.hoverTarget)
+                        this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
+                    this.hoverTarget = obj
+                    this.fire(this.hoverTarget, POINTER_ENTER, {type: POINTER_ENTER})
+                }
+            }
+        })
+    }
+
     _processClick() {
         if (this.waitcb) {
             this.waitcb()
@@ -69,12 +119,9 @@ export default class Pointer {
         }
 
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
-        let fired = false
         intersects.forEach((it) => {
-            // if(!fired) {
-            this.fire(it.object, 'click', {type: 'click'})
-            fired = true
-            // }
+            const valid = this.intersectionFilter(it.object)
+            if(valid) this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK})
         })
     }
     mouseClick(e) {
