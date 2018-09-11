@@ -28,8 +28,9 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     <title>Nonogram Game</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script src="./node_modules/three/build/three.js"></script>
+    <script src="./node_modules/three/build/three.min.js"></script>
     <script src="./node_modules/three/examples/js/libs/stats.min.js"></script>
+    <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
     <style>
         body {
             font-family: Monospace;
@@ -65,7 +66,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
 <script src="./WebVR.js"></script>
 <script src="./pointer.js" type="module"></script>
-<script src="./GLTFLoader.js"></script>
 <script src="./nonogram.js" type="module"></script>
 <script src="./tween.js" type="module"></script>
 
@@ -124,9 +124,9 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     ]
     let currentLevelIndex = 0
     const texture_loader = new THREE.TextureLoader()
-    const lava_texture = texture_loader.load('./lava_texture.png')
-    const floor_lava_texture = texture_loader.load('./lava_texture.png')
-    const floor_lava_texture_bump = texture_loader.load('./lava_texture_bump.png')
+    const lava_texture = texture_loader.load('./lava_texture.jpg')
+    const floor_lava_texture = texture_loader.load('./lava_texture.jpg')
+    const floor_lava_texture_bump = texture_loader.load('./lava_texture_bump.jpg')
     let floor_material
 
     const CELL_MATERIALS = []
@@ -191,23 +191,25 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
         window.addEventListener( 'resize', onWindowResize, false );
 
-        let fontLoaded = false
-        let rock1Loaded = false
-        let rock3Loaded = false
-
-        function doSetup() {
-            if(!fontLoaded) return console.log("still waitingh on the font")
-            if(!rock1Loaded) return console.log("still waiting on the rock1")
-            if(!rock3Loaded) return console.log("still waiting on the rock3")
+        THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
+            console.log(`loading ${url}.  loaded ${loaded} of ${total}`)
+        }
+        THREE.DefaultLoadingManager.onLoad = () => {
+            console.log(`loading complete`)
             console.log("really setting it up now")
             setupGame(levels[currentLevelIndex])
         }
+        THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+            console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
+        }
+        THREE.DefaultLoadingManager.onError = (url) => {
+            console.log(`error loading ${url}`)
+        }
+
 
         const loader = new THREE.FontLoader()
         loader.load('node_modules/three/examples/fonts/optimer_regular.typeface.json',(fnt)=>{
             font = fnt
-            fontLoaded = true
-            doSetup()
         })
 
 
@@ -219,8 +221,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                     rock_geometry.scale(0.3,0.3,0.3)
                     rock_geometry.rotateX(-Math.PI/2)
                     CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
-                    rock1Loaded = true
-                    doSetup()
                 }
             })
         })
@@ -229,8 +229,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 if(ch.isMesh) {
                     mountain_geometry = ch.geometry
                     mountain_geometry.scale(10,10,10)
-                    rock3Loaded = true
-                    doSetup()
                 }
             })
 
