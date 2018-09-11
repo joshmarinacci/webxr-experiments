@@ -64,7 +64,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 <audio src="./dark-movement3.mp3" id="fx-movement"></audio>
 
 <script src="./WebVR.js"></script>
-<script src="./Pointer.js"></script>
+<script src="./pointer.js" type="module"></script>
 <script src="./GLTFLoader.js"></script>
 <script src="./nonogram.js" type="module"></script>
 <script src="./tween.js" type="module"></script>
@@ -83,8 +83,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     import {TWEEN} from "./tween.js"
     import Pointer from "./pointer.js"
     var camera, scene, renderer;
-    var controller1, controller2;
-    let clicker, font;
+    let pointer, font;
     let rock_geometry;
     let mountain_geometry;
     let click_to_play;
@@ -185,77 +184,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
-
-        function setupControllers() {
-            // controllers
-
-			const rc = new THREE.Raycaster()
-            function onSelectStart(e) {
-                this.userData.isSelecting = true;
-
-	            console.log("clicking", e)
-
-                if(clicker.waitcb) {
-                    clicker.waitcb()
-                    clicker.waitcb = null
-                    return
-                }
-
-
-                const c = e.target
-	            const origin = c.position
-	            console.log("origin is", origin)
-	            const dir = new THREE.Vector3(0,0,-1)
-//	            dir.copy(c.up)
-	            dir.applyQuaternion(c.quaternion)
-	            console.log("dir is", dir)
-	            rc.set(c.position,dir)
-	            //controller1.position, controller.quaternion, controller.rotation, controller)
-	            //rc.setFromCamera(controller.position)
-                
-                
-                const intersects = rc.intersectObjects(scene.children, true)
-                let fired = false
-                intersects.forEach((it) => {
-                    // if(!fired && it.object.jtype) {
-		                console.log(it)
-                        fire(it.object, 'click', {type: 'click'})
-                        fired = true
-                    // }
-                })
-            }
-
-            function onSelectEnd() {
-                this.userData.isSelecting = false;
-            }
-
-            controller1 = renderer.vr.getController(0);
-            controller1.addEventListener('selectstart', onSelectStart);
-            controller1.addEventListener('selectend', onSelectEnd);
-            scene.add(controller1);
-
-            controller2 = renderer.vr.getController(1);
-            controller2.addEventListener('selectstart', onSelectStart);
-            controller2.addEventListener('selectend', onSelectEnd);
-            scene.add(controller2);
-
-            // helpers
-            var geometry = new THREE.BufferGeometry();
-            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
-            geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
-
-            var material = new THREE.LineBasicMaterial({
-                vertexColors: false,
-                linewidth: 5,
-                blending: THREE.AdditiveBlending
-            });
-
-            controller1.add(new THREE.Line(geometry, material));
-            controller2.add(new THREE.Line(geometry, material));
-        }
-        setupControllers()
-
-        clicker = new Pointer(scene,renderer.domElement,camera)
+        pointer = new Pointer(scene,renderer,camera)
 
         window.addEventListener( 'resize', onWindowResize, false );
 
@@ -328,29 +257,13 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         renderer.setSize( window.innerWidth, window.innerHeight );
     }
 
-    function handleController( controller ) {
-        if ( controller.userData.isSelecting ) {
-	        /*
-            var object = room.children[ 0 ];
-            room.remove( object );
-            object.position.copy( controller.position );
-            object.userData.velocity.x = ( Math.random() - 0.5 ) * 0.02;
-            object.userData.velocity.y = ( Math.random() - 0.5 ) * 0.02;
-            object.userData.velocity.z = ( Math.random() * 0.02 - 0.1 );
-            object.userData.velocity.applyQuaternion( controller.quaternion );
-            room.add( object );
-            */
-        }
-    }
-
     function animate() {
         renderer.setAnimationLoop( render );
     }
 
     let old = 0
     function render(time) {
-        handleController( controller1 );
-        handleController( controller2 );
+        pointer.tick(time)
         TWEEN.tick(time)
         old += 0.0001
         floor_material.map.rotation = old
@@ -681,7 +594,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             TWEEN.make({target:alert_text1.material,property:"opacity",from:0,to:1,duration:500})
             TWEEN.make({target:alert_text2.material,property:"opacity",from:0,to:1,duration:500})
 
-            clicker.waitSceneClick(()=>{
+            pointer.waitSceneClick(()=>{
                 TWEEN.make({target:alert_text1.material,property:"opacity",from:1,to:0,duration:500})
                 TWEEN.make({target:alert_text2.material,property:"opacity",from:1,to:0,duration:500})
                     .onEnd(()=>{
