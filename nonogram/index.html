@@ -36,20 +36,33 @@ https://freesound.org/people/memz/sounds/323495/
     <script src="./node_modules/three/build/three.min.js"></script>
     <!--<script src="./node_modules/three/examples/js/libs/stats.min.js"></script>-->
     <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/hobby-of-night" type="text/css"/>
     <style>
         body {
-            font-family: Monospace;
+            font-family: 'H0bbyofnightRegular';
+            font-weight: normal;
+            font-style: normal;
             background-color: #101010;
             color: #fff;
             margin: 0px;
             overflow: hidden;
+        }
+
+        h1 {
+            font-size: 20vh;
+            background: linear-gradient(red, orange);
+            background-clip: text;
+            color: transparent;
+        }
+        h3 {
+            font-size: 10vh;
+            color: #c02a2a;
         }
         a {
             color: #48f;
         }
         #overlay {
             position: fixed;
-            padding-top: 20%;
             font-size: 5vh;
             text-align: center;
             background-color: rgba(0,0,0,0.5);
@@ -69,7 +82,10 @@ https://freesound.org/people/memz/sounds/323495/
             position: absolute;
             bottom: 20px;
             z-index: 999;
-            font-size: 30pt;
+            font-family: 'H0bbyofnightRegular';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 5vmin;
             padding: 0.5em;
             white-space: nowrap;
             left: 50%;
@@ -80,7 +96,7 @@ https://freesound.org/people/memz/sounds/323495/
 </head>
 <body>
 <div id="overlay">
-    <h1>Lava Nonogram</h1>
+    <h1>Lava Flow</h1>
     <h3 id="loading-indicator"><label>loading</label><progress max="100" value="0" id="progress"></progress></h3>
     <h3 id="click-to-play">click to play</h3>
 </div>
