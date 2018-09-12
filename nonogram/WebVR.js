@@ -9,19 +9,19 @@ var WEBVR = {
 
     createButton: function ( renderer, options ) {
 
-        if ( options && options.frameOfReferenceType ) {
-
-            renderer.vr.setFrameOfReferenceType( options.frameOfReferenceType );
-
-        }
+        // if ( options && options.frameOfReferenceType ) {
+        //
+        //     renderer.vr.setFrameOfReferenceType( options.frameOfReferenceType );
+        //
+        // }
 
         function showEnterVR( device ) {
 
             button.style.display = '';
 
             button.style.cursor = 'pointer';
-            button.style.left = 'calc(50% - 50px)';
-            button.style.width = '100px';
+            // button.style.left = 'calc(50% - 50px)';
+            // button.style.width = '100px';
 
             button.textContent = 'ENTER VR';
 
@@ -100,8 +100,8 @@ var WEBVR = {
             button.style.display = '';
 
             button.style.cursor = 'auto';
-            button.style.left = 'calc(50% - 75px)';
-            button.style.width = '150px';
+            // button.style.left = 'calc(50% - 75px)';
+            // button.style.width = '150px';
 
             button.textContent = 'VR NOT FOUND';
 
@@ -115,9 +115,10 @@ var WEBVR = {
         }
 
         function stylizeElement( element ) {
+            // element.style.position = 'absolute';
+            // element.style.bottom = '20px';
+            /*
 
-            element.style.position = 'absolute';
-            element.style.bottom = '20px';
             element.style.padding = '12px 6px';
             element.style.border = '1px solid #fff';
             element.style.borderRadius = '4px';
@@ -127,7 +128,8 @@ var WEBVR = {
             element.style.textAlign = 'center';
             element.style.opacity = '0.5';
             element.style.outline = 'none';
-            element.style.zIndex = '999';
+            */
+            // element.style.zIndex = '999';
 
         }
 
@@ -151,6 +153,7 @@ var WEBVR = {
         } else if ( 'getVRDisplays' in navigator ) {
 
             var button = document.createElement( 'button' );
+            button.setAttribute("id","enter-vr")
             button.style.display = 'none';
 
             stylizeElement( button );
