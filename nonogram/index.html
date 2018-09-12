@@ -109,6 +109,9 @@ https://fontlibrary.org/en/font/hobby-of-night
             background-color: #fff;
             transform: translate(-50%,0)
         }
+        progress {
+            border: 1px solid red;
+        }
     </style>
 </head>
 <body>
@@ -164,6 +167,12 @@ https://fontlibrary.org/en/font/hobby-of-night
 
 
     const levels = [
+        new Nonogram([ // Jesse's
+            [1,0,0, 1,0,0],
+            [0,0,1, 0,0,1],
+            [1,0,0, 1,0,0],
+        ]),
+
         new Nonogram([ // V shape
             [1,0,1],
             [0,1,0],
@@ -258,7 +267,7 @@ https://fontlibrary.org/en/font/hobby-of-night
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
         stats = new JStats(renderer)
-        camera.add(stats)
+        // camera.add(stats)
         scene.add(camera)
 
         document.body.appendChild( WEBVR.createButton( renderer ) );
