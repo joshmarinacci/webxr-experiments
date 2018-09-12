@@ -110,7 +110,18 @@ https://fontlibrary.org/en/font/hobby-of-night
             transform: translate(-50%,0)
         }
         progress {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance:none;
+        }
+        progress::-webkit-progress-bar {
+            box-sizing: border-box;
             border: 1px solid red;
+            width: 10em;
+            height: 1em;
+        }
+        progress::-webkit-progress-value {
+            color: green;
         }
     </style>
 </head>
@@ -167,11 +178,18 @@ https://fontlibrary.org/en/font/hobby-of-night
 
 
     const levels = [
+        new Nonogram([ //jesse's
+            [0,1,0,1],
+            [1,0,1,0],
+            [0,1,0,1],
+            [1,0,1,0],
+        ]),
         new Nonogram([ // Jesse's
             [1,0,0, 1,0,0],
             [0,0,1, 0,0,1],
             [1,0,0, 1,0,0],
         ]),
+
 
         new Nonogram([ // V shape
             [1,0,1],
