@@ -65,6 +65,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 <script src="./nonogram.js" type="module"></script>
 <script src="./tween.js" type="module"></script>
 <script src="./jstats.js" type="module"></script>
+<script src="./jtimer.js" type="module"></script>
 
 <script type="module">
     function $(sel) {
@@ -80,6 +81,9 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     import {TWEEN} from "./tween.js"
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
     import JStats from "./jstats.js"
+    import JTimer from "./jtimer.js"
+
+    const TIMER = new JTimer()
 
     var camera, scene, renderer;
     let pointer, font;
@@ -200,6 +204,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         THREE.DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
             console.log("really setting it up now")
+            setupText()
             setupGame(levels[currentLevelIndex])
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
@@ -294,6 +299,31 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     }
 
 
+
+    const roundedRectShape = new THREE.Shape();
+    const roundedRectCurveSize = 0.95;
+
+    ( function roundedRect( ctx, x, y, width, height, radius ) {
+
+        ctx.moveTo( x, y + radius );
+        ctx.lineTo( x, y + height - radius );
+        ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
+        ctx.lineTo( x + width - radius, y + height );
+        ctx.quadraticCurveTo( x + width, y + height, x + width, y + height - radius );
+        ctx.lineTo( x + width, y + radius );
+        ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
+        ctx.lineTo( x + radius, y );
+        ctx.quadraticCurveTo( x, y, x, y + radius );
+
+    } )( roundedRectShape, 0, 0, roundedRectCurveSize, roundedRectCurveSize, 0.2 );
+    const tilegeo = new THREE.ExtrudeBufferGeometry(roundedRectShape, {
+        depth:0.1,
+        bevelEnabled: false
+    })
+    tilegeo.translate(-roundedRectCurveSize/2, -roundedRectCurveSize/2,0)
+    const cell_material_highlight = new THREE.MeshLambertMaterial({color:0xffffff})
+    const cell_material_normal = new THREE.MeshLambertMaterial({color:0x444444})
+
     class GridCell extends THREE.Group {
         /*
          grid cell has three children:
@@ -304,35 +334,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         constructor(nonogram, x, y) {
             super()
 
-
-            const roundedRectShape = new THREE.Shape();
-            const size = 0.95;
-
-            ( function roundedRect( ctx, x, y, width, height, radius ) {
-
-                ctx.moveTo( x, y + radius );
-                ctx.lineTo( x, y + height - radius );
-                ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
-                ctx.lineTo( x + width - radius, y + height );
-                ctx.quadraticCurveTo( x + width, y + height, x + width, y + height - radius );
-                ctx.lineTo( x + width, y + radius );
-                ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
-                ctx.lineTo( x + radius, y );
-                ctx.quadraticCurveTo( x, y, x, y + radius );
-
-            } )( roundedRectShape, 0, 0, size, size, 0.2 );
-
-            const tilegeo = new THREE.ExtrudeBufferGeometry(roundedRectShape, {
-                depth:0.1,
-                bevelEnabled: false
-            })
-            tilegeo.translate(-size/2, -size/2,0)
-
-
-
-            const highlighted_material = new THREE.MeshLambertMaterial({color:0xffffff})
-            const normal_material = new THREE.MeshLambertMaterial({color:0x444444})
-            const tile = new THREE.Mesh(tilegeo,normal_material)
+            const tile = new THREE.Mesh(tilegeo,cell_material_normal)
             tile.userData.type = 'tile'
             this.add(tile)
             let front = new THREE.Group()
@@ -354,10 +356,10 @@ https://freesound.org/people/neizvestnost/sounds/184464/
             this.flipping = false
 
             on(tile,POINTER_ENTER,()=>{
-                tile.material = highlighted_material
+                tile.material = cell_material_highlight
             })
             on(tile,POINTER_EXIT,()=>{
-                tile.material = normal_material
+                tile.material = cell_material_normal
             })
             on(tile,POINTER_CLICK,()=>{
                 if(this.flipping) return
@@ -518,59 +520,69 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
 
 
-        click_to_play = makeNumber('Click to Play',2,2)
+
+
+        scene.add(board)
+        currentBoard = board
+    }
+
+    function setupText() {
+        TIMER.start("setup-text")
+        const overlay = new THREE.Group()
+        overlay.position.z = -5
+        click_to_play = makeNumber('Click to Play', 2, 2)
         click_to_play.material.color.set(0xff0000)
         click_to_play.position.x = -1
         click_to_play.visible = false
-        board.add(click_to_play)
+        overlay.add(click_to_play)
 
-        you_win = makeNumber('You Win',2,2)
+        you_win = makeNumber('You Win', 2, 2)
         you_win.material.color.set(0xff0000)
         you_win.position.x = 0
         you_win.position.z = 0.5
         you_win.visible = false
-        board.add(you_win)
+        overlay.add(you_win)
 
-        notification_text = makeNumber('notification',2,2)
+        notification_text = makeNumber('notification', 2, 2)
         notification_text.material.color.set(0x00ff00)
         notification_text.position.x = 0
         notification_text.position.z = 0.5
         notification_text.visible = false
-        board.add(notification_text)
+        overlay.add(notification_text)
 
 
         alert_text1 = new THREE.Mesh(
-            new THREE.TextGeometry('alert 1',{
+            new THREE.TextGeometry('alert 1', {
                 font: font,
                 size: 0.8,
                 height: 0.1,
             }),
-            new THREE.MeshLambertMaterial({color:0x00ff00})
+            new THREE.MeshLambertMaterial({color: 0x00ff00})
         )
         alert_text1.geometry.computeBoundingBox()
         alert_text1.geometry.center()
         alert_text1.position.z = 0.5
         alert_text1.position.y = 3
         alert_text1.visible = false
-        board.add(alert_text1)
+        overlay.add(alert_text1)
 
         alert_text2 = new THREE.Mesh(
-            new THREE.TextGeometry('alert 2',{
+            new THREE.TextGeometry('alert 2', {
                 font: font,
                 size: 0.5,
                 height: 0.1,
             }),
-            new THREE.MeshLambertMaterial({color:0x00ff00})
+            new THREE.MeshLambertMaterial({color: 0x00ff00})
         )
         alert_text2.geometry.computeBoundingBox()
         alert_text2.geometry.center()
         alert_text2.position.z = 0.5
         alert_text2.position.y = 1.5
         alert_text2.visible = false
-        board.add(alert_text2)
+        overlay.add(alert_text2)
 
-        scene.add(board)
-        currentBoard = board
+        scene.add(overlay)
+        TIMER.stop("setup-text")
     }
 
 
