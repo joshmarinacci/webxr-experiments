@@ -6,6 +6,7 @@ export const STATES = {
 
 export default class Nonogram {
     constructor(data) {
+        data.reverse()
         this.data = data
         this.width = this.data[0].length
         this.height = this.data.length
