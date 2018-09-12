@@ -3,6 +3,7 @@ import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
 import {TWEEN} from "./tween.js"
 
 import {RESOURCES} from './resources.js'
+import {playSound} from './resources'
 
 const roundedRectShape = new THREE.Shape();
 const roundedRectCurveSize = 0.95;
@@ -65,6 +66,8 @@ export default class GridCell extends THREE.Group {
 
         this.on(tile,POINTER_ENTER,()=>{
             tile.material = cell_material_highlight
+            playSound(RESOURCES.SOUNDS.hover)
+
         })
         this.on(tile,POINTER_EXIT,()=>{
             tile.material = cell_material_normal
@@ -72,8 +75,7 @@ export default class GridCell extends THREE.Group {
         this.on(tile,POINTER_CLICK,()=>{
             if(this.flipping) return
             //play the sound
-            if(RESOURCES.SOUNDS.thunk.isPlaying) RESOURCES.SOUNDS.thunk.stop()
-            RESOURCES.SOUNDS.thunk.play()
+            playSound(RESOURCES.SOUNDS.thunk)
             //update the state
             nonogram.rollCellState(x,y)
             const r = this.rotation.x

@@ -21,6 +21,11 @@ https://freesound.org/people/fons/sounds/101369/
 
 https://freesound.org/people/neizvestnost/sounds/184464/
 
+https://freesound.org/people/LloydEvans09/sounds/321805/
+
+https://freesound.org/people/memz/sounds/323495/
+
+
 --->
 
 
@@ -85,7 +90,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     import JStats from "./jstats.js"
     import JTimer from "./jtimer.js"
     import GridCell, {CELL_GEOMETRIES, CELL_MATERIALS} from "./cell.js"
-    import {RESOURCES} from './resources.js'
+    import {RESOURCES, playSound} from './resources.js'
 
     const TIMER = new JTimer()
 
@@ -256,24 +261,28 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         const audioListener = new THREE.AudioListener()
         camera.add(audioListener)
 
-        RESOURCES.SOUNDS.thunk = new THREE.Audio(audioListener)
-        RESOURCES.SOUNDS.valid = new THREE.Audio(audioListener)
-        RESOURCES.SOUNDS.invalid = new THREE.Audio(audioListener)
-        RESOURCES.SOUNDS.win = new THREE.Audio(audioListener)
-        RESOURCES.SOUNDS.complete = new THREE.Audio(audioListener)
-
-        Object.keys(RESOURCES.SOUNDS).forEach(name => scene.add(RESOURCES.SOUNDS[name]))
+        Object.keys(RESOURCES.SOUNDS).forEach(name => {
+            RESOURCES.SOUNDS[name] = new THREE.Audio(audioListener)
+            scene.add(RESOURCES.SOUNDS[name])
+        })
 
         const audioLoader = new THREE.AudioLoader()
         audioLoader.load("./thunk.mp3", (buf)=> RESOURCES.SOUNDS.thunk.setBuffer(buf))
         audioLoader.load("./dark-texture.mp3", (buf)=> RESOURCES.SOUNDS.invalid.setBuffer(buf))
         audioLoader.load("./dark-movement3.mp3", (buf)=> RESOURCES.SOUNDS.valid.setBuffer(buf))
         audioLoader.load("./music.mp3", (buf) => RESOURCES.SOUNDS.win.setBuffer(buf))
-        audioLoader.load("./music.mp3", (buf) => RESOURCES.SOUNDS.complete.setBuffer(buf))
+        audioLoader.load("./bonk.mp3", (buf)=> {
+            RESOURCES.SOUNDS.hover.setBuffer(buf)
+            RESOURCES.SOUNDS.hover.setVolume(0.3)
+        })
+        audioLoader.load("./piano.mp3",(buf)=>{
+            RESOURCES.SOUNDS.complete.setBuffer(buf).setLoop(true)
+        })
 
         const overlay = $('#overlay')
         overlay.addEventListener('click',()=>{
             overlay.style.visibility = 'hidden'
+            $('#bg-music').volume = 0.5
             $('#bg-music').play()
         })
 
@@ -331,6 +340,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         on(mesh,POINTER_CLICK,cb)
         on(mesh,POINTER_ENTER,()=>{
             mesh.material = material_highlight
+            playSound(RESOURCES.SOUNDS.hover)
         })
         on(mesh, POINTER_EXIT,() => {
             mesh.material = material_normal
@@ -339,10 +349,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 
         const tgeo = new THREE.TextGeometry(text,{font:font, size:0.3, height:0.1})
         tgeo.center()
-        const tnode = new THREE.Mesh(
-            tgeo,
-            new THREE.MeshLambertMaterial({color:0x444444})
-        )
+        const tnode = new THREE.Mesh(tgeo, new THREE.MeshLambertMaterial({color:0x444444}))
         button.add(tnode)
 
         return button
@@ -397,10 +404,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         board.add(nums)
 
 
-        function playSound(snd) {
-            if(snd.isPlaying) snd.stop()
-            snd.play()
-        }
 
         const button = makeButton("check",0x5566ff,(e)=>{
             if(nonogram.checkInvalid() > 0) {
@@ -421,7 +424,13 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                         })
                         .catch(e=>console.log(e))
                 } else {
-                    displayAlert('Level complete',"next").then(() => loadNextLevel()).catch(e=>console.log(e))
+                    $("#bg-music").pause()
+                    playSound(RESOURCES.SOUNDS.complete)
+                    displayAlert('Level complete',"next").then(() => {
+                        $("#bg-music").play()
+                        loadNextLevel()
+                        RESOURCES.SOUNDS.complete.stop()
+                    }).catch(e=>console.log(e))
                 }
                 return
             } else {
