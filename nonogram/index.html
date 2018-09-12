@@ -26,6 +26,10 @@ https://freesound.org/people/LloydEvans09/sounds/321805/
 https://freesound.org/people/memz/sounds/323495/
 
 
+font
+
+https://fontlibrary.org/en/font/hobby-of-night
+
 --->
 
 
@@ -34,8 +38,9 @@ https://freesound.org/people/memz/sounds/323495/
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="./node_modules/three/build/three.min.js"></script>
-    <!--<script src="./node_modules/three/examples/js/libs/stats.min.js"></script>-->
     <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="./node_modules/three/examples/js/loaders/TTFLoader.js"></script>
+    <script src="./node_modules/three/examples/js/libs/opentype.min.js"></script>
     <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/hobby-of-night" type="text/css"/>
     <style>
         body {
@@ -58,6 +63,7 @@ https://freesound.org/people/memz/sounds/323495/
                 background: linear-gradient(red, orange);
                 background-clip: text;
                 color: transparent;
+                /*color: orange;*/
             }
         }
         h3 {
@@ -148,6 +154,7 @@ https://freesound.org/people/memz/sounds/323495/
     let alert_text1;
     let alert_text2;
     let currentBoard;
+    let pointLight;
 
     let stats
 
@@ -234,9 +241,13 @@ https://freesound.org/people/memz/sounds/323495/
 
         // scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
-        var light = new THREE.DirectionalLight( 0xffffff );
+        var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
         light.position.set( 0, -1, 1 ).normalize();
         scene.add( light );
+
+        pointLight = new THREE.PointLight(0xffffff, 0.5)
+        pointLight.position.set(0,-5,0)
+        scene.add(pointLight)
 
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
@@ -273,12 +284,9 @@ https://freesound.org/people/memz/sounds/323495/
         THREE.DefaultLoadingManager.onError = (url) => {
             console.log(`error loading ${url}`)
         }
-
-
-        const loader = new THREE.FontLoader()
-        loader.load('node_modules/three/examples/fonts/optimer_regular.typeface.json',(fnt)=>{
-            font = fnt
-        })
+        const loader = new THREE.TTFLoader()
+        const fontLoader = new THREE.FontLoader()
+        loader.load('./hobby-of-night.ttf',fnt => font = fontLoader.parse(fnt))
 
 
         const gltf_loader = new THREE.GLTFLoader()
@@ -354,6 +362,8 @@ https://freesound.org/people/memz/sounds/323495/
 
     let old = 0
     function render(time) {
+        pointLight.position.x = Math.sin(old*200)*5
+        pointLight.position.z = Math.cos(old*200)*5
         pointer.tick(time)
         TWEEN.tick(time)
         old += 0.0001
@@ -520,7 +530,7 @@ https://freesound.org/people/memz/sounds/323495/
         overlay.add(you_win)
 
         notification_text = makeNumber('notification', 2, 2)
-        notification_text.material.color.set(0x00ff00)
+        notification_text.material.color.set(0xFFA500)
         notification_text.position.x = 0
         notification_text.position.z = 0.5
         notification_text.visible = false
@@ -533,12 +543,12 @@ https://freesound.org/people/memz/sounds/323495/
                 size: 0.8,
                 height: 0.1,
             }),
-            new THREE.MeshLambertMaterial({color: 0x00ff00})
+            new THREE.MeshLambertMaterial({color: 0xFFA500, flatShading: true})
         )
         alert_text1.geometry.computeBoundingBox()
         alert_text1.geometry.center()
         alert_text1.position.z = 0.5
-        alert_text1.position.y = 3
+        alert_text1.position.y = 2.5
         alert_text1.visible = false
         overlay.add(alert_text1)
 
@@ -548,7 +558,7 @@ https://freesound.org/people/memz/sounds/323495/
                 size: 0.5,
                 height: 0.1,
             }),
-            new THREE.MeshLambertMaterial({color: 0x00ff00})
+            new THREE.MeshLambertMaterial({color: 0xFFA500})
         )
         alert_text2.geometry.computeBoundingBox()
         alert_text2.geometry.center()
