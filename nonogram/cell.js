@@ -3,7 +3,7 @@ import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
 import {TWEEN} from "./tween.js"
 
 import {RESOURCES} from './resources.js'
-import {playSound} from './resources'
+import {playSound} from './resources.js'
 
 const roundedRectShape = new THREE.Shape();
 const roundedRectCurveSize = 0.95;
