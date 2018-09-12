@@ -41,8 +41,13 @@ https://fontlibrary.org/en/font/hobby-of-night
     <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="./node_modules/three/examples/js/loaders/TTFLoader.js"></script>
     <script src="./node_modules/three/examples/js/libs/opentype.min.js"></script>
-    <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/hobby-of-night" type="text/css"/>
     <style>
+        @font-face {
+            font-family: 'H0bbyofnightRegular';
+            src: url('./hobby-of-night.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
         body {
             font-family: 'H0bbyofnightRegular';
             font-weight: normal;
@@ -63,7 +68,6 @@ https://fontlibrary.org/en/font/hobby-of-night
                 background: linear-gradient(red, orange);
                 background-clip: text;
                 color: transparent;
-                /*color: orange;*/
             }
         }
         h3 {
@@ -164,16 +168,17 @@ https://fontlibrary.org/en/font/hobby-of-night
             [1,0,1],
             [0,1,0],
         ]),
-        new Nonogram([ // snake
-            [0,1,0,0,0],
-            [1,0,0,1,0],
-            [0,1,1,0,1],
+        new Nonogram([ //
+            [0,1,0],
+            [1,0,0],
+            [0,1,1],
         ]),
-        new Nonogram([ //skull
-            [0,1,1,1,0],
-            [1,0,1,0,1],
-            [1,1,1,1,1],
-            [0,1,1,1,0],
+
+        new Nonogram([ //T
+            [1,1,1,1],
+            [0,1,1,0],
+            [0,1,1,0],
+            [0,1,1,0],
         ]),
         new Nonogram([ //ball
             [0,1,1,1,0],
@@ -238,8 +243,6 @@ https://fontlibrary.org/en/font/hobby-of-night
             return floor
         }
         scene.add(makeBackground())
-
-        // scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
         var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
         light.position.set( 0, -1, 1 ).normalize();
