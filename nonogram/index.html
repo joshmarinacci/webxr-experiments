@@ -56,12 +56,19 @@ https://freesound.org/people/memz/sounds/323495/
             width: 100vw;
             height: 100vh;
         }
+        #loading-indicator {
+            display: block;
+        }
+        #click-to-play {
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div id="overlay">
     <h1>Lava Nonogram</h1>
-    <h3>click to play</h3>
+    <h3 id="loading-indicator"><label>loading</label><progress max="100" value="0" id="progress"></progress></h3>
+    <h3 id="click-to-play">click to play</h3>
 </div>
 <audio src="./dark_waves.mp3" id="bg-music" loop></audio>
 
@@ -210,11 +217,14 @@ https://freesound.org/people/memz/sounds/323495/
         THREE.DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
             console.log("really setting it up now")
+            $("#loading-indicator").style.display = 'none'
+            $("#click-to-play").style.display = 'block'
             setupText()
             setupGame(levels[currentLevelIndex])
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
             console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
+            $("#progress").setAttribute('value',100*(loaded/total))
         }
         THREE.DefaultLoadingManager.onError = (url) => {
             console.log(`error loading ${url}`)
