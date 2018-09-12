@@ -66,6 +66,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
 <script src="./tween.js" type="module"></script>
 <script src="./jstats.js" type="module"></script>
 <script src="./jtimer.js" type="module"></script>
+<script src="./cell.js" type="module"></script>
+<script src="./resources.js" type="module"></script>
 
 <script type="module">
     function $(sel) {
@@ -82,6 +84,8 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
     import JStats from "./jstats.js"
     import JTimer from "./jtimer.js"
+    import GridCell, {CELL_GEOMETRIES, CELL_MATERIALS} from "./cell.js"
+    import {RESOURCES} from './resources.js'
 
     const TIMER = new JTimer()
 
@@ -95,8 +99,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     let alert_text1;
     let alert_text2;
     let currentBoard;
-    let thunkSound, validSound, invalidSound, winSound;
-    // const stats = new Stats()
 
     let stats
 
@@ -134,17 +136,16 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     const floor_lava_texture_bump = texture_loader.load('./lava_texture_bump.jpg')
     let floor_material
 
-    const CELL_MATERIALS = []
+    // const CELL_MATERIALS = []
     CELL_MATERIALS[STATES.UNKNOWN]  = new THREE.MeshBasicMaterial({color:0x000000, side:THREE.DoubleSide})
     CELL_MATERIALS[STATES.SELECTED] = new THREE.MeshLambertMaterial({color:0x888888, side:THREE.DoubleSide})
     CELL_MATERIALS[STATES.EMPTY]    = new THREE.MeshBasicMaterial({color:0xff0000, side:THREE.DoubleSide, map:lava_texture})
 
-    const CELL_GEOMETRIES = []
+    // const CELL_GEOMETRIES = []
     CELL_GEOMETRIES[STATES.UNKNOWN] = new THREE.BoxGeometry(0.6, 0.6, 0.2)
     // CELL_GEOMETRIES[STATES.SELECTED] = rock_geometry
     CELL_GEOMETRIES[STATES.EMPTY] = new THREE.BoxGeometry(0.6, 0.6, 0.2)
 
-    const CELL_TYPE = 'cell'
     const BUTTON_TYPE = 'button'
 
     init();
@@ -255,20 +256,20 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         const audioListener = new THREE.AudioListener()
         camera.add(audioListener)
 
-        thunkSound = new THREE.Audio(audioListener)
-        scene.add(thunkSound)
-        validSound = new THREE.Audio(audioListener)
-        scene.add(validSound)
-        invalidSound = new THREE.Audio(audioListener)
-        scene.add(invalidSound)
-        winSound = new THREE.Audio(audioListener)
-        scene.add(winSound)
+        RESOURCES.SOUNDS.thunk = new THREE.Audio(audioListener)
+        RESOURCES.SOUNDS.valid = new THREE.Audio(audioListener)
+        RESOURCES.SOUNDS.invalid = new THREE.Audio(audioListener)
+        RESOURCES.SOUNDS.win = new THREE.Audio(audioListener)
+        RESOURCES.SOUNDS.complete = new THREE.Audio(audioListener)
+
+        Object.keys(RESOURCES.SOUNDS).forEach(name => scene.add(RESOURCES.SOUNDS[name]))
 
         const audioLoader = new THREE.AudioLoader()
-        audioLoader.load("./thunk.mp3", (buf)=> thunkSound.setBuffer(buf))
-        audioLoader.load("./dark-texture.mp3", (buf)=> invalidSound.setBuffer(buf))
-        audioLoader.load("./dark-movement3.mp3", (buf)=> validSound.setBuffer(buf))
-        audioLoader.load("./music.mp3", (buf) => winSound.setBuffer(buf))
+        audioLoader.load("./thunk.mp3", (buf)=> RESOURCES.SOUNDS.thunk.setBuffer(buf))
+        audioLoader.load("./dark-texture.mp3", (buf)=> RESOURCES.SOUNDS.invalid.setBuffer(buf))
+        audioLoader.load("./dark-movement3.mp3", (buf)=> RESOURCES.SOUNDS.valid.setBuffer(buf))
+        audioLoader.load("./music.mp3", (buf) => RESOURCES.SOUNDS.win.setBuffer(buf))
+        audioLoader.load("./music.mp3", (buf) => RESOURCES.SOUNDS.complete.setBuffer(buf))
 
         const overlay = $('#overlay')
         overlay.addEventListener('click',()=>{
@@ -298,99 +299,6 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         renderer.render( scene, camera );
     }
 
-
-
-    const roundedRectShape = new THREE.Shape();
-    const roundedRectCurveSize = 0.95;
-
-    ( function roundedRect( ctx, x, y, width, height, radius ) {
-
-        ctx.moveTo( x, y + radius );
-        ctx.lineTo( x, y + height - radius );
-        ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
-        ctx.lineTo( x + width - radius, y + height );
-        ctx.quadraticCurveTo( x + width, y + height, x + width, y + height - radius );
-        ctx.lineTo( x + width, y + radius );
-        ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
-        ctx.lineTo( x + radius, y );
-        ctx.quadraticCurveTo( x, y, x, y + radius );
-
-    } )( roundedRectShape, 0, 0, roundedRectCurveSize, roundedRectCurveSize, 0.2 );
-    const tilegeo = new THREE.ExtrudeBufferGeometry(roundedRectShape, {
-        depth:0.1,
-        bevelEnabled: false
-    })
-    tilegeo.translate(-roundedRectCurveSize/2, -roundedRectCurveSize/2,0)
-    const cell_material_highlight = new THREE.MeshLambertMaterial({color:0xffffff})
-    const cell_material_normal = new THREE.MeshLambertMaterial({color:0x444444})
-
-    class GridCell extends THREE.Group {
-        /*
-         grid cell has three children:
-            one for the tile itself
-            one for the front decoration
-            one for the back decoration
-         */
-        constructor(nonogram, x, y) {
-            super()
-
-            const tile = new THREE.Mesh(tilegeo,cell_material_normal)
-            tile.userData.type = 'tile'
-            this.add(tile)
-            let front = new THREE.Group()
-            front.position.z = 0.15
-            this.add(front)
-            let back = new THREE.Group()
-            back.position.z = -0.15
-            this.add(back)
-
-            function meshForState(state) {
-                const mesh = new THREE.Mesh(CELL_GEOMETRIES[state],CELL_MATERIALS[state])
-                mesh.jtype = CELL_TYPE
-                return mesh
-            }
-
-            front.add(meshForState(STATES.UNKNOWN))
-            back.add(meshForState(STATES.SELECTED))
-
-            this.flipping = false
-
-            on(tile,POINTER_ENTER,()=>{
-                tile.material = cell_material_highlight
-            })
-            on(tile,POINTER_EXIT,()=>{
-                tile.material = cell_material_normal
-            })
-            on(tile,POINTER_CLICK,()=>{
-                if(this.flipping) return
-                //play the sound
-                if(thunkSound.isPlaying) thunkSound.stop()
-                thunkSound.play()
-                //update the state
-                nonogram.rollCellState(x,y)
-                const r = this.rotation.x
-                //set a new back geometry
-                back.remove(back.children[0])
-                back.add(meshForState(nonogram.getCellState(x,y)))
-                //flip
-                this.flipping = true
-                TWEEN.make({
-                    target:this.rotation,
-                    property:'x',
-                    from:r,
-                    to:r+Math.PI,
-                    duration:500,
-                }).onEnd(()=>{
-                    //swap the references to front and back
-                    const temp = front
-                    front = back
-                    back = temp
-                    this.flipping = false
-                })
-            })
-        }
-    }
-
     function makeCell(nonogram, x, y) {
         const cell = new GridCell(nonogram,x,y)
         cell.position.x = x
@@ -415,11 +323,18 @@ https://freesound.org/people/neizvestnost/sounds/184464/
     function makeButton(text,color, cb) {
         const button = new THREE.Group()
         const geo = new THREE.PlaneGeometry(1.2,0.6)
-        const mat = new THREE.MeshBasicMaterial({color:color})
-        const mesh = new THREE.Mesh(geo,mat)
+        const material_normal = new THREE.MeshBasicMaterial({color:color})
+        const material_highlight = new THREE.MeshBasicMaterial({color:0xcccccc})
+        const mesh = new THREE.Mesh(geo,material_normal)
         mesh.jtype = BUTTON_TYPE
         mesh.userData.clickable = true
         on(mesh,POINTER_CLICK,cb)
+        on(mesh,POINTER_ENTER,()=>{
+            mesh.material = material_highlight
+        })
+        on(mesh, POINTER_EXIT,() => {
+            mesh.material = material_normal
+        })
         button.add(mesh)
 
         const tgeo = new THREE.TextGeometry(text,{font:font, size:0.3, height:0.1})
@@ -482,25 +397,24 @@ https://freesound.org/people/neizvestnost/sounds/184464/
         board.add(nums)
 
 
+        function playSound(snd) {
+            if(snd.isPlaying) snd.stop()
+            snd.play()
+        }
 
         const button = makeButton("check",0x5566ff,(e)=>{
-            console.log("clicked the check button")
-            console.log("valid =",nonogram.checkValid())
-            console.log("invalid = ", nonogram.checkInvalid())
             if(nonogram.checkInvalid() > 0) {
-                if(invalidSound.isPlaying) invalidSound.stop()
-                invalidSound.play()
+                playSound(RESOURCES.SOUNDS.invalid)
                 displayNotification(`${nonogram.checkInvalid()} invalid`)
                 return
             }
             if(nonogram.checkFinished()) {
                 if(isGameEnd()) {
                     $("#bg-music").pause()
-                    if(winSound.isPlaying) winSound.stop()
-                    winSound.play()
+                    playSound(RESOURCES.SOUNDS.win)
                     displayAlert("Game Complete","play again?")
                         .then(()=>{
-                            winSound.stop()
+                            RESOURCES.SOUNDS.win.stop()
                             $("#bg-music").currentTime = 0
                             $("#bg-music").play()
                             restartGame()
@@ -511,8 +425,7 @@ https://freesound.org/people/neizvestnost/sounds/184464/
                 }
                 return
             } else {
-                if(validSound.isPlaying) validSound.stop()
-                validSound.play()
+                playSound(RESOURCES.SOUNDS.valid)
             }
         })
         button.position.y = -1
