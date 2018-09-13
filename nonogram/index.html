@@ -490,7 +490,6 @@ https://fontlibrary.org/en/font/hobby-of-night
         grid.position.x = -center.x
 
         const gboard = new THREE.Object3D()
-        gboard.position.z = 0
         gboard.add(grid)
 
 
@@ -518,7 +517,9 @@ https://fontlibrary.org/en/font/hobby-of-night
         gboard.position.z = 0
         gboard.position.y = 1
         const board = new THREE.Object3D()
-        board.position.z = -5
+
+        const scale = -Math.max(nonogram.width, nonogram.height)*0.4
+        board.position.z = -3 + scale
         board.add(gboard)
         board.add(nums)
 
