@@ -75,9 +75,6 @@ https://fontlibrary.org/en/font/hobby-of-night
             font-size: 10vh;
             color: #c02a2a;
         }
-        a {
-            color: #48f;
-        }
         #overlay {
             position: fixed;
             font-size: 5vh;
@@ -98,7 +95,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             border-radius: 1.5em;
             position: absolute;
             bottom: 20px;
-            z-index: 999;
+            /*z-index: 999;*/
             font-family: 'H0bbyofnightRegular';
             font-weight: normal;
             font-style: normal;
@@ -113,15 +110,17 @@ https://fontlibrary.org/en/font/hobby-of-night
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance:none;
-        }
-        progress::-webkit-progress-bar {
-            box-sizing: border-box;
-            border: 1px solid red;
-            width: 10em;
+            display: inline-block;
+            border: 0.1em solid black;
+            background-color: black;
+            border-radius: 20px;
+            width: 5em;
             height: 1em;
         }
-        progress::-webkit-progress-value {
-            color: green;
+        progress::-webkit-progress-value, progress::-moz-progress-bar {
+            background-color: #c02a2a;
+            background: linear-gradient(red, orange);
+            border-radius: 20px;
         }
     </style>
 </head>
@@ -178,6 +177,11 @@ https://fontlibrary.org/en/font/hobby-of-night
 
 
     const levels = [
+        new Nonogram([ //jesses
+            [0,1,0],
+            [1,1,1],
+            [0,1,0],
+        ],'plus'),
         new Nonogram([ //jesse's
             [0,1,0,1],
             [1,0,1,0],
