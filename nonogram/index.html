@@ -106,7 +106,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             background-color: #fff;
             transform: translate(-50%,0)
         }
-        progress {
+        progress[value] {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance:none;
@@ -117,7 +117,12 @@ https://fontlibrary.org/en/font/hobby-of-night
             width: 5em;
             height: 1em;
         }
-        progress::-webkit-progress-value, progress::-moz-progress-bar {
+        progress::-moz-progress-bar {
+            background-color: #c02a2a;
+            background: linear-gradient(red, orange);
+            border-radius: 20px;
+        }
+        progress::-webkit-progress-value {
             background-color: #c02a2a;
             background: linear-gradient(red, orange);
             border-radius: 20px;
@@ -396,8 +401,8 @@ https://fontlibrary.org/en/font/hobby-of-night
 
     let old = 0
     function render(time) {
-        pointLight.position.x = Math.sin(old*200)*5
-        pointLight.position.z = Math.cos(old*200)*5
+        pointLight.position.x = Math.sin(old*200)*3
+        pointLight.position.z = Math.cos(old*200)*3
         pointer.tick(time)
         TWEEN.tick(time)
         old += 0.0001
