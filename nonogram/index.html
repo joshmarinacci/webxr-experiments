@@ -552,6 +552,9 @@ https://fontlibrary.org/en/font/hobby-of-night
                 } else {
                     $("#bg-music").pause()
                     playSound(RESOURCES.SOUNDS.complete)
+                    grid.children.forEach(cell => {
+                        if(nonogram.isSolution(cell.cellx,cell.celly))  cell.solutionMesh.visible = true
+                    })
                     displayAlert('Level complete',nonogram.getName()).then(() => {
                         $("#bg-music").play()
                         loadNextLevel()

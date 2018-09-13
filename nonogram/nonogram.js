@@ -71,6 +71,10 @@ export default class Nonogram {
         return this.checkValid() === this.width * this.height
     }
 
+    isSolution(x,y) {
+        return this.data[y][x] === 1
+    }
+
 
     calculateColumnCounts(col) {
         const counts = []

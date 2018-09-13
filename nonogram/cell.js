@@ -42,7 +42,8 @@ export default class GridCell extends THREE.Group {
      */
     constructor(nonogram, x, y) {
         super()
-
+        this.cellx = x
+        this.celly = y
         const tile = new THREE.Mesh(tilegeo,cell_material_normal)
         tile.userData.type = 'tile'
         this.add(tile)
@@ -98,6 +99,14 @@ export default class GridCell extends THREE.Group {
                 this.flipping = false
             })
         })
+
+
+        this.solutionMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'#dddddd', flatShading:true})
+            )
+        this.solutionMesh.visible = false
+        this.add(this.solutionMesh)
     }
 
     on(obj, type, cb) {
