@@ -182,11 +182,25 @@ https://fontlibrary.org/en/font/hobby-of-night
 
 
     const levels = [
-        new Nonogram([ //jesses
+        new Nonogram([
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        ],''),
+
+        new Nonogram([ //jesses plus symbol
             [0,1,0],
             [1,1,1],
             [0,1,0],
         ],'plus'),
+
+        new Nonogram([
+            //jesses
+            [1,1,1,1,1,1,1],
+            [0,0,0,0,0,0,0],
+            [1,1,1,1,1,1,1],
+            [1,0,1,0,1,0,1],
+        ],'foo'),
+
+
         new Nonogram([ //jesse's
             [0,1,0,1],
             [1,0,1,0],
