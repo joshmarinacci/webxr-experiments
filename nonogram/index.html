@@ -106,6 +106,9 @@ https://fontlibrary.org/en/font/hobby-of-night
             background-color: #fff;
             transform: translate(-50%,0)
         }
+        #enter-vr:disabled {
+            display:none;
+        }
         progress[value] {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -329,6 +332,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             console.log("really setting it up now")
             $("#loading-indicator").style.display = 'none'
             $("#click-to-play").style.display = 'block'
+            showClickToPlay()
             setupText()
             setupGame(levels[currentLevelIndex])
         }
@@ -396,15 +400,17 @@ https://fontlibrary.org/en/font/hobby-of-night
             RESOURCES.SOUNDS.complete.setBuffer(buf).setLoop(true)
         })
 
+
+    }
+    function showClickToPlay() {
         const overlay = $('#overlay')
         overlay.addEventListener('click',()=>{
             overlay.style.visibility = 'hidden'
             $('#bg-music').volume = 0.5
             $('#bg-music').play()
         })
-
+        $("#enter-vr").removeAttribute('disabled')
     }
-
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();

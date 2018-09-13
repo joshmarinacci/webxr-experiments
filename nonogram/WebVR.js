@@ -154,6 +154,7 @@ var WEBVR = {
 
             var button = document.createElement( 'button' );
             button.setAttribute("id","enter-vr")
+            button.setAttribute("disabled",true)
             button.style.display = 'none';
 
             stylizeElement( button );
