@@ -5,14 +5,18 @@ export const STATES = {
 }
 
 export default class Nonogram {
-    constructor(data) {
+    constructor(data, name) {
         data.reverse()
         this.data = data
         this.width = this.data[0].length
         this.height = this.data.length
-
+        this.name = name || "==="
         this.state = []
         this.reset()
+    }
+
+    getName() {
+        return this.name
     }
 
     reset() {

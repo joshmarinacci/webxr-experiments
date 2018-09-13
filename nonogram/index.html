@@ -225,23 +225,23 @@ https://fontlibrary.org/en/font/hobby-of-night
         */
         new Nonogram([ //
             [0,1,0],
-            [1,0,0],
-            [0,1,1],
-        ]),
+            [1,1,1],
+            [0,1,0],
+        ],'plus'),
 
         new Nonogram([ //T
             [1,1,1,1],
             [0,1,1,0],
             [0,1,1,0],
             [0,1,1,0],
-        ]),
+        ],'tee'),
         new Nonogram([ //ball
             [0,1,1,1,0],
             [1,1,0,0,1],
             [1,1,1,0,1],
             [1,1,1,1,1],
             [0,1,1,1,0],
-        ]),
+        ],'ball'),
         new Nonogram([ //sailing ship
             [0,0,1,1,0,0,0],
             [0,0,0,1,1,0,0],
@@ -250,7 +250,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             [1,1,1,1,1,1,1],
             [1,1,1,1,1,1,1],
             [0,1,1,1,1,1,0],
-        ]),
+        ],'ship'),
     ]
     let currentLevelIndex = 0
     const texture_loader = new THREE.TextureLoader()
@@ -525,7 +525,7 @@ https://fontlibrary.org/en/font/hobby-of-night
         const board = new THREE.Object3D()
 
         const scale = -Math.max(nonogram.width, nonogram.height)*0.4
-        board.position.z = -3 + scale
+        board.position.z = Math.min(-3 + scale,-5)
         board.add(gboard)
         board.add(nums)
 
@@ -552,7 +552,7 @@ https://fontlibrary.org/en/font/hobby-of-night
                 } else {
                     $("#bg-music").pause()
                     playSound(RESOURCES.SOUNDS.complete)
-                    displayAlert('Level complete',"next").then(() => {
+                    displayAlert('Level complete',nonogram.getName()).then(() => {
                         $("#bg-music").play()
                         loadNextLevel()
                         RESOURCES.SOUNDS.complete.stop()
@@ -564,6 +564,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             }
         })
         button.position.y = -1
+        button.position.z = 1
         board.add(button)
 
 
