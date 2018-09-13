@@ -135,7 +135,7 @@ https://fontlibrary.org/en/font/hobby-of-night
     <h3 id="loading-indicator"><label>loading</label><progress max="100" value="0" id="progress"></progress></h3>
     <h3 id="click-to-play">click to play</h3>
 </div>
-<audio src="./dark_waves.mp3" id="bg-music" loop></audio>
+<audio src="./audio/dark_waves_128.mp3" id="bg-music" loop></audio>
 
 <script src="./WebVR.js"></script>
 <script src="./pointer.js" type="module"></script>
@@ -182,6 +182,7 @@ https://fontlibrary.org/en/font/hobby-of-night
 
 
     const levels = [
+        /*
         new Nonogram([
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],''),
@@ -218,6 +219,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             [1,0,1],
             [0,1,0],
         ]),
+        */
         new Nonogram([ //
             [0,1,0],
             [1,0,0],
@@ -382,15 +384,15 @@ https://fontlibrary.org/en/font/hobby-of-night
         })
 
         const audioLoader = new THREE.AudioLoader()
-        audioLoader.load("./thunk.mp3", (buf)=> RESOURCES.SOUNDS.thunk.setBuffer(buf))
-        audioLoader.load("./dark-texture.mp3", (buf)=> RESOURCES.SOUNDS.invalid.setBuffer(buf))
-        audioLoader.load("./dark-movement3.mp3", (buf)=> RESOURCES.SOUNDS.valid.setBuffer(buf))
-        audioLoader.load("./music.mp3", (buf) => RESOURCES.SOUNDS.win.setBuffer(buf))
-        audioLoader.load("./bonk.mp3", (buf)=> {
+        audioLoader.load("./audio/thunk_128.mp3", (buf)=> RESOURCES.SOUNDS.thunk.setBuffer(buf))
+        audioLoader.load("./audio/dark-texture_128.mp3", (buf)=> RESOURCES.SOUNDS.invalid.setBuffer(buf))
+        audioLoader.load("./audio/dark-movement3_128.mp3", (buf)=> RESOURCES.SOUNDS.valid.setBuffer(buf))
+        audioLoader.load("./audio/music_128.mp3", (buf) => RESOURCES.SOUNDS.win.setBuffer(buf))
+        audioLoader.load("./audio/bonk_128.mp3", (buf)=> {
             RESOURCES.SOUNDS.hover.setBuffer(buf)
             RESOURCES.SOUNDS.hover.setVolume(0.3)
         })
-        audioLoader.load("./piano.mp3",(buf)=>{
+        audioLoader.load("./audio/piano_128.mp3",(buf)=>{
             RESOURCES.SOUNDS.complete.setBuffer(buf).setLoop(true)
         })
 
