@@ -508,7 +508,7 @@ https://fontlibrary.org/en/font/hobby-of-night
             $('#bg-music').volume = 0.5
             $('#bg-music').play()
         })
-        $("#enter-vr").removeAttribute('disabled')
+        if($("#enter-vr"))  $("#enter-vr").removeAttribute('disabled')
     }
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
