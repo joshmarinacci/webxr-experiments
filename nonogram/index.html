@@ -91,11 +91,20 @@ https://fontlibrary.org/en/font/hobby-of-night
             width: 100vw;
             height: 100vh;
         }
+        #overlay h1, #overlay h2, #overlay h3 {
+            padding: 0;
+            margin: 0.5em;
+        }
         #loading-indicator {
             display: block;
         }
         #click-to-play {
             display: none;
+            border:4px solid transparent;
+            margin: 0 20vw;
+        }
+        #click-to-play:hover {
+            border:4px solid orange;
         }
 
         #enter-vr {
@@ -138,11 +147,78 @@ https://fontlibrary.org/en/font/hobby-of-night
             background: linear-gradient(red, orange);
             border-radius: 20px;
         }
+
+        #credits {
+            font-family: sans-serif;
+            box-sizing: border-box;
+            padding: 15vh 15vw;
+            color: #ccc;
+            background-color: rgba(0,0,0,0.8);
+            position: fixed;
+            top:0;
+            bottom:0;
+            left:0;
+            right:0;
+            display: none;
+            z-index: 999;
+            width: 99vw;
+            height: 99vh;
+            font-size: 1.5vw;
+        }
+        #credits a {
+            color: orange;
+        }
+        #credits h3, #credits h4 {
+            text-align: center;
+            font-size: 2vw;
+        }
+
+        #credits-link, #credits-close {
+            border: 0px solid black;
+            font-size: 3vw;
+            font-family: sans-serif;
+            background-color: orange;
+            color: black;
+            border: 3px solid orange;
+        }
     </style>
 </head>
 <body>
+
+<div id="credits">
+    <h3>Credits</h3>
+    <h4>Concept, code and game by Josh Marinacci</h4>
+    <ul>
+        <li>Music: <a href="https://freemusicarchive.org/music/Xenojam/~/Dark_Waves
+">Dark Waves</a> by Xenojam,
+            <a href="https://freesound.org/people/neizvestnost/sounds/184464/">Short Composition 1</a> by neizvestnost,
+
+        </li>
+        <li>Sound Effects:
+            <a href="https://freesound.org/people/Julien%20Matthey/sounds/201570/">Drum</a> by Julien Matthey,
+            <a href="https://freesound.org/people/Dneproman/sounds/256829/">Dark Texture 3</a> by Dneproman,
+            <a href="https://freesound.org/people/fons/sounds/101369/">Dark Movement 3</a> by fons,
+            <a href="https://freesound.org/people/LloydEvans09/sounds/321805/">PVC pipe hit</a> by LloydEvans09,
+            <a href="https://freesound.org/people/memz/sounds/323495/">Dark Evil Piano</a> by memz,
+        </li>
+        <li>
+            Font:
+            <a href="https://fontlibrary.org/en/font/hobby-of-night">Hobby Of Night</a> by deFharo
+        </li>
+        <li>
+            3D Models:
+            <a href="https://opengameart.org/content/low-poly-rocks-pack">Low Poly Rocks Pack</a> by MrCraft Animation
+        </li>
+    </ul>
+
+    <h3>Learn more at</h3>
+    <h3><a href="https://vr.josh.earth/">vr.josh.earth</a></h3>
+    <h3><button id="credits-close">close</button></h3>
+</div>
+
 <div id="overlay">
     <h1>Lava Flow</h1>
+    <h2><button id="credits-link">credits</button></h2>
     <h3 id="loading-indicator"><label>loading</label><progress max="100" value="0" id="progress"></progress></h3>
     <h3 id="click-to-play">click to play</h3>
 </div>
@@ -279,6 +355,13 @@ https://fontlibrary.org/en/font/hobby-of-night
 
     const BUTTON_TYPE = 'button'
 
+    $("#credits-close").addEventListener('click',(e)=>{
+        $("#credits").style.display = 'none'
+    })
+    $("#credits-link").addEventListener('click',(e)=>{
+        $("#credits").style.display = 'block'
+    })
+
     init();
     animate();
 
@@ -412,7 +495,7 @@ https://fontlibrary.org/en/font/hobby-of-night
     }
     function showClickToPlay() {
         const overlay = $('#overlay')
-        overlay.addEventListener('click',()=>{
+        $("#click-to-play").addEventListener('click',()=>{
             overlay.style.visibility = 'hidden'
             $('#bg-music').volume = 0.5
             $('#bg-music').play()
