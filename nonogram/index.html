@@ -279,6 +279,11 @@ https://fontlibrary.org/en/font/hobby-of-night
     const levels = [
         /*
         new Nonogram([
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ],"jesse,s weird nonogram")
+        */
+        /*
+        new Nonogram([
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],''),
 
@@ -322,11 +327,11 @@ https://fontlibrary.org/en/font/hobby-of-night
         ],'plus'),
 
         new Nonogram([ //T
-            [1,1,1,1],
-            [0,1,1,0],
-            [0,1,1,0],
-            [0,1,1,0],
-        ],'tee'),
+            [0,1,0,1],
+            [1,0,1,0],
+            [0,1,0,1],
+        ],'fish'),
+
         new Nonogram([ //ball
             [0,1,1,1,0],
             [1,1,0,0,1],
@@ -339,10 +344,57 @@ https://fontlibrary.org/en/font/hobby-of-night
             [0,0,0,1,1,0,0],
             [0,0,0,1,1,1,0],
             [0,0,0,1,1,1,1],
-            [1,1,1,1,1,1,1],
+            [1,0,0,1,0,0,0],
             [1,1,1,1,1,1,1],
             [0,1,1,1,1,1,0],
         ],'ship'),
+        new Nonogram([ // 5x7
+            [0,0,1,0,0],
+            [0,0,0,1,0],
+            [0,0,1,1,0],
+            [0,0,1,1,0],
+            [1,0,1,1,0],
+            [0,1,1,1,1]
+        ],'candle'),
+        new Nonogram([ // 7x6
+            [0,0,1,1,0,0,1],
+            [0,1,1,1,1,1,1],
+            [1,0,1,1,1,1,0],
+            [1,1,1,1,1,1,0],
+            [0,1,1,1,1,1,1],
+            [0,0,1,1,0,0,1],
+        ],'big fish'),
+        new Nonogram([ // 5 x 7
+            [0,0,1,0,0],
+            [0,0,1,0,0],
+            [0,1,1,1,0],
+            [1,0,1,1,1],
+            [1,1,1,1,1],
+            [1,1,1,1,1],
+            [0,1,1,1,0],
+        ],'bomb'),
+        new Nonogram([ // 9 x 7
+            [0,0,1,1,1,0,0,0,0],
+            [0,0,1,1,0,1,0,0,0],
+            [0,1,1,0,1,1,1,0,0],
+            [0,1,1,0,1,1,1,0,0],
+            [0,1,1,0,1,1,1,1,0],
+            [1,1,1,1,0,1,1,1,0],
+            [1,1,1,0,0,1,1,1,1],
+        ],'volcano'),
+        new Nonogram([ // 9 x 9
+            [0,0,1,1,1,1,1,0,0],
+            [0,1,0,0,0,0,0,1,0],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,0,1,1,1,1],
+            [0,1,0,0,0,0,0,1,0],
+            [0,1,0,1,1,1,0,1,0],
+            [0,1,0,0,0,0,0,1,0],
+            [0,0,1,1,1,1,1,0,0],
+        ],'headset'),
+
+
     ]
     let currentLevelIndex = 0
     const texture_loader = new THREE.TextureLoader()
@@ -637,29 +689,29 @@ https://fontlibrary.org/en/font/hobby-of-night
                 return
             }
             if(nonogram.checkFinished()) {
-                if(isGameEnd()) {
-                    $("#bg-music").pause()
-                    playSound(RESOURCES.SOUNDS.win)
-                    displayAlert("Game Complete","play again?")
-                        .then(()=>{
-                            RESOURCES.SOUNDS.win.stop()
-                            $("#bg-music").currentTime = 0
-                            $("#bg-music").play()
-                            restartGame()
-                        })
-                        .catch(e=>console.log(e))
-                } else {
-                    $("#bg-music").pause()
-                    playSound(RESOURCES.SOUNDS.complete)
-                    grid.children.forEach(cell => {
-                        if(nonogram.isSolution(cell.cellx,cell.celly))  cell.solutionMesh.visible = true
-                    })
-                    displayAlert('Level complete',nonogram.getName()).then(() => {
+                $("#bg-music").pause()
+                playSound(RESOURCES.SOUNDS.complete)
+                grid.children.forEach(cell => {
+                    if(nonogram.isSolution(cell.cellx,cell.celly))  cell.solutionMesh.visible = true
+                })
+                displayAlert('Level complete',nonogram.getName()).then(() => {
+                    if(isGameEnd()) {
+                        RESOURCES.SOUNDS.complete.stop()
+                        playSound(RESOURCES.SOUNDS.win)
+                        displayAlert("Wow, You Won!","Play again?")
+                            .then(()=>{
+                                RESOURCES.SOUNDS.win.stop()
+                                $("#bg-music").currentTime = 0
+                                $("#bg-music").play()
+                                restartGame()
+                            })
+                            .catch(e=>console.log(e))
+                    } else {
                         $("#bg-music").play()
                         loadNextLevel()
                         RESOURCES.SOUNDS.complete.stop()
-                    }).catch(e=>console.log(e))
-                }
+                    }
+                })
                 return
             } else {
                 playSound(RESOURCES.SOUNDS.valid)
