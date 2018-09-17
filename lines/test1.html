@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+</head>
+<body>
+
+<script type="x-shader/x-vertex" id="vertexShader">
+attribute float vertexDisplacement;  //defined by the attribute, one per vertex
+uniform float delta; //constant supplied by the render method
+varying float vOpacity; //output for the fragment shader
+varying vec3 vUv; //output for the fragment shader
+void main()
+{
+
+    //displace the position based on the vertex displacement
+    vec3 p = position;
+//    p.x += sin(delta) * vertexDisplacement;
+//    p.y += cos(delta) * vertexDisplacement;
+//    p.x += vertexDisplacement * 1.0;
+//    p.y += vertexDisplacement * 1.0;
+
+    //calculate the final vertex position
+	vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
+	gl_Position = projectionMatrix * modelViewPosition;
+
+    //pass these through to the fragment shader
+    vUv = position;
+    vOpacity = vertexDisplacement;
+}
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentShader">
+uniform float delta; //constant supplied by the render method
+varying float vOpacity; //input from the vertex shader
+varying vec3 vUv; //input from the vertex shader
+void main() {
+    float r = 1.0;// + cos(vUv.x * delta);
+    float g = 0.5;// + sin(delta) * 0.5;
+    float b = sin((vOpacity+delta*2.0)*10.0);
+    vec3 rgb = vec3(b, b, b);
+
+	gl_FragColor = vec4(rgb, 1.0);
+//    gl_FragColor = vec4(rgb, 1.0);
+//	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+
+<script type="module">
+    let scene, camera, renderer
+    let dodeca_mesh
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+
+
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+
+
+
+
+        //setup the geometry
+        // const dodeca_geo = new THREE.BoxGeometry(1,1,1)
+        //extra detail so we can see lots of lines
+        const dodecad = new THREE.DodecahedronBufferGeometry(2,0)
+        const dodeca_geo = new THREE.EdgesGeometry(dodecad)
+        var vertexDisplacement = new Float32Array(dodeca_geo.attributes.position.count);
+        for (var i = 0; i < vertexDisplacement.length; i ++) {
+            vertexDisplacement[i] = i//Math.sin(i)
+        }
+        dodeca_geo.addAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
+
+        // const dodeca_mat = new THREE.MeshLambertMaterial({color:0xff0000})
+        // const dodeca_mat = new THREE.LineBasicMaterial({color:0x0000FF})
+
+        //setup the shader material
+        var customUniforms = {
+            delta: {value: 0}
+        };
+        var dodeca_mat = new THREE.ShaderMaterial({
+            uniforms: customUniforms,
+            vertexShader: document.getElementById( 'vertexShader' ).textContent,
+            fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+        });
+
+
+        //combine into a line loop
+        dodeca_mesh = new THREE.LineSegments(dodeca_geo, dodeca_mat)
+        dodeca_mesh.position.z = -5
+        scene.add(dodeca_mesh)
+
+
+
+    }
+
+    var delta = 0;
+
+    function render(time) {
+        delta += 0.1;
+        dodeca_mesh.material.uniforms.delta.value = 0.5 + Math.sin(delta) * 0.5;
+
+        dodeca_mesh.rotation.y += 0.001
+        renderer.render( scene, camera );
+    }
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>
