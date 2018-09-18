@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+</head>
+<body>
+<script type="x-shader/x-vertex" id="vertexshader">
+//attribute float size;
+uniform float time;
+//varying vec3 vColor;
+attribute vec3 velocity;
+attribute vec3 acceleration;
+void main() {
+//    vColor = color;
+    vec3 acc = acceleration * 0.5 * time * time;
+    vec3 vel = velocity * time;
+//            const acc = p.acceleration.clone().multiplyScalar(0.5*t*t)
+
+    vec4 mvPosition = modelViewMatrix * vec4( acc+vel+position, 1.0 );
+    gl_PointSize = 10.0;//size * ( 300.0 / -mvPosition.z );
+    gl_Position = projectionMatrix * mvPosition;
+}
+</script>
+<script type="x-shader/x-fragment" id="fragmentshader">
+uniform sampler2D texture;
+varying vec3 vColor;
+void main() {
+    //gl_FragColor = vec4( vColor, 1.0 );
+    //gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+    gl_FragColor = vec4(0,1.0,0,1.0);
+}
+</script>
+
+
+<script type="module">
+    const rand = (min,max) => min + Math.random()*(max-min)
+
+
+    let scene, camera, renderer
+    let mesh, particles
+
+
+    const MAX = 100
+    function setupScene() {
+        const initialPositions = []
+        const velocities = []
+        const accelerations = []
+        const geo = new THREE.BufferGeometry()
+        for(let i=0; i<MAX; i++) {
+            initialPositions.push(rand(-0.5, 0.5))
+            initialPositions.push(rand(-4, -3))
+            initialPositions.push(rand(-1, 1))
+            velocities.push(rand(-0.5,0.5))
+            velocities.push(10.0)
+            velocities.push(rand(-1,1))
+            accelerations.push(0)
+            accelerations.push(-9.8)
+            accelerations.push(0)
+        }
+        geo.addAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
+        geo.addAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
+        geo.addAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
+        const mat = new THREE.ShaderMaterial( {
+            uniforms: {
+                time: { value: 12.0}
+            },
+            vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+            fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+            blending:       THREE.AdditiveBlending,
+            depthTest:      false,
+            transparent:    true,
+            vertexColors:   true
+        });
+
+
+        mesh = new THREE.Points(geo,mat)
+        mesh.position.z = -4
+        scene.add(mesh)
+    }
+    function render(time) {
+        mesh.material.uniforms.time.value = time/1000
+        mesh.geometry.verticesNeedUpdate = true
+        renderer.render( scene, camera );
+    }
+
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 0, -1, 1 ).normalize();
+        scene.add( light );
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+        setupScene()
+    }
+
+
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>

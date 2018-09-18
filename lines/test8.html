@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+</head>
+<body>
+
+<script type="module">
+    const rand = (min,max) => min + Math.random()*(max-min)
+
+
+    let scene, camera, renderer
+    let mesh, particles
+
+
+    const MAX = 100
+    function setupScene() {
+        particles = []
+        const geo = new THREE.Geometry()
+        for(let i=0; i<MAX; i++) {
+            const particle = {
+                initialPosition: new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)),
+                velocity: new THREE.Vector3(rand(-0.000, 0.000), 0.050, rand(-0.000, 0.000)),
+                acceleration: new THREE.Vector3(0, -0.002, 0),
+            }
+            particle.position = new THREE.Vector3()
+            particle.position.copy(particle.initialPosition)
+            particles.push(particle)
+            geo.vertices.push(particle.position)
+        }
+
+        const mat = new THREE.PointsMaterial({
+            color:0xffffff,
+            size: 0.1,
+        })
+
+        mesh = new THREE.Points(geo,mat)
+        mesh.position.z = -4
+        scene.add(mesh)
+    }
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 0, -1, 1 ).normalize();
+        scene.add( light );
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+        setupScene()
+    }
+
+
+    function render(time) {
+        particles.forEach(p => {
+            const t = time/100
+            const acc = p.acceleration.clone().multiplyScalar(0.5*t*t)
+            const vel = p.velocity.clone().multiplyScalar(t)
+            acc.add(vel)
+            acc.add(p.initialPosition)
+            p.position.copy(acc)
+        })
+        mesh.geometry.verticesNeedUpdate = true
+        renderer.render( scene, camera );
+    }
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>
