@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+</head>
+<body>
+
+<script type="x-shader/x-vertex" id="vertexShader">
+attribute float vertexDisplacement;  //defined by the attribute, one per vertex
+uniform float delta; //constant supplied by the render method
+varying vec3 vNormal;
+void main()
+{
+   float dist = sin(delta) * 0.5 + 0.5;
+
+    vec3 newPosition = position + normal * vec3(vertexDisplacement*dist);
+	vec4 modelViewPosition = modelViewMatrix * vec4(newPosition, 1.0);
+	gl_Position = projectionMatrix * modelViewPosition;
+	vNormal = normal;
+}
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentShader">
+uniform float delta; //constant supplied by the render method
+varying vec3 vNormal;
+void main() {
+    vec3 rgb = vec3(0.0,1.0,0.0);
+//	gl_FragColor = vec4(rgb, 1.0);
+  gl_FragColor = vec4(vNormal, 1.0);
+}
+</script>
+
+<script type="module">
+    let scene, camera, renderer
+    let dodeca_mesh
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+
+
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+
+
+
+
+        //setup the geometry
+        // const dodeca_geo = new THREE.BoxGeometry(1,1,1)
+        //extra detail so we can see lots of lines
+        // const dodeca_geo = new THREE.DodecahedronBufferGeometry(2,0)
+        const geo = new THREE.SphereBufferGeometry(2, 8,16)
+        geo.computeVertexNormals()
+        // const dodeca_geo = new THREE.EdgesGeometry(dodecad)
+        var vertexDisplacement = new Float32Array(geo.attributes.position.count);
+        for (var i = 0; i < vertexDisplacement.length; i ++) {
+            // vertexDisplacement[i] = (i%2===0)?0:1.0
+            vertexDisplacement[i] = 0.5;
+        }
+        geo.addAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
+
+        // const dodeca_mat = new THREE.MeshLambertMaterial({color:0xff0000})
+        // const dodeca_mat = new THREE.LineBasicMaterial({color:0x0000FF})
+
+        //setup the shader material
+        var customUniforms = {
+            delta: {value: 0}
+        };
+        var mat = new THREE.ShaderMaterial({
+            uniforms: customUniforms,
+            vertexShader: document.getElementById( 'vertexShader' ).textContent,
+            // color:0x00ffff,
+            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+            // flatShading:true,
+            // wireframe:true,
+        });
+
+
+        //combine into a line loop
+        dodeca_mesh = new THREE.Mesh(geo, mat)
+        dodeca_mesh.position.z = -5
+        scene.add(dodeca_mesh)
+
+
+
+    }
+
+    var delta = 0;
+
+    function render(time) {
+        delta += 0.1;
+        dodeca_mesh.material.uniforms.delta.value = 0.5 + Math.sin(delta) * 0.5;
+
+        dodeca_mesh.rotation.y += 0.001
+        renderer.render( scene, camera );
+    }
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>
