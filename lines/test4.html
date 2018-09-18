@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+</head>
+<body>
+
+<script type="module">
+    let scene, camera, renderer
+    let mesh, mesh2
+
+    function setupScene() {
+        const geo = new THREE.SphereGeometry(2)
+        const mat = new THREE.MeshLambertMaterial({ color:0xff0000})
+        mesh = new THREE.Mesh(geo,mat)
+        mesh.position.z = -4
+        scene.add(mesh)
+
+
+        const edges = new THREE.EdgesGeometry(geo)
+        mesh2 = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0x00ff00}))
+        mesh2.position.z = -4
+        scene.add(mesh2)
+    }
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 0, -1, 1 ).normalize();
+        scene.add( light );
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+        setupScene()
+    }
+
+    // var delta = 0;
+    function render(time) {
+        // delta += 0.1;
+        //delta loops from 0 to 1
+        // dodeca_mesh.material.uniforms.delta.value = 0.5 + Math.sin(delta) * 0.5;
+
+        mesh.rotation.y += 0.01
+        mesh2.rotation.y += 0.01
+        renderer.render( scene, camera );
+    }
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>
