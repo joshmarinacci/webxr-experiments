@@ -9,9 +9,9 @@
 
 
 
-# notes
+# Notes
 
-The `Pointer` class unifies mouse and vr controller events into POINTER_CLICK, POINTER_ENTER, and POINTER_EXIT.
+The `Pointer` class unifies mouse and vr controller events into `POINTER_CLICK`, `POINTER_ENTER`, and `POINTER_EXIT`.
 It does not yet handle touch or cardboard / gaze input, but that is coming.  To remove it just don't initialize it.
 
 The `VRStats` class gives you stats *within* VR.  To remove it just don't initialize it.
