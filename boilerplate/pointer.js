@@ -1,6 +1,7 @@
 export const POINTER_ENTER = "enter"
 export const POINTER_EXIT = "exit"
 export const POINTER_CLICK = "click"
+export const POINTER_MOVE = "move"
 
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
@@ -67,10 +68,7 @@ export class Pointer {
 
 
     fire(obj, type, payload) {
-        obj.dispatchEvent({type:type,payload:payload})
-        // if (!obj.listeners) return
-        // if (!obj.listeners[type]) return
-        // obj.listeners[type].forEach(cb => cb(payload))
+        obj.dispatchEvent(payload)
     }
 
     //make the camera follow the mouse in desktop mode. Helps w/ debugging.
@@ -111,6 +109,7 @@ export class Pointer {
         intersects.forEach(it => {
             const obj = it.object
             if(!obj) return
+            this.fire(obj,POINTER_MOVE,{type:POINTER_MOVE, point:it.point})
             if (obj === this.hoverTarget) {
                 //still inside
             } else {
