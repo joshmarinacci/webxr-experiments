@@ -4,8 +4,8 @@
 ## How to use this boilerplate
 
 * Copy or fork this repo
-* install threejs using npm install
-* customize initContent() with whatever you want
+* install threejs using `npm install`
+* customize `initContent()` with whatever you want
 
 
 
@@ -23,7 +23,10 @@ case simply delete the overlay.
 
 # Todos
 
-* clicking does not work inside of VR
+* *fixed* clicking does not work inside of VR
 * a way to customize the ray object easily
+* handle the nothing to load case
+* support touch events
+* support gaze cursor for zero-button cases
 
 
