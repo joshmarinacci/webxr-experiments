@@ -79,7 +79,8 @@
     let spawnPoint = new THREE.Vector3(0,0,5)
 
     //called on setup. Customize this
-    const MAX = 100
+    const MAX = 200
+    const MAX_AGE = 3.0
 
     function resetParticle(particle, time) {
         particle.velocity = new THREE.Vector3(rand(-0.01, 0.01), 0.03, rand(-0.01, 0.01))
@@ -113,7 +114,7 @@
             mat.transparent = true
             const particle = new THREE.Mesh(geo,mat)
             particle.alive = false
-            particle.spawnDelay = rand(0.0,2.0)
+            particle.spawnDelay = rand(0.0,MAX_AGE)
             resetParticle(particle,0)
             particles.add(particle)
         }
@@ -133,6 +134,7 @@
         on(mesh,POINTER_MOVE,(e)=>{
             spawnPoint.copy(e.point)
         })
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
     }
 
     //called on every frame. customize this
@@ -155,12 +157,12 @@
             if(p.age < 1.0) {
                 p.material.opacity = p.age
             }
-            if(p.age > 1.0) {
-                p.material.opacity = 2.0-p.age
+            if(p.age > MAX_AGE-1.0) {
+                p.material.opacity = MAX_AGE-p.age
             }
             // p.velocity.add(p.acceleration)
             p.position.add(p.velocity)
-            if(t - p.birthTime > 2.0) {
+            if(t - p.birthTime > MAX_AGE) {
                 resetParticle(p,t)
             }
         })
