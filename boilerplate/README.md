@@ -19,3 +19,11 @@ The `VRStats` class gives you stats *within* VR.  To remove it just don't initia
 The progress bar is tied to the default loader. If you aren't loading anything, meaning no textures or 
 fonts or sounds, then the progress events will never fire and it will never dismiss the overlay. In this 
 case simply delete the overlay. 
+
+
+# Todos
+
+* clicking does not work inside of VR
+* a way to customize the ray object easily
+
+

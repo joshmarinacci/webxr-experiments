@@ -50,6 +50,7 @@ export class Pointer {
 
         const material = new THREE.LineBasicMaterial({
             vertexColors: false,
+            color:0xff0000,
             linewidth: 5,
             blending: THREE.AdditiveBlending
         })
@@ -101,24 +102,22 @@ export class Pointer {
 
     _processMove() {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+                .filter(it => this.intersectionFilter(it.object))
+
         if(intersects.length === 0 && this.hoverTarget) {
             this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
             this.hoverTarget = null
         }
-        intersects.forEach((it) => {
+        intersects.forEach(it => {
             const obj = it.object
             if(!obj) return
-            const valid = this.intersectionFilter(obj)
-            // const valid = false
-            if(valid) {
-                if (obj === this.hoverTarget) {
-                    //still inside
-                } else {
-                    if (this.hoverTarget)
-                        this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
-                    this.hoverTarget = obj
-                    this.fire(this.hoverTarget, POINTER_ENTER, {type: POINTER_ENTER})
-                }
+            if (obj === this.hoverTarget) {
+                //still inside
+            } else {
+                if (this.hoverTarget)
+                    this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
+                this.hoverTarget = obj
+                this.fire(this.hoverTarget, POINTER_ENTER, {type: POINTER_ENTER})
             }
         })
     }
@@ -131,9 +130,9 @@ export class Pointer {
         }
 
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+                .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            const valid = this.intersectionFilter(it.object)
-            if(valid) this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK})
+            this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK})
         })
     }
     mouseClick(e) {

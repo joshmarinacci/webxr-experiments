@@ -17,10 +17,10 @@
     <script src="./webvr.js"></script>
 
     <!-- stats (fps, polygons, fps) -->
-    <script src="./pointer.js" type="module"></script>
+    <script src="./vrstats.js" type="module"></script>
 
     <!-- mouse/touch/vr-controller support -->
-    <script src="./pointer.js" type="module"></script>
+    <!--<script src="./pointer.js" type="module"></script>-->
 
     <style type="text/css">
         #overlay {
@@ -78,22 +78,28 @@
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xffffff );
+        scene.background = new THREE.Color( 0xcccccc );
 
+        //load a cat texture
         const texture_loader = new THREE.TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
+        //create a cube
         cube = new THREE.Mesh(
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshLambertMaterial({color:'white', map:texture})
         )
+        //camera is at z=0, so move the cube back so we can see it
         cube.position.z = -5
+        //move cube up to camera height (~1.5m)
         cube.position.y = 1.5
+        //make it clickable
+        cube.userData.clickable = true
         scene.add(cube)
 
-
-        var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        //a standard light
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
 
@@ -111,7 +117,7 @@
 
             //Pointer searches everything in the scene by default
             //override this to match just certain things
-            // intersectionFilter: ((o) => o.userData.type === 'tile' || o.userData.clickable)
+            intersectionFilter: ((o) => o.userData.clickable),
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
             cameraFollowMouse:false,
@@ -141,7 +147,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
-        cube.rotation.y += 0.01
+        cube.rotation.y += 0.002
         renderer.render( scene, camera );
     }
 
