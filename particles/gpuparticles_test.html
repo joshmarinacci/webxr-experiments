@@ -19,6 +19,12 @@
             margin: 0px;
             overflow: hidden;
         }
+        #enter-vr {
+            position: fixed;
+            top: 10em;
+            left: auto;
+            right: auto;
+        }
     </style>
 </head>
 <body>
@@ -26,6 +32,7 @@
 
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+    import VRStats from "../boilerplate/vrstats.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -34,7 +41,7 @@
     const rand = (min,max) => min + Math.random()*(max-min)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer
+    let camera, scene, renderer, pointer, stats
     let tick = 0
     let clock = new THREE.Clock()
     let particleSystem, options, spawnerOptions
@@ -44,14 +51,14 @@
         options = {
             maxParticles: 20000,
             position: new THREE.Vector3(0,1.5,-5),
-            positionRandomness: 0.2,
-            velocity: new THREE.Vector3(0,1.0,0),
-            velocityRandomness: 1.0,
+            positionRandomness: 0.1,
+            velocity: new THREE.Vector3(0,0.0,1000.0),
+            velocityRandomness: 0.0,
             color: 0xff0000,
             colorRandomness: 1.0,
             // turbulence: .0,
-            lifetime: 10,
-            size: 30,
+            lifetime: 30,
+            size: 40,
             // smoothPosition: true,
             // sizeRandomness: 0,
             particleNoiseTex: textureLoader.load('./tex/perlin-512.png'),
@@ -59,7 +66,7 @@
         }
 
         spawnerOptions = {
-            spawnRate: 1500,
+            spawnRate: 500,
             horizontalSpeed: 1.5,
             verticalSpeed: 1.33,
             timeScale: 1.0
@@ -101,19 +108,24 @@
              options.position.copy(e.point)
          })
          if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+
+
+
+        stats = new VRStats(renderer)
+        camera.add(stats)
+        scene.add(camera)
+
     }
 
     //called on every frame. customize this
     function render(time) {
         if(pointer) pointer.tick(time)
+        if(stats) stats.update(time)
 
         var delta = clock.getDelta() * spawnerOptions.timeScale;
         tick += delta;
         if ( tick < 0 ) tick = 0;
         if ( delta > 0 ) {
-            // options.position.x = 0//Math.sin( tick * spawnerOptions.horizontalSpeed ) * 20;
-            // options.position.y = 0//Math.sin( tick * spawnerOptions.verticalSpeed ) * 10;
-            // options.position.z = 0//Math.sin( tick * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed ) * 5;
             for ( var x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
                 particleSystem.spawnParticle( options );
             }
@@ -130,11 +142,7 @@
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
         scene = new THREE.Scene();
-        // camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 0.1,10000 );
-        // camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 1, 10000 );
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
-        camera.position.z = 0;
-        // camera.position.y = 1.5
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
