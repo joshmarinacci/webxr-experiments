@@ -208,7 +208,7 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
         const velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0
         const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1
         const lifetime = options.lifetime !== undefined ? options.lifetime : 5
-        const size = options.size !== undefined ? options.size : 10
+        let size = options.size !== undefined ? options.size : 10
         const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0
 
         if ( this.DPR !== undefined ) size *= this.DPR;
