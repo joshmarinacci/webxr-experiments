@@ -1,18 +1,5 @@
 /*
- * GPU Particle System
- * @author flimshaw - Charlie Hoey - http://charliehoey.com
- *
- * A simple to use, general purpose GPU system. Particles are spawn-and-forget with
- * several options available, and do not require monitoring or cleanup after spawning.
- * Because the paths of all particles are completely deterministic once spawned, the scale
- * and direction of time is also variable.
- *
- * Currently uses a static wrapping perlin noise texture for turbulence, and a small png texture for
- * particles, but adding support for a particle texture atlas or changing to a different type of turbulence
- * would be a fairly light day's work.
- *
- * Shader and javascript packing code derrived from several Stack Overflow examples.
- *
+* modified from the version from the ThreeJS examples repo
  */
 
 THREE.GPUParticleSystem = function ( options ) {
@@ -26,7 +13,6 @@ THREE.GPUParticleSystem = function ( options ) {
     this.PARTICLE_COUNT = options.maxParticles || 1000000;
     this.PARTICLE_CONTAINERS = options.containerCount || 1;
 
-    this.PARTICLE_NOISE_TEXTURE = options.particleNoiseTex || null;
     this.PARTICLE_SPRITE_TEXTURE = options.particleSpriteTex || null;
 
 
@@ -40,147 +26,69 @@ THREE.GPUParticleSystem = function ( options ) {
 
     var GPUParticleShader = {
 
-        vertexShader: [
+        vertexShader:
+            `
+            uniform float uTime;
+            uniform float uScale;
 
-            'uniform float uTime;',
-            'uniform float uScale;',
-            'uniform sampler2D tNoise;',
+            attribute vec3 positionStart;
+            attribute float startTime;
+            attribute vec3 velocity;
+            attribute vec3 color;
+            attribute float size;
+            attribute float lifeTime;
 
-            'attribute vec3 positionStart;',
-            'attribute float startTime;',
-            'attribute vec3 velocity;',
-            'attribute float turbulence;',
-            'attribute vec3 color;',
-            'attribute float size;',
-            'attribute float lifeTime;',
+            varying vec4 vColor;
+            varying float lifeLeft;
 
-            'varying vec4 vColor;',
-            'varying float lifeLeft;',
+            void main() {
+            	vColor = vec4( color, 1.0 );
+            	vec3 newPosition;
+            	vec3 v;
+            	float timeElapsed = uTime - startTime;
+            	lifeLeft = 1.0 - ( timeElapsed / lifeTime );
+            	gl_PointSize = ( uScale * size ) * lifeLeft;
+            	v.x = ( velocity.x - 0.5 ) * 1.0;
+            	v.y = ( velocity.y - 0.5 ) * 1.0;
+            	v.z = ( velocity.z - 0.5 ) * 1.0;
+            	newPosition = positionStart + v * timeElapsed;
+                if (lifeLeft < 0.0) { lifeLeft = 0.0; gl_PointSize = 0.;}
+            	if( timeElapsed > 0.0 ) {
+            		gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+            	} else {
+            		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            		lifeLeft = 0.0;
+            		gl_PointSize = 0.;
 
-            'void main() {',
+            	}
+            }
+            `
+        ,
 
-            // unpack things from our attributes'
+        fragmentShader: `
+            varying vec4 vColor;
+            varying float lifeLeft;
+            uniform sampler2D tSprite;
+            void main() {
+            	vec4 tex = texture2D( tSprite, gl_PointCoord );
+            	gl_FragColor = vec4( vColor.rgb * tex.a, lifeLeft * tex.a );
+            }
 
-            '	vColor = vec4( color, 1.0 );',
-
-            // convert our velocity back into a value we can use'
-
-            '	vec3 newPosition;',
-            '	vec3 v;',
-
-            '	float timeElapsed = uTime - startTime;',
-
-            '	lifeLeft = 1.0 - ( timeElapsed / lifeTime );',
-
-            '	gl_PointSize = ( uScale * size ) * lifeLeft;',
-            // '	gl_PointSize = 10.0;//( uScale * size ) * lifeLeft;',
-
-            '	v.x = ( velocity.x - 0.5 ) * 1.0;',
-            '	v.y = ( velocity.y - 0.5 ) * 1.0;',
-            '	v.z = ( velocity.z - 0.5 ) * 1.0;',
-
-            '	newPosition = positionStart + v * timeElapsed;',
-
-            // '	vec3 noise = texture2D( tNoise, vec2( newPosition.x * 0.015 + ( uTime * 0.05 ), newPosition.y * 0.02 + ( uTime * 0.015 ) ) ).rgb;',
-            // '	vec3 noiseVel = ( noise.rgb - 0.5 ) * 30.0;',
-
-            // '	newPosition = mix( newPosition, newPosition + vec3( noiseVel * ( turbulence * 5.0 ) ), ( timeElapsed / lifeTime ) );',
-            // ' newPosition = mix(newPosition, newPosition+'
-
-            '	if( v.y > 0. && v.y < .05 ) {',
-
-            // '		lifeLeft = 0.0;',
-
-            '	}',
-
-            '	if( v.x < - 4.45 ) {',
-
-            // '		lifeLeft = 0.0;',
-
-            '	}',
-            ' if (lifeLeft < 0.0) { lifeLeft = 0.0; gl_PointSize = 0.;}',
-
-            '	if( timeElapsed > 0.0 ) {',
-
-            '		gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );',
-
-            '	} else {',
-
-            '		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
-            '		lifeLeft = 0.0;',
-            '		gl_PointSize = 0.;',
-
-            '	}',
-
-            '}'
-
-        ].join( '\n' ),
-
-        fragmentShader: [
-
-            // 'float scaleLinear( float value, vec2 valueDomain ) {',
-            //
-            // '	return ( value - valueDomain.x ) / ( valueDomain.y - valueDomain.x );',
-            //
-            // '}',
-            //
-            // 'float scaleLinear( float value, vec2 valueDomain, vec2 valueRange ) {',
-            //
-            // '	return mix( valueRange.x, valueRange.y, scaleLinear( value, valueDomain ) );',
-            //
-            // '}',
-            //
-            'varying vec4 vColor;',
-            'varying float lifeLeft;',
-            //
-            'uniform sampler2D tSprite;',
-
-            'void main() {',
-
-            '	float alpha = lifeLeft;',
-
-//			'	if( lifeLeft > 0.995 ) {',
-
-            // '		alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.995 ), vec2( 0.0, 1.0 ) );',
-
-//			'	} else {',
-
-            // '		alpha = lifeLeft * 0.75;',
-
-            //'	}',
-
-            '	vec4 tex = texture2D( tSprite, gl_PointCoord );',
-            '	gl_FragColor = vec4( vColor.rgb * tex.a, alpha * tex.a );',
-            // ' gl_FragColor = vec4(1.0,0,0,lifeLeft);',
-
-            '}'
-
-        ].join( '\n' )
-
+        `
     };
 
     // preload a million random numbers
-
     var i;
-
     for ( i = 1e5; i > 0; i -- ) {
-
         this.rand.push( Math.random() - 0.5 );
-
     }
 
     this.random = function () {
-
         return ++ i >= this.rand.length ? this.rand[ i = 1 ] : this.rand[ i ];
+    }
 
-    };
-
-    var textureLoader = new THREE.TextureLoader();
-
-    this.particleNoiseTex = this.PARTICLE_NOISE_TEXTURE || textureLoader.load( 'textures/perlin-512.png' );
-    this.particleNoiseTex.wrapS = this.particleNoiseTex.wrapT = THREE.RepeatWrapping;
-
-    this.particleSpriteTex = this.PARTICLE_SPRITE_TEXTURE || textureLoader.load( 'textures/particle2.png' );
+    this.particleSpriteTex = this.PARTICLE_SPRITE_TEXTURE
+    if(!this.particleSpriteTex) throw new Error("No particle sprite texture specified")
     this.particleSpriteTex.wrapS = this.particleSpriteTex.wrapT = THREE.RepeatWrapping;
 
     this.particleShaderMat = new THREE.ShaderMaterial( {
@@ -193,9 +101,6 @@ THREE.GPUParticleSystem = function ( options ) {
             'uScale': {
                 value: 1.0
             },
-            'tNoise': {
-                value: this.particleNoiseTex
-            },
             'tSprite': {
                 value: this.particleSpriteTex
             }
@@ -206,64 +111,40 @@ THREE.GPUParticleSystem = function ( options ) {
     } );
 
     // define defaults for all values
-
     this.particleShaderMat.defaultAttributeValues.particlePositionsStartTime = [ 0, 0, 0, 0 ];
     this.particleShaderMat.defaultAttributeValues.particleVelColSizeLife = [ 0, 0, 0, 0 ];
 
     this.init = function () {
-
-        for ( var i = 0; i < this.PARTICLE_CONTAINERS; i ++ ) {
-
-            var c = new THREE.GPUParticleContainer( this.PARTICLES_PER_CONTAINER, this );
+        for (let i = 0; i < this.PARTICLE_CONTAINERS; i ++ ) {
+            const c = new THREE.GPUParticleContainer(this.PARTICLES_PER_CONTAINER, this)
             this.particleContainers.push( c );
             this.add( c );
-
         }
-
     };
 
     this.spawnParticle = function ( options ) {
-
         this.PARTICLE_CURSOR ++;
-
         if ( this.PARTICLE_CURSOR >= this.PARTICLE_COUNT ) {
-
             this.PARTICLE_CURSOR = 1;
-
         }
-
         var currentContainer = this.particleContainers[ Math.floor( this.PARTICLE_CURSOR / this.PARTICLES_PER_CONTAINER ) ];
-
         currentContainer.spawnParticle( options );
-
     };
 
     this.update = function ( time ) {
-
         for ( var i = 0; i < this.PARTICLE_CONTAINERS; i ++ ) {
-
             this.particleContainers[ i ].update( time );
-
         }
-
     };
 
     this.dispose = function () {
-
         this.particleShaderMat.dispose();
-        this.particleNoiseTex.dispose();
         this.particleSpriteTex.dispose();
-
         for ( var i = 0; i < this.PARTICLE_CONTAINERS; i ++ ) {
-
             this.particleContainers[ i ].dispose();
-
         }
-
     };
-
     this.init();
-
 };
 
 THREE.GPUParticleSystem.prototype = Object.create( THREE.Object3D.prototype );
@@ -293,7 +174,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
     this.particleShaderGeo.addAttribute( 'positionStart', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT * 3 ), 3 ).setDynamic( true ) );
     this.particleShaderGeo.addAttribute( 'startTime', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT ), 1 ).setDynamic( true ) );
     this.particleShaderGeo.addAttribute( 'velocity', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT * 3 ), 3 ).setDynamic( true ) );
-    this.particleShaderGeo.addAttribute( 'turbulence', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT ), 1 ).setDynamic( true ) );
     this.particleShaderGeo.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT * 3 ), 3 ).setDynamic( true ) );
     this.particleShaderGeo.addAttribute( 'size', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT ), 1 ).setDynamic( true ) );
     this.particleShaderGeo.addAttribute( 'lifeTime', new THREE.BufferAttribute( new Float32Array( this.PARTICLE_COUNT ), 1 ).setDynamic( true ) );
@@ -311,7 +191,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
         var positionStartAttribute = this.particleShaderGeo.getAttribute( 'positionStart' );
         var startTimeAttribute = this.particleShaderGeo.getAttribute( 'startTime' );
         var velocityAttribute = this.particleShaderGeo.getAttribute( 'velocity' );
-        var turbulenceAttribute = this.particleShaderGeo.getAttribute( 'turbulence' );
         var colorAttribute = this.particleShaderGeo.getAttribute( 'color' );
         var sizeAttribute = this.particleShaderGeo.getAttribute( 'size' );
         var lifeTimeAttribute = this.particleShaderGeo.getAttribute( 'lifeTime' );
@@ -327,7 +206,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
         var positionRandomness = options.positionRandomness !== undefined ? options.positionRandomness : 0;
         var velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0;
         var colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1;
-        var turbulence = options.turbulence !== undefined ? options.turbulence : 1;
         var lifetime = options.lifetime !== undefined ? options.lifetime : 5;
         var size = options.size !== undefined ? options.size : 10;
         var sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0;
@@ -377,9 +255,8 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
         colorAttribute.array[ i * 3 + 1 ] = color.g;
         colorAttribute.array[ i * 3 + 2 ] = color.b;
 
-        // turbulence, size, lifetime and starttime
+        //size, lifetime and starttime
 
-        turbulenceAttribute.array[ i ] = turbulence;
         sizeAttribute.array[ i ] = size + particleSystem.random() * sizeRandomness;
         lifeTimeAttribute.array[ i ] = lifetime;
         startTimeAttribute.array[ i ] = this.time + particleSystem.random() * 2e-2;
@@ -433,7 +310,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
             var positionStartAttribute = this.particleShaderGeo.getAttribute( 'positionStart' );
             var startTimeAttribute = this.particleShaderGeo.getAttribute( 'startTime' );
             var velocityAttribute = this.particleShaderGeo.getAttribute( 'velocity' );
-            var turbulenceAttribute = this.particleShaderGeo.getAttribute( 'turbulence' );
             var colorAttribute = this.particleShaderGeo.getAttribute( 'color' );
             var sizeAttribute = this.particleShaderGeo.getAttribute( 'size' );
             var lifeTimeAttribute = this.particleShaderGeo.getAttribute( 'lifeTime' );
@@ -443,7 +319,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
                 positionStartAttribute.updateRange.offset = this.offset * positionStartAttribute.itemSize;
                 startTimeAttribute.updateRange.offset = this.offset * startTimeAttribute.itemSize;
                 velocityAttribute.updateRange.offset = this.offset * velocityAttribute.itemSize;
-                turbulenceAttribute.updateRange.offset = this.offset * turbulenceAttribute.itemSize;
                 colorAttribute.updateRange.offset = this.offset * colorAttribute.itemSize;
                 sizeAttribute.updateRange.offset = this.offset * sizeAttribute.itemSize;
                 lifeTimeAttribute.updateRange.offset = this.offset * lifeTimeAttribute.itemSize;
@@ -451,7 +326,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
                 positionStartAttribute.updateRange.count = this.count * positionStartAttribute.itemSize;
                 startTimeAttribute.updateRange.count = this.count * startTimeAttribute.itemSize;
                 velocityAttribute.updateRange.count = this.count * velocityAttribute.itemSize;
-                turbulenceAttribute.updateRange.count = this.count * turbulenceAttribute.itemSize;
                 colorAttribute.updateRange.count = this.count * colorAttribute.itemSize;
                 sizeAttribute.updateRange.count = this.count * sizeAttribute.itemSize;
                 lifeTimeAttribute.updateRange.count = this.count * lifeTimeAttribute.itemSize;
@@ -461,7 +335,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
                 positionStartAttribute.updateRange.offset = 0;
                 startTimeAttribute.updateRange.offset = 0;
                 velocityAttribute.updateRange.offset = 0;
-                turbulenceAttribute.updateRange.offset = 0;
                 colorAttribute.updateRange.offset = 0;
                 sizeAttribute.updateRange.offset = 0;
                 lifeTimeAttribute.updateRange.offset = 0;
@@ -470,7 +343,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
                 positionStartAttribute.updateRange.count = - 1;
                 startTimeAttribute.updateRange.count = - 1;
                 velocityAttribute.updateRange.count = - 1;
-                turbulenceAttribute.updateRange.count = - 1;
                 colorAttribute.updateRange.count = - 1;
                 sizeAttribute.updateRange.count = - 1;
                 lifeTimeAttribute.updateRange.count = - 1;
@@ -480,7 +352,6 @@ THREE.GPUParticleContainer = function ( maxParticles, particleSystem ) {
             positionStartAttribute.needsUpdate = true;
             startTimeAttribute.needsUpdate = true;
             velocityAttribute.needsUpdate = true;
-            turbulenceAttribute.needsUpdate = true;
             colorAttribute.needsUpdate = true;
             sizeAttribute.needsUpdate = true;
             lifeTimeAttribute.needsUpdate = true;
