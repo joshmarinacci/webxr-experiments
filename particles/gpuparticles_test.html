@@ -49,7 +49,7 @@
     function initContent(scene,camera,renderer) {
         const textureLoader = new THREE.TextureLoader()
         options = {
-            maxParticles: 20000,
+            maxParticles: 10000,
             position: new THREE.Vector3(0,1.5,-5),
             positionRandomness: 0.1,
             velocity: new THREE.Vector3(0,0.0,1000.0),
@@ -63,19 +63,13 @@
         }
 
         spawnerOptions = {
-            spawnRate: 500,
-            // horizontalSpeed: 1.5,
-            // verticalSpeed: 1.33,
+            spawnRate: 500, // create at the rate of 500 particles/sec
             timeScale: 1.0
         };
 
-        //set the background color of the scene
         scene.background = new THREE.Color(0x000000);
-        //a standard light
         const light = new THREE.AmbientLight();
         scene.add(light);
-
-
 
         //a sphere for calculating a spawn point
         const mesh = new THREE.Mesh(
@@ -86,7 +80,6 @@
 
 
         particleSystem = new THREE.GPUParticleSystem(options)
-        // particleSystem.position.z = -4
         scene.add(particleSystem)
 
 
@@ -101,12 +94,8 @@
         })
 
 
-         on(mesh,POINTER_MOVE,(e)=> {
-             options.position.copy(e.point)
-         })
-         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
-
-
+        on(mesh,POINTER_MOVE,(e)=> options.position.copy(e.point))
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
         stats = new VRStats(renderer)
         camera.add(stats)
@@ -119,11 +108,12 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
 
-        var delta = clock.getDelta() * spawnerOptions.timeScale;
+        const delta = clock.getDelta() * spawnerOptions.timeScale;
         tick += delta;
         if ( tick < 0 ) tick = 0;
         if ( delta > 0 ) {
-            for ( var x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
+            //spawn the correct number of particles for this frame based on the spawn rate
+            for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
                 particleSystem.spawnParticle( options );
             }
         }
