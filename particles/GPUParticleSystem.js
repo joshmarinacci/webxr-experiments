@@ -38,7 +38,6 @@ const GPUParticleShader = {
                         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
                         lifeLeft = 0.0;
                         gl_PointSize = 0.;
-    
                     }
                 }
                 `

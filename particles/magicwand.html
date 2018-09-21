@@ -54,6 +54,13 @@
 </head>
 <body>
 
+<!--
+wand model
+
+https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
+
+
+-->
 
 <div id="overlay">
     <h1>Application Name</h1>
@@ -66,6 +73,8 @@
 
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+    import GPUParticleSystem from './GPUParticleSystem'
+    import VRStats from '../boilerplate/vrstats'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -74,53 +83,27 @@
     const rand = (min,max) => min + Math.random()*(max-min)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer
-    let particles
+    let camera, scene, renderer, pointer, stats
+    let tick = 0
+    let clock = new THREE.Clock()
     let spawnPoint = new THREE.Vector3(0,0,5)
+    let particleSystem, options, spawnerOptions
 
     //called on setup. Customize this
-    const MAX = 200
-    const MAX_AGE = 3.0
-
-    function resetParticle(particle, time) {
-        particle.velocity = new THREE.Vector3(rand(-0.01, 0.01), 0.03, rand(-0.01, 0.01))
-        particle.acceleration = new THREE.Vector3(0,0.000,0)
-        particle.position.copy(spawnPoint)
-        particle.birthTime = time
-        particle.material.opacity = 0.0
-
-    }
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color(0xcccccc);
-
+        scene.background = new THREE.Color(0x000000);
 
         //a standard light
         const light = new THREE.AmbientLight();
         scene.add(light);
 
-
-        //a sphere for calculating a spawn point
+        //an invisible sphere for calculating a spawn point
         const mesh = new THREE.Mesh(
             new THREE.SphereGeometry(5),
             new THREE.MeshLambertMaterial({color:'blue', side:THREE.DoubleSide, visible:false}))
         mesh.userData.clickable = true
         scene.add(mesh)
-
-        particles = new THREE.Group()
-        const geo = new THREE.SphereBufferGeometry(0.1)
-        for(let i=0; i<MAX; i++) {
-            const mat = new THREE.MeshLambertMaterial({color: 'red'})
-            mat.transparent = true
-            const particle = new THREE.Mesh(geo,mat)
-            particle.alive = false
-            particle.spawnDelay = rand(0.0,MAX_AGE)
-            resetParticle(particle,0)
-            particles.add(particle)
-        }
-        particles.position.z = 0
-        scene.add(particles)
-
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene, renderer, camera, {
@@ -131,9 +114,38 @@
             cameraFollowMouse: false,
         })
 
+
+        //options for the particle effect
+        const textureLoader = new THREE.TextureLoader()
+        options = {
+            maxParticles: 10000,
+            position: new THREE.Vector3(0,1.5,-5),
+            positionRandomness: 0.0,
+            baseVelocity: new THREE.Vector3(0.0, 0.4, 0.0),
+            velocity: new THREE.Vector3(0.0, 0.4, 0.0),
+            velocityRandomness: 1.0,
+            baseColor: new THREE.Color(1.0,1.0,0.5),
+            color: new THREE.Color(1.0,0,0),
+            colorRandomness: 0.5,
+            lifetime: 3,
+            size: 10,
+            sizeRandomness: 1.0,
+            particleSpriteTex: textureLoader.load('./tex/particle2.png'),
+        }
+        spawnerOptions = {
+            spawnRate: 5000, // create at the rate of 500 particles/sec
+            timeScale: 1.0
+        };
         on(mesh,POINTER_MOVE,(e)=>{
-            spawnPoint.copy(e.point)
+            options.position.copy(e.point)
         })
+        particleSystem = new GPUParticleSystem(options)
+        scene.add(particleSystem)
+        stats = new VRStats(renderer)
+        camera.add(stats)
+        scene.add(camera)
+
+
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
     }
 
@@ -142,30 +154,29 @@
         const t = time/1000
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
-        particles.children.forEach(p => {
-            if(!p.time) p.time = t
-            if(!p.alive) {
-                if(t >= p.time + p.spawnDelay) {
-                    p.birthTime = t
-                    p.alive = true
-                    resetParticle(p,t)
-                }
-                return
-            }
+        if(stats) stats.update(time)
 
-            p.age = t - p.birthTime
-            if(p.age < 1.0) {
-                p.material.opacity = p.age
+
+        const delta = clock.getDelta() * spawnerOptions.timeScale;
+        tick += delta;
+        if ( tick < 0 ) tick = 0;
+        if ( delta > 0 ) {
+            //spawn the correct number of particles for this frame based on the spawn rate
+            for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
+                options.velocity.x = options.baseVelocity.x + particleSystem.random() * options.velocityRandomness
+                options.velocity.y = options.baseVelocity.y + particleSystem.random() * options.velocityRandomness
+                options.velocity.z = options.baseVelocity.z + particleSystem.random() * options.velocityRandomness
+                options.color.setRGB(
+                    THREE.Math.clamp(options.baseColor.r+particleSystem.random()*options.colorRandomness,0,1),
+                    THREE.Math.clamp(options.baseColor.g+particleSystem.random()*options.colorRandomness,0,1),
+                    THREE.Math.clamp(options.baseColor.b+particleSystem.random()*options.colorRandomness,0,1),
+                )
+                particleSystem.spawnParticle( options );
             }
-            if(p.age > MAX_AGE-1.0) {
-                p.material.opacity = MAX_AGE-p.age
-            }
-            // p.velocity.add(p.acceleration)
-            p.position.add(p.velocity)
-            if(t - p.birthTime > MAX_AGE) {
-                resetParticle(p,t)
-            }
-        })
+        }
+
+        particleSystem.update( tick );
+
         renderer.render( scene, camera );
     }
 
