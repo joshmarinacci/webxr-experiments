@@ -62,30 +62,37 @@ const GPUParticleShader = {
             `
 };
 
+const UPDATEABLE_ATTRIBUTES = ['positionStart', 'startTime', 'velocity', 'color', 'size', 'lifeTime']
+
 export default class GPUParticleSystem extends THREE.Object3D {
     constructor(options) {
         super()
         options = options || {};
-        // parse options and use defaults
+
 
         this.PARTICLE_COUNT = options.maxParticles || 1000000;
-        this.PARTICLE_SPRITE_TEXTURE = options.particleSpriteTex || null;
         this.PARTICLE_CURSOR = 0;
         this.time = 0;
+        this.offset = 0;
+        this.count = 0;
+        this.DPR = window.devicePixelRatio;
+        this.particleUpdate = false;
+
+        // preload a 10_000 random numbers from -0.5 to 0.5
         this.rand = [];
-        // preload a million random numbers
         let i;
-        for ( i = 1e5; i > 0; i -- ) {
+        for (i = 1e5; i>0; i--) {
             this.rand.push( Math.random() - 0.5 );
         }
         this.i = i
 
-        //setup the texture and material
-        this.particleSpriteTex = this.PARTICLE_SPRITE_TEXTURE
-        if(!this.particleSpriteTex) throw new Error("No particle sprite texture specified")
-        this.particleSpriteTex.wrapS = this.particleSpriteTex.wrapT = THREE.RepeatWrapping;
+        //setup the texture
+        this.sprite = options.particleSpriteTex || null;
+        if(!this.sprite) throw new Error("No particle sprite texture specified")
+        this.sprite.wrapS = this.sprite.wrapT = THREE.RepeatWrapping;
 
-        this.particleShaderMat = new THREE.ShaderMaterial( {
+        //setup the shader material
+        this.material = new THREE.ShaderMaterial( {
             transparent: true,
             depthWrite: false,
             uniforms: {
@@ -96,7 +103,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
                     value: 1.0
                 },
                 'tSprite': {
-                    value: this.particleSpriteTex
+                    value: this.sprite
                 }
             },
             blending: THREE.AdditiveBlending,
@@ -105,15 +112,54 @@ export default class GPUParticleSystem extends THREE.Object3D {
         } );
 
         // define defaults for all values
-        this.particleShaderMat.defaultAttributeValues.particlePositionsStartTime = [ 0, 0, 0, 0 ];
-        this.particleShaderMat.defaultAttributeValues.particleVelColSizeLife = [ 0, 0, 0, 0 ];
+        this.material.defaultAttributeValues.particlePositionsStartTime = [ 0, 0, 0, 0 ];
+        this.material.defaultAttributeValues.particleVelColSizeLife = [ 0, 0, 0, 0 ];
 
 
+        // geometry
+        this.geometry = new THREE.BufferGeometry();
+
+        //vec3 attributes
+        this.geometry.addAttribute('position',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.addAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.addAttribute('velocity',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.addAttribute('color',         new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+
+        //scalar attributes
+        this.geometry.addAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
+        this.geometry.addAttribute('size',          new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
+        this.geometry.addAttribute('lifeTime',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
 
 
-        this.container = new GPUParticleContainer(this.PARTICLE_COUNT, this)
-        this.add( this.container );
+        this.particleSystem = new THREE.Points(this.geometry, this.material);
+        this.particleSystem.frustumCulled = false;
+        this.add(this.particleSystem);
     }
+
+    /*
+      This updates the geometry on the shader if at least one particle has been spawned.
+      It uses the offset and the count to determine which part of the data needs to actually
+      be sent to the GPU. This ensures no more data than necessary is sent.
+     */
+    geometryUpdate () {
+        if (this.particleUpdate === true) {
+            this.particleUpdate = false;
+            UPDATEABLE_ATTRIBUTES.forEach(name => {
+                const attr = this.geometry.getAttribute(name)
+                if (this.offset + this.count < this.PARTICLE_COUNT) {
+                    attr.updateRange.offset = this.offset * attr.itemSize
+                    attr.updateRange.count = this.count * attr.itemSize
+                } else {
+                    attr.updateRange.offset = 0
+                    attr.updateRange.count = -1
+                }
+                attr.needsUpdate = true
+            })
+            this.offset = 0;
+            this.count = 0;
+        }
+    }
+
 
     //use one of the random numbers
     random () {
@@ -121,92 +167,16 @@ export default class GPUParticleSystem extends THREE.Object3D {
     }
 
     update ( time ) {
-        this.container.update(time)
-    }
-
-    spawnParticle ( options ) {
-        this.PARTICLE_CURSOR ++;
-        if ( this.PARTICLE_CURSOR >= this.PARTICLE_COUNT ) {
-            this.PARTICLE_CURSOR = 1;
-        }
-        this.container.spawnParticle( options );
-    }
-
-    dispose () {
-        this.particleShaderMat.dispose();
-        this.particleSpriteTex.dispose();
-        this.container.dispose()
-    }
-}
-
-class GPUParticleContainer extends THREE.Object3D {
-    constructor(maxParticles, particleSystem) {
-        super()
-
-        this.PARTICLE_COUNT = maxParticles || 100000;
-        this.PARTICLE_CURSOR = 0;
-        this.time = 0;
-        this.offset = 0;
-        this.count = 0;
-        this.DPR = window.devicePixelRatio;
-        this.GPUParticleSystem = particleSystem;
-        this.particleUpdate = false;
-
-        // geometry
-
-        this.particleShaderGeo = new THREE.BufferGeometry();
-
-        this.particleShaderGeo.addAttribute('position', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.particleShaderGeo.addAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.particleShaderGeo.addAttribute('startTime', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.particleShaderGeo.addAttribute('velocity', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.particleShaderGeo.addAttribute('color', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.particleShaderGeo.addAttribute('size', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.particleShaderGeo.addAttribute('lifeTime', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-
-        // material
-        this.particleShaderMat = this.GPUParticleSystem.particleShaderMat;
-
-        /*
-          This updates the geometry on the shader if at least one particle has been spawned.
-          It uses the offset and the count to determine which part of the data needs to actually
-          be sent to the GPU. This ensures no more data than necessary is sent to the GPU
-         */
-        this.attrNames = ['positionStart', 'startTime', 'velocity', 'color', 'size', 'lifeTime']
-        this.geometryUpdate = function () {
-            if (this.particleUpdate === true) {
-                this.particleUpdate = false;
-                this.attrNames.forEach(name => {
-                    const attr = this.particleShaderGeo.getAttribute(name)
-                    if (this.offset + this.count < this.PARTICLE_COUNT) {
-                        attr.updateRange.offset = this.offset * attr.itemSize
-                        attr.updateRange.count = this.count * attr.itemSize
-                    } else {
-                        attr.updateRange.offset = 0
-                        attr.updateRange.count = -1
-                    }
-                    attr.needsUpdate = true
-                })
-                this.offset = 0;
-                this.count = 0;
-            }
-
-        };
-
-        this.particleSystem = new THREE.Points(this.particleShaderGeo, this.particleShaderMat);
-        this.particleSystem.frustumCulled = false;
-        this.add(this.particleSystem);
-    }
-    dispose () {
-        this.particleShaderGeo.dispose();
-    }
-
-    update (time) {
         this.time = time;
-        this.particleShaderMat.uniforms.uTime.value = time;
+        this.material.uniforms.uTime.value = time;
         this.geometryUpdate();
     }
 
+    dispose () {
+        this.material.dispose();
+        this.sprite.dispose();
+        this.geometry.dispose();
+    }
 
     /* spawn a particle
 
@@ -217,17 +187,17 @@ class GPUParticleContainer extends THREE.Object3D {
     This if spawnParticle is called three times in a row before rendering,
     then count will be 3 and the cursor will have moved by three.
      */
-    spawnParticle (options) {
+    spawnParticle ( options ) {
         let position = new THREE.Vector3()
         let velocity = new THREE.Vector3()
         let color = new THREE.Color()
 
-        const positionStartAttribute = this.particleShaderGeo.getAttribute('positionStart')
-        const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime')
-        const velocityAttribute = this.particleShaderGeo.getAttribute('velocity')
-        const colorAttribute = this.particleShaderGeo.getAttribute('color')
-        const sizeAttribute = this.particleShaderGeo.getAttribute('size')
-        const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime')
+        const positionStartAttribute = this.geometry.getAttribute('positionStart')
+        const startTimeAttribute = this.geometry.getAttribute('startTime')
+        const velocityAttribute = this.geometry.getAttribute('velocity')
+        const colorAttribute = this.geometry.getAttribute('color')
+        const sizeAttribute = this.geometry.getAttribute('size')
+        const lifeTimeAttribute = this.geometry.getAttribute('lifeTime')
 
         options = options || {};
 
@@ -248,18 +218,16 @@ class GPUParticleContainer extends THREE.Object3D {
 
         const i = this.PARTICLE_CURSOR
 
-        const particleSystem = this.GPUParticleSystem
-
         // position
-        positionStartAttribute.array[i * 3 + 0] = position.x + (particleSystem.random() * positionRandomness);
-        positionStartAttribute.array[i * 3 + 1] = position.y + (particleSystem.random() * positionRandomness);
-        positionStartAttribute.array[i * 3 + 2] = position.z + (particleSystem.random() * positionRandomness);
+        positionStartAttribute.array[i * 3 + 0] = position.x + (this.random() * positionRandomness);
+        positionStartAttribute.array[i * 3 + 1] = position.y + (this.random() * positionRandomness);
+        positionStartAttribute.array[i * 3 + 2] = position.z + (this.random() * positionRandomness);
 
         // velocity
         let maxVel = 200
-        let velX = velocity.x + particleSystem.random() * velocityRandomness
-        let velY = velocity.y + particleSystem.random() * velocityRandomness
-        let velZ = velocity.z + particleSystem.random() * velocityRandomness
+        let velX = velocity.x + this.random() * velocityRandomness
+        let velY = velocity.y + this.random() * velocityRandomness
+        let velZ = velocity.z + this.random() * velocityRandomness
         velX = THREE.Math.clamp((velX - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
         velY = THREE.Math.clamp((velY - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
         velZ = THREE.Math.clamp((velZ - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
@@ -268,17 +236,17 @@ class GPUParticleContainer extends THREE.Object3D {
         velocityAttribute.array[i * 3 + 2] = velZ;
 
         // color
-        color.r = THREE.Math.clamp(color.r + particleSystem.random() * colorRandomness, 0, 1);
-        color.g = THREE.Math.clamp(color.g + particleSystem.random() * colorRandomness, 0, 1);
-        color.b = THREE.Math.clamp(color.b + particleSystem.random() * colorRandomness, 0, 1);
+        color.r = THREE.Math.clamp(color.r + this.random() * colorRandomness, 0, 1);
+        color.g = THREE.Math.clamp(color.g + this.random() * colorRandomness, 0, 1);
+        color.b = THREE.Math.clamp(color.b + this.random() * colorRandomness, 0, 1);
         colorAttribute.array[i * 3 + 0] = color.r;
         colorAttribute.array[i * 3 + 1] = color.g;
         colorAttribute.array[i * 3 + 2] = color.b;
 
         //size, lifetime and starttime
-        sizeAttribute.array[i] = size + particleSystem.random() * sizeRandomness;
+        sizeAttribute.array[i] = size + this.random() * sizeRandomness;
         lifeTimeAttribute.array[i] = lifetime;
-        startTimeAttribute.array[i] = this.time + particleSystem.random() * 2e-2;
+        startTimeAttribute.array[i] = this.time + this.random() * 2e-2;
 
         // offset
         if (this.offset === 0) this.offset = this.PARTICLE_CURSOR;
