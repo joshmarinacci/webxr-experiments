@@ -94,7 +94,7 @@
         })
 
 
-        on(mesh,POINTER_MOVE,(e)=> options.position.copy(e.point))
+        // on(mesh,POINTER_MOVE,(e)=> options.position.copy(e.point))
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
         stats = new VRStats(renderer)
@@ -114,6 +114,8 @@
         if ( delta > 0 ) {
             //spawn the correct number of particles for this frame based on the spawn rate
             for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
+                options.position.x = Math.sin(time/100)
+                options.position.y = Math.cos(time/100)+1.5
                 particleSystem.spawnParticle( options );
             }
         }
