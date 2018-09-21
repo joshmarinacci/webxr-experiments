@@ -7,8 +7,7 @@
 
     <!-- required -->
     <script src="./node_modules/three/build/three.min.js"></script>
-    <!-- needed for loading Truetype Fonts -->
-    <script src="./GPUParticleSystem.js"></script>
+    <!--<script src="./GPUParticleSystem.js"></script>-->
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
@@ -33,6 +32,7 @@
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
+    import GPUParticleSystem from "./GPUParticleSystem.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -79,7 +79,7 @@
         scene.add(mesh)
 
 
-        particleSystem = new THREE.GPUParticleSystem(options)
+        particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
 
 
