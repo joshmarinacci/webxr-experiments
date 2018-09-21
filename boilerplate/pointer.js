@@ -6,6 +6,7 @@ export const POINTER_MOVE = "move"
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
         this.opts = opts || {}
+        this.opts.enableLaser = (opts.enableLaser !== undefined) ? opts.enableLaser : true
         this.scene = scene
         this.renderer = renderer
         this.canvas = renderer.domElement
@@ -44,20 +45,23 @@ export class Pointer {
         this.scene.add(this.controller2);
 
 
-        //create visible lines for the two controllers
-        const geometry = new THREE.BufferGeometry()
-        geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
-        geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
+        if(this.opts.enableLaser) {
+            //create visible lines for the two controllers
+            const geometry = new THREE.BufferGeometry()
+            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
+            geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
 
-        const material = new THREE.LineBasicMaterial({
-            vertexColors: false,
-            color:0xff0000,
-            linewidth: 5,
-            blending: THREE.AdditiveBlending
-        })
+            const material = new THREE.LineBasicMaterial({
+                vertexColors: false,
+                color: 0xff0000,
+                linewidth: 5,
+                blending: THREE.AdditiveBlending
+            })
 
-        this.controller1.add(new THREE.Line(geometry, material));
-        this.controller2.add(new THREE.Line(geometry, material));
+            this.controller1.add(new THREE.Line(geometry, material));
+            this.controller2.add(new THREE.Line(geometry, material));
+        }
+
     }
 
     //override this to do something w/ the controllers on every tick

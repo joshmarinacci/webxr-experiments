@@ -86,22 +86,29 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
     let camera, scene, renderer, pointer, stats
     let tick = 0
     let clock = new THREE.Clock()
-    let spawnPoint = new THREE.Vector3(0,0,5)
     let particleSystem, options, spawnerOptions
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color(0x000000);
+        scene.background = new THREE.Color(0x333333);
 
         //a standard light
-        const light = new THREE.AmbientLight();
+        const light = new THREE.AmbientLight(0xffffff,1.0);
         scene.add(light);
+        const light2 = new THREE.DirectionalLight(0xffffff,0.5)
+        scene.add(light2)
+
+        const pointLight = new THREE.PointLight(0xffff00,1,20)
+        pointLight.position.set(0,0,0)
+        scene.add(pointLight)
 
         //an invisible sphere for calculating a spawn point
         const mesh = new THREE.Mesh(
-            new THREE.SphereGeometry(5),
+            new THREE.SphereGeometry(1.6),
             new THREE.MeshLambertMaterial({color:'blue', side:THREE.DoubleSide, visible:false}))
+        mesh.position.y = 1.0
+        mesh.position.x = 0.3
         mesh.userData.clickable = true
         scene.add(mesh)
 
@@ -112,7 +119,32 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
             cameraFollowMouse: false,
+            enableLaser:false,
         })
+
+
+        const gltfLoader = new THREE.GLTFLoader()
+        gltfLoader.load("./magic_wand/scene.gltf",
+            (model)=>{
+                model.scene.traverse((ch)=>{
+                    if(ch.name === 'wandFBX') {
+                        console.log("the model is",model)
+                        ch.position.z = -1
+                        ch.position.y = 0
+                        ch.position.x = 0
+                        const sc = 0.015
+                        ch.scale.x = sc
+                        ch.scale.y = sc
+                        ch.scale.z = sc
+                        ch.rotation.y = -90*Math.PI/180
+                        ch.rotation.z = 90*Math.PI/180
+                        pointer.controller1.add(ch)
+                        light2.target = ch
+                    }
+                })
+            }
+        )
+
 
 
         //options for the particle effect
@@ -138,6 +170,7 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
         };
         on(mesh,POINTER_MOVE,(e)=>{
             options.position.copy(e.point)
+            pointLight.position.copy(e.point)
         })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
