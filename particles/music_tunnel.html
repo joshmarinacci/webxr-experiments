@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Tunnel</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <!-- required -->
+    <script src="./node_modules/three/build/three.min.js"></script>
+    <script src="../boilerplate/webvr.js"></script>
+    <style type="text/css">
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+        #enter-vr {
+            position: fixed;
+            top: 10em;
+            left: auto;
+            right: auto;
+        }
+    </style>
+</head>
+<body>
+
+
+<script type="module">
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+    import VRStats from "../boilerplate/vrstats.js"
+    import GPUParticleSystem from "./GPUParticleSystem.js"
+
+    //JQuery-like selector
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    //generate random number in a range
+    const rand = (min,max) => min + Math.random()*(max-min)
+
+    // global constants and variables for your app go here
+    let camera, scene, renderer, pointer, stats
+    let tick = 0
+    let clock = new THREE.Clock()
+    let particleSystem, options, spawnerOptions
+
+    function initContent(scene,camera,renderer) {
+        const audioListener = new THREE.AudioListener()
+        camera.add(audioListener)
+        const music = new THREE.Audio(audioListener)
+        scene.add(music)
+
+        const audioLoader = new THREE.AudioLoader()
+        const music_url = "./foniqz.mp3"
+        audioLoader.load(music_url,(buf) =>{
+            music.setBuffer(buf)
+            music.play()
+        })
+
+        const textureLoader = new THREE.TextureLoader()
+        options = {
+            maxParticles: 10000,
+            position: new THREE.Vector3(0,1.5,-5),
+            positionRandomness: 0.1,
+            velocity: new THREE.Vector3(0,0.0,1000.0),
+            velocityRandomness: 0.0,
+            color: 0xff0000,
+            colorRandomness: 1.0,
+            lifetime: 20,
+            size: 80,
+            sizeRandomness: 1.0,
+            particleSpriteTex: textureLoader.load('./tex/particle2.png'),
+        }
+
+        spawnerOptions = {
+            spawnRate: 500, // create at the rate of 500 particles/sec
+            timeScale: 1.0
+        };
+
+        scene.background = new THREE.Color(0x000000);
+        const light = new THREE.AmbientLight();
+        scene.add(light);
+
+        //a sphere for calculating a spawn point
+        const mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(5),
+            new THREE.MeshLambertMaterial({color:'blue', side:THREE.DoubleSide, visible:false}))
+        mesh.userData.clickable = true
+        scene.add(mesh)
+
+
+        particleSystem = new GPUParticleSystem(options)
+        scene.add(particleSystem)
+
+
+
+        /*
+        //class which handles mouse and VR controller
+        pointer = new Pointer(scene, renderer, camera, {
+            //Pointer searches everything in the scene by default
+            //override this to match just certain things
+            intersectionFilter: ((o) => o.userData.clickable),
+            //make the camera pan when moving the mouse. good for simulating head turning on desktop
+            cameraFollowMouse: false,
+        })
+        */
+
+
+        // on(mesh,POINTER_MOVE,(e)=> options.position.copy(e.point))
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+
+
+        class StaticText extends THREE.Group {
+            constructor(text) {
+                super()
+                const can = document.createElement('canvas')
+                can.width = 512
+                can.height = 128
+                this.canvas = can
+                const c = can.getContext('2d')
+                c.fillStyle = 'white'
+                c.fillRect(0, 0, can.width, can.height)
+                c.fillStyle = 'black'
+                c.font = '20pt sans-serif'
+                text.forEach((txt,i) => {
+                    c.fillText(txt,3,i*30+40)
+                })
+
+                const ctex = new THREE.CanvasTexture(can)
+                const mesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(2, 0.5),
+                    new THREE.MeshBasicMaterial({map: ctex})
+                )
+                this.add(mesh)
+            }
+        }
+        // stats = new VRStats(renderer)
+        const text = new StaticText(["Foniqz","Spectrum (Subdiffusion Mix)","FreeMusicArchive.org"])
+        text.position.x = 0;
+        text.position.y = -1;
+        text.position.z = -4;
+        text.rotation.x = -15 * Math.PI/180
+        scene.add(text)
+        scene.add(camera)
+
+    }
+
+    //called on every frame. customize this
+    function render(time) {
+        if(pointer) pointer.tick(time)
+        if(stats) stats.update(time)
+
+        const delta = clock.getDelta() * spawnerOptions.timeScale;
+        tick += delta;
+        if ( tick < 0 ) tick = 0;
+        if ( delta > 0 ) {
+            //spawn the correct number of particles for this frame based on the spawn rate
+            for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
+                options.position.x = Math.sin(time/100)
+                options.position.y = Math.cos(time/100)+1.5
+                particleSystem.spawnParticle( options );
+            }
+        }
+
+        particleSystem.update( tick );
+        renderer.render( scene, camera );
+    }
+
+
+    // you shouldn't need to modify much below here
+    function initScene() {
+        //create DIV for the canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.vr.enabled = true;
+        container.appendChild( renderer.domElement );
+        document.body.appendChild( WEBVR.createButton( renderer ) );
+
+        initContent(scene,camera,renderer)
+
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }, false );
+    }
+
+    initScene()
+    renderer.setAnimationLoop(render)
+
+</script>
+</body>
+</html>
