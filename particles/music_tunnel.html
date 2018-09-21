@@ -61,9 +61,10 @@
             maxParticles: 10000,
             position: new THREE.Vector3(0,1.5,-5),
             positionRandomness: 0.1,
-            velocity: new THREE.Vector3(0,0.0,1000.0),
+            velocity: new THREE.Vector3(0.0, 0.0, 0.4),
             velocityRandomness: 0.0,
-            color: 0xff0000,
+            baseColor: new THREE.Color(1.0,0,0),
+            color: new THREE.Color(1.0,0,0),
             colorRandomness: 1.0,
             lifetime: 20,
             size: 80,
@@ -155,8 +156,17 @@
         if ( delta > 0 ) {
             //spawn the correct number of particles for this frame based on the spawn rate
             for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
-                options.position.x = Math.sin(time/100)
-                options.position.y = Math.cos(time/100)+1.5
+                options.position.x = Math.sin(time/100) + particleSystem.random()*options.positionRandomness
+                options.position.y = Math.cos(time/100)+1.5 + particleSystem.random()*options.positionRandomness
+                options.position.z = -5 + particleSystem.random() * options.positionRandomness
+                options.velocity.x += particleSystem.random() * options.velocityRandomness
+                options.velocity.y += particleSystem.random() * options.velocityRandomness
+                options.velocity.z += particleSystem.random() * options.velocityRandomness
+                options.color.setRGB(
+                    THREE.Math.clamp(options.baseColor.r+particleSystem.random()*options.colorRandomness,0,1),
+                    THREE.Math.clamp(options.baseColor.g+particleSystem.random()*options.colorRandomness,0,1),
+                    THREE.Math.clamp(options.baseColor.b+particleSystem.random()*options.colorRandomness,0,1),
+                )
                 particleSystem.spawnParticle( options );
             }
         }

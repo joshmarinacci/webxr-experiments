@@ -22,14 +22,10 @@ const GPUParticleShader = {
                 void main() {
                     vColor = vec4( color, 1.0 );
                     vec3 newPosition;
-                    vec3 v;
                     float timeElapsed = uTime - startTime;
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
                     gl_PointSize = ( uScale * size ) * lifeLeft;
-                    v.x = ( velocity.x - 0.5 ) * 1.0;
-                    v.y = ( velocity.y - 0.5 ) * 1.0;
-                    v.z = ( velocity.z - 0.5 ) * 1.0;
-                    newPosition = positionStart + v * timeElapsed;
+                    newPosition = positionStart + velocity * timeElapsed;
                     if (lifeLeft < 0.0) { 
                         lifeLeft = 0.0; 
                         gl_PointSize = 0.;
@@ -205,11 +201,8 @@ export default class GPUParticleSystem extends THREE.Object3D {
 
         position = options.position !== undefined ? position.copy(options.position) : position.set(0, 0, 0);
         velocity = options.velocity !== undefined ? velocity.copy(options.velocity) : velocity.set(0, 0, 0);
-        color = options.color !== undefined ? color.set(options.color) : color.set(0xffffff);
+        color = options.color !== undefined ? color.copy(options.color) : color.set(0xffffff);
 
-        const positionRandomness = options.positionRandomness !== undefined ? options.positionRandomness : 0
-        const velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0
-        const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1
         const lifetime = options.lifetime !== undefined ? options.lifetime : 5
         let size = options.size !== undefined ? options.size : 10
         const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0
@@ -219,26 +212,14 @@ export default class GPUParticleSystem extends THREE.Object3D {
         const i = this.PARTICLE_CURSOR
 
         // position
-        positionStartAttribute.array[i * 3 + 0] = position.x + (this.random() * positionRandomness);
-        positionStartAttribute.array[i * 3 + 1] = position.y + (this.random() * positionRandomness);
-        positionStartAttribute.array[i * 3 + 2] = position.z + (this.random() * positionRandomness);
+        positionStartAttribute.array[i * 3 + 0] = position.x
+        positionStartAttribute.array[i * 3 + 1] = position.y
+        positionStartAttribute.array[i * 3 + 2] = position.z
 
-        // velocity
-        let maxVel = 200
-        let velX = velocity.x + this.random() * velocityRandomness
-        let velY = velocity.y + this.random() * velocityRandomness
-        let velZ = velocity.z + this.random() * velocityRandomness
-        velX = THREE.Math.clamp((velX - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        velY = THREE.Math.clamp((velY - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        velZ = THREE.Math.clamp((velZ - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        velocityAttribute.array[i * 3 + 0] = velX;
-        velocityAttribute.array[i * 3 + 1] = velY;
-        velocityAttribute.array[i * 3 + 2] = velZ;
+        velocityAttribute.array[i * 3 + 0] = velocity.x;
+        velocityAttribute.array[i * 3 + 1] = velocity.y;
+        velocityAttribute.array[i * 3 + 2] = velocity.z;
 
-        // color
-        color.r = THREE.Math.clamp(color.r + this.random() * colorRandomness, 0, 1);
-        color.g = THREE.Math.clamp(color.g + this.random() * colorRandomness, 0, 1);
-        color.b = THREE.Math.clamp(color.b + this.random() * colorRandomness, 0, 1);
         colorAttribute.array[i * 3 + 0] = color.r;
         colorAttribute.array[i * 3 + 1] = color.g;
         colorAttribute.array[i * 3 + 2] = color.b;
