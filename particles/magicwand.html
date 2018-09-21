@@ -23,6 +23,12 @@
     <!--<script src="./pointer.js" type="module"></script>-->
 
     <style type="text/css">
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
         #overlay {
             position: fixed;
             display: none;
@@ -72,7 +78,11 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+    import {
+        POINTER_MOVE,
+        POINTER_PRESS,
+        POINTER_RELEASE,
+        Pointer} from '../boilerplate/pointer.js'
     import GPUParticleSystem from './GPUParticleSystem'
     import VRStats from '../boilerplate/vrstats'
 
@@ -94,14 +104,10 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
         scene.background = new THREE.Color(0x333333);
 
         //a standard light
-        const light = new THREE.AmbientLight(0xffffff,1.0);
+        const light = new THREE.AmbientLight(0xffffff,0.8);
         scene.add(light);
-        const light2 = new THREE.DirectionalLight(0xffffff,0.5)
-        scene.add(light2)
 
-        const pointLight = new THREE.PointLight(0xffff00,1,20)
-        pointLight.position.set(0,0,0)
-        scene.add(pointLight)
+        const pointLight = new THREE.PointLight(0xffffff,1.0,1.0,2.0)
 
         //an invisible sphere for calculating a spawn point
         const mesh = new THREE.Mesh(
@@ -124,22 +130,18 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
 
 
         const gltfLoader = new THREE.GLTFLoader()
-        gltfLoader.load("./magic_wand/scene.gltf",
+        gltfLoader.load("./wand/scene.gltf",
             (model)=>{
                 model.scene.traverse((ch)=>{
-                    if(ch.name === 'wandFBX') {
-                        console.log("the model is",model)
-                        ch.position.z = -1
-                        ch.position.y = 0
-                        ch.position.x = 0
-                        const sc = 0.015
+                    if(ch.isMesh) {
+                        ch.position.z = -0.7
+                        const sc = 0.6
                         ch.scale.x = sc
                         ch.scale.y = sc
                         ch.scale.z = sc
-                        ch.rotation.y = -90*Math.PI/180
-                        ch.rotation.z = 90*Math.PI/180
                         pointer.controller1.add(ch)
-                        light2.target = ch
+                        pointLight.position.set(0,0,-1.5)
+                        pointer.controller1.add(pointLight)
                     }
                 })
             }
@@ -153,8 +155,8 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
             maxParticles: 10000,
             position: new THREE.Vector3(0,1.5,-5),
             positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, 0.4, 0.0),
-            velocity: new THREE.Vector3(0.0, 0.4, 0.0),
+            baseVelocity: new THREE.Vector3(0.0, 0.0, -1),
+            velocity: new THREE.Vector3(0.0, 0.0, 0.0),
             velocityRandomness: 1.0,
             baseColor: new THREE.Color(1.0,1.0,0.5),
             color: new THREE.Color(1.0,0,0),
@@ -165,18 +167,25 @@ https://sketchfab.com/models/53220e5960e2499ca08c379cd601b62d
             particleSpriteTex: textureLoader.load('./tex/particle2.png'),
         }
         spawnerOptions = {
-            spawnRate: 5000, // create at the rate of 500 particles/sec
+            spawnRate: 0, // create at the rate of 500 particles/sec
             timeScale: 1.0
         };
+        on(mesh,POINTER_PRESS,(e)=>{
+            spawnerOptions.spawnRate = 5000
+            pointLight.intensity = 2.0
+        })
+        on(mesh,POINTER_RELEASE,(e)=>{
+            spawnerOptions.spawnRate = 0
+            pointLight.intensity = 0.0
+        })
         on(mesh,POINTER_MOVE,(e)=>{
             options.position.copy(e.point)
-            pointLight.position.copy(e.point)
         })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
         stats = new VRStats(renderer)
-        camera.add(stats)
-        scene.add(camera)
+        // camera.add(stats)
+        // scene.add(camera)
 
 
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')

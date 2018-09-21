@@ -2,6 +2,8 @@ export const POINTER_ENTER = "enter"
 export const POINTER_EXIT = "exit"
 export const POINTER_CLICK = "click"
 export const POINTER_MOVE = "move"
+export const POINTER_PRESS = "press"
+export const POINTER_RELEASE = "release"
 
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
@@ -19,7 +21,6 @@ export class Pointer {
         this.intersectionFilter = this.opts.intersectionFilter || ((o) => true)
 
 
-
         // setup the mouse
         if(opts.cameraFollowMouse) {
             this.canvas.addEventListener('mousemove', (e) => {
@@ -32,6 +33,8 @@ export class Pointer {
             })
         }
         this.canvas.addEventListener('click', this.mouseClick.bind(this))
+        this.canvas.addEventListener('mousedown',this.mouseDown.bind(this))
+        this.canvas.addEventListener('mouseup',this.mouseUp.bind(this))
 
         // setup the VR controllers
         this.controller1 = this.renderer.vr.getController(0);
@@ -146,9 +149,38 @@ export class Pointer {
         this.raycaster.setFromCamera(mouse, this.camera)
         this._processClick()
     }
+    mouseDown(e) {
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS})
+        })
+    }
+    mouseUp(e) {
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+        })
+    }
 
     controllerSelectStart(e) {
         e.target.userData.isSelecting = true;
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS})
+        })
     }
 
     controllerSelectEnd(e) {
@@ -157,6 +189,11 @@ export class Pointer {
         const dir = new THREE.Vector3(0, 0, -1)
         dir.applyQuaternion(c.quaternion)
         this.raycaster.set(c.position, dir)
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+        })
         this._processClick()
     }
 
