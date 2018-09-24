@@ -70,6 +70,7 @@
             size: 80,
             sizeRandomness: 1.0,
             particleSpriteTex: textureLoader.load('./tex/particle2.png'),
+            blending: THREE.AdditiveBlending,
         }
 
         spawnerOptions = {
@@ -171,7 +172,7 @@
             }
         }
 
-        particleSystem.update( tick );
+        particleSystem.update( time );
         renderer.render( scene, camera );
     }
 

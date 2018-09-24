@@ -12,6 +12,7 @@ const GPUParticleShader = {
                 attribute vec3 positionStart;
                 attribute float startTime;
                 attribute vec3 velocity;
+                attribute vec3 acceleration;
                 attribute vec3 color;
                 attribute float size;
                 attribute float lifeTime;
@@ -25,7 +26,10 @@ const GPUParticleShader = {
                     float timeElapsed = uTime - startTime;
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
                     gl_PointSize = ( uScale * size ) * lifeLeft;
-                    newPosition = positionStart + velocity * timeElapsed;
+                    newPosition = positionStart 
+                        + (velocity * timeElapsed)
+                        + (acceleration * 0.5 * timeElapsed * timeElapsed)
+                        ;
                     if (lifeLeft < 0.0) { 
                         lifeLeft = 0.0; 
                         gl_PointSize = 0.;
@@ -57,7 +61,7 @@ const GPUParticleShader = {
             `
 };
 
-const UPDATEABLE_ATTRIBUTES = ['positionStart', 'startTime', 'velocity', 'color', 'size', 'lifeTime']
+const UPDATEABLE_ATTRIBUTES = ['positionStart', 'startTime', 'velocity', 'acceleration', 'color', 'size', 'lifeTime']
 
 export default class GPUParticleSystem extends THREE.Object3D {
     constructor(options) {
@@ -65,6 +69,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
         options = options || {};
 
 
+        this.blending = options.blending? options.blending : THREE.NormalBlending
         this.PARTICLE_COUNT = options.maxParticles || 1000000;
         this.PARTICLE_CURSOR = 0;
         this.time = 0;
@@ -72,6 +77,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
         this.count = 0;
         this.DPR = window.devicePixelRatio;
         this.particleUpdate = false;
+        this.onTick = options.onTick
 
         // preload a 10_000 random numbers from -0.5 to 0.5
         this.rand = [];
@@ -101,7 +107,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
                     value: this.sprite
                 }
             },
-            blending: THREE.AdditiveBlending,
+            blending: this.blending,
             vertexShader: GPUParticleShader.vertexShader,
             fragmentShader: GPUParticleShader.fragmentShader
         } );
@@ -118,6 +124,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
         this.geometry.addAttribute('position',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
         this.geometry.addAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
         this.geometry.addAttribute('velocity',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.addAttribute('acceleration',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
         this.geometry.addAttribute('color',         new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
 
         //scalar attributes
@@ -161,9 +168,10 @@ export default class GPUParticleSystem extends THREE.Object3D {
         return ++ this.i >= this.rand.length ? this.rand[ this.i = 1 ] : this.rand[ this.i ];
     }
 
-    update ( time ) {
-        this.time = time;
-        this.material.uniforms.uTime.value = time;
+    update ( ttime ) {
+        this.time = ttime/1000
+        this.material.uniforms.uTime.value = this.time;
+        if(this.onTick) this.onTick(this,this.time)
         this.geometryUpdate();
     }
 
@@ -185,11 +193,13 @@ export default class GPUParticleSystem extends THREE.Object3D {
     spawnParticle ( options ) {
         let position = new THREE.Vector3()
         let velocity = new THREE.Vector3()
+        let acceleration = new THREE.Vector3()
         let color = new THREE.Color()
 
         const positionStartAttribute = this.geometry.getAttribute('positionStart')
         const startTimeAttribute = this.geometry.getAttribute('startTime')
         const velocityAttribute = this.geometry.getAttribute('velocity')
+        const accelerationAttribute = this.geometry.getAttribute('acceleration')
         const colorAttribute = this.geometry.getAttribute('color')
         const sizeAttribute = this.geometry.getAttribute('size')
         const lifeTimeAttribute = this.geometry.getAttribute('lifeTime')
@@ -200,6 +210,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
 
         position = options.position !== undefined ? position.copy(options.position) : position.set(0, 0, 0);
         velocity = options.velocity !== undefined ? velocity.copy(options.velocity) : velocity.set(0, 0, 0);
+        acceleration = options.acceleration !== undefined ? acceleration.copy(options.acceleration) : acceleration.set(0, 0, 0);
         color = options.color !== undefined ? color.copy(options.color) : color.set(0xffffff);
 
         const lifetime = options.lifetime !== undefined ? options.lifetime : 5
@@ -218,6 +229,10 @@ export default class GPUParticleSystem extends THREE.Object3D {
         velocityAttribute.array[i * 3 + 0] = velocity.x;
         velocityAttribute.array[i * 3 + 1] = velocity.y;
         velocityAttribute.array[i * 3 + 2] = velocity.z;
+
+        accelerationAttribute.array[i * 3 + 0] = acceleration.x;
+        accelerationAttribute.array[i * 3 + 1] = acceleration.y;
+        accelerationAttribute.array[i * 3 + 2] = acceleration.z;
 
         colorAttribute.array[i * 3 + 0] = color.r;
         colorAttribute.array[i * 3 + 1] = color.g;

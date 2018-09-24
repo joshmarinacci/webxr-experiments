@@ -157,6 +157,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             baseVelocity: new THREE.Vector3(0.0, 0.0, -1),
             velocity: new THREE.Vector3(0.0, 0.0, 0.0),
             velocityRandomness: 1.0,
+            acceleration: new THREE.Vector3(0,0.0,0),
             baseColor: new THREE.Color(1.0,1.0,0.5),
             color: new THREE.Color(1.0,0,0),
             colorRandomness: 0.5,
@@ -164,6 +165,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             size: 10,
             sizeRandomness: 1.0,
             particleSpriteTex: textureLoader.load('./tex/particle2.png'),
+            blending: THREE.AdditiveBlending,
         }
         spawnerOptions = {
             spawnRate: 500, // create at the rate of 500 particles/sec
@@ -216,7 +218,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             }
         }
 
-        particleSystem.update( tick );
+        particleSystem.update( time );
 
         renderer.render( scene, camera );
     }

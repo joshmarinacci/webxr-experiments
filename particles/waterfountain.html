@@ -1,4 +1,13 @@
+
 <!DOCTYPE html>
+
+<!--
+
+
+https://sketchfab.com/models/fd5cd30b8aac444982965aabe2f59f23
+
+-->
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -87,12 +96,10 @@
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats
-    let tick = 0
-    let clock = new THREE.Clock()
-    let particleSystem, options, spawnerOptions
+    let particleSystem, options
 
     //called on setup. Customize this
-    function initContent(scene,camera,renderer) {
+    function initContent(scene,camera,renderer) {``
         //set the background color of the scene
         scene.background = new THREE.Color(0x333333);
 
@@ -100,23 +107,9 @@
         const light = new THREE.AmbientLight(0xffffff,0.8);
         scene.add(light);
 
-        const pointLight = new THREE.PointLight(0xffffff,1.0,1.0,2.0)
-
-        //an invisible sphere for calculating a spawn point
-        const mesh = new THREE.Mesh(
-            new THREE.SphereGeometry(1.6),
-            new THREE.MeshLambertMaterial({color:'blue', side:THREE.DoubleSide, visible:false}))
-        mesh.position.y = 1.0
-        mesh.position.x = 0.3
-        mesh.userData.clickable = true
-        scene.add(mesh)
-
         //class which handles mouse and VR controller
         pointer = new Pointer(scene, renderer, camera, {
-            //Pointer searches everything in the scene by default
-            //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
-            //make the camera pan when moving the mouse. good for simulating head turning on desktop
             cameraFollowMouse: false,
             enableLaser:false,
         })
@@ -124,18 +117,14 @@
 
 
         const gltfLoader = new THREE.GLTFLoader()
-        gltfLoader.load("./wand/scene.gltf",
+        gltfLoader.load("./fountain_low_poly/scene.gltf",
             (model)=>{
                 model.scene.traverse((ch)=>{
                     if(ch.isMesh) {
-                        ch.position.z = -0.7
-                        const sc = 0.6
-                        ch.scale.x = sc
-                        ch.scale.y = sc
-                        ch.scale.z = sc
-                        pointer.controller1.add(ch)
-                        pointLight.position.set(0,0,-1.5)
-                        pointer.controller1.add(pointLight)
+                        ch.position.z = -10
+                        ch.scale.set(0.3,0.3,0.3)
+                        ch.rotation.x = -90*Math.PI/180
+                        scene.add(ch)
                     }
                 })
             }
@@ -147,40 +136,33 @@
         const textureLoader = new THREE.TextureLoader()
         options = {
             maxParticles: 10000,
-            position: new THREE.Vector3(0,1.5,-5),
+            position: new THREE.Vector3(0,1.0,-10.0),
             positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, 0.0, -1),
+            baseVelocity: new THREE.Vector3(0.0, 5.0, 0.0),
             velocity: new THREE.Vector3(0.0, 0.0, 0.0),
             velocityRandomness: 1.0,
-            baseColor: new THREE.Color(1.0,1.0,0.5),
-            color: new THREE.Color(1.0,0,0),
+            acceleration: new THREE.Vector3(0.0,-4.0,0.0),
+            baseColor: new THREE.Color(0.0,1.0,0.5),
+            color: new THREE.Color(0.0,1.0,1.0),
             colorRandomness: 0.5,
-            lifetime: 3,
-            size: 10,
+            lifetime: 3.0,
+            size: 15,
             sizeRandomness: 1.0,
             particleSpriteTex: textureLoader.load('./tex/particle2.png'),
+            blending: THREE.NormalBlending,
+            onTick:(system,time) => {
+                let amt = (Math.sin(time)+0.9) // goes from 0 to 2
+                for(let i=0; i<amt*4; i++) {
+                    options.velocity.x = options.baseVelocity.x + system.random() * options.velocityRandomness
+                    options.velocity.y = options.baseVelocity.y + amt/2.0 + system.random() * options.velocityRandomness
+                    options.velocity.z = options.baseVelocity.z + system.random() * options.velocityRandomness
+                    system.spawnParticle( options );
+                }
+            }
         }
-        spawnerOptions = {
-            spawnRate: 500, // create at the rate of 500 particles/sec
-            timeScale: 1.0
-        };
-        on(mesh,POINTER_PRESS,(e)=>{
-            spawnerOptions.spawnRate = 5000
-            pointLight.intensity = 2.0
-        })
-        on(mesh,POINTER_RELEASE,(e)=>{
-            spawnerOptions.spawnRate = 0
-            pointLight.intensity = 0.0
-        })
-        on(mesh,POINTER_MOVE,(e)=>{
-            options.position.copy(e.point)
-        })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
         stats = new VRStats(renderer)
-        // camera.add(stats)
-        // scene.add(camera)
-
 
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
     }
@@ -191,28 +173,7 @@
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-
-
-        const delta = clock.getDelta() * spawnerOptions.timeScale;
-        tick += delta;
-        if ( tick < 0 ) tick = 0;
-        if ( delta > 0 ) {
-            //spawn the correct number of particles for this frame based on the spawn rate
-            for ( let x = 0; x < spawnerOptions.spawnRate * delta; x++ ) {
-                options.velocity.x = options.baseVelocity.x + particleSystem.random() * options.velocityRandomness
-                options.velocity.y = options.baseVelocity.y + particleSystem.random() * options.velocityRandomness
-                options.velocity.z = options.baseVelocity.z + particleSystem.random() * options.velocityRandomness
-                options.color.setRGB(
-                    THREE.Math.clamp(options.baseColor.r+particleSystem.random()*options.colorRandomness,0,1),
-                    THREE.Math.clamp(options.baseColor.g+particleSystem.random()*options.colorRandomness,0,1),
-                    THREE.Math.clamp(options.baseColor.b+particleSystem.random()*options.colorRandomness,0,1),
-                )
-                particleSystem.spawnParticle( options );
-            }
-        }
-
-        particleSystem.update( tick );
-
+        particleSystem.update( time );
         renderer.render( scene, camera );
     }
 
