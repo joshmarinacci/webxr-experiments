@@ -179,8 +179,13 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             spawnerOptions.spawnRate = 0
             pointLight.intensity = 0.0
         })
+        const wand_tip = new THREE.Vector3(0, 0.05, -1.2)
         on(mesh,POINTER_MOVE,(e)=>{
-            options.position.copy(e.point)
+            if(pointer.controller1.visible) {
+                options.position.copy(pointer.controller1.localToWorld(wand_tip))
+            } else {
+                options.position.copy(e.point)
+            }
         })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
