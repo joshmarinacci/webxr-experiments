@@ -141,6 +141,7 @@ export class Pointer {
         intersects.forEach((it) => {
             this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
         })
+        this._processClick()
     }
 
     controllerMove(controller) {
