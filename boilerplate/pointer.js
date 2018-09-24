@@ -36,6 +36,11 @@ export class Pointer {
         this.canvas.addEventListener('mousedown',this.mouseDown.bind(this))
         this.canvas.addEventListener('mouseup',this.mouseUp.bind(this))
 
+        //touch events
+        this.canvas.addEventListener('touchstart',this.touchStart.bind(this))
+        this.canvas.addEventListener('touchmove',this.touchMove.bind(this))
+        this.canvas.addEventListener('touchend',this.touchEnd.bind(this))
+
         // setup the VR controllers
         this.controller1 = this.renderer.vr.getController(0);
         this.controller1.addEventListener('selectstart', this.controllerSelectStart.bind(this));
@@ -94,6 +99,48 @@ export class Pointer {
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         this.raycaster.setFromCamera(mouse, this.camera)
         this._processMove()
+    }
+
+    touchStart(e) {
+        e.preventDefault()
+        if(e.changedTouches.length <= 0) return
+        const tch = e.changedTouches[0]
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((tch.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((tch.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS})
+        })
+    }
+    touchMove(e) {
+        e.preventDefault()
+        if(e.changedTouches.length <= 0) return
+        const tch = e.changedTouches[0]
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((tch.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((tch.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        this._processMove()
+    }
+    touchEnd(e) {
+        e.preventDefault()
+        if(e.changedTouches.length <= 0) return
+        const tch = e.changedTouches[0]
+        const mouse = new THREE.Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((tch.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((tch.clientY - bounds.top) / bounds.height) * 2 + 1
+        this.raycaster.setFromCamera(mouse, this.camera)
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+            .filter(it => this.intersectionFilter(it.object))
+        intersects.forEach((it) => {
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+        })
     }
 
     controllerMove(controller) {

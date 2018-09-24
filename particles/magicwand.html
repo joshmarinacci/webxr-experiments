@@ -111,7 +111,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
         //an invisible sphere for calculating a spawn point
         const mesh = new THREE.Mesh(
             new THREE.SphereGeometry(1.6),
-            new THREE.MeshLambertMaterial({color:'blue', side:THREE.DoubleSide, visible:false}))
+            new THREE.MeshLambertMaterial({side:THREE.DoubleSide, visible:false}))
         mesh.position.y = 1.0
         mesh.position.x = 0.3
         mesh.userData.clickable = true
