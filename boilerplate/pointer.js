@@ -139,7 +139,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE, point: it.point})
         })
         this._processClick()
     }
@@ -186,7 +186,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
                 .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK})
+            this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
         })
     }
     mouseClick(e) {
@@ -206,7 +206,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS})
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point})
         })
     }
     mouseUp(e) {
@@ -218,7 +218,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE, point: it.point})
         })
     }
 
@@ -227,7 +227,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS})
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point})
         })
     }
 
@@ -240,7 +240,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE})
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE, point: it.point})
         })
         this._processClick()
     }

@@ -174,18 +174,20 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
         on(mesh,POINTER_PRESS,(e)=>{
             spawnerOptions.spawnRate = 5000
             pointLight.intensity = 2.0
+            if(e.point) options.position.copy(e.point)
         })
         on(mesh,POINTER_RELEASE,(e)=>{
             spawnerOptions.spawnRate = 0
             pointLight.intensity = 0.0
+            if(e.point) options.position.copy(e.point)
         })
         const wand_tip = new THREE.Vector3(0, 0.05, -1.2)
         on(mesh,POINTER_MOVE,(e)=>{
-            if(pointer.controller1.visible) {
-                options.position.copy(pointer.controller1.localToWorld(wand_tip))
-            } else {
+            // if(pointer.controller1.visible) {
+                // options.position.copy(pointer.controller1.localToWorld(wand_tip))
+            // } else {
                 options.position.copy(e.point)
-            }
+            // }
         })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
