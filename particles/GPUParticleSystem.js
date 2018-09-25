@@ -14,14 +14,17 @@ const GPUParticleShader = {
                 attribute vec3 velocity;
                 attribute vec3 acceleration;
                 attribute vec3 color;
+                attribute vec3 endColor;
                 attribute float size;
                 attribute float lifeTime;
     
                 varying vec4 vColor;
+                varying vec4 vEndColor;
                 varying float lifeLeft;
     
                 void main() {
                     vColor = vec4( color, 1.0 );
+                    vEndColor = vec4( endColor, 1.0);
                     vec3 newPosition;
                     float timeElapsed = uTime - startTime;
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
@@ -49,19 +52,25 @@ const GPUParticleShader = {
 
     fragmentShader: `
                 varying vec4 vColor;
+                varying vec4 vEndColor;
                 varying float lifeLeft;
                 uniform sampler2D tSprite;
                 void main() {
                     // color based on particle texture and the lifeLeft. 
                     // if lifeLeft is 0 then make invisible
                     vec4 tex = texture2D( tSprite, gl_PointCoord );
-                    gl_FragColor = vec4( vColor.rgb * tex.a, lifeLeft * tex.a );
+                    vec4 color = mix(vColor, vEndColor, 1.0-lifeLeft);
+                    gl_FragColor = vec4( color.rgb * tex.a, lifeLeft * tex.a );
                 }
     
             `
 };
 
-const UPDATEABLE_ATTRIBUTES = ['positionStart', 'startTime', 'velocity', 'acceleration', 'color', 'size', 'lifeTime']
+const UPDATEABLE_ATTRIBUTES = [
+    'positionStart', 'startTime',
+    'velocity', 'acceleration',
+    'color', 'endColor',
+    'size', 'lifeTime']
 
 export default class GPUParticleSystem extends THREE.Object3D {
     constructor(options) {
@@ -126,6 +135,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
         this.geometry.addAttribute('velocity',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
         this.geometry.addAttribute('acceleration',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
         this.geometry.addAttribute('color',         new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.addAttribute('endColor',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
 
         //scalar attributes
         this.geometry.addAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
@@ -195,12 +205,14 @@ export default class GPUParticleSystem extends THREE.Object3D {
         let velocity = new THREE.Vector3()
         let acceleration = new THREE.Vector3()
         let color = new THREE.Color()
+        let endColor = new THREE.Color()
 
         const positionStartAttribute = this.geometry.getAttribute('positionStart')
         const startTimeAttribute = this.geometry.getAttribute('startTime')
         const velocityAttribute = this.geometry.getAttribute('velocity')
         const accelerationAttribute = this.geometry.getAttribute('acceleration')
         const colorAttribute = this.geometry.getAttribute('color')
+        const endcolorAttribute = this.geometry.getAttribute('endColor')
         const sizeAttribute = this.geometry.getAttribute('size')
         const lifeTimeAttribute = this.geometry.getAttribute('lifeTime')
 
@@ -212,6 +224,7 @@ export default class GPUParticleSystem extends THREE.Object3D {
         velocity = options.velocity !== undefined ? velocity.copy(options.velocity) : velocity.set(0, 0, 0);
         acceleration = options.acceleration !== undefined ? acceleration.copy(options.acceleration) : acceleration.set(0, 0, 0);
         color = options.color !== undefined ? color.copy(options.color) : color.set(0xffffff);
+        endColor = options.endColor !== undefined ? endColor.copy(options.endColor) : endColor.copy(color)
 
         const lifetime = options.lifetime !== undefined ? options.lifetime : 5
         let size = options.size !== undefined ? options.size : 10
@@ -237,6 +250,10 @@ export default class GPUParticleSystem extends THREE.Object3D {
         colorAttribute.array[i * 3 + 0] = color.r;
         colorAttribute.array[i * 3 + 1] = color.g;
         colorAttribute.array[i * 3 + 2] = color.b;
+
+        endcolorAttribute.array[i * 3 + 0] = endColor.r;
+        endcolorAttribute.array[i * 3 + 1] = endColor.g;
+        endcolorAttribute.array[i * 3 + 2] = endColor.b;
 
         //size, lifetime and starttime
         sizeAttribute.array[i] = size + this.random() * sizeRandomness;

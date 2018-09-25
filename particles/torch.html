@@ -23,6 +23,7 @@
             height: 100vh;
             background-color: rgba(0,0,0,0.5);
             text-align: center;
+            display: none;
         }
         #loading-indicator {
             display: block;
@@ -63,46 +64,79 @@
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     let camera, scene, renderer, pointer, stats;
-    let parts
+    let torches = []
     function initContent(scene,camera,renderer) {
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0x000000 );
         const textureLoader = new THREE.TextureLoader()
         const options = {
             maxParticles: 1000,
-            position: new THREE.Vector3(0,1.0,-10.0),
+            position: new THREE.Vector3(0,0,0),
             positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, 5.0, 0.0),
+            baseVelocity: new THREE.Vector3(0.0, 1.0, 0.0),
             velocity: new THREE.Vector3(0.0, 0.0, 0.0),
-            velocityRandomness: 1.0,
-            acceleration: new THREE.Vector3(0.0,-4.0,0.0),
-            baseColor: new THREE.Color(0.0,1.0,0.5),
-            color: new THREE.Color(0.0,1.0,1.0),
+            velocityRandomness: 0.3,
+            acceleration: new THREE.Vector3(0.0,0.0,0.0),
+            color: new THREE.Color(0.5,0.3,0.0),
+            endColor: new THREE.Color(0.5,0.0,0.0),
             colorRandomness: 0.5,
             lifetime: 3.0,
-            size: 15,
+            size: 40,
             sizeRandomness: 1.0,
             particleSpriteTex: textureLoader.load('./tex/particle2.png'),
-            blending: THREE.NormalBlending,
+            blending: THREE.AdditiveBlending,
             onTick:(system,time) => {
-                let amt = (Math.sin(time)+0.9) // goes from 0 to 2
-                for(let i=0; i<amt*4; i++) {
-                    options.velocity.x = options.baseVelocity.x + system.random() * options.velocityRandomness
-                    options.velocity.y = options.baseVelocity.y + amt/2.0 + system.random() * options.velocityRandomness
-                    options.velocity.z = options.baseVelocity.z + system.random() * options.velocityRandomness
-                    system.spawnParticle( options );
-                }
+                options.velocity.x = options.baseVelocity.x + system.random() * options.velocityRandomness
+                options.velocity.y = options.baseVelocity.y + system.random() * options.velocityRandomness*2.0
+                options.velocity.z = options.baseVelocity.z + system.random() * options.velocityRandomness
+                system.spawnParticle( options );
             }
         }
-        parts = new GPUParticleSystem(options)
-        scene.add(parts)
+
+        function makeTorch() {
+            const group = new THREE.Group()
+
+            const parts = new GPUParticleSystem(options)
+            parts.position.y = 1.1
+            group.add(parts)
+            group.particleSystem = parts
+
+            const torch = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.3,0.2,1),
+                new THREE.MeshLambertMaterial({color:'white'})
+            )
+            torch.position.y = 0.5
+            group.add(torch)
+
+            const light = new THREE.PointLight(0xff0000, 1.0, 4.0)
+            light.position.y = 2.5
+            group.add(light)
+            group.light = light
+
+            return group
+        }
+
+        for(let i=0; i<3; i++) {
+            const torch = makeTorch()
+            torch.position.z = -5
+            torch.position.y = -0.0
+            torch.position.x = i*2.0 - 2.0
+            scene.add(torch)
+            torches.push(torch)
+        }
+
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(10,30,100,100),
+            new THREE.MeshLambertMaterial({color:'white'})
+        )
+        floor.rotation.x = -90 * Math.PI/180
+        floor.position.z = 0
+        scene.add(floor)
+
+
     }
 
-    //called on every frame. customize this
     function render(time) {
-        //update the pointer and stats, if configured
-        if(pointer) pointer.tick(time)
-        if(stats) stats.update(time)
-        parts.update(time)
+        torches.forEach(torch => torch.particleSystem.update(time))
         renderer.render( scene, camera );
     }
 
