@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+        }
+    </style>
+    <script src="./node_modules/three/build/three.min.js"></script>
+    <script src="./node_modules/three/examples/js/lines/LineSegmentsGeometry.js"></script>
+    <script src="./node_modules/three/examples/js/lines/LineGeometry.js"></script>
+    <script src="./node_modules/three/examples/js/lines/WireframeGeometry2.js"></script>
+    <script src="./node_modules/three/examples/js/lines/LineMaterial.js"></script>
+    <script src="./node_modules/three/examples/js/lines/LineSegments2.js"></script>
+    <script src="./node_modules/three/examples/js/lines/Wireframe.js"></script>
+</head>
+<body>
+<script type="x-shader/x-fragment" id="fragmentShader">
+    uniform float delta; //constant supplied by the render method
+    varying vec2 vUv;
+    void main() {
+        float c = 0.5+sin(vUv.y*10.0+delta*10.0)*0.5;
+        vec3 rgb = vec3(c,c, c);
+        gl_FragColor = vec4(rgb, 1.0);
+    }
+</script>
+
+<script type="module">
+    let scene, camera, renderer
+    let mesh
+    let matLine
+
+    function setupScene() {
+        var geo = new THREE.SphereGeometry( 2 );
+        var geometry = new THREE.WireframeGeometry2( geo );
+        matLine = new THREE.LineMaterial( {
+            color: 0xff0000,
+            linewidth: 5, // in pixels
+        } );
+        matLine.resolution.set( window.innerWidth, window.innerHeight );
+        matLine.uniforms.delta = {value:0}
+        matLine.fragmentShader = document.querySelector('#fragmentShader').textContent
+        mesh = new THREE.Wireframe( geometry, matLine );
+        mesh.position.z = -10
+        scene.add( mesh );
+    }
+
+    function init() {
+        //setup canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        //setup scene and cameras
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x000000 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        //setup light
+        var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 0, -1, 1 ).normalize();
+        scene.add( light );
+
+        //setup renderer
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //setup events
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        },false);
+
+
+        setupScene()
+    }
+
+    function render(time) {
+        mesh.rotation.y += 0.001
+        matLine.uniforms.delta.value = time/1000
+        renderer.render( scene, camera );
+    }
+
+    init();
+    renderer.setAnimationLoop( render );
+
+</script>
+
+</body>
+</html>
