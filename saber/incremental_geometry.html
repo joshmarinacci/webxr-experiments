@@ -70,6 +70,7 @@
         //set background to gray
         scene.background = new THREE.Color( 0x000000 );
 
+        const textureLoader = new THREE.TextureLoader()
 
         //copy swoop points into geometry
         const verts = []
@@ -78,7 +79,11 @@
         geo.addAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3))
 
         //make the swoop mesh as a triangle strip
-        const mat = new THREE.MeshBasicMaterial({color:0x88ff88, wireframe:false, side: THREE.DoubleSide})
+        const mat = new THREE.MeshBasicMaterial({
+            color:0x88ff88,
+            wireframe:false,
+            side: THREE.DoubleSide,
+        })
         swoop = new THREE.Mesh(geo,mat)
         swoop.setDrawMode(THREE.TriangleStripDrawMode)
         scene.add(swoop)
@@ -92,7 +97,10 @@
         //made the blade from a cylinder
         blade = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(0.03,0.03, 2),
-            new THREE.MeshBasicMaterial({color:0x00ff00})
+            new THREE.MeshLambertMaterial({
+                color:0x00ff00,
+                map: textureLoader.load('./texture.png'),
+            })
         )
         blade.rotation.x = 90 * Math.PI/180
         //center vertically
@@ -102,7 +110,9 @@
 
         const hilt = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(0.04, 0.04, 0.5),
-            new THREE.MeshBasicMaterial({color:0x777777})
+            new THREE.MeshLambertMaterial({
+                color:0x777777,
+            })
         )
         hilt.rotation.x = 90*Math.PI/180
         hilt.position.z = -0.5/2
@@ -112,6 +122,9 @@
         start = new THREE.Vector3(0,0,-2.5)
         end = new THREE.Vector3(0,0,-0.5)
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+
+
+        scene.add(new THREE.PointLight())
     }
 
 
@@ -161,17 +174,17 @@
         THREE.DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
             console.log("really setting it up now")
-            $('#loading-indicator').style.display = 'none'
-            $('#click-to-play').style.display = 'block'
-            const overlay = $('#overlay')
-            $("#click-to-play").addEventListener('click',()=>{
-                overlay.style.visibility = 'hidden'
-                if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
-            })
+            // $('#loading-indicator').style.display = 'none'
+            // $('#click-to-play').style.display = 'block'
+            // const overlay = $('#overlay')
+            // $("#click-to-play").addEventListener('click',()=>{
+            //     overlay.style.visibility = 'hidden'
+            //     if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+            // })
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
             console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
-            $("#progress").setAttribute('value',100*(loaded/total))
+            // $("#progress").setAttribute('value',100*(loaded/total))
         }
         THREE.DefaultLoadingManager.onError = (url) => {
             console.log(`error loading ${url}`)
