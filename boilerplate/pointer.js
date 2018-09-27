@@ -45,12 +45,20 @@ export class Pointer {
         this.controller1 = this.renderer.vr.getController(0);
         this.controller1.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller1.addEventListener('selectend', this.controllerSelectEnd.bind(this));
-        this.scene.add(this.controller1);
+
 
         this.controller2 = this.renderer.vr.getController(1);
         this.controller2.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller2.addEventListener('selectend', this.controllerSelectEnd.bind(this));
+
+        if(opts.mouseSimulatesController) {
+            this.controller1 = new THREE.Group()
+            this.controller1.position.set(0,0,0)
+        }
+
+        this.scene.add(this.controller1);
         this.scene.add(this.controller2);
+
 
 
         if(this.opts.enableLaser) {
@@ -98,6 +106,9 @@ export class Pointer {
         mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         this.raycaster.setFromCamera(mouse, this.camera)
+        if(this.opts.mouseSimulatesController) {
+            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, this.raycaster.ray.direction)
+        }
         this._processMove()
     }
 

@@ -47,79 +47,82 @@
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats, swoop, blade;
+    let camera, scene, renderer, pointer, swoop, blade;
+    let start,end
 
-    let index = 0
+    const TRAIL_COUNT = 10 // number of strips for the trail
+    const swoop_points = []
+    for(let j=0;j<TRAIL_COUNT; j++) {
+        swoop_points.push({x:0,y:3, z:0})
+        swoop_points.push({x:0,y:0, z:0})
+    }
+
+    function copyPoints(src,dst) {
+        src.forEach((pt,i) =>{
+            dst[i*3+0] = pt.x
+            dst[i*3+1] = pt.y
+            dst[i*3+2] = pt.z
+        })
+    }
+
     function initContent(scene,camera,renderer) {
-        //set the background color of the scene
+        //set background to gray
         scene.background = new THREE.Color( 0xcccccc );
 
 
-        const geo = new THREE.BufferGeometry()
+        //copy swoop points into geometry
         const verts = []
-        let y = 1
-        for(let i=0; i<10; i++) {
-            y *= -1
-            verts.push(i/3)
-            verts.push(y*0.2+1)
-            verts.push(0)
-            verts.push(i/3)
-            verts.push(y*0.2-1)
-            verts.push(0)
-        }
-        console.log(verts)
+        copyPoints(swoop_points,verts)
+        const geo = new THREE.BufferGeometry()
         geo.addAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3))
-        geo.setDrawRange(0,6*10) // start at point 0, draw to point 6
 
-
+        //make the swoop mesh as a triangle strip
         const mat = new THREE.MeshBasicMaterial({color:0x000000, wireframe:false, side: THREE.DoubleSide})
         swoop = new THREE.Mesh(geo,mat)
         swoop.setDrawMode(THREE.TriangleStripDrawMode)
-        swoop.position.z = -5
-        swoop.position.y = 1.5
         scene.add(swoop)
-
-        blade = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.1,0.1),
-            new THREE.MeshBasicMaterial({color:0xff0000})
-        )
-        blade.position.z = -5
-        scene.add(blade)
-
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene,renderer,camera, {
+            mouseSimulatesController:true,
+            enableLaser:true,
         })
+
+        //made the blade from a cylinder
+        blade = new THREE.Mesh(
+            new THREE.CylinderBufferGeometry(0.1,0.1, 3),
+            new THREE.MeshBasicMaterial({color:0xff0000})
+        )
+        //center vertically
+        blade.position.y = 1.5
+        //put the blade inside the controller group
+        pointer.controller1.add(blade)
+
+        //start and end points of the blade to use with the swoop
+        start = new THREE.Vector3(0,3,0)
+        end = new THREE.Vector3(0,0,0)
     }
 
+
     //called on every frame. customize this
-    let tick = 0
-    const TRAIL_COUNT = 10 // number of strips for the trail
-    const STRIP_SIZE = 6 // a verticle strip is two points or 6 floats
-    const prev = []
-    for(let j=0;j<TRAIL_COUNT; j++) {
-        prev.push({x:0,y:0})
-    }
     function render(time) {
-        const pt = pointer.raycaster.ray.direction
-        blade.position.x = pt.x
-        blade.position.y = pt.y+2
-        const positions = swoop.geometry.attributes.position.array
-        prev.push({x:pt.x, y:pt.y})
-        prev.shift()
-        prev.forEach((pt,i) =>{
-            positions[i*STRIP_SIZE+0] = pt.x
-            positions[i*STRIP_SIZE+1] = pt.y+1
-            positions[i*STRIP_SIZE+3] = pt.x
-            positions[i*STRIP_SIZE+4] = pt.y-0
-        })
+        //copy the start and end points for the new segment
+        const pt1 = pointer.controller1.localToWorld(start.clone())
+        const pt2 = pointer.controller1.localToWorld(end.clone())
+        swoop_points.push(pt1)
+        swoop_points.push(pt2)
+        //remove two points
+        swoop_points.shift()
+        swoop_points.shift()
+        //copy to geometry
+        copyPoints(swoop_points,swoop.geometry.attributes.position.array)
+        //trigger update
         swoop.geometry.attributes.position.needsUpdate = true
-        swoop.geometry.setDrawRange(0, TRAIL_COUNT*2)
-    renderer.render( scene, camera );
+        renderer.render( scene, camera );
     }
 
 
     // you shouldn't need to modify much below here
-
     function initScene() {
         //create DIV for the canvas
         const container = document.createElement( 'div' );
@@ -165,9 +168,6 @@
 
     }
 
-
-
-    // initPage()
     initScene()
     renderer.setAnimationLoop(render)
 
