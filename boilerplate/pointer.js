@@ -53,7 +53,7 @@ export class Pointer {
 
         if(opts.mouseSimulatesController) {
             this.controller1 = new THREE.Group()
-            this.controller1.position.set(0,0,0)
+            this.controller1.position.set(0,0,-4)
         }
 
         this.scene.add(this.controller1);
@@ -107,7 +107,11 @@ export class Pointer {
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         this.raycaster.setFromCamera(mouse, this.camera)
         if(this.opts.mouseSimulatesController) {
-            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, this.raycaster.ray.direction)
+            const dir = this.raycaster.ray.direction.clone()
+            dir.z = -dir.z
+            dir.y = -dir.y
+            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, dir)
+            // this.controller1.quaternion.setFromUnitVectors(dir,THREE.Object3D.DefaultUp)
         }
         this._processMove()
     }
