@@ -1,5 +1,8 @@
 <!--
 
+ignition sound
+https://freesound.org/people/joe93barlow/sounds/78674/
+
 swing sound
 https://freesound.org/people/gyzhor/sounds/47125/
 
@@ -60,8 +63,8 @@ https://freesound.org/people/gyzhor/sounds/47125/
     const TRAIL_COUNT = 10 // number of strips for the trail
     const swoop_points = []
     for(let j=0;j<TRAIL_COUNT; j++) {
-        swoop_points.push({x:0,y:3, z:0})
-        swoop_points.push({x:0,y:0, z:0})
+        swoop_points.push(new THREE.Vector3(0,3,0))
+        swoop_points.push(new THREE.Vector3(0,0,0))
     }
 
     function copyPoints(src,dst) {
@@ -179,13 +182,12 @@ https://freesound.org/people/gyzhor/sounds/47125/
         camera.add(audioListener)
         swingSound = new THREE.Audio(audioListener)
         const audioLoader = new THREE.AudioLoader()
-        audioLoader.load("./swing.mp3", (buf) => swingSound.setBuffer(buf))
+        audioLoader.load("./swing2.mp3", (buf) => swingSound.setBuffer(buf))
 
 
         startSound = new THREE.Audio(audioListener)
-        audioLoader.load("./ignition.wav",(buf) => {
-            startSound.setBuffer(buf)
-        })
+        audioLoader.load("./ignition.wav",(buf) => startSound.setBuffer(buf))
+
 
 
         pointer.waitSceneClick(()=>{
@@ -194,8 +196,39 @@ https://freesound.org/people/gyzhor/sounds/47125/
             bladeGlow.visible = true
             swoop.visible = true
             startSound.play()
+            // swingSound.play()
+            soundStarted = true
         })
 
+    }
+
+
+    let soundStarted = false
+    let count = 0
+    function calculateSpeed(time) {
+        count++
+        // if(count > 100) throw new Error()
+        const dists = []
+        let prev = swoop_points[0]
+        for(let i=2; i<swoop_points.length; i+=2) {
+            const curr = swoop_points[i]
+            const dist = curr.distanceTo(prev)
+            dists.push(dist)
+            prev = curr
+        }
+        // console.log(dists)
+        const vels = []
+        const d1 = dists[dists.length-2]
+        const d2 = dists[dists.length-1]
+        const dx = d2-d1
+        if(dx > 0.3) {
+            console.log('accl = ', dx)
+            if(soundStarted) {
+                if(swingSound.isPlaying) swingSound.stop()
+                swingSound.play()
+            }
+            // if(!swingSound.isPlaying) swingSound.play()
+        }//dists[dists.length-2], dists[dists.length-1], )
     }
 
 
@@ -209,6 +242,10 @@ https://freesound.org/people/gyzhor/sounds/47125/
         //remove two points
         swoop_points.shift()
         swoop_points.shift()
+
+        //calculate the current velocity and acceleration
+        calculateSpeed(time)
+
         //copy to geometry
         copyPoints(swoop_points,swoop.geometry.attributes.position.array)
         //trigger update
