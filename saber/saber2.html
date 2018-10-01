@@ -50,7 +50,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
 <body>
 
 <script type="module">
-    import {POINTER_MOVE, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, Pointer} from '../boilerplate/pointer.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -121,13 +121,14 @@ https://freesound.org/people/gyzhor/sounds/47125/
         //put the blade inside the controller group
         pointer.controller1.add(blade)
 
+        //glow is just another cylinder around the first one,
+        //lighter and translucent
         const bladeGlow = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.15,2.05),
+            new THREE.CylinderBufferGeometry(0.04,0.04,2),
             new THREE.MeshLambertMaterial({
-                color: 0xffffff,
+                color:0x88ff88,
                 transparent:true,
-                opacity: 0.5,
-                map: textureLoader.load('./texture.png'),
+                opacity: 0.3,
             })
         )
         bladeGlow.rotation.x = -90 * Math.PI/180
@@ -139,7 +140,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
         const hilt = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(0.04, 0.04, 0.5),
-            new THREE.MeshLambertMaterial({
+            new THREE.MeshPhongMaterial({
                 color:0x777777,
             })
         )
@@ -148,13 +149,13 @@ https://freesound.org/people/gyzhor/sounds/47125/
         pointer.controller1.add(hilt)
 
         const button = new THREE.Mesh(
-            new THREE.BoxGeometry(0.02,0.05,0.1),
+            new THREE.BoxGeometry(0.02,0.03,0.04),
             new THREE.MeshLambertMaterial({
                 color:0x660000
             })
         )
         button.position.z = -0.3
-        button.position.y = 0.04
+        button.position.y = 0.03
         button.position.x = 0
         pointer.controller1.add(button)
 
@@ -165,7 +166,9 @@ https://freesound.org/people/gyzhor/sounds/47125/
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
 
-        scene.add(new THREE.PointLight())
+        const pointLight = new THREE.PointLight()
+        pointLight.position.set(0,6,0)
+        scene.add(pointLight)
 
         scene.add(new THREE.AmbientLight(0x888888))
 
@@ -189,15 +192,22 @@ https://freesound.org/people/gyzhor/sounds/47125/
         audioLoader.load("./ignition.wav",(buf) => startSound.setBuffer(buf))
 
 
-
-        pointer.waitSceneClick(()=>{
-            button.material.color.set(0xff0000)
-            blade.visible = true
-            bladeGlow.visible = true
-            swoop.visible = true
-            startSound.play()
-            // swingSound.play()
-            soundStarted = true
+        pointer.on(POINTER_CLICK,()=>{
+            if(!blade.visible) {
+                button.material.color.set(0xff0000)
+                blade.visible = true
+                bladeGlow.visible = true
+                swoop.visible = true
+                startSound.play()
+                soundStarted = true
+            } else {
+                button.material.color.set(0x660000)
+                blade.visible = false
+                bladeGlow.visible = false
+                swoop.visible = false
+                startSound.play()
+                soundStarted = false
+            }
         })
 
     }
@@ -221,11 +231,16 @@ https://freesound.org/people/gyzhor/sounds/47125/
         const d1 = dists[dists.length-2]
         const d2 = dists[dists.length-1]
         const dx = d2-d1
-        if(dx > 0.3) {
+        if(dx > 0.1) {
             console.log('accl = ', dx)
             if(soundStarted) {
-                if(swingSound.isPlaying) swingSound.stop()
-                swingSound.play()
+                if(swingSound.isPlaying) {
+                    swingSound.stop()
+                    swingSound.startTime = 0.5
+                    swingSound.play()
+                } else {
+                    swingSound.play()
+                }
             }
             // if(!swingSound.isPlaying) swingSound.play()
         }//dists[dists.length-2], dists[dists.length-1], )

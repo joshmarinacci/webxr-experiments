@@ -7,6 +7,7 @@ export const POINTER_RELEASE = "release"
 
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
+        this.listeners = {}
         this.opts = opts || {}
         this.opts.enableLaser = (opts.enableLaser !== undefined) ? opts.enableLaser : true
         this.scene = scene
@@ -90,6 +91,10 @@ export class Pointer {
 
     fire(obj, type, payload) {
         obj.dispatchEvent(payload)
+    }
+    fireSelf(type,payload) {
+        if(!this.listeners[type]) return
+        this.listeners[type].forEach(cb => cb(payload))
     }
 
     //make the camera follow the mouse in desktop mode. Helps w/ debugging.
@@ -204,6 +209,8 @@ export class Pointer {
         intersects.forEach((it) => {
             this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
         })
+
+        this.fireSelf(POINTER_CLICK)
     }
     mouseClick(e) {
         const mouse = new THREE.Vector2()
@@ -265,4 +272,9 @@ export class Pointer {
         this.waitcb = cb
     }
 
+
+    on(type,cb) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].push(cb)
+    }
 }
