@@ -80,7 +80,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene,renderer,camera, {
-            // mouseSimulatesController:true,
+            mouseSimulatesController:true,
             enableLaser:false,
         })
 
@@ -217,22 +217,21 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
     let soundStarted = false
     function calculateSpeed(time) {
-        const dists = []
-        let prev = swoop_points[0]
-        for(let i=2; i<swoop_points.length; i+=2) {
-            const curr = swoop_points[i]
-            const dist = curr.distanceTo(prev)
-            dists.push(dist)
-            prev = curr
-        }
-        const d1 = dists[dists.length-2]
-        const d2 = dists[dists.length-1]
+        //get the three most recent top points
+        const p1 = swoop_points[swoop_points.length-6]
+        const p2 = swoop_points[swoop_points.length-4]
+        const p3= swoop_points[swoop_points.length-2]
+        //distance between them is velocity
+        const d1 = p1.distanceTo(p2)
+        const d2 = p2.distanceTo(p3)
+        //distance between those is acceleration
         const accel = d2-d1
+        //if enough accel, play sound
         if(accel > 0.1) {
             if(soundStarted) {
                 if(swingSound.isPlaying) {
                     swingSound.stop()
-                    swingSound.startTime = 0.5
+                    swingSound.startTime = 0.0
                     swingSound.play()
                 } else {
                     swingSound.play()
