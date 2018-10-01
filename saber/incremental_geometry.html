@@ -8,7 +8,6 @@
     <!-- required -->
     <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
     <script src="../boilerplate/webvr.js"></script>
-
     <style type="text/css">
         #overlay {
             position: fixed;
@@ -49,7 +48,7 @@
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, swoop, blade;
-    let start,end
+    let start,end, composer
 
     const TRAIL_COUNT = 10 // number of strips for the trail
     const swoop_points = []
@@ -90,7 +89,7 @@
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene,renderer,camera, {
-            // mouseSimulatesController:true,
+            mouseSimulatesController:true,
             enableLaser:false,
         })
 
@@ -117,6 +116,17 @@
         hilt.rotation.x = 90*Math.PI/180
         hilt.position.z = -0.5/2
         pointer.controller1.add(hilt)
+
+        const button = new THREE.Mesh(
+            new THREE.BoxGeometry(1.0,1.0,1.0),
+            new THREE.MeshLambertMaterial({
+                color:0xffff00
+            })
+        )
+        button.position.z = -1
+        button.position.y = -1
+        button.position.x = 0
+        pointer.controller1.add(button)
 
         //start and end points of the blade to use with the swoop
         start = new THREE.Vector3(0,0,-2.5)

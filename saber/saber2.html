@@ -93,6 +93,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
             opacity:0.7,
         })
         swoop = new THREE.Mesh(geo,mat)
+        swoop.visible = false
         swoop.setDrawMode(THREE.TriangleStripDrawMode)
         scene.add(swoop)
 
@@ -113,6 +114,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         blade.rotation.x = 90 * Math.PI/180
         //center vertically
         blade.position.z = -1.50
+        blade.visible = false
         //put the blade inside the controller group
         pointer.controller1.add(blade)
 
@@ -127,6 +129,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         )
         bladeGlow.rotation.x = -90 * Math.PI/180
         bladeGlow.position.z = -1.50
+        bladeGlow.visible = false
         pointer.controller1.add(bladeGlow)
 
 
@@ -140,6 +143,18 @@ https://freesound.org/people/gyzhor/sounds/47125/
         hilt.rotation.x = 90*Math.PI/180
         hilt.position.z = -0.5/2
         pointer.controller1.add(hilt)
+
+        const button = new THREE.Mesh(
+            new THREE.BoxGeometry(0.02,0.05,0.1),
+            new THREE.MeshLambertMaterial({
+                color:0x660000
+            })
+        )
+        button.position.z = -0.3
+        button.position.y = 0.04
+        button.position.x = 0
+        pointer.controller1.add(button)
+
 
         //start and end points of the blade to use with the swoop
         start = new THREE.Vector3(0,0,-2.5)
@@ -155,7 +170,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(40,40),
-            new THREE.MeshLambertMaterial({color:'red'})
+            new THREE.MeshLambertMaterial({color:'orange'})
         )
         floor.rotation.x = -90 * Math.PI/180
         scene.add(floor)
@@ -166,13 +181,18 @@ https://freesound.org/people/gyzhor/sounds/47125/
         const audioLoader = new THREE.AudioLoader()
         audioLoader.load("./swing.mp3", (buf) => swingSound.setBuffer(buf))
 
-        // setTimeout(()=>{
-        //     swingSound.play()
-        // },2000)
 
         startSound = new THREE.Audio(audioListener)
         audioLoader.load("./ignition.wav",(buf) => {
             startSound.setBuffer(buf)
+        })
+
+
+        pointer.waitSceneClick(()=>{
+            button.material.color.set(0xff0000)
+            blade.visible = true
+            bladeGlow.visible = true
+            swoop.visible = true
             startSound.play()
         })
 
