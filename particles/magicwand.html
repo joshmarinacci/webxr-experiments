@@ -123,6 +123,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
+            //mouseSimulatesController:true,
             cameraFollowMouse: false,
             enableLaser:false,
         })
@@ -181,20 +182,11 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
             pointLight.intensity = 0.0
             if(e.point) options.position.copy(e.point)
         })
-        const wand_tip = new THREE.Vector3(0, 0.05, -1.2)
         on(mesh,POINTER_MOVE,(e)=>{
-            // if(pointer.controller1.visible) {
-                // options.position.copy(pointer.controller1.localToWorld(wand_tip))
-            // } else {
-                options.position.copy(e.point)
-            // }
+            options.position.copy(e.point)
         })
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
-        stats = new VRStats(renderer)
-        // camera.add(stats)
-        // scene.add(camera)
-
 
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
     }
