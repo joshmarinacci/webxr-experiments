@@ -210,7 +210,7 @@ export class Pointer {
             this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
         })
 
-        this.fireSelf(POINTER_CLICK)
+        this.fireSelf(POINTER_CLICK, {})
     }
     mouseClick(e) {
         const mouse = new THREE.Vector2()
