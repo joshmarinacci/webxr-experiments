@@ -54,7 +54,6 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
-    const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, swoop, blade;
@@ -79,6 +78,13 @@ https://freesound.org/people/gyzhor/sounds/47125/
         //set background to gray
         scene.background = new THREE.Color( 0x000000 );
 
+        //class which handles mouse and VR controller
+        pointer = new Pointer(scene,renderer,camera, {
+            // mouseSimulatesController:true,
+            enableLaser:false,
+        })
+
+
         const textureLoader = new THREE.TextureLoader()
 
         //copy swoop points into geometry
@@ -100,11 +106,9 @@ https://freesound.org/people/gyzhor/sounds/47125/
         swoop.setDrawMode(THREE.TriangleStripDrawMode)
         scene.add(swoop)
 
-        //class which handles mouse and VR controller
-        pointer = new Pointer(scene,renderer,camera, {
-            // mouseSimulatesController:true,
-            enableLaser:false,
-        })
+        //start and end points of the blade to use with the swoop
+        start = new THREE.Vector3(0,0,-2.5)
+        end = new THREE.Vector3(0,0,-0.5)
 
         //made the blade from a cylinder
         blade = new THREE.Mesh(
@@ -121,7 +125,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         //put the blade inside the controller group
         pointer.controller1.add(blade)
 
-        //glow is just another cylinder around the first one,
+        //blade glow is just another cylinder around the first one,
         //lighter and translucent
         const bladeGlow = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(0.04,0.04,2),
@@ -138,6 +142,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
 
 
 
+        //hilt is another cylinder, this time gray w/ shiny Phong material
         const hilt = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(0.04, 0.04, 0.5),
             new THREE.MeshPhongMaterial({
@@ -148,6 +153,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         hilt.position.z = -0.5/2
         pointer.controller1.add(hilt)
 
+        //a red button on the hilt
         const button = new THREE.Mesh(
             new THREE.BoxGeometry(0.02,0.03,0.04),
             new THREE.MeshLambertMaterial({
@@ -160,20 +166,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         pointer.controller1.add(button)
 
 
-        //start and end points of the blade to use with the swoop
-        start = new THREE.Vector3(0,0,-2.5)
-        end = new THREE.Vector3(0,0,-0.5)
-        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
-
-
-        const pointLight = new THREE.PointLight()
-        pointLight.position.set(0,6,0)
-        scene.add(pointLight)
-
-        scene.add(new THREE.AmbientLight(0x888888))
-
-
-
+        //an orange floor
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(40,40),
             new THREE.MeshLambertMaterial({color:'orange'})
@@ -181,17 +174,24 @@ https://freesound.org/people/gyzhor/sounds/47125/
         floor.rotation.x = -90 * Math.PI/180
         scene.add(floor)
 
+
+        //some lights
+        const pointLight = new THREE.PointLight()
+        pointLight.position.set(0,6,0)
+        scene.add(pointLight)
+        scene.add(new THREE.AmbientLight(0x888888))
+
+        //load up the sounds
         const audioListener = new THREE.AudioListener()
         camera.add(audioListener)
-        swingSound = new THREE.Audio(audioListener)
         const audioLoader = new THREE.AudioLoader()
+        swingSound = new THREE.Audio(audioListener)
         audioLoader.load("./swing2.mp3", (buf) => swingSound.setBuffer(buf))
-
-
         startSound = new THREE.Audio(audioListener)
         audioLoader.load("./ignition.wav",(buf) => startSound.setBuffer(buf))
 
 
+        //toggle the blade and sounds when the button is pressed
         pointer.on(POINTER_CLICK,()=>{
             if(!blade.visible) {
                 button.material.color.set(0xff0000)
@@ -210,14 +210,13 @@ https://freesound.org/people/gyzhor/sounds/47125/
             }
         })
 
+        //handle the enter VR button
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
     }
 
 
     let soundStarted = false
-    let count = 0
     function calculateSpeed(time) {
-        count++
-        // if(count > 100) throw new Error()
         const dists = []
         let prev = swoop_points[0]
         for(let i=2; i<swoop_points.length; i+=2) {
@@ -226,13 +225,10 @@ https://freesound.org/people/gyzhor/sounds/47125/
             dists.push(dist)
             prev = curr
         }
-        // console.log(dists)
-        const vels = []
         const d1 = dists[dists.length-2]
         const d2 = dists[dists.length-1]
-        const dx = d2-d1
-        if(dx > 0.1) {
-            console.log('accl = ', dx)
+        const accel = d2-d1
+        if(accel > 0.1) {
             if(soundStarted) {
                 if(swingSound.isPlaying) {
                     swingSound.stop()
@@ -242,8 +238,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
                     swingSound.play()
                 }
             }
-            // if(!swingSound.isPlaying) swingSound.play()
-        }//dists[dists.length-2], dists[dists.length-1], )
+        }
     }
 
 
@@ -258,16 +253,15 @@ https://freesound.org/people/gyzhor/sounds/47125/
         swoop_points.shift()
         swoop_points.shift()
 
-        //calculate the current velocity and acceleration
+        //calculate the current acceleration
         calculateSpeed(time)
 
         //copy to geometry
         copyPoints(swoop_points,swoop.geometry.attributes.position.array)
+
         //trigger update
         swoop.geometry.attributes.position.needsUpdate = true
         renderer.render( scene, camera );
-
-        // if(!swingSound.isPlaying) swingSound.play()
     }
 
 
