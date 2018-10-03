@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!--
+https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,6 +16,7 @@
 
     <!-- stats (fps, polygons, fps) -->
     <script src="../boilerplate/vrstats.js" type="module"></script>
+    <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 
     <!-- mouse/touch/vr-controller support -->
     <!--<script src="./pointer.js" type="module"></script>-->
@@ -122,9 +126,21 @@
             new THREE.MeshLambertMaterial({color:0xeeeeee})
         )
         ground.rotation.x = -90*Math.PI/180
-        scene.add(ground)
+        // scene.add(ground)
 
-        scene.add(new THREE.AmbientLight())
+
+        new THREE.GLTFLoader().load("./low_poly_christmas_forest/scene.gltf",(model)=>{
+            model.scene.position.z = -5
+            model.scene.position.y = -1
+            model.scene.rotation.y = 220*Math.PI/180
+            scene.add(model.scene)
+        })
+
+        const dirLight = new THREE.DirectionalLight(0xffffff,1.0)
+        dirLight.position.set(-10,10,10)
+        scene.add(dirLight)
+        // dirLight.target = snow
+        scene.add(new THREE.AmbientLight(0xffffff,0.5))
     }
 
     //called on every frame. customize this
