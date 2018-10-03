@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+
+<!--
+
+https://opengameart.org/content/snow-flake
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,20 +14,16 @@
     <script src="./node_modules/three/build/three.min.js"></script>
     <!-- needed for loading GLTF files -->
     <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-    <!-- needed for loading Truetype Fonts -->
-    <script src="./node_modules/three/examples/js/loaders/TTFLoader.js"></script>
-    <script src="./node_modules/three/examples/js/libs/opentype.min.js"></script>
 
     <!-- needed to enter VR -->
-    <script src="./webvr.js"></script>
+    <script src="../boilerplate/webvr.js"></script>
 
-    <!-- stats (fps, polygons, fps) -->
-    <script src="./vrstats.js" type="module"></script>
 
-    <!-- mouse/touch/vr-controller support -->
-    <!--<script src="./pointer.js" type="module"></script>-->
 
     <style type="text/css">
+        body {
+            margin:0;
+        }
         #overlay {
             position: fixed;
             font-size: 5vh;
@@ -64,39 +65,27 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from './pointer.js'
-    import VRStats from "./vrstats.js"
+    import VRStats from "../boilerplate/vrstats.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const rand = (min,max) => Math.random()*(max-min) + min
+    const randi = (min,max) => Math.floor(Math.random()*(max-min)+min)
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let cube
+    let flakes
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0xff0000 );
 
         //load a cat texture
         const texture_loader = new THREE.TextureLoader()
-        //cat from http://creative-commons-cats.tumblr.com/page/3
-        const texture = texture_loader.load('./cat.jpg')
+        const texture = texture_loader.load('./snowflake.png')
 
-        //create a cube
-        cube = new THREE.Mesh(
-            new THREE.BoxGeometry(1,1,1),
-            new THREE.MeshLambertMaterial({color:'white', map:texture})
-        )
-        //camera is at z=0, so move the cube back so we can see it
-        cube.position.z = -5
-        //move cube up to camera height (~1.5m)
-        cube.position.y = 1.5
-        //make it clickable
-        cube.userData.clickable = true
-        scene.add(cube)
 
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
@@ -105,39 +94,32 @@
 
 
 
+        flakes = new THREE.Group()
+        const geom = new THREE.PlaneBufferGeometry(1,1)
+        const mat = new THREE.MeshLambertMaterial({color:'white', map:texture, transparent:true, side:THREE.DoubleSide})
+        for(let i=0; i<100; i++) {
+            const flake = new THREE.Mesh(geom,mat)
+            flake.position.set(rand(-10,10),rand(-5,7),rand(-5,0))
+            console.log(flake.position.x)
+            flake.velocity = new THREE.Vector3(0,rand(-5,-30),0)
+
+            const rot = randi(0,3)
+            if(rot === 0) flake.rotationVelocity = new THREE.Vector3(rand(-30,30),0,0)
+            if(rot === 1) flake.rotationVelocity = new THREE.Vector3(0,rand(-30,30),0)
+            if(rot === 2) flake.rotationVelocity = new THREE.Vector3(0,0,rand(-30,30))
+            flakes.add(flake)
+        }
+        flakes.position.z = -2
+        scene.add(flakes)
+
+
+        scene.add(new THREE.AmbientLight(0xffffff,1.0))
 
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
         camera.add(stats)
         scene.add(camera)
-
-        //class which handles mouse and VR controller
-        pointer = new Pointer(scene,renderer,camera, {
-
-            //Pointer searches everything in the scene by default
-            //override this to match just certain things
-            intersectionFilter: ((o) => o.userData.clickable),
-
-            //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
-        })
-
-
-        //change cube to red BG when clicking
-        on(cube,POINTER_CLICK,()=>{
-            console.log("clicking on the cube")
-            cube.material.color.set(0xff0000)
-        })
-        //change cube to green BG when hovering over it
-        on(cube,POINTER_ENTER,()=>{
-            console.log("entering the cube")
-            cube.material.color.set(0x00ff00)
-        })
-        on(cube,POINTER_EXIT,()=>{
-            console.log('exiting the cube')
-            cube.material.color.set(0xffffff)
-        })
 
     }
 
@@ -146,8 +128,18 @@
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
+        if(flakes) {
+            flakes.children.forEach(flake => {
+                flake.position.x += flake.velocity.x/1000
+                flake.position.y += flake.velocity.y/1000
+                flake.position.z += flake.velocity.z/1000
+                flake.rotation.x += flake.rotationVelocity.x/1000
+                flake.rotation.y += flake.rotationVelocity.y/1000
+                flake.rotation.z += flake.rotationVelocity.z/1000
+                if(flake.position.y < -10) flake.position.y += 20
+            })
+        }
         //rotate the cube on every tick
-        cube.rotation.y += 0.002
         renderer.render( scene, camera );
     }
 
