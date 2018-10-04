@@ -52,7 +52,7 @@
         Scene, PerspectiveCamera, WebGLRenderer,
         DefaultLoadingManager, TextureLoader,
         DirectionalLight, AmbientLight, PointLight,
-        Quaternion, Vector3,
+        Quaternion, Vector3, Spherical,
     } from "../boilerplate/node_modules/three/build/three.module.js"
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
 
@@ -60,6 +60,28 @@
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     const toRad = deg => deg * Math.PI/180
+
+
+    /*
+Returns a random point of a sphere, evenly distributed over the sphere.
+The sphere is centered at (x0,y0,z0) with the passed in radius.
+The returned point is returned as a three element array [x,y,z].
+*/
+    function randomSpherePoint(radius){
+        // u and v are a random distribution from 0 to 1
+        var u = Math.random();
+        var v = Math.random();
+        // create random spherical coordinate
+        var theta = 2 * Math.PI * u;
+        var phi = Math.acos(2 * v - 1);
+
+        return new Spherical(radius,phi,theta)
+        //convert to cartisian coords
+        // var x = x0 + (radius * Math.sin(phi) * Math.cos(theta));
+        // var y = y0 + (radius * Math.sin(phi) * Math.sin(theta));
+        // var z = z0 + (radius * Math.cos(phi));
+        // return [x,y,z];
+    }
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats
@@ -70,7 +92,7 @@
         scene.background = new Color( 0x000000 );
 
         //load a cat texture
-        const texture_loader = new TextureLoader()
+        // const texture_loader = new TextureLoader()
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene,renderer,camera, {
@@ -97,17 +119,36 @@
         for(let i=0; i<100; i++) {
             const building = new Mesh(
                 // new BoxBufferGeometry(1,2,1),
-                new SphereBufferGeometry(1),
+                new SphereBufferGeometry(0.5),
                 new MeshStandardMaterial({color:'white', flatShading:true})
             )
-            building.position.set(0,15,0)
-            const theta = Math.random()*Math.PI*2
-            const phi = 0.1
-            building.position.applyAxisAngle(new Vector3(1,0,0), theta)
-            // building.position.applyAxisAngle(new Vector3(0,0,1), phi)
-            building.position.x = -2
-            building.rotation.x = theta
-            // building.rotation.z = phi
+
+            const pt = randomSpherePoint(15)
+            // const pt = new Spherical(15,i,i)
+            building.position.setFromSpherical(pt)
+            // building.rotation.x = pt.phi
+            // building.rotation.y = pt.theta
+            // building.position.set(pt[0],pt[1],pt[2])
+            globe.add(building)
+        }
+
+        for(let i=0; i<31; i++) {
+            const building = new Mesh(new BoxBufferGeometry(1,3,1), new MeshStandardMaterial({color:'white'}))
+            const pt = new Spherical(15,-i*0.2,0)
+            building.position.setFromSpherical(pt)
+            building.position.x -= 2
+            building.rotation.x = pt.phi
+            building.rotation.z = 0.1
+            globe.add(building)
+        }
+
+        for(let i=0; i<31; i++) {
+            const building = new Mesh(new BoxBufferGeometry(1,3,1), new MeshStandardMaterial({color:'white'}))
+            const pt = new Spherical(15,-i*0.2,0)
+            building.position.setFromSpherical(pt)
+            building.position.x += 2
+            building.rotation.x = pt.phi
+            building.rotation.z = -0.1
             globe.add(building)
         }
 
@@ -157,7 +198,7 @@
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
-        // document.body.appendChild( WEBVR.createButton( renderer ) );
+        document.body.appendChild( WEBVR.createButton( renderer ) );
 
         initContent(scene,camera,renderer)
 

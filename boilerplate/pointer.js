@@ -5,6 +5,8 @@ export const POINTER_MOVE = "move"
 export const POINTER_PRESS = "press"
 export const POINTER_RELEASE = "release"
 
+import * as THREE from "./node_modules/three/build/three.module.js"
+
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
         this.listeners = {}
