@@ -86,6 +86,17 @@ The returned point is returned as a three element array [x,y,z].
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats
     let globe
+
+
+    const ANGULAR_SPEED = 0.05
+    const MOVEMENTS = {
+        ArrowUp:    new Quaternion().setFromAxisAngle(new Vector3(1,0,0),toRad(ANGULAR_SPEED)),
+        ArrowDown:  new Quaternion().setFromAxisAngle(new Vector3(1,0,0),toRad(-ANGULAR_SPEED*6)),
+        ArrowLeft:  new Quaternion().setFromAxisAngle(new Vector3(0,1,0),toRad(-ANGULAR_SPEED*6)),
+        ArrowRight: new Quaternion().setFromAxisAngle(new Vector3(0,1,0),toRad(ANGULAR_SPEED*6)),
+    }
+
+
     //called on setup. Customize this
     function initContent(scene, camera, renderer) {
         //set the background color of the scene
@@ -103,17 +114,19 @@ The returned point is returned as a three element array [x,y,z].
             cameraFollowMouse:false,
         })
 
+        const RADIUS = 30
+
         globe = new Group()
         globe.add(new Mesh(
-            new SphereBufferGeometry(15,40,40),
+            new SphereBufferGeometry(RADIUS,40,40),
             new MeshStandardMaterial({color:'red', flatShading:true, wireframe:false})
         ))
         globe.add(new Mesh(
-            new SphereBufferGeometry(15,40,40),
+            new SphereBufferGeometry(RADIUS,40,40),
             new MeshStandardMaterial({color:'black', flatShading:true, wireframe:true})
         ))
         globe.position.z = -5
-        globe.position.y = -15
+        globe.position.y = -RADIUS
 
 
         for(let i=0; i<100; i++) {
@@ -123,18 +136,14 @@ The returned point is returned as a three element array [x,y,z].
                 new MeshStandardMaterial({color:'white', flatShading:true})
             )
 
-            const pt = randomSpherePoint(15)
-            // const pt = new Spherical(15,i,i)
+            const pt = randomSpherePoint(RADIUS)
             building.position.setFromSpherical(pt)
-            // building.rotation.x = pt.phi
-            // building.rotation.y = pt.theta
-            // building.position.set(pt[0],pt[1],pt[2])
             globe.add(building)
         }
 
         for(let i=0; i<31; i++) {
             const building = new Mesh(new BoxBufferGeometry(1,3,1), new MeshStandardMaterial({color:'white'}))
-            const pt = new Spherical(15,-i*0.2,0)
+            const pt = new Spherical(RADIUS,-i*0.2,0)
             building.position.setFromSpherical(pt)
             building.position.x -= 2
             building.rotation.x = pt.phi
@@ -144,7 +153,7 @@ The returned point is returned as a three element array [x,y,z].
 
         for(let i=0; i<31; i++) {
             const building = new Mesh(new BoxBufferGeometry(1,3,1), new MeshStandardMaterial({color:'white'}))
-            const pt = new Spherical(15,-i*0.2,0)
+            const pt = new Spherical(RADIUS,-i*0.2,0)
             building.position.setFromSpherical(pt)
             building.position.x += 2
             building.rotation.x = pt.phi
@@ -158,21 +167,15 @@ The returned point is returned as a three element array [x,y,z].
         scene.add(new AmbientLight(0xffffff,0.5))
 
 
-        const MOVEMENTS = {
-            ArrowUp:    new Quaternion().setFromAxisAngle(new Vector3(1,0,0),toRad( 1)),
-            ArrowDown:  new Quaternion().setFromAxisAngle(new Vector3(1,0,0),toRad(-1)),
-            ArrowLeft:  new Quaternion().setFromAxisAngle(new Vector3(0,1,0),toRad(-1)),
-            ArrowRight: new Quaternion().setFromAxisAngle(new Vector3(0,1,0),toRad( 1)),
-        }
-
         on(document,'keydown',(e)=>{
             if(MOVEMENTS[e.key])  globe.quaternion.multiplyQuaternions(MOVEMENTS[e.key],globe.quaternion)
         })
 
-
         const dirLight = new PointLight(0xffffff,0.6, 30, 1)
         dirLight.position.set(0,15,-20)
         scene.add(dirLight)
+
+        $("#enter-vr").disabled = false
     }
 
     //called on every frame. customize this
@@ -181,6 +184,7 @@ The returned point is returned as a three element array [x,y,z].
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
+        globe.quaternion.multiplyQuaternions(MOVEMENTS.ArrowUp, globe.quaternion)
         renderer.render( scene, camera );
     }
 
