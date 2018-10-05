@@ -208,9 +208,10 @@ export class Pointer {
 
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
                 .filter(it => this.intersectionFilter(it.object))
-        intersects.forEach((it) => {
+        if(intersects.length > 0) {
+            const it = intersects[0]
             this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
-        })
+        }
 
         this.fireSelf(POINTER_CLICK, {})
     }

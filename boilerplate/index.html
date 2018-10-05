@@ -147,7 +147,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
-        cube.rotation.y += 0.002
+        if(cube) cube.rotation.y += 0.002
         renderer.render( scene, camera );
     }
 
