@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <!--<script src="./node_modules/three/build/three.js"></script>-->
+    <script src="./node_modules/three/build/three.js"></script>
     <!-- needed for loading GLTF files -->
-    <!--<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>-->
+    <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
@@ -81,7 +81,7 @@
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let cube
+    let skel_mixer, skel_model, skel_move_action, animation, skel_idle_action
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -135,10 +135,10 @@
 
         const board = new Group()
         const glow = new Mesh(
-            new BoxBufferGeometry(0.6,0.6,0.6),
+            new BoxBufferGeometry(0.7,5,0.7),
             new MeshLambertMaterial({
                 color:'0xffffff',
-                opacity:0.5,
+                opacity:0.3,
                 transparent:true
             })
         )
@@ -147,15 +147,64 @@
 
         let selected = null
 
-        function animateUnit(src,dst) {
-            if(!selected) return
-            selected.position.x = dst.position.x
-            selected.position.z = dst.position.z
-            glow.visible = false
-            selected = null
+        function lerp (min,max,t) {
+            return (max-min)*t + min
         }
 
-        const size = 4
+        animation = {
+            target:null,
+            props:{},
+            running:false,
+            startTime:null,
+            duration: 1000,
+            move: function() {
+                animation.running = true
+            },
+            animate: function (time) {
+                if(!animation.running) return
+                if(!animation.startTime) animation.startTime = time
+                const t = (time-animation.startTime)/animation.duration
+                const props = animation.props
+                Object.keys(props).forEach(prop => {
+                    const start = props[prop][0]
+                    const end = props[prop][1]
+                    if(start instanceof Vector3) {
+                        animation.target[prop].set(
+                            lerp(start.x,end.x,t),
+                            lerp(start.y,end.y,t),
+                            lerp(start.z,end.z,t)
+                        )
+                    }
+                })
+                if(t > 1) {
+                    animation.running = false
+                    animation.startTime = null
+                    if(animation.onDone) animation.onDone()
+                }
+            }
+        }
+        function animateUnit(src,dst) {
+            if(!selected) return
+            animation.target = selected
+            const len = selected.position.distanceTo(dst.position)
+            console.log(len)
+            animation.duration = len*500
+            animation.props = {
+                position:[selected.position.clone(), dst.position.clone()]
+            }
+            animation.onDone = () => {
+                skel_move_action.stop()
+            }
+            animation.move()
+            glow.visible = false
+            selected = null
+
+            // selected.position.x = dst.position.x
+            // selected.position.z = dst.position.z
+            skel_move_action.play()
+        }
+
+        const size = 7
         for(let i=0; i<size; i++) {
             for(let j=0; j<size; j++) {
                 const tile = new Mesh(
@@ -175,24 +224,52 @@
             }
         }
 
+        const unit = new Group()
+        const loader = new THREE.GLTFLoader()
+        loader.load("./Skeleton.glb",(m)=> {
+            console.log(m)
+            m.scene.position.y = -0.3
+            m.scene.position.z = 0
+            m.scene.scale.set(0.5,0.5,0.5)
+            m.scene.userData.clickable = true
+            skel_model = m
+            unit.add(skel_model.scene)
 
-        const unit = new Mesh(
-            new BoxBufferGeometry(0.5,0.5,0.5),
-            new MeshPhongMaterial({color:0x00ff00})
+            skel_mixer = new THREE.AnimationMixer(skel_model.scene)
+            skel_idle_action = skel_mixer.clipAction(THREE.AnimationClip.findByName(skel_model.animations,'Skeleton_Idle'))
+            skel_idle_action.setLoop(THREE.LoopPingPong)
+            skel_idle_action.play()
+
+            const clip = THREE.AnimationClip.findByName(skel_model.animations,'Skeleton_Death')
+            const action = skel_mixer.clipAction(clip)
+            action.time = clip.duration
+            action.setLoop(THREE.LoopOnce,1)
+                .setEffectiveTimeScale(-0.3)
+                .play()
+
+            const moveClip = THREE.AnimationClip.findByName(skel_model.animations,"Skeleton_Running")
+            skel_move_action = skel_mixer.clipAction(moveClip)
+        })
+
+        const placeHolder = new Mesh(
+            new BoxBufferGeometry(0.5,5,0.5),
+            new MeshPhongMaterial({color:0x00ff00, opacity:0.0, transparent:true})
         )
+
+        placeHolder.userData.clickable = true
+        placeHolder.position.y = 0.25 + 0.1
+        unit.add(placeHolder)
         unit.position.x = -size/2 + 0.5
         unit.position.z = -size/2 + 0.5
-        unit.position.y = 0.25+0.1
+        // unit.position.y = 0.25+0.1
         unit.userData.clickable = true
 
-        on(unit,POINTER_ENTER, e => unit.material.color.set(0xccffcc))
-        on(unit,POINTER_EXIT,  e => unit.material.color.set(0x00ff00))
-        on(unit,'click',(e)=>{
-            glow.position.x = e.target.position.x
-            glow.position.y = e.target.position.y
-            glow.position.z = e.target.position.z
+        on(placeHolder,POINTER_ENTER, e => e.target.material.opacity = 0.5)
+        on(placeHolder,POINTER_EXIT,  e => e.target.material.opacity = 0.0)
+        on(placeHolder,'click',(e)=>{
+            glow.position.copy(e.target.parent.position)
             glow.visible = true
-            selected = e.target
+            selected = unit
         })
         board.add(unit)
 
@@ -202,7 +279,7 @@
 
 
         const plate = new Mesh(
-            new CylinderBufferGeometry(size/2+1,size/2+1,0.5,10),
+            new CylinderBufferGeometry(size/2+2,size/2+2.5,0.5,10),
             new MeshLambertMaterial({color:0x00ff00})
         )
         plate.userData.clickable = true
@@ -240,11 +317,14 @@
 
     }
 
+    const clock = new THREE.Clock(true)
     //called on every frame. customize this
     function render(time) {
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
+        if(skel_mixer) skel_mixer.update(clock.getDelta())
+        if(animation) animation.animate(time)
         renderer.render( scene, camera );
     }
 
