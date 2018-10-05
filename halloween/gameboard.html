@@ -85,7 +85,7 @@
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new Color( 0xcccccc );
+        scene.background = new Color( 0x333333 );
 
         //load a cat texture
         const texture_loader = new TextureLoader()
@@ -341,6 +341,7 @@
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.vr.enabled = true;
+        renderer.gammaOutput = true
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

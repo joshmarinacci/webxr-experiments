@@ -92,6 +92,7 @@
 
 
         const loader = new THREE.GLTFLoader()
+        /*
         loader.load("./Skeleton.glb",(m)=>{
             console.log(m.animations)
             scene.add(m.scene)
@@ -115,7 +116,7 @@
             action.setLoop(THREE.LoopOnce,1)
                 .setEffectiveTimeScale(-0.5)
                 .play()
-        })
+        })*/
 
         // loader.load('./Bat.glb',(m)=>{
         //     console.log(m.animations)
@@ -131,20 +132,20 @@
         //
         // })
 
-        // loader.load('./Dragon.glb',(m)=>{
-        //     console.log(m.animations)
-        //     scene.add(m.scene)
-        //     m.scene.position.z = -10
-        //     mixer = new THREE.AnimationMixer(m.scene)
-        //     const clip = THREE.AnimationClip.findByName(m.animations,'Dragon_Flying')
-        //     const action = mixer.clipAction(clip)
-        //     model = m
-        //     action
-        //     // .setLoop(THREE.LoopOnce,1)
-        //     // .setEffectiveTimeScale(-0.5)
-        //         .play()
-        //
-        // })
+        loader.load('./Dragon.glb',(m)=>{
+            console.log(m.animations)
+            scene.add(m.scene)
+            m.scene.position.z = -10
+            mixer = new THREE.AnimationMixer(m.scene)
+            const clip = THREE.AnimationClip.findByName(m.animations,'Dragon_Flying')
+            const action = mixer.clipAction(clip)
+            model = m
+            action
+            // .setLoop(THREE.LoopOnce,1)
+            // .setEffectiveTimeScale(-0.5)
+                .play()
+
+        })
 
         // loader.load('./Slime.glb',(m)=>{
         //     console.log(m.animations)
@@ -202,6 +203,7 @@
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.vr.enabled = true;
+        renderer.gammaOutput = true
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
