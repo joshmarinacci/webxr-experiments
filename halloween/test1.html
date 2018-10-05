@@ -85,10 +85,10 @@
         const texture = texture_loader.load('./cat.jpg')
 
         //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 3.0 );
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
-        // scene.add(new THREE.AmbientLight(0xffffff,2.0))
+        scene.add(new THREE.AmbientLight(0xffffff,1.0))
 
 
         const loader = new THREE.GLTFLoader()
