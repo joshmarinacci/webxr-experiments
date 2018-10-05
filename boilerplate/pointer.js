@@ -184,10 +184,11 @@ export class Pointer {
             this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
             this.hoverTarget = null
         }
-        intersects.forEach(it => {
+        if(intersects.length >= 1) {
+            const it = intersects[0]
             const obj = it.object
-            if(!obj) return
-            this.fire(obj,POINTER_MOVE,{type:POINTER_MOVE, point:it.point})
+            if (!obj) return
+            this.fire(obj, POINTER_MOVE, {type: POINTER_MOVE, point: it.point})
             if (obj === this.hoverTarget) {
                 //still inside
             } else {
@@ -196,7 +197,7 @@ export class Pointer {
                 this.hoverTarget = obj
                 this.fire(this.hoverTarget, POINTER_ENTER, {type: POINTER_ENTER})
             }
-        })
+        }
     }
 
     _processClick() {

@@ -58,7 +58,9 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE,
+    POINTER_RELEASE,
+        POINTER_PRESS, Pointer} from '../boilerplate/pointer.js'
     import {
         Color, Mesh, SphereBufferGeometry, Group, BoxBufferGeometry,
         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial,
@@ -67,6 +69,7 @@
         DirectionalLight, AmbientLight, PointLight,
         Quaternion, Vector3, Spherical,
         MeshPhongMaterial,
+        CylinderBufferGeometry
     } from "../boilerplate/node_modules/three/build/three.module.js"
 
     // import VRStats from "../boilerplate/vrstats.js"
@@ -152,16 +155,19 @@
             selected = null
         }
 
-        for(let i=0; i<3; i++) {
-            for(let j=0; j<3; j++) {
+        const size = 4
+        for(let i=0; i<size; i++) {
+            for(let j=0; j<size; j++) {
                 const tile = new Mesh(
                     new BoxBufferGeometry(0.9,0.2,0.9),
                     new MeshPhongMaterial({color:0xff0000})
                 )
-                tile.position.x = i
-                tile.position.z = j
+                tile.position.x = i - size/2 + 0.5
+                tile.position.z = j - size/2 + 0.5
                 tile.userData.clickable = true
                 board.add(tile)
+                on(tile,POINTER_ENTER, e => tile.material.color.set(0xff8888))
+                on(tile,POINTER_EXIT,  e => tile.material.color.set(0xff0000))
                 on(tile,'click',(e)=>{
                     animateUnit(selected,e.target)
                 })
@@ -174,29 +180,62 @@
             new BoxBufferGeometry(0.5,0.5,0.5),
             new MeshPhongMaterial({color:0x00ff00})
         )
-        unit.position.x = 0
-        unit.position.z = 0
+        unit.position.x = -size/2 + 0.5
+        unit.position.z = -size/2 + 0.5
         unit.position.y = 0.25+0.1
         unit.userData.clickable = true
 
+        on(unit,POINTER_ENTER, e => unit.material.color.set(0xccffcc))
+        on(unit,POINTER_EXIT,  e => unit.material.color.set(0x00ff00))
         on(unit,'click',(e)=>{
-            console.log("selected the unit",e)
             glow.position.x = e.target.position.x
             glow.position.y = e.target.position.y
             glow.position.z = e.target.position.z
             glow.visible = true
             selected = e.target
-
         })
         board.add(unit)
 
-        board.position.z = -6
-        board.position.x = -1
+        board.position.z = -5 - size/2
+        board.position.x = 0
         scene.add(board)
 
 
-        // $("#enter-vr").removeAttribute('disabled')
-        // $("#overlay").style.visibility = 'hidden'
+        const plate = new Mesh(
+            new CylinderBufferGeometry(size/2+1,size/2+1,0.5,10),
+            new MeshLambertMaterial({color:0x00ff00})
+        )
+        plate.userData.clickable = true
+        plate.position.y = -0.5
+        plate.position.z = -5 - size/2
+        let rotating = false
+        let startRotation = 0
+        let startPoint = new Vector3(0,0,0)
+        on(plate, POINTER_ENTER, (e) =>{
+            plate.material.color.set(0x88ff88)
+        })
+        on(plate, POINTER_EXIT, (e) =>{
+            plate.material.color.set(0x00ff00)
+        })
+        on(plate,POINTER_PRESS,(e) => {
+            startRotation = plate.rotation.y
+            rotating = true
+            startPoint = e.point
+        })
+        on(plate,POINTER_MOVE, (e) => {
+            if(!rotating) return
+            plate.rotation.y = startRotation + (e.point.x - startPoint.x)/2
+            board.rotation.y = plate.rotation.y
+        })
+        on(plate,POINTER_RELEASE,e => {
+            rotating = false
+        })
+
+        scene.add(plate)
+
+
+        $("#enter-vr").removeAttribute('disabled')
+        $("#overlay").style.visibility = 'hidden'
 
 
     }
