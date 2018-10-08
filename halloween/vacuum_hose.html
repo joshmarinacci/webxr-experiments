@@ -62,6 +62,87 @@
     import GPUParticleSystem from '../particles/GPUParticleSystem'
     import VRStats from "../boilerplate/vrstats.js"
 
+
+    class Tweenie {
+        constructor(opts) {
+            this.target = opts.target
+            this.shouldStart = false
+            this.startTime = -1
+            this.running = false
+            this.duration = opts.duration
+            this.props = opts.props || {}
+            this.interpolation = opts.interpolation || this.lerp
+            this.onEndHandler = opts.onEnd || (() => {
+                // console.log("doing nothing for on end")
+            })
+        }
+        start() {
+            this.shouldStart = true
+            return this
+        }
+        onEnd(cb) {
+            this.onEndHandler = cb
+            return this
+        }
+        lerp(from,to,t) {
+            // console.log("lerp",from,to,t)
+            return (to-from)*t + from
+        }
+        update(time) {
+            if(this.shouldStart){
+                this.startTime = time
+                this.shouldStart = false
+                this.running = true
+            }
+
+            if(!this.running) return
+
+            const elapsed = (time - this.startTime)/1000
+            if(elapsed > this.duration) {
+                this.running = false
+                this.onEndHandler(this)
+                return
+            }
+
+            const t = elapsed/this.duration
+            Object.keys(this.props).forEach(prop => {
+                const val = this.target[prop]
+                const settings = this.props[prop]
+                const lerp = this.interpolation
+                if(val instanceof THREE.Vector3) {
+                    val.x = lerp(settings.from.x, settings.to.x,t,this)
+                    val.y = lerp(settings.from.y, settings.to.y,t,this)
+                    val.z = lerp(settings.from.z, settings.to.z,t,this)
+                    return
+                }
+                console.error("can't lerp ",val)
+            })
+        }
+        stop() {
+            this.running = false
+            return this
+        }
+    }
+    Tweenie.Lerp = function(a,b,t) { return (b-a)*t + a }
+    Tweenie.LINEAR = "LINEAR"
+    Tweenie.JITTER = "JITTER"
+
+
+    class ParallelTweenie {
+        constructor(tweens) {
+            this.subTweens = tweens
+            this.running = false
+        }
+        start() {
+            this.subTweens.forEach(tw => tw.start())
+            this.running = true
+        }
+        update(time) {
+            if(!this.running) return
+            this.subTweens.forEach(tw => tw.update(time))
+        }
+    }
+
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
@@ -69,8 +150,9 @@
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let skel_model, particles
+    let skel_model, particles, unit
     let sucking = false
+    let suck_tween, move_tween
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -105,7 +187,7 @@
 
 
         //load a monster
-        const unit = new THREE.Group()
+        unit = new THREE.Group()
         const loader = new THREE.GLTFLoader()
         loader.load("./Skeleton.glb",(m)=> {
             m.scene.position.y = -0.3
@@ -180,18 +262,67 @@
 
         //when hover on monster make it glow
         on(glow,POINTER_ENTER,()=> glow.material.opacity = 0.5)
+        //when hover off monster take away the glow
         on(glow,POINTER_EXIT,()=> glow.material.opacity = 0.0)
+        //make particles suck into hose, use different particles shape to show how they streak in
         on(glow,POINTER_PRESS,()=>{
             sucking = true
+            const shake_tween = new Tweenie({
+                target:skel_model.scene,
+                duration: 0.5,
+                interpolation: (a,b,t) => Tweenie.Lerp(a,b,Math.sin(t*15*Math.PI*2)),
+                props: { position: { from: skel_model.scene.position.clone(), to: new THREE.Vector3(0.05,0,0)}}
+            })
+            const scale_tween = new Tweenie({
+                target:unit,
+                duration: 1.0,
+                props: {
+                    scale:    { from: unit.scale.clone(),    to: new THREE.Vector3(0.2,0.2,0.2)},
+                }
+            })
+            const wait_tween = new Tweenie({
+                duration: 1.0
+            })
+            move_tween = new Tweenie({
+                target:unit,
+                duration:1.0,
+                props: {
+                    position: { from: unit.position.clone(), to: new THREE.Vector3(0,0,0)}
+                }
+            })
+            wait_tween.onEnd(()=>{
+                console.log("moving now")
+                move_tween.start()
+            })
+            move_tween.onEnd(()=>{
+                console.log("really captured now. yay!")
+            })
+
+            suck_tween = new ParallelTweenie([shake_tween, scale_tween, wait_tween])
+            suck_tween.start()
+            /*
+            suck_tween = new Tweenie({
+                target:unit,
+                duration: 2.0,
+                props: {
+                    // position: { from: unit.position.clone(), to: new THREE.Vector3(0.1,0,-5)},
+                    // position: { from: unit.position.clone(), to: unit.position.clone()},
+                    scale:    { from: unit.scale.clone(),    to: new THREE.Vector3(0.2,0.2,0.2)},
+                }
+            }).onEnd(()=>{
+                console.log("done")
+                unit.visible = false
+            })
+            .start()
+            */
         })
         on(glow,POINTER_RELEASE,()=>{
             sucking = false
+            if(suck_tween)suck_tween.stop()
         })
-        //when hover off monster take away the glow
         //when click on monster stop his moving, make him shake, shrink into hose, then fade away
-        //make glow around monster animate all crazy
-        //make particles suck into hose, use different particles shape to show how they streak in
 
+        //make glow around monster animate all crazy
     }
 
     //called on every frame. customize this
@@ -201,6 +332,8 @@
         if(stats) stats.update(time)
         //rotate the cube on every tick
         particles.update( time );
+        if(suck_tween) suck_tween.update(time)
+        if(move_tween) move_tween.update(time)
 
         renderer.render( scene, camera );
     }
