@@ -58,9 +58,9 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_RELEASE, Pointer} from '../boilerplate/pointer.js'
     import GPUParticleSystem from '../particles/GPUParticleSystem'
-    // import VRStats from "../boilerplate/vrstats.js"
+    import VRStats from "../boilerplate/vrstats.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -70,6 +70,7 @@
     let camera, scene, renderer, pointer, stats;
 
     let skel_model, particles
+    let sucking = false
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -86,9 +87,9 @@
 
 
         // enable stats visible inside VR
-        // stats = new VRStats(renderer)
-        // camera.add(stats)
-        // scene.add(camera)
+        stats = new VRStats(renderer)
+        camera.add(stats)
+        scene.add(camera)
 
         //class which handles mouse and VR controller
         pointer = new Pointer(scene,renderer,camera, {
@@ -96,7 +97,7 @@
             //Pointer searches everything in the scene by default
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
-            mouseSimulatesController:true,
+            // mouseSimulatesController:true,
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
             cameraFollowMouse:false,
@@ -113,7 +114,7 @@
             m.scene.userData.clickable = true
             skel_model = m
             unit.add(skel_model.scene)
-            $('#overlay').style.display = 'none'
+            // $('#overlay').style.display = 'none'
         })
         unit.position.set(0,0,-5)
 
@@ -135,7 +136,7 @@
         //add hose to the controller
 
         const hose = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.20,0.15,2.0),
+            new THREE.CylinderGeometry(0.1,0.05,1.0),
             new THREE.MeshLambertMaterial({color:0x888888})
         )
         hose.rotation.x = -90 * Math.PI/180
@@ -144,32 +145,35 @@
 
 
         const textureLoader = new THREE.TextureLoader()
-        let sucking = true
         const options = {
             maxParticles: 10000,
-            position: new THREE.Vector3(0, 1.5, -3),
-            positionRandomness: 0.4,
-            baseVelocity: new THREE.Vector3(0.1, 0.1, 0),
-            velocity: new THREE.Vector3(0.0, 1.0, 0),
-            velocityRandomness: 1.0,
+            position: new THREE.Vector3(0, 0, -2),
+            // positionRandomness: 0.4,
+            baseVelocity: new THREE.Vector3(0.0, 0.0, -2),
+            velocity: new THREE.Vector3(2.0, 2.0, 0),
+            velocityRandomness: 2.0,
             acceleration: new THREE.Vector3(0, 0.0, 0),
             baseColor: new THREE.Color(1.0, 0.0, 0.5),
             color: new THREE.Color(0.1, 0.5, 0.2),
             colorRandomness: 0.5,
-            lifetime: 3,
-            size: 20,
+            lifetime: 2,
+            size: 40,
+            reverseTime:true,
             sizeRandomness: 0.0,
             particleSpriteTex: textureLoader.load('../particles/tex/particle2.png'),
             blending: THREE.AdditiveBlending,
             onTick:(system,time) => {
                 if(!sucking) return
                 options.velocity.x = options.baseVelocity.x + system.random() * options.velocityRandomness
-                // options.velocity.y = options.baseVelocity.y + amt/2.0 + system.random() * options.velocityRandomness
-                // options.velocity.z = options.baseVelocity.z + system.random() * options.velocityRandomness
+                options.velocity.y = options.baseVelocity.y + system.random() * options.velocityRandomness
+                options.velocity.z = options.baseVelocity.z //+ //system.random() * options.velocityRandomness
                 system.spawnParticle( options );
             }
         }
         particles = new GPUParticleSystem(options)
+
+        // TODO: putting the particles inside of the controller slows down from 60fps to 30fps. why?
+        // pointer.controller1.add(particles)
         scene.add(particles)
 
 
@@ -177,8 +181,11 @@
         //when hover on monster make it glow
         on(glow,POINTER_ENTER,()=> glow.material.opacity = 0.5)
         on(glow,POINTER_EXIT,()=> glow.material.opacity = 0.0)
-        on(glow,POINTER_CLICK,()=>{
+        on(glow,POINTER_PRESS,()=>{
             sucking = true
+        })
+        on(glow,POINTER_RELEASE,()=>{
+            sucking = false
         })
         //when hover off monster take away the glow
         //when click on monster stop his moving, make him shake, shrink into hose, then fade away
@@ -194,6 +201,7 @@
         if(stats) stats.update(time)
         //rotate the cube on every tick
         particles.update( time );
+
         renderer.render( scene, camera );
     }
 
@@ -212,7 +220,7 @@
         renderer.gammaOutput = true
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
-        // document.body.appendChild( WEBVR.createButton( renderer ) );
+        document.body.appendChild( WEBVR.createButton( renderer ) );
 
         initContent(scene,camera,renderer)
 

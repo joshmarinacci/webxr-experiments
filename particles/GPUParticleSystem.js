@@ -8,6 +8,7 @@ const GPUParticleShader = {
         `
                 uniform float uTime;
                 uniform float uScale;
+                uniform bool reverseTime;
     
                 attribute vec3 positionStart;
                 attribute float startTime;
@@ -27,6 +28,7 @@ const GPUParticleShader = {
                     vEndColor = vec4( endColor, 1.0);
                     vec3 newPosition;
                     float timeElapsed = uTime - startTime;
+                    if(reverseTime) timeElapsed = lifeTime - timeElapsed;
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
                     gl_PointSize = ( uScale * size ) * lifeLeft;
                     newPosition = positionStart 
@@ -88,6 +90,8 @@ export default class GPUParticleSystem extends THREE.Object3D {
         this.particleUpdate = false;
         this.onTick = options.onTick
 
+        this.reverseTime = options.reverseTime
+
         // preload a 10_000 random numbers from -0.5 to 0.5
         this.rand = [];
         let i;
@@ -114,6 +118,9 @@ export default class GPUParticleSystem extends THREE.Object3D {
                 },
                 'tSprite': {
                     value: this.sprite
+                },
+                reverseTime: {
+                    value: this.reverseTime
                 }
             },
             blending: this.blending,
