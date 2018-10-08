@@ -5,6 +5,8 @@ export const POINTER_MOVE = "move"
 export const POINTER_PRESS = "press"
 export const POINTER_RELEASE = "release"
 
+import * as THREE from "./node_modules/three/build/three.module.js"
+
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
         this.listeners = {}
@@ -182,10 +184,11 @@ export class Pointer {
             this.fire(this.hoverTarget, POINTER_EXIT, {type: POINTER_EXIT})
             this.hoverTarget = null
         }
-        intersects.forEach(it => {
+        if(intersects.length >= 1) {
+            const it = intersects[0]
             const obj = it.object
-            if(!obj) return
-            this.fire(obj,POINTER_MOVE,{type:POINTER_MOVE, point:it.point})
+            if (!obj) return
+            this.fire(obj, POINTER_MOVE, {type: POINTER_MOVE, point: it.point})
             if (obj === this.hoverTarget) {
                 //still inside
             } else {
@@ -194,7 +197,7 @@ export class Pointer {
                 this.hoverTarget = obj
                 this.fire(this.hoverTarget, POINTER_ENTER, {type: POINTER_ENTER})
             }
-        })
+        }
     }
 
     _processClick() {
@@ -206,9 +209,10 @@ export class Pointer {
 
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
                 .filter(it => this.intersectionFilter(it.object))
-        intersects.forEach((it) => {
+        if(intersects.length > 0) {
+            const it = intersects[0]
             this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
-        })
+        }
 
         this.fireSelf(POINTER_CLICK, {})
     }
