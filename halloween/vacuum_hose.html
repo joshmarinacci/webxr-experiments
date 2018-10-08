@@ -58,6 +58,29 @@
 </div>
 
 <script type="module">
+    /*
+
+    monster mover
+
+    pick a random spot in a circle around you (pick a random angle and convert to cartesian coords)
+    pick a random heading
+    pick a target heading
+    on each tick
+        rotate skeleton by 10 degree to better match the heading
+        move skeleton in direction of heading by 0.01 meters
+    every N ticks
+        pick a new random target heading
+
+    if skeleton exceeds bounds of play area it stops, rotates 90 degrees clockwise, then tries again
+
+
+    move the camera out to see him moving around
+    add plane to show where he is
+
+
+
+
+     */
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_RELEASE, Pointer} from '../boilerplate/pointer.js'
     import GPUParticleSystem from '../particles/GPUParticleSystem'
     import VRStats from "../boilerplate/vrstats.js"
@@ -153,6 +176,11 @@
     let skel_model, particles, unit
     let sucking = false
     let suck_tween, move_tween
+
+    const PLAY_BOUNDS = {
+        WIDTH: 10,
+        HEIGHT: 10,
+    }
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -325,6 +353,12 @@
         //when click on monster stop his moving, make him shake, shrink into hose, then fade away
 
         //make glow around monster animate all crazy
+
+
+
+
+
+
     }
 
     //called on every frame. customize this
