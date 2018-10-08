@@ -9,6 +9,8 @@ const GPUParticleShader = {
                 uniform float uTime;
                 uniform float uScale;
                 uniform bool reverseTime;
+                uniform float fadeIn;
+                uniform float fadeOut;
     
                 attribute vec3 positionStart;
                 attribute float startTime;
@@ -22,6 +24,7 @@ const GPUParticleShader = {
                 varying vec4 vColor;
                 varying vec4 vEndColor;
                 varying float lifeLeft;
+                varying float alpha;
     
                 void main() {
                     vColor = vec4( color, 1.0 );
@@ -29,6 +32,16 @@ const GPUParticleShader = {
                     vec3 newPosition;
                     float timeElapsed = uTime - startTime;
                     if(reverseTime) timeElapsed = lifeTime - timeElapsed;
+                    if(timeElapsed < fadeIn) {
+                        alpha = timeElapsed/fadeIn;
+                    }
+                    if(timeElapsed >= fadeIn && timeElapsed <= (lifeTime - fadeOut)) {
+                        alpha = 1.0;
+                    }
+                    if(timeElapsed > (lifeTime - fadeOut)) {
+                        alpha = 1.0 - (timeElapsed - (lifeTime-fadeOut))/fadeOut;
+                    }
+                    
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
                     gl_PointSize = ( uScale * size ) * lifeLeft;
                     newPosition = positionStart 
@@ -56,13 +69,14 @@ const GPUParticleShader = {
                 varying vec4 vColor;
                 varying vec4 vEndColor;
                 varying float lifeLeft;
+                varying float alpha;
                 uniform sampler2D tSprite;
                 void main() {
                     // color based on particle texture and the lifeLeft. 
                     // if lifeLeft is 0 then make invisible
                     vec4 tex = texture2D( tSprite, gl_PointCoord );
                     vec4 color = mix(vColor, vEndColor, 1.0-lifeLeft);
-                    gl_FragColor = vec4( color.rgb, lifeLeft* tex.a);
+                    gl_FragColor = vec4( color.rgb, alpha * tex.a);
                 }
     
             `
@@ -91,6 +105,10 @@ export default class GPUParticleSystem extends THREE.Object3D {
         this.onTick = options.onTick
 
         this.reverseTime = options.reverseTime
+        this.fadeIn = options.fadeIn || 1
+        if(this.fadeIn === 0) this.fadeIn = 0.001
+        this.fadeOut = options.fadeOut || 1
+        if(this.fadeOut === 0) this.fadeOut = 0.001
 
         // preload a 10_000 random numbers from -0.5 to 0.5
         this.rand = [];
@@ -121,6 +139,12 @@ export default class GPUParticleSystem extends THREE.Object3D {
                 },
                 reverseTime: {
                     value: this.reverseTime
+                },
+                fadeIn: {
+                    value: this.fadeIn
+                },
+                fadeOut: {
+                    value: this.fadeOut,
                 }
             },
             blending: this.blending,
