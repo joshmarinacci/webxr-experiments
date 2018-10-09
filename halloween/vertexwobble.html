@@ -110,7 +110,7 @@
             const token = '#include <begin_vertex>'
             const customTransform = `
                 vec3 transformed = vec3(position);
-                transformed.x = position.x + sin(time*10.0+position.y*10.0)*0.1;
+                transformed.x = position.x  + sin(time*10.0+position.y*10.0)*0.1;
                 vTime = time;
             `
             shader.vertexShader = shader.vertexShader.replace(token,customTransform)
