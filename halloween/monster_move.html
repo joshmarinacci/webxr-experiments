@@ -77,11 +77,14 @@
             this.minZ = -20
             this.maxX = 10
             this.maxZ = -10
+
+            this.running = false
         }
         randomDir() {
             this.targetHeading += (Math.random()-0.5)*180
         }
         update() {
+            if(!this.running) return
             if(this.currentHeading < this.targetHeading) this.currentHeading += 5
             if(this.currentHeading > this.targetHeading) this.currentHeading -= 5
             this.rotation.y = this.currentHeading*Math.PI/180
@@ -108,6 +111,12 @@
                 this.position.z += 0.1
                 this.randomDir()
             }
+        }
+        pause() {
+            this.running = false
+        }
+        start() {
+            this.running = true
         }
     }
 
@@ -142,12 +151,14 @@
 
 
         const floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(20,10),
+            new THREE.PlaneGeometry(22,12),
             new THREE.MeshLambertMaterial({color:0xffcccc})
         )
         floor.position.set(0,0,-10+-5)
         floor.rotation.x = -90 * Math.PI/180
         scene.add(floor)
+
+        monster.start()
     }
 
     //called on every frame. customize this
