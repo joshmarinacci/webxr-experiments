@@ -82,9 +82,6 @@ https://opengameart.org/content/snow-flake
         //set the background color of the scene
         scene.background = new THREE.Color( 0xff0000 );
 
-        //load a cat texture
-        const texture_loader = new THREE.TextureLoader()
-        const texture = texture_loader.load('./snowflake.png')
 
 
         //a standard light
@@ -94,6 +91,9 @@ https://opengameart.org/content/snow-flake
 
 
 
+        //load a cat texture
+        const texture_loader = new THREE.TextureLoader()
+        const texture = texture_loader.load('./snowflake.png')
         flakes = new THREE.Group()
         const geom = new THREE.PlaneBufferGeometry(1,1)
         const mat = new THREE.MeshLambertMaterial({color:'white', map:texture, transparent:true, side:THREE.DoubleSide})

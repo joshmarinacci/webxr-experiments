@@ -76,7 +76,7 @@ const GPUParticleShader = {
                     // if lifeLeft is 0 then make invisible
                     vec4 tex = texture2D( tSprite, gl_PointCoord );
                     vec4 color = mix(vColor, vEndColor, 1.0-lifeLeft);
-                    gl_FragColor = vec4( color.rgb, alpha * tex.a);
+                    gl_FragColor = vec4( color.rgb*tex.rgb, alpha * tex.a);
                 }
     
             `
