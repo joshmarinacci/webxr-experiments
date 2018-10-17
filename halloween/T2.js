@@ -71,6 +71,7 @@ class ParallelTween extends Tween {
         return this
     }
     start() {
+        // console.log("starting parallel")
         this.running = true
         this.subs.forEach(s=>s.start())
         // console.log('started')
@@ -125,6 +126,8 @@ class SequentialTween extends Tween {
                 console.log("the next swapped itself", res)
                 //swap in the result
                 this.subs[this.n] = res
+                //backup
+                this.n = this.n -1
                 //recurse
                 return this._startNext()
             } else {
@@ -135,7 +138,7 @@ class SequentialTween extends Tween {
         return cur
     }
     update(time) {
-        console.log('updating')
+        // console.log('updating')
         const cur = this.subs[this.n]
         cur.update(time)
         // console.log("updated cur",cur, cur.isAlive())
@@ -188,7 +191,7 @@ class T2 {
 
 const t2 = new T2()
 
-const obj = { x: -1, y: -1}
+const obj = { x: -1, y: -1, z: 0, w: 0}
 
 const para = t2.parallel()
     .and(t2.prop({ target:obj, property:'x', from:10, to:0, duration: 1}))
@@ -204,12 +207,23 @@ const seq = t2.sequence()
         console.log("done with part 1. calculating part 2")
         return t2.prop({target:obj, property:'x', from: 0, to:-8, duration:1})
     })
+    .then(() => {
+        console.log("now we're going to insert a new parallel tween")
+        return t2.parallel()
+            .and(t2.prop({target:obj, property:'z', from:-1,to:1, duration:1}))
+            .and(t2.prop({target:obj, property:'w', from:-1,to:1, duration:1}))
+    })
     .start()
 
 function update() {
     console.log("tick")
     t2.update()
     console.log(obj)
-    if(t2.isAlive()) setTimeout(update,250)
+    if(t2.isAlive()) {
+        setTimeout(update,250)
+    } else {
+        console.log("done with everything. check it out!")
+        console.log(obj.z === 1)
+    }
 }
 update()
