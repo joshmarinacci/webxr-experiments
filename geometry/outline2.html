@@ -86,7 +86,7 @@
         mat.onBeforeCompile = (shader) => {
             const token = '#include <begin_vertex>'
             const customTransform = `
-                vec3 transformed = position + objectNormal*0.02;//*position.z;
+                vec3 transformed = position + objectNormal*0.02;
             `
             shader.vertexShader = shader.vertexShader.replace(token,customTransform)
         }
