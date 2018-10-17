@@ -22,8 +22,9 @@ class ActionTween extends Tween {
     }
     start() {
         console.log("running the sub function")
-        this.fn()
+        const res = this.fn()
         this.running = false
+        return res
     }
 }
 
@@ -91,7 +92,7 @@ class SequentialTween extends Tween {
     constructor() {
         super()
         this.subs = []
-        this.n = 0
+        this.n = -1
     }
     then(obj) {
         if(obj instanceof Tween) {
@@ -103,48 +104,43 @@ class SequentialTween extends Tween {
     }
     start() {
         this.running = true
-        const cur = this.subs[this.n]
-        cur.start()
+        this._startNext()
         return this
+    }
+    _startNext() {
+        this.n = this.n + 1
+
+        //if at the end of everything
+        if(this.n > this.subs.length-1) {
+            this.running = false
+            this.n = -1
+            return null
+        }
+
+
+        const cur = this.subs[this.n]
+        const res = cur.start()
+        if(!cur.isAlive()) {
+            if(res) {
+                console.log("the next swapped itself", res)
+                //swap in the result
+                this.subs[this.n] = res
+                //recurse
+                return this._startNext()
+            } else {
+                console.log("the next didn't swap. just move on")
+                return this._startNext()
+            }
+        }
+        return cur
     }
     update(time) {
         console.log('updating')
         const cur = this.subs[this.n]
         cur.update(time)
         // console.log("updated cur",cur, cur.isAlive())
+        if(!cur.isAlive()) this._startNext()
 
-        if(!cur.isAlive()) {
-            console.log("going to the next")
-            while(true) {
-                this.n = this.n + 1
-                if(this.n > this.subs.length-1) {
-                    this.running = false
-                    this.n = -1
-                    break
-                }
-                const next = this.subs[this.n]
-                next.start()
-                if(next.isAlive()) break
-            }
-            /*
-            if(this.n < this.subs.length-1) {
-                console.log("really next")
-                this.n = this.n + 1
-                const next = this.subs[this.n]
-                next.start()
-                //if this was an action, then need to go to the
-                //next one
-                if(!next.isAlive()) {
-                    this.n = this.n+1
-                    next = this.subs[this.n]
-                    next.start()
-                }
-            } else {
-                console.log("fully done")
-                this.running = false
-                this.n = -1
-            }*/
-        }
     }
     isAlive() {
         const first = this.subs.find(s => s.isAlive() === true)
@@ -191,18 +187,8 @@ class T2 {
 
 
 const t2 = new T2()
-// const act = t2.action(()=>console.log("action is running"))
-// act.start()
 
 const obj = { x: -1, y: -1}
-
-// const prop = t2.prop({
-//     target:obj,
-//     property:'x',
-//     from:0,
-//     to:10,
-//     duration:1 })
-// prop.start()
 
 const para = t2.parallel()
     .and(t2.prop({ target:obj, property:'x', from:10, to:0, duration: 1}))
@@ -210,9 +196,14 @@ const para = t2.parallel()
     .start()
 
 const seq = t2.sequence()
+    .then(()=>console.log("first is an action"))
     .then(t2.prop({ target:obj, property:'y', from:10, to:0, duration: 1}))
     .then(()=> console.log("inside the sequential action"))
     .then(t2.prop({target:obj, property:'y', from:0, to:10, duration:1 }))
+    .then(()=>{
+        console.log("done with part 1. calculating part 2")
+        return t2.prop({target:obj, property:'x', from: 0, to:-8, duration:1})
+    })
     .start()
 
 function update() {
