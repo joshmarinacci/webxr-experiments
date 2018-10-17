@@ -34,6 +34,7 @@ class PropTween extends Tween {
         this.type = 'prop'
         this.target = opts.target
         this.duration = opts.duration
+        if(typeof this.duration === 'undefined') throw new Error("duration is missing")
         this.property = opts.property
         this.from = opts.from
         this.to = opts.to
@@ -44,10 +45,13 @@ class PropTween extends Tween {
         if(!this.startTime) this.startTime = time
         const diff = time - this.startTime
 
-        const t = diff/this.duration
+        let t = diff/this.duration
+        if(t > 1.0) {
+            t = 1.0
+        }
         const v = this.lerp(this.from, this.to, t)
         this.target[this.property] = v
-        if(t > 1.0) {
+        if(t == 1.0) {
             this.running = false
         }
     }
