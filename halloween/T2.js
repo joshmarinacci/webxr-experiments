@@ -1,4 +1,3 @@
-const util = require('util')
 class Tween {
     constructor() {
         this.running = false
@@ -28,6 +27,21 @@ class ActionTween extends Tween {
     }
 }
 
+class ForeverTween extends Tween {
+    constructor(fn) {
+        super()
+        this.type = 'forever'
+        this.fn = fn
+    }
+    start() {
+        this.running = true
+        this.startTime = Date.now()/1000
+    }
+    update(time) {
+        const diff = time/1000 - this.startTime
+        this.fn(diff)
+    }
+}
 class PropTween extends Tween {
     constructor(opts) {
         super()
@@ -36,11 +50,11 @@ class PropTween extends Tween {
         this.duration = opts.duration
         if(typeof this.duration === 'undefined') throw new Error("duration is missing")
         this.property = opts.property
+        if(typeof this.property === 'undefined') throw new Error("property is missing")
         this.from = opts.from
         this.to = opts.to
     }
     update(time) {
-
         time = time/1000
         if(!this.startTime) this.startTime = time
         const diff = time - this.startTime
@@ -93,6 +107,7 @@ class ParallelTween extends Tween {
         return first !== undefined
     }
 }
+
 class SequentialTween extends Tween {
     constructor() {
         super()
@@ -156,6 +171,7 @@ class SequentialTween extends Tween {
         return first !== undefined
     }
 }
+
 class T2 {
     constructor() {
         this.subs = []
@@ -189,11 +205,17 @@ class T2 {
             if(s.isAlive()) s.update(now)
         })
     }
+    forever(fn) {
+        const t = new ForeverTween(fn)
+        this.subs.push(t)
+        return t
+    }
 }
 
 
+export const t2 = new T2();
 
-const t2 = new T2()
+/*
 
 const obj = { x: -1, y: -1, z: 0, w: 0}
 
@@ -231,3 +253,4 @@ function update() {
     }
 }
 update()
+*/
