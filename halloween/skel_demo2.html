@@ -147,10 +147,11 @@
             m.scene.scale.set(0.5,0.5,0.5)
             m.scene.userData.clickable = true
             unit.add(m.scene)
+            T2.clip({target:m,name:'Skeleton_Running',}).start()
         })
 
 
-        T2.prop({target:unit.rotation, property:'y', from:0, to:2*Math.PI, duration:10}).start()
+        T2.prop({target:unit.rotation, property:'y', from:0, to:2*Math.PI, duration:3, loop:-1}).start()
         // T2.prop({target:matShader.uniforms.time, property:'value', from:0, to:T2.INFINITE, duration:T2.INFINITE})
 
     }

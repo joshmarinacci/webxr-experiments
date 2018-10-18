@@ -53,6 +53,10 @@ class PropTween extends Tween {
         if(typeof this.property === 'undefined') throw new Error("property is missing")
         this.from = opts.from
         this.to = opts.to
+
+        this.loop = opts.loop
+        if(typeof this.loop === 'undefined') this.loop = 1
+        this.loopCount = 0
     }
     update(time) {
         time = time/1000
@@ -66,12 +70,44 @@ class PropTween extends Tween {
         const v = this.lerp(this.from, this.to, t)
         this.target[this.property] = v
         if(t == 1.0) {
-            this.running = false
+            this.loopCount++
+            if(this.loop !== -1) {
+                if(this.loopCount >= this.loop) {
+                    this.running = false
+                    return
+                }
+            }
+            this.startTime = time
         }
     }
 
     lerp(from,to,t) {
         return (to-from)*t + from
+    }
+}
+
+class ClipTween extends Tween {
+    constructor(opts) {
+        super()
+        this.type = 'clip'
+        this.target = opts.target
+        this.name = opts.name
+        if(typeof this.name === 'undefined') throw new Error("name is missing")
+    }
+    start() {
+        this.running = true
+        this.mixer = new THREE.AnimationMixer(this.target.scene)
+        this.action = this.mixer.clipAction(THREE.AnimationClip.findByName(this.target.animations,this.name))
+        // this.action.setLoop(THREE.LoopPingPong)
+        this.action.play()
+        // this.action.setEffectiveTimeScale(-0.3)
+        this.startTime = Date.now()/1000
+        this.prevTime = this.startTime
+    }
+    update(time) {
+        const diff = time/1000 - this.prevTime
+        this.mixer.update(diff)
+        this.prevTime = time/1000
     }
 }
 
@@ -210,8 +246,12 @@ class T2 {
         this.subs.push(t)
         return t
     }
+    clip(opts) {
+        const t = new ClipTween(opts)
+        this.subs.push(t)
+        return t
+    }
 }
-
 
 export const t2 = new T2();
 
