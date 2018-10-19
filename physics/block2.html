@@ -74,7 +74,7 @@
     let camera, scene, renderer, pointer, stats;
 
     let sphere, world, fixedTimeStep, maxSubSteps, lastTime
-    let blocks
+    let blocks, htmlCanvas
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -157,6 +157,16 @@
         return sphere
     }
 
+    function update_text(str) {
+        const ctx = htmlCanvas.getContext('2d')
+        ctx.fillStyle = 'white'
+        ctx.fillRect(0,0,htmlCanvas.width, htmlCanvas.height)
+        ctx.font = '36px sans-serif'
+        ctx.fillStyle = 'black'
+        const metrics = ctx.measureText(str)
+        ctx.fillText(str,512/2-metrics.width/2, (36/2+128/2))
+    }
+
     function initContent(scene,camera,renderer) {
         setup_background_and_lighting(scene)
 
@@ -221,6 +231,18 @@
         fixedTimeStep = 1.0 / 60.0; // seconds
         maxSubSteps = 3;
         $("#overlay").style.display = 'none'
+
+
+        htmlCanvas = document.createElement('canvas')
+        htmlCanvas.width = 512
+        htmlCanvas.height = 128
+        update_text('it is super awesome')
+        const text = new THREE.Mesh(
+            new THREE.PlaneGeometry(4,1),
+            new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(htmlCanvas)})
+        )
+        text.position.set(0,2,-4)
+        scene.add(text)
     }
 
     function sync_graphics(obj) {
