@@ -74,6 +74,7 @@
     let camera, scene, renderer, pointer, stats;
 
     let sphere, sphereBody, cube, cubeBody, world, fixedTimeStep, maxSubSteps, lastTime
+    const cubes = []
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -117,36 +118,46 @@
         world.gravity.set(0, -9.82, 0); // m/s²
 
         // Create a sphere
-        var radius = 1; // m
-        sphereBody = new CANNON.Body({
-            mass: 5, // kg
-            position: new CANNON.Vec3(0, 5, -10), // m
-            shape: new CANNON.Sphere(radius)
-        });
-        world.addBody(sphereBody);
+        // var radius = 1; // m
+        // sphereBody = new CANNON.Body({
+        //     mass: 5, // kg
+        //     position: new CANNON.Vec3(0, 5, -10), // m
+        //     shape: new CANNON.Sphere(radius)
+        // });
+        // world.addBody(sphereBody);
 
-        //create a sphere
-        sphere = new THREE.Mesh(
-            new THREE.SphereGeometry(1),
-            new THREE.MeshLambertMaterial({color:'red'})
-        )
-        scene.add(sphere)
-        sphere.userData.body = sphereBody
+        // create a sphere
+        // sphere = new THREE.Mesh(
+        //     new THREE.SphereGeometry(1),
+        //     new THREE.MeshLambertMaterial({color:'red'})
+        // )
+        // scene.add(sphere)
+        // sphere.userData.body = sphereBody
 
+        //TODO: three uses extents, Cannon uses half extents.
+        function makeCubeWithPhysics(x,y,z) {
+            //create a cube
+            const s = 0.9
+            const cube = new THREE.Mesh(
+                new THREE.BoxGeometry(s,s,s),
+                new THREE.MeshLambertMaterial({color: 'blue'})
+            )
+            scene.add(cube)
+            const cubeBody = new CANNON.Body({
+                mass: 1,//kg
+                position: new CANNON.Vec3(x,y,z),
+                shape: new CANNON.Box(new CANNON.Vec3(s/2,s/2,s/2))
+            })
+            world.addBody(cubeBody)
+            cube.userData.body = cubeBody
+            return cube
+        }
 
-        //create a cube
-        cube = new THREE.Mesh(
-            new THREE.BoxGeometry(1,1,1),
-            new THREE.MeshLambertMaterial({color:'blue'})
-        )
-        scene.add(cube)
-        cubeBody = new CANNON.Body({
-            mass:1,//kg
-            position: new CANNON.Vec3(-2, 5, -10),
-            shape: new CANNON.Box(new CANNON.Vec3(1,1,1,))
-        })
-        world.addBody(cubeBody)
-        cube.userData.body = cubeBody
+        for(let j=-2; j<2; j++) {
+            for (let i = 2; i < 6; i++) {
+                cubes.push(makeCubeWithPhysics(j, i, -7))
+            }
+        }
 
 
 
@@ -199,10 +210,14 @@
         if(world && lastTime) {
             var dt = (time - lastTime)/1000
             world.step(fixedTimeStep, dt, maxSubSteps)
-            sphere.position.copy(sphere.userData.body.position)
-            sphere.quaternion.copy(sphere.userData.body.quaternion)
-            cube.position.copy(cube.userData.body.position)
-            cube.quaternion.copy(cube.userData.body.quaternion)
+            cubes.forEach((c) => {
+                c.position.copy(c.userData.body.position)
+                c.quaternion.copy(c.userData.body.quaternion)
+            })
+            // sphere.position.copy(sphere.userData.body.position)
+            // sphere.quaternion.copy(sphere.userData.body.quaternion)
+            // cube.position.copy(cube.userData.body.position)
+            // cube.quaternion.copy(cube.userData.body.quaternion)
         }
         lastTime = time
         renderer.render( scene, camera );
