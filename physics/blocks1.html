@@ -85,6 +85,7 @@
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
+        scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
 
 
@@ -137,10 +138,10 @@
         //TODO: three uses extents, Cannon uses half extents.
         function makeCubeWithPhysics(x,y,z) {
             //create a cube
-            const s = 0.9
+            const s = 0.99
             const cube = new THREE.Mesh(
                 new THREE.BoxGeometry(s,s,s),
-                new THREE.MeshLambertMaterial({color: 'blue'})
+                new THREE.MeshPhongMaterial({color: 'aqua', flatShading:true})
             )
             scene.add(cube)
             const cubeBody = new CANNON.Body({
@@ -153,13 +154,29 @@
             return cube
         }
 
-        for(let j=-2; j<2; j++) {
-            for (let i = 2; i < 6; i++) {
+        for(let j=-2; j<=2; j++) {
+            for (let i = 1; i < 6; i++) {
                 cubes.push(makeCubeWithPhysics(j, i, -7))
             }
         }
 
 
+        pointer.on(POINTER_CLICK,(e)=>{
+            const rad = 0.6
+            sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(rad),
+                new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
+            )
+            scene.add(sphere)
+            sphereBody = new CANNON.Body({
+                mass: 5,
+                shape: new CANNON.Sphere(rad),
+                position: new CANNON.Vec3(0, 1.5, -3),
+                velocity: new CANNON.Vec3(0,5,-10)
+            })
+            world.add(sphereBody)
+            sphere.userData.body = sphereBody
+        })
 
         // Create a plane
         var groundBody = new CANNON.Body({
@@ -183,20 +200,6 @@
         fixedTimeStep = 1.0 / 60.0; // seconds
         maxSubSteps = 3;
 
-// Start the simulation loop
-        /*
-        var lastTime;
-        (function simloop(time){
-            requestAnimationFrame(simloop);
-            if(lastTime !== undefined){
-                var dt = (time - lastTime) / 1000;
-                world.step(fixedTimeStep, dt, maxSubSteps);
-            }
-            console.log("Sphere z position: " + sphereBody.position.z);
-            lastTime = time;
-        })();
-        */
-
         $("#overlay").style.display = 'none'
 
     }
@@ -214,8 +217,10 @@
                 c.position.copy(c.userData.body.position)
                 c.quaternion.copy(c.userData.body.quaternion)
             })
-            // sphere.position.copy(sphere.userData.body.position)
-            // sphere.quaternion.copy(sphere.userData.body.quaternion)
+            if(sphere && sphereBody) {
+                sphere.position.copy(sphere.userData.body.position)
+                sphere.quaternion.copy(sphere.userData.body.quaternion)
+            }
             // cube.position.copy(cube.userData.body.position)
             // cube.quaternion.copy(cube.userData.body.quaternion)
         }
