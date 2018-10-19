@@ -74,7 +74,7 @@
     let camera, scene, renderer, pointer, stats;
 
     let sphere, world, fixedTimeStep, maxSubSteps, lastTime
-    let blocks, htmlCanvas
+    let blocks, htmlCanvas, shots_left, canvas_texture
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -136,6 +136,14 @@
         return cubes
     }
 
+    function restart_level() {
+        blocks.forEach(c => {
+            world.remove(c.userData.body)
+            scene.remove(c)
+        })
+        blocks = make_level(world)
+    }
+
     function fire_ball(world,scene,dir) {
         dir.normalize()
         dir.multiplyScalar(10)
@@ -154,6 +162,7 @@
         })
         world.add(sphereBody)
         sphere.userData.body = sphereBody
+        shots_left--
         return sphere
     }
 
@@ -165,6 +174,7 @@
         ctx.fillStyle = 'black'
         const metrics = ctx.measureText(str)
         ctx.fillText(str,512/2-metrics.width/2, (36/2+128/2))
+        canvas_texture.needsUpdate = true
     }
 
     function initContent(scene,camera,renderer) {
@@ -199,6 +209,7 @@
         UP.setFromAxisAngle(new THREE.Vector3(0,1,0),0)
 
         let waiting = false
+        shots_left = 3
         function check_level_complete() {
             const standing = blocks.filter((b)=>{
                 b.material.color.set(0x0088ff)
@@ -210,6 +221,20 @@
             world.remove(sphere.userData.body)
             scene.remove(sphere)
             waiting = false
+            if(shots_left <= 0 && standing.length > 0) {
+                update_text(`restart`)
+                shots_left = 3
+                restart_level()
+                return
+            }
+            if(standing.length <= 0) {
+                update_text('you win')
+                shots_left = 3
+                restart_level()
+                return
+            }
+            update_text(`blocks:${standing.length}, shots:${shots_left}`)
+
         }
 
         const click_sphere = new THREE.Mesh(
@@ -236,12 +261,13 @@
         htmlCanvas = document.createElement('canvas')
         htmlCanvas.width = 512
         htmlCanvas.height = 128
+        canvas_texture = new THREE.CanvasTexture(htmlCanvas)
         update_text('it is super awesome')
         const text = new THREE.Mesh(
             new THREE.PlaneGeometry(4,1),
-            new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(htmlCanvas)})
+            new THREE.MeshLambertMaterial({map:canvas_texture})
         )
-        text.position.set(0,2,-4)
+        text.position.set(0,4,-4)
         scene.add(text)
     }
 
