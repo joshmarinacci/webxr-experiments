@@ -73,24 +73,12 @@
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let sphere, sphereBody, world, fixedTimeStep, maxSubSteps, lastTime
+    let sphere, sphereBody, cube, cubeBody, world, fixedTimeStep, maxSubSteps, lastTime
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
-        //create a cube
-        sphere = new THREE.Mesh(
-            new THREE.SphereGeometry(1),
-            new THREE.MeshLambertMaterial({color:'red'})
-        )
-        //camera is at z=0, so move the cube back so we can see it
-        sphere.position.z = -10
-        //move cube up to camera height (~1.5m)
-        sphere.position.y = 1.5
-        //make it clickable
-        sphere.userData.clickable = true
-        scene.add(sphere)
 
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
@@ -128,7 +116,7 @@
         world = new CANNON.World();
         world.gravity.set(0, -9.82, 0); // m/s²
 
-// Create a sphere
+        // Create a sphere
         var radius = 1; // m
         sphereBody = new CANNON.Body({
             mass: 5, // kg
@@ -137,7 +125,32 @@
         });
         world.addBody(sphereBody);
 
-// Create a plane
+        //create a sphere
+        sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(1),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        scene.add(sphere)
+        sphere.userData.body = sphereBody
+
+
+        //create a cube
+        cube = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'blue'})
+        )
+        scene.add(cube)
+        cubeBody = new CANNON.Body({
+            mass:1,//kg
+            position: new CANNON.Vec3(-2, 5, -10),
+            shape: new CANNON.Box(new CANNON.Vec3(1,1,1,))
+        })
+        world.addBody(cubeBody)
+        cube.userData.body = cubeBody
+
+
+
+        // Create a plane
         var groundBody = new CANNON.Body({
             mass: 0 // mass == 0 makes the body static
         });
@@ -186,8 +199,10 @@
         if(world && lastTime) {
             var dt = (time - lastTime)/1000
             world.step(fixedTimeStep, dt, maxSubSteps)
-            sphere.position.copy(sphereBody.position)
-            sphere.quaternion.copy(sphereBody.quaternion)
+            sphere.position.copy(sphere.userData.body.position)
+            sphere.quaternion.copy(sphere.userData.body.quaternion)
+            cube.position.copy(cube.userData.body.position)
+            cube.quaternion.copy(cube.userData.body.quaternion)
         }
         lastTime = time
         renderer.render( scene, camera );
