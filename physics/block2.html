@@ -112,14 +112,14 @@
         //create a cube
         const s = 0.99
         const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(s,s,s),
+            new THREE.BoxGeometry(s,s*2,s),
             new THREE.MeshPhongMaterial({color: 'aqua', flatShading:true})
         )
         scene.add(cube)
         const cubeBody = new CANNON.Body({
             mass: 1,//kg
             position: new CANNON.Vec3(x,y,z),
-            shape: new CANNON.Box(new CANNON.Vec3(s/2,s/2,s/2))
+            shape: new CANNON.Box(new CANNON.Vec3(s/2,s/2*2,s/2))
         })
         world.addBody(cubeBody)
         cube.userData.body = cubeBody
@@ -128,15 +128,18 @@
 
     function make_level(world) {
         const cubes = []
-        for(let x=-2; x<=2; x+=2) {
-            for (let y = 1; y < 4; y++) {
+        for(let x=-1; x<=1; x+=1) {
+            for (let y = 1; y < 4; y+=2) {
                 cubes.push(make_block(x, y, -7))
             }
         }
         return cubes
     }
 
-    function fire_ball(world,scene) {
+    function fire_ball(world,scene,dir) {
+        dir.normalize()
+        dir.multiplyScalar(10)
+        console.log("firing at",dir)
         const rad = 0.6
         const sphere = new THREE.Mesh(
             new THREE.SphereGeometry(rad),
@@ -146,8 +149,8 @@
         const sphereBody = new CANNON.Body({
             mass: 5,
             shape: new CANNON.Sphere(rad),
-            position: new CANNON.Vec3(0, 1.5, -3),
-            velocity: new CANNON.Vec3(0,5,-10)
+            position: new CANNON.Vec3(0, 1.5, 0),
+            velocity: new CANNON.Vec3(dir.x,dir.y,dir.z)
         })
         world.add(sphereBody)
         sphere.userData.body = sphereBody
@@ -181,7 +184,37 @@
 
         blocks = make_level(world)
 
-        pointer.on(POINTER_CLICK,(e)=> sphere = fire_ball(world,scene))
+        // const UP = new THREE.Vector3(0,0,0)
+        const UP = new THREE.Quaternion()
+        UP.setFromAxisAngle(new THREE.Vector3(0,1,0),0)
+
+        let waiting = false
+        function check_level_complete() {
+            const standing = blocks.filter((b)=>{
+                b.material.color.set(0x0088ff)
+                const diff = Math.abs(b.quaternion.angleTo(UP))
+                if(diff < 0.5) b.material.color.set(0xff8800)
+                return diff < 0.5
+            })
+            console.log("you have ",standing.length,'left')
+            world.remove(sphere.userData.body)
+            scene.remove(sphere)
+            waiting = false
+        }
+
+        const click_sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(10),
+            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:true, opacity:0.0})
+        )
+        click_sphere.userData.clickable = true
+        click_sphere.position.set(0,0,0)
+        scene.add(click_sphere)
+        on(click_sphere,POINTER_CLICK,(e)=> {
+            if(waiting) return
+            waiting = true
+            sphere = fire_ball(world,scene,e.point.clone())
+            setTimeout(check_level_complete,3000)
+        })
 
         create_floor(world,scene)
 
