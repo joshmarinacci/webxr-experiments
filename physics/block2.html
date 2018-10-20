@@ -171,7 +171,7 @@
                 const cubes = []
                 for(let x=-1.5; x<=2; x+=1.5) {
                     for (let y = 1; y < 4; y+=2) {
-                        cubes.push(make_block(x, y, -7))
+                        cubes.push(make_block(x, y, -9))
                     }
                 }
                 return cubes
@@ -181,9 +181,9 @@
             title:"hard",
             make: function(world,scene) {
                 const cubes = []
-                for(let x=-1.5; x<=2; x+=1.5) {
+                for(let x=-2; x<=2; x+=2) {
                     for (let y = 1; y < 3; y+=2) {
-                        cubes.push(make_block(x, y, -7))
+                        cubes.push(make_block(x, y, -11))
                     }
                 }
                 return cubes
