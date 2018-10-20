@@ -74,7 +74,8 @@
     let camera, scene, renderer, pointer, stats;
 
     let sphere, world, fixedTimeStep, maxSubSteps, lastTime
-    let blocks, htmlCanvas, shots_left, canvas_texture
+    let htmlCanvas, shots_left, canvas_texture
+    let blocks = []
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -126,28 +127,58 @@
         return cube
     }
 
-    function make_level(world) {
-        const cubes = []
-        for(let x=-1; x<=1; x+=1) {
-            for (let y = 1; y < 4; y+=2) {
-                cubes.push(make_block(x, y, -7))
+    let currentLevel = 0
+    const levels = [
+        {
+            title:"easy",
+            make: function(world,scene) {
+                const cubes = []
+                for(let x=-1; x<=2.2; x+=1.1) {
+                    for (let y = 1; y < 4; y+=2) {
+                        cubes.push(make_block(x, y, -7))
+                    }
+                }
+                return cubes
             }
-        }
-        return cubes
-    }
+        },
+        {
+            title:"medium",
+            make: function(world,scene) {
+                const cubes = []
+                for(let x=-1.5; x<=2; x+=1.5) {
+                    for (let y = 1; y < 4; y+=2) {
+                        cubes.push(make_block(x, y, -7))
+                    }
+                }
+                return cubes
+            }
+        },
+        {
+            title:"hard",
+            make: function(world,scene) {
+                const cubes = []
+                for(let x=-1.5; x<=2; x+=1.5) {
+                    for (let y = 1; y < 3; y+=2) {
+                        cubes.push(make_block(x, y, -7))
+                    }
+                }
+                return cubes
+            }
+        },
+    ]
 
     function restart_level() {
+        shots_left = 3
         blocks.forEach(c => {
             world.remove(c.userData.body)
             scene.remove(c)
         })
-        blocks = make_level(world)
+        blocks = levels[currentLevel].make(world,scene)
     }
 
     function fire_ball(world,scene,dir) {
         dir.normalize()
         dir.multiplyScalar(10)
-        console.log("firing at",dir)
         const rad = 0.6
         const sphere = new THREE.Mesh(
             new THREE.SphereGeometry(rad),
@@ -182,7 +213,7 @@
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
-        camera.add(stats)
+        // camera.add(stats)
         scene.add(camera)
 
         //class which handles mouse and VR controller
@@ -202,9 +233,7 @@
         world = new CANNON.World();
         world.gravity.set(0, -9.82, 0);
 
-        blocks = make_level(world)
 
-        // const UP = new THREE.Vector3(0,0,0)
         const UP = new THREE.Quaternion()
         UP.setFromAxisAngle(new THREE.Vector3(0,1,0),0)
 
@@ -217,20 +246,24 @@
                 if(diff < 0.5) b.material.color.set(0xff8800)
                 return diff < 0.5
             })
-            console.log("you have ",standing.length,'left')
             world.remove(sphere.userData.body)
             scene.remove(sphere)
             waiting = false
             if(shots_left <= 0 && standing.length > 0) {
                 update_text(`restart`)
-                shots_left = 3
                 restart_level()
                 return
             }
             if(standing.length <= 0) {
-                update_text('you win')
-                shots_left = 3
-                restart_level()
+                currentLevel++
+                if(currentLevel >= levels.length) {
+                    update_text('you win. play again')
+                    currentLevel = 0
+                    restart_level()
+                } else {
+                    update_text(`level ${levels[currentLevel].title}`)
+                    restart_level()
+                }
                 return
             }
             update_text(`blocks:${standing.length}, shots:${shots_left}`)
@@ -262,13 +295,16 @@
         htmlCanvas.width = 512
         htmlCanvas.height = 128
         canvas_texture = new THREE.CanvasTexture(htmlCanvas)
-        update_text('it is super awesome')
+        update_text('start playing')
         const text = new THREE.Mesh(
             new THREE.PlaneGeometry(4,1),
             new THREE.MeshLambertMaterial({map:canvas_texture})
         )
         text.position.set(0,4,-4)
         scene.add(text)
+
+        blocks = levels[currentLevel].make(world,scene)
+        update_text(`level ${levels[currentLevel].title}`)
     }
 
     function sync_graphics(obj) {
