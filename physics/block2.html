@@ -65,6 +65,20 @@
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
 
+    const theme = {
+        blocks: {
+            colors: {
+                normal: 0xccff00,
+                down: 0x4488ff,
+            }
+        },
+        floor: {
+            colors: {
+                normal: 0xcccccc,
+            }
+        }
+    }
+
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -80,12 +94,22 @@
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0x000000 );
+
+        const sky = new THREE.Mesh(
+            new THREE.SphereGeometry(50),
+            new THREE.MeshLambertMaterial({color:'white', side:THREE.BackSide})
+        )
+        scene.add(sky)
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 1, 1, 1 ).normalize();
+        light.position.set( -2, 2, 1 ).normalize();
         scene.add( light );
         scene.add(new THREE.AmbientLight(0xffffff,0.3))
+
+        scene.fog = new THREE.Fog(0x88ff88,10,20)
+        // scene.add(fog)
+
     }
 
     function create_floor(world,scene) {
@@ -101,7 +125,7 @@
 
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(100,100),
-            new THREE.MeshLambertMaterial({color:'yellow'})
+            new THREE.MeshLambertMaterial({color:theme.floor.colors.normal})
         )
         ground.position.set(0,0,0)
         ground.rotation.x = -90*Math.PI/180
@@ -114,7 +138,7 @@
         const s = 0.99
         const cube = new THREE.Mesh(
             new THREE.BoxGeometry(s,s*2,s),
-            new THREE.MeshPhongMaterial({color: 'aqua', flatShading:true})
+            new THREE.MeshPhongMaterial({color: theme.blocks.colors.normal, flatShading:true})
         )
         scene.add(cube)
         const cubeBody = new CANNON.Body({
@@ -241,10 +265,13 @@
         shots_left = 3
         function check_level_complete() {
             const standing = blocks.filter((b)=>{
-                b.material.color.set(0x0088ff)
+                b.material.color.set(theme.blocks.colors.normal)
                 const diff = Math.abs(b.quaternion.angleTo(UP))
-                if(diff < 0.5) b.material.color.set(0xff8800)
-                return diff < 0.5
+                const standing = (diff < 0.5)
+                if(!standing) {
+                    b.material.color.set(theme.blocks.colors.down)
+                }
+                return standing
             })
             world.remove(sphere.userData.body)
             scene.remove(sphere)
