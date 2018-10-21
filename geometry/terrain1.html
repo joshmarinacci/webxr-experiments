@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
+    <script src="../boilerplate/node_modules/three/build/three.js"></script>
     <!-- needed for loading GLTF files -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="../boilerplate/webvr.js"></script>
@@ -51,8 +51,8 @@
             position: fixed;
             top: 0;
             left:0;
-            width:200px;
-            height:200px;
+            width:100px;
+            height:100px;
             image-rendering: pixelated;
         }
     </style>
@@ -70,7 +70,7 @@
     <h3 id="click-to-play">click to start</h3>
 </div>
 
-<canvas id="debug-canvas" width="100" height="100"></canvas>
+<canvas id="debug-canvas" width="50" height="50"></canvas>
 
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
@@ -87,6 +87,10 @@
 
 
     let simplex = new SimplexNoise(4);
+    function map(val, smin, smax, emin, emax) {
+        const t =  (val-smin)/(smax-smin)
+        return (emax-emin)*t + emin
+    }
     function noise(nx, ny) {
         // Rescale from -1.0:+1.0 to 0.0:1.0
         return simplex.noise2D(nx, ny) / 2 + 0.5;
@@ -105,25 +109,18 @@
         return val/max;
     }
 
-
+    //generate grayscale image of noise
     function generateTexture() {
         const canvas = document.getElementById('debug-canvas')
-        // canvas.width = 20
-        // canvas.height = 20
         const c = canvas.getContext('2d')
-        c.imageSmoothingEnabled = false
-        c.mozImageSmoothingEnabled = false
-        c.oImageSmoothingEnabled = false
         c.fillStyle = 'black'
         c.fillRect(0,0,canvas.width, canvas.height)
 
-
         for(let i=0; i<canvas.width; i++) {
             for(let j=0; j<canvas.height; j++) {
-                const v =  octave(i/canvas.width,j/canvas.height,16)
+                let v =  octave(i/canvas.width,j/canvas.height,16)
                 const per = (100*v).toFixed(2)+'%'
                 c.fillStyle = `rgb(${per},${per},${per})`
-                if(v < 0.5) continue;
                 c.fillRect(i,j,1,1)
             }
         }
@@ -131,33 +128,54 @@
     }
 
     function generateMeshFromTexture(data) {
+        //make plane geometry
         const geo = new THREE.PlaneGeometry(data.width,data.height,data.width,data.height+1)
 
-        function map(val, smin, smax, emin, emax) {
-            const t =  (val-smin)/(smax-smin)
-            return (emax-emin)*t + emin
-        }
 
         for(let j=0; j<data.height; j++) {
             for (let i = 0; i < data.width; i++) {
-                const col = data.data[(j*(data.width)+i)*4]
-                const v1 = geo.vertices[j*(data.width+1)+i]
-                // v1.z = map(col,0,255,0,1)
-                const split = 0
-                if(col < split) {
-                    v1.z = 0
-                }
-                if(col >= split) {
-                    v1.z = map(col,split,255,0,8)
-                }
+                const n = (j*(data.width)+i)
+                const nn = (j*(data.width+1)+i)
+                const col = data.data[n*4]
+                const v1 = geo.vertices[nn]
+                v1.z = map(col,0,255,-10,10)
+                if(v1.z > 2.5) v1.z *= 1.3
+                //jitter x and y
+                // v1.x += map(Math.random(),0,1,-0.5,0.5)
+                // v1.y += map(Math.random(),0,1,-0.5,0.5)
             }
         }
+        geo.faces.forEach(f=>{
+            const a = geo.vertices[f.a]
+            const b = geo.vertices[f.b]
+            const c = geo.vertices[f.c]
+            const avg = (a.z+b.z+c.z)/3
+            const max = Math.max(a.z,Math.max(b.z,c.z))
 
+            //if average is below water, set to 0
+            if(avg < 0) {
+                a.z = 0
+                b.z = 0
+                c.z = 0
+            }
+            //assign colors based on the highest point of the face
+            if(max <=0)   return f.color.set(0x44ccff)
+            if(max <=1.5) return f.color.set(0x228800)
+            if(max <=3.5)   return f.color.set(0xeecc44)
+            if(max <=5)   return f.color.set(0xcccccc)
+            f.color.set('white')
+        })
+        geo.colorsNeedUpdate = true
         geo.verticesNeedUpdate = true
         geo.computeFlatVertexNormals()
-        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:'red', wireframe:false}))
+        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
+            // color:'white',
+            // wireframe:true,
+            vertexColors: THREE.VertexColors,
+            flatShading:true,
+        }))
         mesh.position.y = -0
-        mesh.position.z = -100
+        mesh.position.z = -30
         mesh.rotation.x = -30 * Math.PI/180
         return mesh
     }
@@ -167,7 +185,7 @@
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
-        const light = new THREE.DirectionalLight( 0xffffff, 0.3 );
+        const light = new THREE.DirectionalLight( 0xffffff, 0.7 );
         light.position.set( 1, 1, 0 ).normalize();
         scene.add( light );
         scene.add(new THREE.AmbientLight(0xffffff,0.3))
@@ -180,8 +198,8 @@
 
         const tex = generateTexture()
         const mesh = generateMeshFromTexture(tex)
-        // mesh.position.set(0,0,-10)
         scene.add(mesh)
+        obj = mesh
 
     }
 
@@ -191,6 +209,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
+        if(obj) obj.rotation.z -= 0.001
         renderer.render( scene, camera );
     }
 
