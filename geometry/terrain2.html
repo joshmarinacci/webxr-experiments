@@ -76,6 +76,12 @@
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
 
+
+    const COLORS = {
+        GRASS:0x228800,
+        WATER:0x44ccff
+    }
+
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
@@ -159,8 +165,8 @@
                 c.z = 0
             }
             //assign colors based on the highest point of the face
-            if(max <=0)   return f.color.set(0x44ccff)
-            if(max <=1.5) return f.color.set(0x228800)
+            if(max <=0)   return f.color.set(COLORS.WATER)
+            if(max <=1.5) return f.color.set(COLORS.GRASS)
             if(max <=3.5)   return f.color.set(0xeecc44)
             if(max <=5)   return f.color.set(0xcccccc)
             f.color.set('white')
@@ -174,11 +180,98 @@
             vertexColors: THREE.VertexColors,
             flatShading:true,
         }))
-        mesh.position.y = -0
-        mesh.position.z = -20
-        mesh.rotation.x = -30 * Math.PI/180
+        // mesh.position.y = -0
+        // mesh.position.z = -20
+        // mesh.rotation.x = -30 * Math.PI/180
         return mesh
     }
+
+    function jitter(geo,per) {
+        geo.vertices.forEach(v => {
+            v.x += map(Math.random(),0,1,-per,per)
+            v.y += map(Math.random(),0,1,-per,per)
+            v.z += map(Math.random(),0,1,-per,per)
+        })
+    }
+    function chopBottom(geo,bottom) {
+        geo.vertices.forEach(v => {
+            if(v.y < bottom) v.y = bottom
+        })
+    }
+
+    const toRad = deg => deg * Math.PI/180
+
+    function makeTree(scale) {
+        const tree = new THREE.Geometry()
+        function randomColor(geo,color,per) {
+            geo.faces.forEach(f => {
+                f.color.set(color)
+            })
+        }
+        const levels = Math.floor(map(Math.random(),0,1,2,5))
+        for(let i=0; i<levels; i++) {
+            const cone2 = new THREE.ConeGeometry(1+3-i, levels, 8)
+            cone2.translate(0, i*2, 0)
+            randomColor(cone2,0x00ff00,0.2)
+            tree.merge(cone2)
+        }
+
+        const trunk = new THREE.CylinderGeometry(0.5,0.5,2)
+        trunk.translate(0,-2,0)
+        randomColor(trunk,0xbb6600)
+        tree.merge(trunk)
+        tree.translate(0,2,0)
+        jitter(tree,0.05)
+        tree.scale(scale,scale,scale)
+        tree.colorsNeedUpdate = true
+        tree.verticesNeedUpdate = true
+        tree.computeFlatVertexNormals()
+        const mesh = new THREE.Mesh(tree, new THREE.MeshLambertMaterial({
+            // color:'white',
+            // wireframe:true,
+            vertexColors: THREE.VertexColors,
+            flatShading:true,
+        }))
+        return mesh
+    }
+
+    function makeCloud() {
+        const geo = new THREE.SphereGeometry(2, 16, 8)
+        geo.scale(1.5,1,1)
+
+        const size2 = map(Math.random(),0,1, 0.5,1.5)
+        const geo2 = new THREE.SphereGeometry(size2,7,5)
+        // const angle = map(Math.random(),0,1,30,90)
+        geo2.rotateX(toRad(90))
+        geo2.scale(2,2,1)
+        geo2.translate(2,0.5,0)
+        geo.merge(geo2)
+
+        const size3 = map(Math.random(),0,1, 0.5,1.5)
+        const geo3 = new THREE.SphereGeometry(size3,5,7)
+        geo3.rotateZ(toRad(90))
+        geo3.scale(1.5,1.5,1)
+        geo3.translate(-2,0.5,0)
+        geo.merge(geo3)
+
+
+        jitter(geo,0.1)
+        chopBottom(geo,-0.0)
+        geo.colorsNeedUpdate = true
+        geo.verticesNeedUpdate = true
+        geo.computeFlatVertexNormals()
+        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
+            // color:'white',
+            // wireframe:true,
+            // vertexColors: THREE.VertexColors,
+            flatShading:true,
+        }))
+        // mesh.position.z = -8
+        // mesh.position.y = 1.5
+        return mesh
+    }
+
+
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
@@ -188,6 +281,11 @@
         const light = new THREE.DirectionalLight( 0xffffff, 0.7 );
         light.position.set( 1, 1, 0 ).normalize();
         scene.add( light );
+
+        const light2 = new THREE.DirectionalLight( 0xff5566, 0.4 );
+        light2.position.set( -3, -1, 0 ).normalize();
+        scene.add( light2 );
+
         scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
 
@@ -196,10 +294,49 @@
 
 
 
+        const group = new THREE.Group()
+        group.position.z = -10
+        group.position.y = 0
+        scene.add(group)
+        obj = group
+
+        //add the terrain
         const tex = generateTexture()
-        const mesh = generateMeshFromTexture(tex)
-        scene.add(mesh)
-        obj = mesh
+        const terrain = generateMeshFromTexture(tex)
+        terrain.rotation.x = toRad(-90)
+        group.add(terrain)
+        group.rotation.y = toRad(-45)
+        group.rotation.x = toRad(0)
+
+        //find a vertex where z is exactly 0
+        let n = -1;
+        let treeCount = 0
+        while(true) {
+            // if(treeCount > 300) break
+            n++
+            if(n>=terrain.geometry.faces.length) break
+            const f = terrain.geometry.faces[n]
+            const v = terrain.geometry.vertices[f.a]
+            if(f.color.getHex() === COLORS.GRASS && v.z > 0) {
+                const tree = makeTree(0.1)
+                tree.position.set(v.x,v.z,-v.y)
+                group.add(tree)
+                // console.log(v.z)
+                treeCount++
+            }
+        }
+
+
+        for(let i=0; i<5; i++) {
+            const cloud = makeCloud()
+            cloud.position.set(
+                map(Math.random(),0,1,-10,10),
+                8,
+                map(Math.random(),0,1,-10,10),
+            )
+            group.add(cloud)
+        }
+
 
     }
 
@@ -209,7 +346,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
-        if(obj) obj.rotation.z -= 0.001
+        // if(obj) obj.rotation.y -= 0.001
         renderer.render( scene, camera );
     }
 
