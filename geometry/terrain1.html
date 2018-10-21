@@ -10,6 +10,7 @@
     <!-- needed for loading GLTF files -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="../boilerplate/webvr.js"></script>
+    <script src="node_modules/simplex-noise/simplex-noise.js"></script>
 
     <!-- mouse/touch/vr-controller support -->
     <!--<script src="./pointer.js" type="module"></script>-->
@@ -45,6 +46,15 @@
             left: 50%;
             transform: translate(-50%,0);
         }
+
+        #debug-canvas {
+            position: fixed;
+            top: 0;
+            left:0;
+            width:200px;
+            height:200px;
+            image-rendering: pixelated;
+        }
     </style>
 
 </head>
@@ -60,6 +70,8 @@
     <h3 id="click-to-play">click to start</h3>
 </div>
 
+<canvas id="debug-canvas" width="100" height="100"></canvas>
+
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
@@ -73,17 +85,48 @@
 
     let obj
 
+
+    let simplex = new SimplexNoise(4);
+    function noise(nx, ny) {
+        // Rescale from -1.0:+1.0 to 0.0:1.0
+        return simplex.noise2D(nx, ny) / 2 + 0.5;
+    }
+    function octave(nx,ny,octaves) {
+        let val = 0;
+        let freq = 1;
+        let max = 0;
+        let amp = 1;
+        for(let i=0; i<octaves; i++) {
+            val += noise(nx*freq,ny*freq)*amp;
+            max += amp;
+            amp /= 2;
+            freq  *= 2;
+        }
+        return val/max;
+    }
+
+
     function generateTexture() {
-        const canvas = document.createElement('canvas')
-        canvas.width = 10
-        canvas.height = 10
+        const canvas = document.getElementById('debug-canvas')
+        // canvas.width = 20
+        // canvas.height = 20
         const c = canvas.getContext('2d')
+        c.imageSmoothingEnabled = false
+        c.mozImageSmoothingEnabled = false
+        c.oImageSmoothingEnabled = false
         c.fillStyle = 'black'
         c.fillRect(0,0,canvas.width, canvas.height)
-        c.fillStyle = 'gray'
-        c.fillRect(2,2,6,6)
-        c.fillStyle = 'white'
-        c.fillRect(3,3,4,4)
+
+
+        for(let i=0; i<canvas.width; i++) {
+            for(let j=0; j<canvas.height; j++) {
+                const v =  octave(i/canvas.width,j/canvas.height,16)
+                const per = (100*v).toFixed(2)+'%'
+                c.fillStyle = `rgb(${per},${per},${per})`
+                if(v < 0.5) continue;
+                c.fillRect(i,j,1,1)
+            }
+        }
         return c.getImageData(0,0,canvas.width,canvas.height)
     }
 
@@ -99,17 +142,23 @@
             for (let i = 0; i < data.width; i++) {
                 const col = data.data[(j*(data.width)+i)*4]
                 const v1 = geo.vertices[j*(data.width+1)+i]
-                v1.z = map(col,0,255,0,1)
-                // if(col === 0) v1.z = 0
-                // if(col === 128) v1.z = 1
-                // if(col === 255) v1.z = 2
+                // v1.z = map(col,0,255,0,1)
+                const split = 0
+                if(col < split) {
+                    v1.z = 0
+                }
+                if(col >= split) {
+                    v1.z = map(col,split,255,0,8)
+                }
             }
         }
 
         geo.verticesNeedUpdate = true
         geo.computeFlatVertexNormals()
-        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:'red', wireframe:true}))
-        mesh.rotation.x = -60 * Math.PI/180
+        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:'red', wireframe:false}))
+        mesh.position.y = -0
+        mesh.position.z = -100
+        mesh.rotation.x = -30 * Math.PI/180
         return mesh
     }
 
@@ -131,7 +180,7 @@
 
         const tex = generateTexture()
         const mesh = generateMeshFromTexture(tex)
-        mesh.position.set(0,0,-10)
+        // mesh.position.set(0,0,-10)
         scene.add(mesh)
 
     }
@@ -153,7 +202,7 @@
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 250 );
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
