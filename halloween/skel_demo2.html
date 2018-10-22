@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<!--
-https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,20 +7,16 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
 
     <!-- required -->
     <script src="./node_modules/three/build/three.min.js"></script>
+    <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
 
-    <!-- stats (fps, polygons, fps) -->
-    <script src="../boilerplate/vrstats.js" type="module"></script>
-    <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-
-    <!-- mouse/touch/vr-controller support -->
-    <!--<script src="./pointer.js" type="module"></script>-->
-
     <style type="text/css">
         html, body {
             margin:0;
+            padding:0;
+            overflow: hidden;
         }
         #overlay {
             position: fixed;
@@ -66,89 +59,108 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
-    import VRStats from "../boilerplate/vrstats.js"
-    import GPUParticleSystem from "./GPUParticleSystem.js"
-
+    import {t2 as T2} from "./T2.js"
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats, parts
+    let camera, scene, renderer, pointer, stats;
 
+    let block, unit
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0x000000 );
 
-        //load the particle texture
-        const texture_loader = new THREE.TextureLoader()
-        const texture = texture_loader.load('./round_blurry_dot.png')
+        //a standard light
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+        scene.add(new THREE.AmbientLight(0xffffff,0.1))
 
-        const rand = (min,max) => Math.random()*(max-min) + min
+        $("#overlay").style.display = 'none'
 
-        const options = {
-            maxParticles: 10000,
-            position: new THREE.Vector3(0,5,-5),
-            positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, -1.0, 0.0),
-            velocity: new THREE.Vector3(0.0, -0.5, 0.0),
-            velocityRandomness: 1.0,
-            acceleration: new THREE.Vector3(0.0,0.0,0.0),
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,1.0,1.0),
-            colorRandomness: 0.0,
-            lifetime: 30.0,
-            size: 20,
-            sizeRandomness: 30.0,
-            particleSpriteTex: texture,
-            blending: THREE.NormalBlending,
-            onTick:(system,time) => {
-                for(let i=0; i<1; i++) {
-                    options.position.set(rand(-5,5), 8, rand(0,-5))
-                    options.color.set(0xffffff)
-                    system.spawnParticle(options);
-                }
+        function makeEffectShader() {
+            const mat = new THREE.MeshLambertMaterial({color:'green', transparent:true, opacity: 0.5})
+            mat.onBeforeCompile = (shader) => {
+                //add 'time' uniform to structure
+                shader.uniforms.time = { value: 0}
+                //add 'time' uniform to the shader declarations
+                shader.vertexShader = `
+                uniform float time;
+                varying float vTime;
+            ` + shader.vertexShader
+                /*
+                this include
+                    #include <begin_vertex>
+                becomes this code
+                    vec3 transformed = vec3( position );
+
+                replace the declaration of transformed with ours.
+                 */
+
+                const token = '#include <begin_vertex>'
+                const customTransform = `
+                vec3 transformed = vec3(position);
+                transformed.x = position.x  + sin(time*10.0+position.y*10.0)*0.1;
+                vTime = time;
+            `
+                shader.vertexShader = shader.vertexShader.replace(token,customTransform)
+
+
+                shader.fragmentShader = `
+                varying float vTime;
+            `+shader.fragmentShader
+                const ctoken = '#include <color_fragment>'
+                const customColor = `
+                float yval = cos(gl_FragCoord.y/10.0 + vTime*10.0);
+                float remapped = (yval + 1.0)/2.0;
+                diffuseColor.a *= clamp(0.0,0.9,remapped+0.5)-0.1;
+            `
+                shader.fragmentShader = shader.fragmentShader.replace(ctoken,customColor)
+                T2.forever(time => shader.uniforms.time.value = time).start()
             }
+            return mat
         }
-        parts = new GPUParticleSystem(options)
-        parts.position.z = -3
-        scene.add(parts)
+        const mat = makeEffectShader()
+        const sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(1.5,16,64),mat)
+        sphere.position.z = -6
+        sphere.position.y = 1.5
+        scene.add(sphere)
 
-        stats = new VRStats(renderer)
-        camera.add(stats)
-        scene.add(camera)
-
-
-        const ground = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(50,50),
-            new THREE.MeshLambertMaterial({color:0xeeeeee})
-        )
-        ground.rotation.x = -90*Math.PI/180
-        // scene.add(ground)
+        T2.prop({target:sphere.material,property:'opacity',from:0.0, to:1.0, duration:2}).start()
 
 
-        new THREE.GLTFLoader().load("./low_poly_christmas_forest/scene.gltf",(model)=>{
-            model.scene.position.z = -5
-            model.scene.position.y = -1
-            model.scene.rotation.y = 220*Math.PI/180
-            scene.add(model.scene)
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshPhongMaterial({color:'white'}))
+        floor.rotation.x = - 90 * Math.PI/180
+        scene.add(floor)
+
+
+
+        unit = new THREE.Group()
+        unit.position.z = -5.4
+        unit.position.y = 1.5
+        scene.add(unit)
+        const loader = new THREE.GLTFLoader()
+        loader.load("./Skeleton.glb",(m)=> {
+            m.scene.position.y = -1.3
+            m.scene.position.z = 0
+            m.scene.scale.set(0.5,0.5,0.5)
+            m.scene.userData.clickable = true
+            unit.add(m.scene)
+            T2.clip({target:m,name:'Skeleton_Running',}).start()
         })
 
-        const dirLight = new THREE.DirectionalLight(0xffffff,1.0)
-        dirLight.position.set(-10,10,10)
-        scene.add(dirLight)
-        // dirLight.target = parts
-        scene.add(new THREE.AmbientLight(0xffffff,0.5))
+
+        T2.prop({target:unit.rotation, property:'y', from:0, to:2*Math.PI, duration:3, loop:-1}).start()
+        // T2.prop({target:matShader.uniforms.time, property:'value', from:0, to:T2.INFINITE, duration:T2.INFINITE})
+
     }
 
     //called on every frame. customize this
     function render(time) {
-        //update the pointer and stats, if configured
-        if(pointer) pointer.tick(time)
-        if(stats) stats.update(time)
-        parts.update(time)
+        T2.update()
         renderer.render( scene, camera );
     }
 
@@ -164,6 +176,7 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.gammaOutput = true
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );

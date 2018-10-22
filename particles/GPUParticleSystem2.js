@@ -43,7 +43,7 @@ const GPUParticleShader = {
                     }
                     
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
-                    gl_PointSize = ( uScale * size ) * lifeLeft;
+                    gl_PointSize = ( uScale * size );// * lifeLeft;
                     newPosition = positionStart 
                         + (velocity * timeElapsed)
                         + (acceleration * 0.5 * timeElapsed * timeElapsed)

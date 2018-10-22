@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<!--
-https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,14 +6,10 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <script src="./node_modules/three/build/three.min.js"></script>
-
-    <!-- needed to enter VR -->
-    <script src="../boilerplate/webvr.js"></script>
-
-    <!-- stats (fps, polygons, fps) -->
-    <script src="../boilerplate/vrstats.js" type="module"></script>
+    <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
+    <!-- needed for loading GLTF files -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="../boilerplate/webvr.js"></script>
 
     <!-- mouse/touch/vr-controller support -->
     <!--<script src="./pointer.js" type="module"></script>-->
@@ -24,6 +17,8 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <style type="text/css">
         html, body {
             margin:0;
+            padding:0;
+            overflow: hidden;
         }
         #overlay {
             position: fixed;
@@ -68,79 +63,59 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
-    import GPUParticleSystem from "./GPUParticleSystem.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats, parts
+    let camera, scene, renderer, pointer, stats;
 
+    let obj
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
-        //load the particle texture
-        const texture_loader = new THREE.TextureLoader()
-        const texture = texture_loader.load('./round_blurry_dot.png')
 
-        const rand = (min,max) => Math.random()*(max-min) + min
 
-        const options = {
-            maxParticles: 10000,
-            position: new THREE.Vector3(0,5,-5),
-            positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, -1.0, 0.0),
-            velocity: new THREE.Vector3(0.0, -0.5, 0.0),
-            velocityRandomness: 1.0,
-            acceleration: new THREE.Vector3(0.0,0.0,0.0),
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,1.0,1.0),
-            colorRandomness: 0.0,
-            lifetime: 30.0,
-            size: 20,
-            sizeRandomness: 30.0,
-            particleSpriteTex: texture,
-            blending: THREE.NormalBlending,
-            onTick:(system,time) => {
-                for(let i=0; i<1; i++) {
-                    options.position.set(rand(-5,5), 8, rand(0,-5))
-                    options.color.set(0xffffff)
-                    system.spawnParticle(options);
-                }
-            }
+        //create a cube
+        obj = new THREE.Group()
+
+        const mat = new THREE.MeshLambertMaterial({color:'black', side:THREE.BackSide })
+        mat.onBeforeCompile = (shader) => {
+            const token = '#include <begin_vertex>'
+            const customTransform = `
+                vec3 transformed = position + objectNormal*0.02;
+            `
+            shader.vertexShader = shader.vertexShader.replace(token,customTransform)
         }
-        parts = new GPUParticleSystem(options)
-        parts.position.z = -3
-        scene.add(parts)
 
-        stats = new VRStats(renderer)
-        camera.add(stats)
-        scene.add(camera)
+        obj.add(new THREE.Mesh(
+            new THREE.TorusKnotBufferGeometry(0.6,0.1),
+            mat
+        ))
+        obj.add(new THREE.Mesh(
+            new THREE.TorusKnotBufferGeometry(0.6,0.1),
+            new THREE.MeshPhongMaterial({color:'yellow', side: THREE.FrontSide, flat:true})
+        ))
+
+        //camera is at z=0, so move the cube back so we can see it
+        obj.position.z = -3
+        //move cube up to camera height (~1.5m)
+        obj.position.y = 1.5
+        scene.add(obj)
+
+        //a standard light
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+        scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
 
-        const ground = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(50,50),
-            new THREE.MeshLambertMaterial({color:0xeeeeee})
-        )
-        ground.rotation.x = -90*Math.PI/180
-        // scene.add(ground)
+        $("#overlay").style.display = 'none'
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
-
-        new THREE.GLTFLoader().load("./low_poly_christmas_forest/scene.gltf",(model)=>{
-            model.scene.position.z = -5
-            model.scene.position.y = -1
-            model.scene.rotation.y = 220*Math.PI/180
-            scene.add(model.scene)
-        })
-
-        const dirLight = new THREE.DirectionalLight(0xffffff,1.0)
-        dirLight.position.set(-10,10,10)
-        scene.add(dirLight)
-        // dirLight.target = parts
-        scene.add(new THREE.AmbientLight(0xffffff,0.5))
     }
 
     //called on every frame. customize this
@@ -148,7 +123,8 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        parts.update(time)
+        //rotate the cube on every tick
+        if(obj) obj.rotation.y += 0.01
         renderer.render( scene, camera );
     }
 
@@ -164,6 +140,7 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.gammaOutput = true
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );

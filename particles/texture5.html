@@ -14,12 +14,6 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
 
-    <!-- stats (fps, polygons, fps) -->
-    <script src="../boilerplate/vrstats.js" type="module"></script>
-    <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-
-    <!-- mouse/touch/vr-controller support -->
-    <!--<script src="./pointer.js" type="module"></script>-->
 
     <style type="text/css">
         html, body {
@@ -68,7 +62,7 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
-    import GPUParticleSystem from "./GPUParticleSystem.js"
+    import GPUParticleSystem from "./GPUParticleSystem2.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -80,67 +74,52 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0x000000 );
 
         //load the particle texture
         const texture_loader = new THREE.TextureLoader()
-        const texture = texture_loader.load('./round_blurry_dot.png')
+        const texture = texture_loader.load('./kenney_particlePack/PNG/scorch_01.png')
 
         const rand = (min,max) => Math.random()*(max-min) + min
 
         const options = {
-            maxParticles: 10000,
-            position: new THREE.Vector3(0,5,-5),
+            position: new THREE.Vector3(0,2,0),
             positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, -1.0, 0.0),
-            velocity: new THREE.Vector3(0.0, -0.5, 0.0),
+            velocity: new THREE.Vector3(0.0, 0, 0.0),
             velocityRandomness: 1.0,
             acceleration: new THREE.Vector3(0.0,0.0,0.0),
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,1.0,1.0),
-            colorRandomness: 0.0,
-            lifetime: 30.0,
-            size: 20,
-            sizeRandomness: 30.0,
+
+            color: new THREE.Color(1.0,0.0,1.0),
+            endColor: new THREE.Color(0.0,1.0,1.0),
+
+            lifetime: 2.0,
+            fadeIn:0.001,
+            fadeOut:3.0,
+            size: 30,
+            sizeRandomness: 0.0,
+        }
+
+        parts = new GPUParticleSystem({
+            maxParticles: 10000,
             particleSpriteTex: texture,
-            blending: THREE.NormalBlending,
-            onTick:(system,time) => {
-                for(let i=0; i<1; i++) {
-                    options.position.set(rand(-5,5), 8, rand(0,-5))
-                    options.color.set(0xffffff)
+            blending: THREE.AdditiveBlending,
+            onTick: (system, time) => {
+                for(let i=0; i<10; i++) {
+                    options.color.setHSL(0.1, 1.0, 0.5)
+                    options.endColor.setHSL(0.0, 0.0, 0.8)
+                    const theta = rand(0,Math.PI*2)
+                    const size = 0.4
+                    options.position.set(Math.sin(theta)*size,Math.cos(theta)*size, 0)
+                    const s = 0.02
+                    options.velocity.set(rand(-s, s), rand(-s, s), rand(-s, s))
                     system.spawnParticle(options);
                 }
             }
-        }
-        parts = new GPUParticleSystem(options)
-        parts.position.z = -3
+        })
+        parts.position.set(0,1.5,-1)
         scene.add(parts)
 
-        stats = new VRStats(renderer)
-        camera.add(stats)
-        scene.add(camera)
-
-
-        const ground = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(50,50),
-            new THREE.MeshLambertMaterial({color:0xeeeeee})
-        )
-        ground.rotation.x = -90*Math.PI/180
-        // scene.add(ground)
-
-
-        new THREE.GLTFLoader().load("./low_poly_christmas_forest/scene.gltf",(model)=>{
-            model.scene.position.z = -5
-            model.scene.position.y = -1
-            model.scene.rotation.y = 220*Math.PI/180
-            scene.add(model.scene)
-        })
-
-        const dirLight = new THREE.DirectionalLight(0xffffff,1.0)
-        dirLight.position.set(-10,10,10)
-        scene.add(dirLight)
-        // dirLight.target = parts
-        scene.add(new THREE.AmbientLight(0xffffff,0.5))
+        scene.add(new THREE.AmbientLight(0xffffff,1.0))
     }
 
     //called on every frame. customize this
@@ -148,7 +127,7 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        parts.update(time)
+        if(parts) parts.update(time)
         renderer.render( scene, camera );
     }
 

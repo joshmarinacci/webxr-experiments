@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<!--
-https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,14 +6,11 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <script src="./node_modules/three/build/three.min.js"></script>
-
-    <!-- needed to enter VR -->
-    <script src="../boilerplate/webvr.js"></script>
-
-    <!-- stats (fps, polygons, fps) -->
-    <script src="../boilerplate/vrstats.js" type="module"></script>
+    <script src="../boilerplate/node_modules/three/build/three.js"></script>
+    <!-- needed for loading GLTF files -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="../boilerplate/webvr.js"></script>
+    <script src="node_modules/simplex-noise/simplex-noise.js"></script>
 
     <!-- mouse/touch/vr-controller support -->
     <!--<script src="./pointer.js" type="module"></script>-->
@@ -24,6 +18,8 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <style type="text/css">
         html, body {
             margin:0;
+            padding:0;
+            overflow: hidden;
         }
         #overlay {
             position: fixed;
@@ -50,6 +46,15 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
             left: 50%;
             transform: translate(-50%,0);
         }
+
+        #debug-canvas {
+            position: fixed;
+            top: 0;
+            left:0;
+            width:100px;
+            height:100px;
+            image-rendering: pixelated;
+        }
     </style>
 
 </head>
@@ -65,82 +70,128 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
     <h3 id="click-to-play">click to start</h3>
 </div>
 
+<canvas id="debug-canvas" width="50" height="50"></canvas>
+
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
-    import GPUParticleSystem from "./GPUParticleSystem.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats, parts
+    let camera, scene, renderer, pointer, stats;
+
+    let group
+
+
+    let simplex = new SimplexNoise(4);
+    function map(val, smin, smax, emin, emax) {
+        const t =  (val-smin)/(smax-smin)
+        return (emax-emin)*t + emin
+    }
+    const toRad = deg => deg * Math.PI/180
+    function noise(nx, ny) {
+        // Rescale from -1.0:+1.0 to 0.0:1.0
+        return simplex.noise2D(nx, ny) / 2 + 0.5;
+    }
+    function octave(nx,ny,octaves) {
+        let val = 0;
+        let freq = 1;
+        let max = 0;
+        let amp = 1;
+        for(let i=0; i<octaves; i++) {
+            val += noise(nx*freq,ny*freq)*amp;
+            max += amp;
+            amp /= 2;
+            freq  *= 2;
+        }
+        return val/max;
+    }
+
+    function jitter(geo,per) {
+        geo.vertices.forEach(v => {
+            v.x += map(Math.random(),0,1,-per,per)
+            v.y += map(Math.random(),0,1,-per,per)
+            v.z += map(Math.random(),0,1,-per,per)
+        })
+    }
+    function chopBottom(geo,bottom) {
+        geo.vertices.forEach(v => {
+            if(v.y < bottom) v.y = bottom
+        })
+    }
+
+    function makeCloud() {
+        const geo = new THREE.SphereGeometry(2, 16, 8)
+        geo.scale(1.5,1,1)
+
+        const size2 = map(Math.random(),0,1, 0.5,1.5)
+        const geo2 = new THREE.SphereGeometry(size2,7,5)
+        // const angle = map(Math.random(),0,1,30,90)
+        geo2.rotateX(toRad(90))
+        geo2.scale(2,2,1)
+        geo2.translate(2,0.5,0)
+        geo.merge(geo2)
+
+        const size3 = map(Math.random(),0,1, 0.5,1.5)
+        const geo3 = new THREE.SphereGeometry(size3,5,7)
+        geo3.rotateZ(toRad(90))
+        geo3.scale(1.5,1.5,1)
+        geo3.translate(-2,0.5,0)
+        geo.merge(geo3)
+
+
+        jitter(geo,0.1)
+        chopBottom(geo,-0.0)
+        geo.colorsNeedUpdate = true
+        geo.verticesNeedUpdate = true
+        geo.computeFlatVertexNormals()
+        const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
+            // color:'white',
+            // wireframe:true,
+            // vertexColors: THREE.VertexColors,
+            flatShading:true,
+        }))
+        // mesh.position.z = -8
+        // mesh.position.y = 1.5
+        return mesh
+    }
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new THREE.Color( 0x444444 );
 
-        //load the particle texture
-        const texture_loader = new THREE.TextureLoader()
-        const texture = texture_loader.load('./round_blurry_dot.png')
-
-        const rand = (min,max) => Math.random()*(max-min) + min
-
-        const options = {
-            maxParticles: 10000,
-            position: new THREE.Vector3(0,5,-5),
-            positionRandomness: 0.0,
-            baseVelocity: new THREE.Vector3(0.0, -1.0, 0.0),
-            velocity: new THREE.Vector3(0.0, -0.5, 0.0),
-            velocityRandomness: 1.0,
-            acceleration: new THREE.Vector3(0.0,0.0,0.0),
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,1.0,1.0),
-            colorRandomness: 0.0,
-            lifetime: 30.0,
-            size: 20,
-            sizeRandomness: 30.0,
-            particleSpriteTex: texture,
-            blending: THREE.NormalBlending,
-            onTick:(system,time) => {
-                for(let i=0; i<1; i++) {
-                    options.position.set(rand(-5,5), 8, rand(0,-5))
-                    options.color.set(0xffffff)
-                    system.spawnParticle(options);
-                }
-            }
-        }
-        parts = new GPUParticleSystem(options)
-        parts.position.z = -3
-        scene.add(parts)
-
-        stats = new VRStats(renderer)
-        camera.add(stats)
-        scene.add(camera)
+        const light = new THREE.DirectionalLight( 0xffffff, 0.7 );
+        light.position.set( 1, 1, 0 ).normalize();
+        scene.add( light );
+        const light2 = new THREE.DirectionalLight( 0xff5566, 0.7 );
+        light2.position.set( -3, -1, 0 ).normalize();
+        scene.add( light2 );
+        scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
 
-        const ground = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(50,50),
-            new THREE.MeshLambertMaterial({color:0xeeeeee})
-        )
-        ground.rotation.x = -90*Math.PI/180
-        // scene.add(ground)
+        $("#overlay").style.display = 'none'
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
 
-        new THREE.GLTFLoader().load("./low_poly_christmas_forest/scene.gltf",(model)=>{
-            model.scene.position.z = -5
-            model.scene.position.y = -1
-            model.scene.rotation.y = 220*Math.PI/180
-            scene.add(model.scene)
-        })
 
-        const dirLight = new THREE.DirectionalLight(0xffffff,1.0)
-        dirLight.position.set(-10,10,10)
-        scene.add(dirLight)
-        // dirLight.target = parts
-        scene.add(new THREE.AmbientLight(0xffffff,0.5))
+        group = new THREE.Group()
+        group.position.y = 3
+        group.position.z = -10
+        scene.add(group)
+
+        const mesh = makeCloud()
+        mesh.position.x = -5
+        group.add(mesh)
+        const mesh2 = makeCloud()
+        mesh2.position.x = 5
+        group.add(mesh2)
+        const mesh3 = makeCloud()
+        mesh3.position.z = -5
+        group.add(mesh3)
     }
 
     //called on every frame. customize this
@@ -148,7 +199,7 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        parts.update(time)
+        if(group) group.rotation.y -= 0.005
         renderer.render( scene, camera );
     }
 
@@ -160,10 +211,11 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 250 );
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.gammaOutput = true
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
