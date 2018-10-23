@@ -78,6 +78,10 @@
 
     let timeLabel, monstersLabel
 
+    const CONSTS = {
+        SCROLL_SPEED: 0.05,
+    }
+
 
     class SimpleText extends THREE.Object3D {
         constructor(w,h) {
@@ -185,6 +189,12 @@
 
     }
 
+    let monsters
+    function setupMonsters() {
+        monsters = new THREE.Group()
+        scene.add(monsters)
+    }
+
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         scene.background = new THREE.Color( 0xcccccc );
@@ -214,20 +224,48 @@
         setupTerrain()
         setupBackground()
         setupOverlay()
+        setupMonsters()
         setupVacuum()
         setupStart()
     }
 
     function moveTerrain(time) {
         worlds.forEach(w => {
-            w.position.z += 0.2
+            w.position.z += CONSTS.SCROLL_SPEED
             if(w.position.z > 10) {
                 w.position.z = -20
             }
         })
-        //scroll at constant speed over a flat plane with N seconds to capture M monsters.
         // Monsters are positioned ahead of you and slide into view as you move towards them at a fixed rate.
-        // Position monsters and decor fixed intervals.
+    }
+
+    let lastMonster = 0
+    const rand = (min,max) => Math.random()*(max-min) + min
+    function updateMonsters(time) {
+        const diff = (time - lastMonster)
+        if(diff > 3) {
+            lastMonster = time
+
+            const monster = new THREE.Mesh(
+                new THREE.SphereGeometry(0.5,16,8),
+                new THREE.MeshLambertMaterial({color:'green'})
+            )
+            monster.position.set(rand(-3,3),1,-30)
+            monsters.add(monster)
+        }
+
+
+        const remove = []
+        monsters.children.forEach(m => {
+            m.position.z += CONSTS.SCROLL_SPEED
+            if(m.position.z > 20) {
+                remove.push(m)
+            }
+        })
+
+        remove.forEach(m => {
+            m.parent.remove(m)
+        })
     }
 
     //called on every frame. customize this
@@ -235,7 +273,8 @@
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        moveTerrain(time)
+        moveTerrain(time/1000)
+        updateMonsters(time/1000)
         renderer.render( scene, camera );
     }
 
