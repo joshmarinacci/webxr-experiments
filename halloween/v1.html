@@ -314,14 +314,12 @@
         monstersLabel.setText(`${SCORE.CAPTURED}`)
         const level = getCurrentLevel()
         t2.sequence()
-            .then(t2.action(()=>{
+            .then(()=>{
                 roundLabel.setText(`capture ${level.CAPTURE} in ${CONSTS.ROUND_TIME} s`)
                 monstersLabel.setText('0')
-            }))
+            })
             .then(t2.wait(1))
-            .then(t2.action(()=>{
-                roundLabel.visible = false
-            }))
+            .then((()=> roundLabel.visible = false))
             .start()
     }
     function updateTime(time) {
@@ -339,40 +337,36 @@
                 // WIN
                 if (currentLevel + 1 === LEVELS.length) {
                     t2.sequence()
-                        .then(t2.action(()=>{
+                        .then(()=>{
                             roundLabel.setText("you win")
                             roundLabel.visible = true
-                        }))
+                        })
                         .then(t2.wait(2))
-                        .then(t2.action(()=>{
-                            restartGame()
-                        }))
+                        .then(()=>restartGame())
                         .start()
                 } else {
                     // NEXT ROUND
                     t2.sequence()
-                        .then(t2.action(()=>{
+                        .then(()=>{
                             roundLabel.setText("level complete")
                             roundLabel.visible = true
-                        }))
+                        })
                         .then(t2.wait(2))
-                        .then(t2.action(()=>{
+                        .then(()=>{
                             currentLevel++
                             startLevel()
-                        }))
+                        })
                         .start()
                 }
             } else {
                 // LOSE, Start game over
                 t2.sequence()
-                    .then(t2.action(()=>{
+                    .then(()=>{
                         roundLabel.setText("game over")
                         roundLabel.visible = true
-                    }))
+                    })
                     .then(t2.wait(2))
-                    .then(t2.action(()=>{
-                        restartGame()
-                    }))
+                    .then(()=>restartGame())
                     .start()
             }
         }

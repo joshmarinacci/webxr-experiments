@@ -37,7 +37,6 @@ class ActionTween extends Tween {
         this.fn = fn
     }
     start() {
-        console.log("running the sub function")
         const res = this.fn()
         this.running = false
         return res
