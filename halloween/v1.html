@@ -70,12 +70,42 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const toRad = deg => deg * Math.PI/180
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
+    let worlds = []
 
     function setupTerrain() {
-        //scroll at constant speed over a flat plane with N seconds to capture M monsters.
+        function makeWorld(dz) {
+            const world = new THREE.Group()
+            world.position.z = dz
+
+            //scroll at constant speed over a flat plane with N seconds to capture M monsters.
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(10, 10),
+                new THREE.MeshLambertMaterial({color: 'orange'})
+            );
+            ground.rotation.x = toRad(-90)
+            ground.position.z = -5
+            world.add(ground)
+
+
+            for (let i = 0; i < 10; i++) {
+                const block = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.3, 1, 0.3),
+                    new THREE.MeshLambertMaterial({color: 'gray'})
+                )
+                const even = i % 2 === 0
+                block.position.set(even ? 1 : -1, 0.5, -i)
+                world.add(block)
+            }
+            return world
+        }
+        worlds.push(makeWorld(0))
+        worlds.push(makeWorld(-10))
+        worlds.push(makeWorld(-20))
+        worlds.forEach(w => scene.add(w))
     }
     function setupBackground() {
         //Skybox to anchor your vision.
@@ -133,6 +163,12 @@
     }
 
     function moveTerrain(time) {
+        worlds.forEach(w => {
+            w.position.z += 0.2
+            if(w.position.z > 10) {
+                w.position.z = -20
+            }
+        })
         //scroll at constant speed over a flat plane with N seconds to capture M monsters.
         // Monsters are positioned ahead of you and slide into view as you move towards them at a fixed rate.
         // Position monsters and decor fixed intervals.
