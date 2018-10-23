@@ -73,6 +73,9 @@ class PropTween extends Tween {
         this.loop = opts.loop
         if(typeof this.loop === 'undefined') this.loop = 1
         this.loopCount = 0
+        this.reversed = false
+        this.autoReverse = opts.autoReverse
+        if(typeof this.autoReverse === 'undefined') this.autoReverse = false
     }
     update(time) {
         time = time/1000
@@ -83,10 +86,13 @@ class PropTween extends Tween {
         if(t > 1.0) {
             t = 1.0
         }
-        const v = this.lerp(this.from, this.to, t)
+        const v = this.lerp(this.from, this.to, this.reversed?(1-t):t)
         this.target[this.property] = v
-        if(t == 1.0) {
+        if(t === 1.0) {
             this.loopCount++
+            if(this.autoReverse) {
+                this.reversed = !this.reversed
+            }
             if(this.loop !== -1) {
                 if(this.loopCount >= this.loop) {
                     this.running = false

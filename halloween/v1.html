@@ -83,7 +83,7 @@
     let timeLabel, monstersLabel, roundLabel
 
     const CONSTS = {
-        SCROLL_SPEED: 0.05,
+        SCROLL_SPEED: 0.03,
         ROUND_TIME: 15,
         CAPTURE_TIME: 1,
     }
@@ -279,6 +279,36 @@
     const rand = (min,max) => Math.random()*(max-min) + min
 
 
+    function makeScaleAnim(captureTarget, start,end) {
+        const anim = t2.parallel()
+        const props = ['x','y','z']
+        props.forEach(p => {
+            anim.and(t2.prop({
+                target:captureTarget.scale,
+                property:p,
+                from:start,
+                to:end,
+                duration: 0.5
+            }))
+        })
+        return anim
+    }
+    function makePositionToAnim(target, end) {
+        const anim = t2.parallel()
+        const props = ['x','y','z']
+        props.forEach(p => {
+            anim.and(t2.prop({
+                target:target.position,
+                property:p,
+                from:target.position[p],
+                to:end[p],
+                duration: 0.5
+            }))
+        })
+        return anim
+    }
+
+
     let capturing = false
     let captureTarget = null
     const clock = new THREE.Clock(true)
@@ -295,11 +325,26 @@
     function updateCapture() {
         if(!capturing) return
         if(clock.getElapsedTime() > CONSTS.CAPTURE_TIME) {
-            console.log("captured")
             capturing = false
             SCORE.CAPTURED += 1
             monstersLabel.setText(`${SCORE.CAPTURED}`)
-            captureTarget.userData.shouldRemove = true
+            // captureTarget.userData.shouldRemove = true
+            const pos = captureTarget.position.clone()
+            t2.sequence()
+                .then(t2.prop({
+                    target:captureTarget.position,
+                    property:'x',
+                    from:pos.x-0.5,
+                    to:  pos.x+0.5,
+                    duration: 0.05,
+                    autoReverse:true,
+                    loop:10
+                }))
+                .then(t2.parallel()
+                    .and(makeScaleAnim(captureTarget,1.0,0.1))
+                    .and(makePositionToAnim(captureTarget,new THREE.Vector3(0,1.5,0)))
+                )
+                .start()
         }
     }
     function updateMonsters(time) {
