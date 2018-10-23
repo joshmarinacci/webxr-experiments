@@ -76,6 +76,38 @@
     let camera, scene, renderer, pointer, stats;
     let worlds = []
 
+    let timeLabel, monstersLabel
+
+
+    class SimpleText extends THREE.Object3D {
+        constructor(w,h) {
+            super()
+            this.htmlCanvas = document.createElement('canvas')
+            this.htmlCanvas.width = 128*w
+            this.htmlCanvas.height = 128*h
+            this.canvas_texture = new THREE.CanvasTexture(this.htmlCanvas)
+            this.mesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(w,h),
+                new THREE.MeshLambertMaterial({map:this.canvas_texture})
+            )
+            this.add(this.mesh)
+            // text.position.set(0,4,-4)
+            // scene.add(text)
+        }
+        setText(str) {
+            const ctx = this.htmlCanvas.getContext('2d')
+            ctx.fillStyle = 'white'
+            ctx.fillRect(0,0,this.htmlCanvas.width, this.htmlCanvas.height)
+            ctx.font = '36px sans-serif'
+            ctx.fillStyle = 'black'
+            const metrics = ctx.measureText(str)
+            ctx.fillText(str,
+                this.htmlCanvas.width/2-metrics.width/2,
+                (36/2+this.htmlCanvas.height/2))
+            this.canvas_texture.needsUpdate = true
+        }
+    }
+
     function setupTerrain() {
         function makeWorld(dz) {
             const world = new THREE.Group()
@@ -129,7 +161,16 @@
     }
     function setupOverlay() {
         //time left in round
+        timeLabel = new SimpleText(1,1)
+        timeLabel.position.set(-2,4,-5)
+        timeLabel.setText("0")
+        scene.add(timeLabel)
+
         //monsters left to catch
+        monstersLabel = new SimpleText(1,1)
+        monstersLabel.position.set(2,4,-5)
+        monstersLabel.setText("0")
+        scene.add(monstersLabel)
     }
     function setupStart() {
         //show click to start
