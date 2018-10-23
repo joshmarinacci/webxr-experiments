@@ -83,7 +83,7 @@
 
             //scroll at constant speed over a flat plane with N seconds to capture M monsters.
             const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(10, 10),
+                new THREE.PlaneGeometry(50, 11),
                 new THREE.MeshLambertMaterial({color: 'orange'})
             );
             ground.rotation.x = toRad(-90)
@@ -108,9 +108,24 @@
         worlds.forEach(w => scene.add(w))
     }
     function setupBackground() {
-        //Skybox to anchor your vision.
-        //         Fog to obscure things in the distance.
+        scene.background = 0x000000
+        scene.fog = new THREE.Fog('black',10,25)
 
+        const loader = new THREE.TextureLoader()
+        loader.load("./eso0932a-sky-3k.jpg",(tex) => {
+            tex.offset.set(-0.1,-0.1)
+            tex.wrapS = THREE.RepeatWrapping
+            tex.wrapT = THREE.RepeatWrapping
+            const sky = new THREE.Mesh(
+                new THREE.SphereGeometry(20,32,32),
+                new THREE.MeshBasicMaterial({
+                    color:0xcccccc,
+                    side: THREE.BackSide,
+                    map: tex
+                })
+            )
+            scene.add(sky)
+        })
     }
     function setupOverlay() {
         //time left in round
@@ -146,7 +161,7 @@
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
