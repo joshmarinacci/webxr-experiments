@@ -13,6 +13,23 @@ class Tween {
     }
 }
 
+class WaitTween extends Tween {
+    constructor(dur) {
+        super()
+        this.type = 'wait'
+        this.duration = dur
+    }
+    update(time) {
+        time = time/1000
+        if(!this.startTime) this.startTime = time
+        const diff = time - this.startTime
+        let t = diff/this.duration
+        if(t >= 1) {
+            this.running = false
+        }
+    }
+}
+
 class ActionTween extends Tween {
     constructor(fn) {
         super()
@@ -248,6 +265,11 @@ class T2 {
     }
     clip(opts) {
         const t = new ClipTween(opts)
+        this.subs.push(t)
+        return t
+    }
+    wait(dur) {
+        const t = new WaitTween(dur)
         this.subs.push(t)
         return t
     }

@@ -66,6 +66,7 @@
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
+    import {t2} from "./T2.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -76,10 +77,15 @@
     let camera, scene, renderer, pointer, stats;
     let worlds = []
 
-    let timeLabel, monstersLabel
+    let timeLabel, monstersLabel, roundLabel
 
     const CONSTS = {
         SCROLL_SPEED: 0.05,
+        ROUND_TIME: 10,
+    }
+    const SCORE = {
+        TIME_LEFT: 0,
+        CAPTURED: 0
     }
 
 
@@ -175,12 +181,29 @@
         monstersLabel.position.set(2,4,-5)
         monstersLabel.setText("0")
         scene.add(monstersLabel)
+
+
+        roundLabel = new SimpleText(4,1)
+        roundLabel.position.set(0,2,-5)
+        roundLabel.setText("start round")
+        scene.add(roundLabel)
     }
     function setupStart() {
         //show click to start
         //start round
         // when round ends you win or lose depending on how many you got.
 
+        SCORE.CAPTURED = 0
+        SCORE.TIME_LEFT = CONSTS.ROUND_TIME
+        SCORE.START_TIME = Date.now()
+
+        const anim = t2.sequence()
+            anim
+                .then(t2.wait(1))
+                .then(t2.action(()=>{
+                    roundLabel.visible = false
+                }))
+                .start()
     }
     function setupVacuum() {
         //Must focus on monster for 1 full second in a cone of influence to fully capture it.
@@ -236,50 +259,61 @@
                 w.position.z = -20
             }
         })
-        // Monsters are positioned ahead of you and slide into view as you move towards them at a fixed rate.
     }
 
     let lastMonster = 0
     const rand = (min,max) => Math.random()*(max-min) + min
+    function clickMonster(e) {
+        SCORE.CAPTURED += 1
+        monstersLabel.setText(`${SCORE.CAPTURED}`)
+        e.target.userData.shouldRemove = true
+    }
     function updateMonsters(time) {
         const diff = (time - lastMonster)
         if(diff > 3) {
             lastMonster = time
-
             const monster = new THREE.Mesh(
                 new THREE.SphereGeometry(0.5,16,8),
                 new THREE.MeshLambertMaterial({color:'green'})
             )
             monster.position.set(rand(-3,3),1,-30)
+            monster.userData.clickable = true
             monsters.add(monster)
+            on(monster,'click',clickMonster)
         }
-
 
         const remove = []
         monsters.children.forEach(m => {
             m.position.z += CONSTS.SCROLL_SPEED
-            if(m.position.z > 20) {
-                remove.push(m)
-            }
+            if(m.position.z > 20) remove.push(m)
+            if(m.userData.shouldRemove) remove.push(m)
         })
 
-        remove.forEach(m => {
-            m.parent.remove(m)
-        })
+        remove.forEach(m => m.parent.remove(m))
     }
 
-    //called on every frame. customize this
+    function updateTime(time) {
+        const left = (CONSTS.ROUND_TIME-Math.floor((Date.now()-SCORE.START_TIME)/1000))
+        if(left !== SCORE.TIME_LEFT) {
+            SCORE.TIME_LEFT = left
+            timeLabel.setText(`${SCORE.TIME_LEFT}`)
+        }
+
+        if(left <= 0) {
+            roundLabel.setText("round over")
+            roundLabel.visible = true
+        }
+    }
+
     function render(time) {
-        //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         moveTerrain(time/1000)
         updateMonsters(time/1000)
+        updateTime(time)
+        t2.update()
         renderer.render( scene, camera );
     }
-
-
-    // you shouldn't need to modify much below here
 
     function initScene() {
         //create DIV for the canvas
@@ -327,13 +361,8 @@
 
 
     }
-
-
-
-    // initPage()
     initScene()
     renderer.setAnimationLoop(render)
-
 </script>
 </body>
 </html>
