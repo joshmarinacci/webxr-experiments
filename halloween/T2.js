@@ -174,6 +174,10 @@ class SequentialTween extends Tween {
         }
         return this
     }
+    wait(dur) {
+        this.subs.push(new WaitTween(dur))
+        return this
+    }
     start() {
         this.running = true
         this._startNext()

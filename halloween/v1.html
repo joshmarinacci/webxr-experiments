@@ -318,7 +318,7 @@
                 roundLabel.setText(`capture ${level.CAPTURE} in ${CONSTS.ROUND_TIME} s`)
                 monstersLabel.setText('0')
             })
-            .then(t2.wait(1))
+            .wait(1)
             .then((()=> roundLabel.visible = false))
             .start()
     }
@@ -341,7 +341,7 @@
                             roundLabel.setText("you win")
                             roundLabel.visible = true
                         })
-                        .then(t2.wait(2))
+                        .wait(2)
                         .then(()=>restartGame())
                         .start()
                 } else {
@@ -351,7 +351,7 @@
                             roundLabel.setText("level complete")
                             roundLabel.visible = true
                         })
-                        .then(t2.wait(2))
+                        .wait(2)
                         .then(()=>{
                             currentLevel++
                             startLevel()
@@ -365,7 +365,7 @@
                         roundLabel.setText("game over")
                         roundLabel.visible = true
                     })
-                    .then(t2.wait(2))
+                    .wait(2)
                     .then(()=>restartGame())
                     .start()
             }
