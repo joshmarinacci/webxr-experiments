@@ -81,12 +81,24 @@
 
     const CONSTS = {
         SCROLL_SPEED: 0.05,
-        ROUND_TIME: 10,
+        ROUND_TIME: 15,
     }
     const SCORE = {
         TIME_LEFT: 0,
         CAPTURED: 0
     }
+    const LEVELS = [
+        {
+            CAPTURE:2,
+        },
+        {
+            CAPTURE:3,
+        },
+        {
+            CAPTURE:4,
+        }
+    ]
+    let currentLevel = 0
 
 
     class SimpleText extends THREE.Object3D {
@@ -188,6 +200,11 @@
         roundLabel.setText("start round")
         scene.add(roundLabel)
     }
+
+    function getCurrentLevel() {
+        return LEVELS[currentLevel]
+    }
+
     function setupStart() {
         //show click to start
         //start round
@@ -196,14 +213,7 @@
         SCORE.CAPTURED = 0
         SCORE.TIME_LEFT = CONSTS.ROUND_TIME
         SCORE.START_TIME = Date.now()
-
-        const anim = t2.sequence()
-            anim
-                .then(t2.wait(1))
-                .then(t2.action(()=>{
-                    roundLabel.visible = false
-                }))
-                .start()
+        restartGame()
     }
     function setupVacuum() {
         //Must focus on monster for 1 full second in a cone of influence to fully capture it.
@@ -292,7 +302,30 @@
         remove.forEach(m => m.parent.remove(m))
     }
 
+    let running = false
+    function restartGame() {
+        currentLevel = 0
+        startLevel()
+    }
+    function startLevel() {
+        running = true
+        SCORE.START_TIME = Date.now()
+        SCORE.CAPTURED = 0
+        monstersLabel.setText(`${SCORE.CAPTURED}`)
+        const level = getCurrentLevel()
+        t2.sequence()
+            .then(t2.action(()=>{
+                roundLabel.setText(`capture ${level.CAPTURE} in ${CONSTS.ROUND_TIME} s`)
+                monstersLabel.setText('0')
+            }))
+            .then(t2.wait(1))
+            .then(t2.action(()=>{
+                roundLabel.visible = false
+            }))
+            .start()
+    }
     function updateTime(time) {
+        if(!running) return
         const left = (CONSTS.ROUND_TIME-Math.floor((Date.now()-SCORE.START_TIME)/1000))
         if(left !== SCORE.TIME_LEFT) {
             SCORE.TIME_LEFT = left
@@ -300,8 +333,48 @@
         }
 
         if(left <= 0) {
-            roundLabel.setText("round over")
-            roundLabel.visible = true
+            running = false
+            const level = getCurrentLevel()
+            if(SCORE.CAPTURED >= level.CAPTURE) {
+                // WIN
+                if (currentLevel + 1 === LEVELS.length) {
+                    t2.sequence()
+                        .then(t2.action(()=>{
+                            roundLabel.setText("you win")
+                            roundLabel.visible = true
+                        }))
+                        .then(t2.wait(2))
+                        .then(t2.action(()=>{
+                            restartGame()
+                        }))
+                        .start()
+                } else {
+                    // NEXT ROUND
+                    t2.sequence()
+                        .then(t2.action(()=>{
+                            roundLabel.setText("level complete")
+                            roundLabel.visible = true
+                        }))
+                        .then(t2.wait(2))
+                        .then(t2.action(()=>{
+                            currentLevel++
+                            startLevel()
+                        }))
+                        .start()
+                }
+            } else {
+                // LOSE, Start game over
+                t2.sequence()
+                    .then(t2.action(()=>{
+                        roundLabel.setText("game over")
+                        roundLabel.visible = true
+                    }))
+                    .then(t2.wait(2))
+                    .then(t2.action(()=>{
+                        restartGame()
+                    }))
+                    .start()
+            }
         }
     }
 

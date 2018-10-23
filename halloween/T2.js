@@ -203,7 +203,7 @@ class SequentialTween extends Tween {
                 //recurse
                 return this._startNext()
             } else {
-                console.log("the next didn't swap. just move on")
+                // console.log("the next didn't swap. just move on")
                 return this._startNext()
             }
         }
