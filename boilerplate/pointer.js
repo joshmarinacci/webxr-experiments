@@ -56,7 +56,7 @@ export class Pointer {
 
         if(opts.mouseSimulatesController) {
             this.controller1 = new THREE.Group()
-            this.controller1.position.set(0,1,-3)
+            this.controller1.position.set(0,1,-2)
             this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, new THREE.Vector3(0,0,1))
         }
 

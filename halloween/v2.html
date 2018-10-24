@@ -225,6 +225,21 @@
         //Must focus on monster for 1 full second in a cone of influence to fully capture it.
         //         Reverse particles and is sucked into your vacuum.
         //             Get a point.
+        const hose = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1,0.05,1.0),
+            new THREE.MeshLambertMaterial({color:0x888888})
+        )
+        const nozzle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1,0.14,0.1),
+            new THREE.MeshLambertMaterial({color:0xccff00})
+        )
+        nozzle.position.y = 0.5
+        const group = new THREE.Group()
+        group.add(hose)
+        group.add(nozzle)
+        group.rotation.x = -90 * Math.PI/180
+        group.position.z = -1.0
+        pointer.controller1.add(group)
 
     }
 
@@ -254,7 +269,7 @@
             cameraFollowMouse:false,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
-            mouseSimulatesController:false,
+            mouseSimulatesController:true,
 
         })
 
@@ -329,7 +344,6 @@
         if(!capturing) return
         if(clock.getElapsedTime() > CONSTS.CAPTURE_TIME) {
             capturing = false
-            console.log("fully captured")
             SCORE.CAPTURED += 1
             monstersLabel.setText(`${SCORE.CAPTURED}`)
             const monster = captureTarget.parent
@@ -365,7 +379,6 @@
     }
     function makeMonster(master) {
         const monster = master.scene
-        console.log(master)
         monster.rotation.y = toRad(-90)
         //create a mesh for selection
         const grabTarget = new THREE.Mesh(
@@ -379,7 +392,7 @@
 
         const s = 0.2
         monster.scale.set(s,s,s)
-        monster.position.set(rand(-3, 3), 1, -10)
+        monster.position.set(rand(-3, 3), 0, -10)
         monster.userData.clickable = true
         monsters.add(monster)
         on(grabTarget, POINTER_EXIT,  releaseMonster)
@@ -398,8 +411,8 @@
             .and(t2.prop({
                 target:monster.rotation,
                 property:'y',
-                from:monster.rotation.y-0.2,
-                to:monster.rotation.y+0.2,
+                from:toRad(30 - 90),
+                to:toRad(-30 - 90),
                 loop:-1,
                 duration:1.5,
                 autoReverse: true
