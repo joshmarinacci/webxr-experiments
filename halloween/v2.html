@@ -373,7 +373,7 @@
             endColor: new THREE.Color(0.0,1.0,1.0),
             colorRandomness: 0.0,
 
-            lifetime: 2.0,
+            lifetime: 0.5,
             fadeIn:0.001,
             fadeOut:0.001,
             size: 60,
@@ -386,7 +386,7 @@
             blending: THREE.AdditiveBlending,
             onTick:(system,time) => {
                 for (let i = 0; i < 10; i++) {
-                    options.velocity.set(rand(-1,1),rand(-1,1), 0)
+                    options.velocity.set(rand(-2,2),rand(-2,2), 0)
                     system.spawnParticle(options);
                 }
             }})
@@ -403,11 +403,6 @@
             group.remove(group.userData.hover)
             group.userData.hover = null
         }
-        if(group.userData.particles) {
-            scene.remove(group.userData.particles)
-            particles = null
-        }
-
     }
     function updateCapture() {
         if(!capturing) return
@@ -419,6 +414,13 @@
             const monster = captureTarget.parent
             const pos = monster.position.clone()
             t2.sequence()
+                .then(t2.prop({
+                    target:monster.position,
+                    property:'y',
+                    from:pos.y,
+                    to:  pos.y+1.0,
+                    duration: 0.3,
+                }))
                 .then(t2.prop({
                     target:monster.position,
                     property:'x',
@@ -438,6 +440,10 @@
                     if(group.userData.hover) {
                         group.remove(group.userData.hover)
                         group.userData.hover = null
+                    }
+                    if(group.userData.particles) {
+                        scene.remove(group.userData.particles)
+                        particles = null
                     }
                 })
                 .start()
@@ -585,7 +591,11 @@
     function render(time) {
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        if(particles) particles.update(time)
+        if(particles && captureTarget) {
+            const group = captureTarget.parent
+            particles.position.copy(group.position)
+            particles.update(time)
+        }
         moveTerrain(time/1000)
         updateMonsters(time/1000)
         updateCapture(time/1000)
