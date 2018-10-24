@@ -226,9 +226,10 @@
         //         Reverse particles and is sucked into your vacuum.
         //             Get a point.
         const hose = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.1,0.05,1.0),
+            new THREE.CylinderGeometry(0.1,0.05,1.5),
             new THREE.MeshLambertMaterial({color:0x888888})
         )
+        hose.position.y = -0.25
         const nozzle = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1,0.14,0.1),
             new THREE.MeshLambertMaterial({color:0xccff00})
@@ -269,11 +270,11 @@
             cameraFollowMouse:false,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
-            mouseSimulatesController:true,
+            mouseSimulatesController:false,
 
         })
 
-        $("#overlay").style.display = 'none'
+        // $("#overlay").style.display = 'none'
 
         setupTerrain()
         setupBackground()
@@ -359,8 +360,8 @@
                     loop:10
                 }))
                 .then(t2.parallel()
-                    .and(makeScaleAnim(monster,monster.scale.x,0.1))
-                    .and(makePositionToAnim(monster,new THREE.Vector3(0,1.5,0)))
+                    .and(makeScaleAnim(monster,monster.scale.x,0.03))
+                    .and(makePositionToAnim(monster,pointer.controller1.position.clone()))
                 )
                 .then(()=>{
                     monster.userData.shouldRemove = true
