@@ -403,6 +403,10 @@
             group.remove(group.userData.hover)
             group.userData.hover = null
         }
+        if(group.userData.particles) {
+            scene.remove(group.userData.particles)
+            particles = null
+        }
     }
     function updateCapture() {
         if(!capturing) return
