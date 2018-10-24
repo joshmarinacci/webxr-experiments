@@ -114,15 +114,29 @@ class ClipTween extends Tween {
         this.type = 'clip'
         this.target = opts.target
         this.name = opts.name
+        this.loop = opts.loop
+        this.autoReverse = opts.autoReverse
+        if(typeof this.autoReverse === 'undefined') this.autoReverse = false
+        if(typeof this.loop === 'undefined') this.loop = 1
         if(typeof this.name === 'undefined') throw new Error("name is missing")
+        this.speed = opts.speed
+        if(typeof this.speed === 'undefined') this.speed = 1
     }
     start() {
         this.running = true
         this.mixer = new THREE.AnimationMixer(this.target.scene)
         this.action = this.mixer.clipAction(THREE.AnimationClip.findByName(this.target.animations,this.name))
-        // this.action.setLoop(THREE.LoopPingPong)
+        if(this.loop === 1) {
+            this.action.setLoop(THREE.LoopOnce, 1)
+        }
+        if(this.loop === -1) {
+            this.action.setLoop(this.autoReverse?THREE.LoopPingPong:THREE.LoopRepeat, Infinity)
+        }
+        if(this.loop > 1) {
+            this.action.setLoop(THREE.LoopRepeat, this.loop)
+        }
         this.action.play()
-        // this.action.setEffectiveTimeScale(-0.3)
+        this.action.setEffectiveTimeScale(this.speed)
         this.startTime = Date.now()/1000
         this.prevTime = this.startTime
     }
