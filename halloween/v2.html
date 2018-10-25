@@ -117,15 +117,23 @@
         TIME_LEFT: 0,
         CAPTURED: 0
     }
+    const MONSTERS = {
+        SLIME:'SLIME',
+        SKELETON:'SKELETON',
+        BAT:'BAT'
+    }
     const LEVELS = [
         {
             CAPTURE:2,
+            MONSTER:MONSTERS.SLIME
         },
         {
             CAPTURE:3,
+            MONSTER: MONSTERS.SKELETON,
         },
         {
             CAPTURE:4,
+            MONSTER: MONSTERS.BAT
         }
     ]
     let currentLevel = 0
@@ -703,9 +711,10 @@
         const diff = (time - lastMonster)
         if(diff > CONSTS.MONSTER_FREQUENCY) {
             lastMonster = time
-            // loadMonster("./Slime.glb").then(makeSlime)
-            // loadMonster("./Skeleton.glb").then(makeSkeleton)
-            loadMonster("./Bat.glb").then(makeBat)
+            const level = getCurrentLevel()
+            if(level.MONSTER === MONSTERS.SLIME) loadMonster("./Slime.glb").then(makeSlime)
+            if(level.MONSTER === MONSTERS.SKELETON) loadMonster("./Skeleton.glb").then(makeSkeleton)
+            if(level.MONSTER === MONSTERS.BAT) loadMonster("./Bat.glb").then(makeBat)
         }
         const remove = []
         monsters.children.forEach(m => {
