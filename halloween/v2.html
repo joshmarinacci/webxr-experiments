@@ -210,6 +210,57 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
     }
 
+    class TTFText extends THREE.Object3D {
+        constructor(url) {
+            super()
+
+            const loader = new THREE.TTFLoader()
+            const fontLoader = new THREE.FontLoader()
+            loader.load(url,data => {
+                this.numberFont = fontLoader.parse(data)
+                this.rebuildGeometry()
+            })
+            this.text = 'A'
+        }
+        rebuildGeometry() {
+            if(!this.numberFont) return
+            const geo = new THREE.TextGeometry(this.text,{
+                font: this.numberFont,
+                size: 0.5,
+                height: 0.1,
+            })
+
+            this.mesh = new THREE.Group()
+
+            const outlineMaterial = new THREE.MeshLambertMaterial({
+                color:0xff0000,
+                side: THREE.BackSide,
+                emissive: new THREE.Color(0xff0000),
+                emissiveIntensity:0.5})
+            outlineMaterial.onBeforeCompile = (shader) => {
+                const token = '#include <begin_vertex>'
+                const customTransform = `
+                vec3 transformed = position + objectNormal*0.03;
+            `
+                shader.vertexShader = shader.vertexShader.replace(token,customTransform)
+            }
+
+            const mesh2 = new THREE.Mesh(geo,outlineMaterial)
+            // const s = 1.1
+            // mesh2.scale.set(s,s,s)
+            this.mesh.add(mesh2)
+
+            const mesh  = new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xffffff, side: THREE.FrontSide}))
+            this.mesh.add(mesh)
+
+            this.add(this.mesh)
+        }
+        setText(str) {
+            this.text = str
+            this.remove(this.mesh)
+            this.rebuildGeometry()
+        }
+    }
     function setupTerrain() {
         function makeWorld(dz) {
             const world = new THREE.Group()
@@ -276,10 +327,11 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     function setupOverlay() {
         //time left in round
-        timeLabel = new SimpleText(1,1)
-        timeLabel.font = '64px dpuntillasBtotiptoeRegular';
-        timeLabel.position.set(-2,4,-5)
+        timeLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        timeLabel.position.set(-2,4,-4)
         timeLabel.setText("0")
+        timeLabel.rotation.y = toRad(30)
+        timeLabel.rotation.x = toRad(30)
         scene.add(timeLabel)
 
         t2.prop({
@@ -293,10 +345,11 @@ https://freesound.org/people/HF2010/sounds/110497/
         }).start()
 
         //monsters left to catch
-        monstersLabel = new SimpleText(1,1)
-        monstersLabel.font = '64px dpuntillasBtotiptoeRegular';
-        monstersLabel.position.set(2,4,-5)
+        monstersLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        monstersLabel.position.set(2,4,-4)
         monstersLabel.setText("0")
+        monstersLabel.rotation.y = toRad(-30)
+        monstersLabel.rotation.x = toRad(30)
         scene.add(monstersLabel)
 
         t2.prop({
