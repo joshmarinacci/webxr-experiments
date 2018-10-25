@@ -129,10 +129,10 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     const CONSTS = {
-        SCROLL_SPEED: 0.02,
-        ROUND_TIME: 15,
+        SCROLL_SPEED: 0.04,
+        ROUND_TIME: 30,
         CAPTURE_TIME: 1,
-        MONSTER_FREQUENCY: 5,
+        MONSTER_FREQUENCY: 2,
         COLORS: {
             orange: '#FF6515',
             blue: '#006C8D',
@@ -210,7 +210,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             //scroll at constant speed over a flat plane with N seconds to capture M monsters.
             const ground = new THREE.Mesh(
                 new THREE.PlaneGeometry(CONSTS.TERRAIN_SIZE*4, CONSTS.TERRAIN_SIZE*2),
-                new THREE.MeshLambertMaterial({color: CONSTS.COLORS.orange})
+                new THREE.MeshLambertMaterial({color: CONSTS.COLORS.green})
             );
             // ground.material.color.setHSL(rand(0,1),1,0.5)
             ground.rotation.x = toRad(-90)
@@ -364,6 +364,15 @@ https://freesound.org/people/HF2010/sounds/110497/
         pointer.controller1.add(group)
 
     }
+    function setupCar() {
+        const carBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(1,1,2),
+            new THREE.MeshLambertMaterial({color:CONSTS.COLORS.purple})
+        )
+        carBody.rotation.x = toRad(90)
+        carBody.position.set(0,0,0)
+        scene.add(carBody)
+    }
 
     let monsters
     function setupMonsters() {
@@ -435,7 +444,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
@@ -449,6 +458,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         setupOverlay()
         setupMonsters()
         setupVacuum()
+        setupCar()
         setupStart()
         setupMusic()
         setupSoundEffects()
@@ -564,7 +574,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         scene.add(particles)
     }
     function releaseMonster(e) {
-        vacuum_sound.stop()
+        if(vacuum_sound.isPlaying) vacuum_sound.stop()
         capturing = false
         e.target.material.color.set(0x00ff00)
         const group = e.target.parent
