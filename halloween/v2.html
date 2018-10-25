@@ -126,6 +126,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     const DEBUG = {
         FOG:true,
         MUSIC:true,
+        TTF_FONT: false
     }
 
     const CONSTS = {
@@ -250,7 +251,11 @@ https://freesound.org/people/HF2010/sounds/110497/
             // mesh2.scale.set(s,s,s)
             this.mesh.add(mesh2)
 
-            const mesh  = new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xffffff, side: THREE.FrontSide}))
+            const mesh  = new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xffffff,
+                side: THREE.FrontSide,
+                emissive: new THREE.Color(0xffffff),
+                emissiveIntensity: 1.0
+            }))
             this.mesh.add(mesh)
 
             this.add(this.mesh)
@@ -327,7 +332,14 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     function setupOverlay() {
         //time left in round
-        timeLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        if(DEBUG.TTF_FONT) {
+            timeLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        } else {
+            timeLabel = new SimpleText(1,1)
+            timeLabel.font = '48px dpuntillasBtotiptoeRegular';
+            timeLabel.backgroundColor = CONSTS.COLORS.purple
+            timeLabel.color = CONSTS.COLORS.green
+        }
         timeLabel.position.set(-2,4,-4)
         timeLabel.setText("0")
         timeLabel.rotation.y = toRad(30)
@@ -345,7 +357,14 @@ https://freesound.org/people/HF2010/sounds/110497/
         }).start()
 
         //monsters left to catch
-        monstersLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        if(DEBUG.TTF_FONT) {
+            monstersLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
+        } else {
+            monstersLabel = new SimpleText(1,1)
+            monstersLabel.font = '48px dpuntillasBtotiptoeRegular';
+            monstersLabel.backgroundColor = CONSTS.COLORS.purple
+            monstersLabel.color = CONSTS.COLORS.green
+        }
         monstersLabel.position.set(2,4,-4)
         monstersLabel.setText("0")
         monstersLabel.rotation.y = toRad(-30)
