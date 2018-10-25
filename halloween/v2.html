@@ -129,10 +129,6 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     const CONSTS = {
-        SCROLL_SPEED: 0.04,
-        ROUND_TIME: 30,
-        CAPTURE_TIME: 1,
-        MONSTER_FREQUENCY: 2,
         COLORS: {
             orange: '#FF6515',
             blue: '#006C8D',
@@ -153,15 +149,27 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     const LEVELS = [
         {
+            SPEED: 0.02,
+            TIME: 30,
             CAPTURE:2,
+            CAPTURE_TIME:1,
+            MONSTER_FREQUENCY:2,
             MONSTER:MONSTERS.SLIME
         },
         {
+            SPEED: 0.04,
+            TIME: 30,
             CAPTURE:3,
+            CAPTURE_TIME:1.5,
+            MONSTER_FREQUENCY:3,
             MONSTER: MONSTERS.SKELETON,
         },
         {
+            SPEED: 0.06,
+            TIME: 30,
             CAPTURE:4,
+            CAPTURE_TIME:2,
+            MONSTER_FREQUENCY:4,
             MONSTER: MONSTERS.BAT
         }
     ]
@@ -220,7 +228,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             function makeRandomTree() {
                 let r = Math.floor(Math.random()*3)
                 if(r === 0) return loadMonster("./models/dead_bush/scene.gltf").then(mod => {
-                    const off = new THREE.Vector3(7, 0, 0)
+                    const off = new THREE.Vector3(7, -0.4, 0)
                     const obj = mod.scene.children[0]
                     obj.position.set(0, 0, 0)
                     obj.position.add(off)
@@ -246,7 +254,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                 for(let j=6; j>-13; j-=4) {
                     const off = new THREE.Vector3(i+rand(-1,1),0,j+rand(-1,1))
                     // const off = new THREE.Vector3(i,0,j)
-                    if(off.x > -2 && off.x < 2) {
+                    if(off.x > -3 && off.x < 3) {
                         continue
                     }
                     makeRandomTree().then(tree => {
@@ -338,7 +346,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         })
 
         SCORE.CAPTURED = 0
-        SCORE.TIME_LEFT = CONSTS.ROUND_TIME
+        SCORE.TIME_LEFT = 99
         SCORE.START_TIME = Date.now()
     }
     let scorch_texture
@@ -465,8 +473,9 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function moveTerrain(time) {
+        const level = getCurrentLevel()
         worlds.forEach(w => {
-            w.position.z += CONSTS.SCROLL_SPEED
+            w.position.z += level.SPEED
             if(w.position.z > CONSTS.TERRAIN_SIZE*2) {
                 w.position.z = -CONSTS.TERRAIN_SIZE*4
             }
@@ -532,7 +541,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         clock.start()
         const group = e.target.parent
         const hover = group.userData.hover
-        hover.material.color.set(0xff0000)
+        if(hover) hover.material.color.set(0xff0000)
         makeParticles(group)
 
     }
@@ -589,7 +598,8 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     function updateCapture() {
         if(!capturing) return
-        if(clock.getElapsedTime() > CONSTS.CAPTURE_TIME) {
+        const level = getCurrentLevel()
+        if(clock.getElapsedTime() > level.CAPTURE_TIME) {
 
             capturing = false
             SCORE.CAPTURED += 1
@@ -646,7 +656,6 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function makeSlime(master) {
-        console.log(master)
         const monster = master.scene
         monster.rotation.y = toRad(-90)
         //create a mesh for selection
@@ -691,7 +700,6 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function makeSkeleton(master) {
-        console.log(master)
         const monster = master.scene
         // monster.rotation.y = toRad(-90)
         //create a mesh for selection
@@ -737,7 +745,6 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function makeBat(master) {
-        console.log(master)
         const monster = master.scene
         // monster.rotation.y = toRad(-90)
         //create a mesh for selection
@@ -785,16 +792,16 @@ https://freesound.org/people/HF2010/sounds/110497/
     function updateMonsters(time) {
         if(!running) return
         const diff = (time - lastMonster)
-        if(diff > CONSTS.MONSTER_FREQUENCY) {
+        const level = getCurrentLevel()
+        if(diff > level.MONSTER_FREQUENCY) {
             lastMonster = time
-            const level = getCurrentLevel()
             if(level.MONSTER === MONSTERS.SLIME) loadMonster("./Slime.glb").then(makeSlime)
             if(level.MONSTER === MONSTERS.SKELETON) loadMonster("./Skeleton.glb").then(makeSkeleton)
             if(level.MONSTER === MONSTERS.BAT) loadMonster("./Bat.glb").then(makeBat)
         }
         const remove = []
         monsters.children.forEach(m => {
-            m.position.z += CONSTS.SCROLL_SPEED
+            m.position.z += level.SPEED
             if(m.position.z > 20) remove.push(m)
             if(m.userData.shouldRemove) remove.push(m)
         })
@@ -819,7 +826,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         t2.sequence()
             .then(()=>{
                 roundLabel.visible = true
-                roundLabel.setText(`capture ${level.CAPTURE} in ${CONSTS.ROUND_TIME} s`)
+                roundLabel.setText(`capture ${level.CAPTURE} in ${level.TIME} s`)
                 monstersLabel.setText('0')
             })
             .wait(1)
@@ -870,7 +877,8 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     function updateTime(time) {
         if(!running) return
-        const left = (CONSTS.ROUND_TIME-Math.floor((Date.now()-SCORE.START_TIME)/1000))
+        const level = getCurrentLevel()
+        const left = (level.TIME-Math.floor((Date.now()-SCORE.START_TIME)/1000))
         if(left !== SCORE.TIME_LEFT) {
             SCORE.TIME_LEFT = left
             timeLabel.setText(`${SCORE.TIME_LEFT}`)
@@ -932,11 +940,11 @@ https://freesound.org/people/HF2010/sounds/110497/
         }, false );
 
         THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
-            console.log(`loading ${url}.  loaded ${loaded} of ${total}`)
+            // console.log(`loading ${url}.  loaded ${loaded} of ${total}`)
         }
         THREE.DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
-            console.log("really setting it up now")
+            // console.log("really setting it up now")
             $('#loading-indicator').style.display = 'none'
             $('#click-to-play').style.display = 'block'
             const overlay = $('#overlay')
