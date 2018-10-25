@@ -20,6 +20,13 @@
     <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/de-puntillas-b-to-tiptoe-regular" type="text/css"/>
 
     <style type="text/css">
+        /*
+        orange: FF6515
+        blue: 006C8D
+        purple: 920084
+        green: CAE807
+        black: 000000
+         */
         html, body {
             margin:0;
             padding:0;
@@ -29,7 +36,8 @@
             font-family: 'dpuntillasBtotiptoeRegular';
             font-weight: normal;
             font-style: normal;
-            background-color: white;
+            color: #ff6f15;
+            background-color: #000000;
         }
         #overlay {
             position: fixed;
@@ -96,7 +104,14 @@
         SCROLL_SPEED: 0.01,
         ROUND_TIME: 15,
         CAPTURE_TIME: 1,
-        MONSTER_FREQUENCY: 2
+        MONSTER_FREQUENCY: 2,
+        COLORS: {
+            orange: '#FF6515',
+            blue: '#006C8D',
+            purple: '#920084',
+            green: '#CAE807',
+            black: '#000000',
+        }
     }
     const SCORE = {
         TIME_LEFT: 0,
@@ -133,13 +148,15 @@
             // text.position.set(0,4,-4)
             // scene.add(text)
             this.font = '36px sans-serif'
+            this.color = 'black';
+            this.backgroundColor = 'gray'
         }
         setText(str) {
             const ctx = this.htmlCanvas.getContext('2d')
-            ctx.fillStyle = 'white'
+            ctx.fillStyle = this.backgroundColor
             ctx.fillRect(0,0,this.htmlCanvas.width, this.htmlCanvas.height)
             ctx.font = this.font
-            ctx.fillStyle = 'black'
+            ctx.fillStyle = this.color
             const metrics = ctx.measureText(str)
             ctx.fillText(str,
                 this.htmlCanvas.width/2-metrics.width/2,
@@ -156,7 +173,7 @@
             //scroll at constant speed over a flat plane with N seconds to capture M monsters.
             const ground = new THREE.Mesh(
                 new THREE.PlaneGeometry(50, 11),
-                new THREE.MeshLambertMaterial({color: 'orange'})
+                new THREE.MeshLambertMaterial({color: CONSTS.COLORS.orange})
             );
             ground.rotation.x = toRad(-90)
             ground.position.z = -5
@@ -166,7 +183,7 @@
             for (let i = 0; i < 10; i++) {
                 const block = new THREE.Mesh(
                     new THREE.BoxGeometry(0.3, 1, 0.3),
-                    new THREE.MeshLambertMaterial({color: 'gray'})
+                    new THREE.MeshLambertMaterial({color: CONSTS.COLORS.purple})
                 )
                 const even = i % 2 === 0
                 block.position.set(even ? 1 : -1, 0.5, -i)
@@ -234,7 +251,10 @@
             loop:-1
         }).start()
 
-        roundLabel = new SimpleText(4,1)
+        roundLabel = new SimpleText(7,1)
+        roundLabel.backgroundColor = CONSTS.COLORS.black
+        roundLabel.color = CONSTS.COLORS.orange
+
         roundLabel.position.set(0,2,-5)
         roundLabel.setText("start round")
         roundLabel.font = '48px dpuntillasBtotiptoeRegular';
@@ -252,6 +272,8 @@
         // when round ends you win or lose depending on how many you got.
 
         const splashScreen = new SimpleText(6,2)
+        splashScreen.backgroundColor = CONSTS.COLORS.blue
+        splashScreen.color = CONSTS.COLORS.orange
         splashScreen.setText("click to play")
         splashScreen.position.set(0,2,-4)
         scene.add(splashScreen)
@@ -331,9 +353,10 @@
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         scene.background = new THREE.Color( 0xcccccc );
-        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 1, 1, 1 ).normalize();
+        const light = new THREE.DirectionalLight( 0xffffff, 0.7 );
+        light.position.set( 0, 1, 1 ).normalize();
         scene.add( light );
+        scene.add(new THREE.AmbientLight(0xffffff,0.2))
         stats = new VRStats(renderer)
         camera.add(stats)
         scene.add(camera)
