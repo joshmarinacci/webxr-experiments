@@ -104,7 +104,7 @@
         SCROLL_SPEED: 0.01,
         ROUND_TIME: 15,
         CAPTURE_TIME: 1,
-        MONSTER_FREQUENCY: 2,
+        MONSTER_FREQUENCY: 5,
         COLORS: {
             orange: '#FF6515',
             blue: '#006C8D',
@@ -560,7 +560,9 @@
             })
         })
     }
-    function makeMonster(master) {
+
+    function makeSlime(master) {
+        console.log(master)
         const monster = master.scene
         monster.rotation.y = toRad(-90)
         //create a mesh for selection
@@ -603,12 +605,107 @@
             }))
             .start()
     }
+
+    function makeSkeleton(master) {
+        console.log(master)
+        const monster = master.scene
+        // monster.rotation.y = toRad(-90)
+        //create a mesh for selection
+        const grabTarget = new THREE.Mesh(
+            new THREE.SphereGeometry(2.5),
+            new THREE.MeshLambertMaterial({color:'green'})
+        )
+        grabTarget.material.visible = false
+        grabTarget.position.y = 2.5
+        grabTarget.userData.clickable = true
+        monster.add(grabTarget)
+
+        const s = 0.3
+        monster.scale.set(s,s,s)
+        monster.position.set(rand(-3, 3), 0, -10)
+        monster.userData.clickable = true
+        monsters.add(monster)
+        on(grabTarget, POINTER_ENTER,  showMonster)
+        on(grabTarget, POINTER_EXIT,  releaseMonster)
+        on(grabTarget, POINTER_PRESS, grabMonster)
+        on(grabTarget, POINTER_RELEASE, releaseMonster)
+
+
+        t2.parallel()
+            .and(t2.clip({
+                target:master,
+                // name:'Slime_Idle',
+                name:'Skeleton_Attack',
+                speed:1,
+                loop:-1,
+                autoReverse:true
+            }))
+            /*            .and(t2.prop({
+                            target:monster.rotation,
+                            property:'y',
+                            from:toRad(30 - 90),
+                            to:toRad(-30 - 90),
+                            loop:-1,
+                            duration:1.5,
+                            autoReverse: true
+                        }))*/
+            .start()
+    }
+
+    function makeBat(master) {
+        console.log(master)
+        const monster = master.scene
+        // monster.rotation.y = toRad(-90)
+        //create a mesh for selection
+        const grabTarget = new THREE.Mesh(
+            new THREE.SphereGeometry(2.0),
+            new THREE.MeshLambertMaterial({color:'green', wireframe:true})
+        )
+        grabTarget.material.visible = false
+        grabTarget.position.y = 2.5
+        grabTarget.userData.clickable = true
+        monster.add(grabTarget)
+
+        const s = 0.3
+        monster.scale.set(s,s,s)
+        monster.position.set(rand(-3, 3), 0, -10)
+        monster.userData.clickable = true
+        monsters.add(monster)
+        on(grabTarget, POINTER_ENTER,  showMonster)
+        on(grabTarget, POINTER_EXIT,  releaseMonster)
+        on(grabTarget, POINTER_PRESS, grabMonster)
+        on(grabTarget, POINTER_RELEASE, releaseMonster)
+
+
+        t2.parallel()
+            .and(t2.clip({
+                target:master,
+                // name:'Slime_Idle',
+                name:'Bat_Flying',
+                speed:1,
+                loop:-1,
+                // autoReverse:true
+            }))
+            /*            .and(t2.prop({
+                            target:monster.rotation,
+                            property:'y',
+                            from:toRad(30 - 90),
+                            to:toRad(-30 - 90),
+                            loop:-1,
+                            duration:1.5,
+                            autoReverse: true
+                        }))*/
+            .start()
+    }
+
     function updateMonsters(time) {
         if(!running) return
         const diff = (time - lastMonster)
         if(diff > CONSTS.MONSTER_FREQUENCY) {
             lastMonster = time
-            loadMonster("./Slime.glb").then(makeMonster)
+            // loadMonster("./Slime.glb").then(makeSlime)
+            // loadMonster("./Skeleton.glb").then(makeSkeleton)
+            loadMonster("./Bat.glb").then(makeBat)
         }
         const remove = []
         monsters.children.forEach(m => {
