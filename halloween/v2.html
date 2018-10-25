@@ -188,14 +188,45 @@
             world.add(ground)
 
 
-            for (let i = 0; i < 10; i++) {
-                const block = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.3, 1, 0.3),
-                    new THREE.MeshLambertMaterial({color: CONSTS.COLORS.purple})
-                )
-                const even = i % 2 === 0
-                block.position.set(even ? 1 : -1, 0.5, -i)
-                world.add(block)
+            function makeRandomTree() {
+                const r = Math.floor(Math.random()*3)
+                if(r === 0) return loadMonster("./models/dead_bush/scene.gltf").then(mod => {
+                    const off = new THREE.Vector3(7, 0, 0)
+                    const obj = mod.scene.children[0]
+                    obj.position.set(0, 0, -5)
+                    obj.position.add(off)
+                    return obj
+                })
+                if(r === 1) return loadMonster("./models/dead_tree/scene.gltf").then(mod => {
+                    const off = new THREE.Vector3(0, 0, 0)
+                    // console.log('the dead tree',mod)
+                    const obj = mod.scene.children[0]
+                    obj.position.set(0,0,-10)
+                    obj.position.add(off)
+                    return obj
+                })
+                if(r === 2) return loadMonster("./models/autumn_tree_2/scene.gltf").then(mod => {
+                    const off = new THREE.Vector3(0, -7.2, 0)
+                    // console.log('autumn tree',mod)
+                    const obj = mod.scene.children[0]
+                    obj.scale.set(0.5,0.5,0.5)
+                    obj.position.set(0,0,-10)
+                    obj.position.add(off)
+                    return obj
+                })
+            }
+            for(let i=0; i< 6; i++) {
+                for(let j=0; j<5; j++) {
+                    const off = new THREE.Vector3(i * 6 - 3*6 ,0,j*5)
+                    if(off.x > -2 && off.x < 2) {
+                        console.log("too close to the center")
+                        continue
+                    }
+                    makeRandomTree().then(tree => {
+                        tree.position.add(off)
+                        world.add(tree)
+                    })
+                }
             }
             return world
         }
@@ -214,7 +245,7 @@
             tex.wrapS = THREE.RepeatWrapping
             tex.wrapT = THREE.RepeatWrapping
             const sky = new THREE.Mesh(
-                new THREE.SphereGeometry(20,32,32),
+                new THREE.SphereGeometry(30,32,32),
                 new THREE.MeshBasicMaterial({
                     color:0xcccccc,
                     side: THREE.BackSide,
@@ -870,7 +901,7 @@
             })
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
-            console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
+            // console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
             $("#progress").setAttribute('value',100*(loaded/total))
         }
         THREE.DefaultLoadingManager.onError = (url) => {
