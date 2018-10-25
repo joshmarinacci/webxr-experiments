@@ -11,6 +11,17 @@ https://sketchfab.com/models/5fcc300e817d440f826b0cb24e3c652c
 dead tree
 https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
 
+
+ Suoni Di Genova » ghost_yacht.wav
+https://freesound.org/people/suonidigenova/sounds/55055/
+
+ Baïkal » baik6.wav
+
+https://freesound.org/people/ashassin/sounds/8516/
+
+
+https://freesound.org/people/HF2010/sounds/110497/
+
 -->
 <html lang="en">
 <head>
@@ -389,6 +400,23 @@ https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
         })
     }
 
+    let vacuum_sound, capture_sound
+    function setupSoundEffects() {
+        const audioListener = new THREE.AudioListener()
+        camera.add(audioListener)
+
+        const audioLoader = new THREE.AudioLoader()
+        vacuum_sound = new THREE.Audio(audioListener)
+        audioLoader.load('./sounds/55055__suonidigenova__ghost-yacht.wav', (buffer) => {
+            vacuum_sound.setBuffer(buffer)
+        })
+        capture_sound = new THREE.Audio(audioListener)
+        audioLoader.load('./sounds/110497__hf2010__voice-of-your-demise.mp3', (buffer) => {
+            capture_sound.setBuffer(buffer)
+        })
+
+    }
+
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         scene.background = new THREE.Color( 0xcccccc );
@@ -423,6 +451,7 @@ https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
         setupVacuum()
         setupStart()
         setupMusic()
+        setupSoundEffects()
     }
 
     function moveTerrain(time) {
@@ -486,6 +515,7 @@ https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
 
     let particles
     function grabMonster(e) {
+        vacuum_sound.play()
         e.target.material.color.set(0xffcccc)
         captureTarget = e.target
         capturing = true
@@ -534,6 +564,7 @@ https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
         scene.add(particles)
     }
     function releaseMonster(e) {
+        vacuum_sound.stop()
         capturing = false
         e.target.material.color.set(0x00ff00)
         const group = e.target.parent
@@ -575,6 +606,10 @@ https://sketchfab.com/models/ccc4088f050a4f708f3855c71d2bd9c4
                 .then(t2.parallel()
                     .and(makeScaleAnim(monster,monster.scale.x,0.03))
                     .and(makePositionToAnim(monster,pointer.controller1.position.clone()))
+                    .and(()=>{
+                        if(capture_sound.isPlaying) capture_sound.stop()
+                        capture_sound.play()
+                    })
                 )
                 .then(()=>{
                     monster.userData.shouldRemove = true
