@@ -17,11 +17,19 @@
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
 
+    <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/de-puntillas-b-to-tiptoe-regular" type="text/css"/>
+
     <style type="text/css">
         html, body {
             margin:0;
             padding:0;
             overflow: hidden;
+        }
+        h1 {
+            font-family: 'dpuntillasBtotiptoeRegular';
+            font-weight: normal;
+            font-style: normal;
+            background-color: white;
         }
         #overlay {
             position: fixed;
@@ -124,12 +132,13 @@
             this.add(this.mesh)
             // text.position.set(0,4,-4)
             // scene.add(text)
+            this.font = '36px sans-serif'
         }
         setText(str) {
             const ctx = this.htmlCanvas.getContext('2d')
             ctx.fillStyle = 'white'
             ctx.fillRect(0,0,this.htmlCanvas.width, this.htmlCanvas.height)
-            ctx.font = '36px sans-serif'
+            ctx.font = this.font
             ctx.fillStyle = 'black'
             const metrics = ctx.measureText(str)
             ctx.fillText(str,
@@ -193,12 +202,16 @@
     function setupOverlay() {
         //time left in round
         timeLabel = new SimpleText(1,1)
+        timeLabel.font = '64px dpuntillasBtotiptoeRegular';
+
+
         timeLabel.position.set(-2,4,-5)
         timeLabel.setText("0")
         scene.add(timeLabel)
 
         //monsters left to catch
         monstersLabel = new SimpleText(1,1)
+        monstersLabel.font = '64px dpuntillasBtotiptoeRegular';
         monstersLabel.position.set(2,4,-5)
         monstersLabel.setText("0")
         scene.add(monstersLabel)
@@ -207,6 +220,7 @@
         roundLabel = new SimpleText(4,1)
         roundLabel.position.set(0,2,-5)
         roundLabel.setText("start round")
+        roundLabel.font = '48px dpuntillasBtotiptoeRegular';
         scene.add(roundLabel)
     }
 
