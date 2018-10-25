@@ -203,11 +203,19 @@
         //time left in round
         timeLabel = new SimpleText(1,1)
         timeLabel.font = '64px dpuntillasBtotiptoeRegular';
-
-
         timeLabel.position.set(-2,4,-5)
         timeLabel.setText("0")
         scene.add(timeLabel)
+
+        t2.prop({
+            target:timeLabel.rotation,
+            property:'z',
+            from:toRad(-10),
+            to:toRad(10),
+            duration:3,
+            autoReverse:true,
+            loop:-1
+        }).start()
 
         //monsters left to catch
         monstersLabel = new SimpleText(1,1)
@@ -216,6 +224,15 @@
         monstersLabel.setText("0")
         scene.add(monstersLabel)
 
+        t2.prop({
+            target:monstersLabel.rotation,
+            property:'z',
+            from:toRad(10),
+            to:toRad(-10),
+            duration:4,
+            autoReverse:true,
+            loop:-1
+        }).start()
 
         roundLabel = new SimpleText(4,1)
         roundLabel.position.set(0,2,-5)
