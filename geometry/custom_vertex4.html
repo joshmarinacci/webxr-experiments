@@ -78,7 +78,7 @@
         scene.background = new THREE.Color( 0xcccccc );
 
 
-        mat = new THREE.MeshLambertMaterial({
+        mat = new THREE.MeshPhongMaterial({
             color:'green',
             transparent:true,
             opacity: 0.5
@@ -94,9 +94,12 @@
             const token = '#include <begin_vertex>'
             const customTransform = `
         vec3 transformed = vec3(position);
-        transformed.x = position.x + sin(position.y*10.0 + time*10.0)*0.1;
-        transformedNormal.x = transformedNormal.x + sin(position.y*10.0 + time*10.0)*0.1;
-        transformedNormal.y = transformedNormal.y + sin(position.x*10.0 + time*10.0)*0.1;
+        float freq = 10.0;
+        float amp = 0.01;
+        float angle = (time + position.y)*freq;
+        transformed.x += sin(angle)*amp;
+        objectNormal = normalize(vec3(1.0,-amp * freq * cos(angle),0.0));
+        vNormal = normalMatrix * objectNormal;
     `
             shader.vertexShader =
                 shader.vertexShader.replace(token,customTransform)

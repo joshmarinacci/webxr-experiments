@@ -281,4 +281,7 @@ export class Pointer {
         if(!this.listeners[type]) this.listeners[type] = []
         this.listeners[type].push(cb)
     }
+    off(type,cb) {
+        this.listeners[type] = this.listeners[type].filter(c => c !== cb)
+    }
 }

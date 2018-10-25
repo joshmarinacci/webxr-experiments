@@ -108,6 +108,7 @@
     let currentLevel = 0
     let slime
 
+    let intro_music, level_music, win_music, lose_music
 
     class SimpleText extends THREE.Object3D {
         constructor(w,h) {
@@ -213,15 +214,29 @@
         return LEVELS[currentLevel]
     }
 
+    let splashShowing = false
     function setupStart() {
         //show click to start
         //start round
         // when round ends you win or lose depending on how many you got.
 
+        const splashScreen = new SimpleText(6,2)
+        splashScreen.setText("click to play")
+        splashScreen.position.set(0,2,-4)
+        scene.add(splashScreen)
+
+        splashShowing = true
+        pointer.on(POINTER_CLICK,()=>{
+            if(!splashShowing) return
+            splashShowing = false
+            splashScreen.visible = false
+            intro_music.stop()
+            restartGame()
+        })
+
         SCORE.CAPTURED = 0
         SCORE.TIME_LEFT = CONSTS.ROUND_TIME
         SCORE.START_TIME = Date.now()
-        restartGame()
     }
     let scorch_texture
     function setupVacuum() {
@@ -251,6 +266,35 @@
     function setupMonsters() {
         monsters = new THREE.Group()
         scene.add(monsters)
+    }
+
+    function setupMusic() {
+        const audioListener = new THREE.AudioListener()
+        camera.add(audioListener)
+
+        const audioLoader = new THREE.AudioLoader()
+
+        intro_music = new THREE.Audio(audioListener)
+        audioLoader.load('./music/Loyalty_Freak_Music_-_01_-_Monster_Parade.mp3',(buffer) => {
+            intro_music.setBuffer(buffer)
+            intro_music.setVolume(0.5)
+            intro_music.play()
+        })
+        level_music = new THREE.Audio(audioListener)
+        audioLoader.load("./music/Loyalty_Freak_Music_-_13_-_Ghost_Surf_Rock.mp3",(buffer) => {
+            level_music.setBuffer(buffer)
+            level_music.setVolume(0.5)
+        })
+        win_music = new THREE.Audio(audioListener)
+        audioLoader.load('./music/Loyalty_Freak_Music_-_12_-_Halloween_Ghost_Party.mp3',(buffer) => {
+            win_music.setBuffer(buffer)
+            win_music.setVolume(0.5)
+        })
+        lose_music = new THREE.Audio(audioListener)
+        audioLoader.load('./music/Loyalty_Freak_Music_-_05_-_We_all_gonna_die_.mp3',(buffer) => {
+            lose_music.setBuffer(buffer)
+            lose_music.setVolume(0.5)
+        })
     }
 
     //called on setup. Customize this
@@ -285,6 +329,7 @@
         setupMonsters()
         setupVacuum()
         setupStart()
+        setupMusic()
     }
 
     function moveTerrain(time) {
@@ -505,6 +550,7 @@
             .start()
     }
     function updateMonsters(time) {
+        if(!running) return
         const diff = (time - lastMonster)
         if(diff > CONSTS.MONSTER_FREQUENCY) {
             lastMonster = time
@@ -528,6 +574,7 @@
         startLevel()
     }
     function startLevel() {
+        level_music.play()
         running = true
         SCORE.START_TIME = Date.now()
         SCORE.CAPTURED = 0
@@ -535,12 +582,55 @@
         const level = getCurrentLevel()
         t2.sequence()
             .then(()=>{
+                roundLabel.visible = true
                 roundLabel.setText(`capture ${level.CAPTURE} in ${CONSTS.ROUND_TIME} s`)
                 monstersLabel.setText('0')
             })
             .wait(1)
             .then((()=> roundLabel.visible = false))
             .start()
+    }
+
+    function showNextlevelScreen() {
+        running = false
+        roundLabel.setText("level complete")
+        roundLabel.visible = true
+        const handler = () => {
+            pointer.off(POINTER_CLICK,handler)
+            roundLabel.visible = false
+            currentLevel++
+            startLevel()
+        }
+        pointer.on(POINTER_CLICK,handler)
+    }
+    function showLoseScreen() {
+        running = false
+        level_music.stop()
+        lose_music.play()
+        roundLabel.setText("game over. click to play again")
+        roundLabel.visible = true
+        const handler = () => {
+            pointer.off(POINTER_CLICK,handler)
+            roundLabel.visible = false
+            lose_music.stop()
+            restartGame()
+        }
+        pointer.on(POINTER_CLICK,handler)
+    }
+
+    function showWinScreen() {
+        running = false
+        level_music.stop()
+        win_music.play()
+        roundLabel.setText("you win. click to play again")
+        roundLabel.visible = true
+        const handler = () => {
+            pointer.off(POINTER_CLICK,handler)
+            roundLabel.visible = false
+            win_music.stop()
+            restartGame()
+        }
+        pointer.on(POINTER_CLICK,handler)
     }
     function updateTime(time) {
         if(!running) return
@@ -556,38 +646,13 @@
             if(SCORE.CAPTURED >= level.CAPTURE) {
                 // WIN
                 if (currentLevel + 1 === LEVELS.length) {
-                    t2.sequence()
-                        .then(()=>{
-                            roundLabel.setText("you win")
-                            roundLabel.visible = true
-                        })
-                        .wait(2)
-                        .then(()=>restartGame())
-                        .start()
+                    showWinScreen()
                 } else {
                     // NEXT ROUND
-                    t2.sequence()
-                        .then(()=>{
-                            roundLabel.setText("level complete")
-                            roundLabel.visible = true
-                        })
-                        .wait(2)
-                        .then(()=>{
-                            currentLevel++
-                            startLevel()
-                        })
-                        .start()
+                    showNextlevelScreen()
                 }
             } else {
-                // LOSE, Start game over
-                t2.sequence()
-                    .then(()=>{
-                        roundLabel.setText("game over")
-                        roundLabel.visible = true
-                    })
-                    .wait(2)
-                    .then(()=>restartGame())
-                    .start()
+                showLoseScreen()
             }
         }
     }
