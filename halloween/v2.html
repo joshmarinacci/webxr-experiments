@@ -55,7 +55,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             padding:0;
             overflow: hidden;
         }
-        h1,h2 {
+        h1,h2,h3 {
             font-family: 'dpuntillasBtotiptoeRegular';
             font-weight: normal;
             font-style: normal;
@@ -64,18 +64,26 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
         h1 {
             font-size: 15vmin;
+            margin:0.25em;
         }
         h2 {
+            margin:0.5em 0.25em;
             font-size: 6vmin;
             color: #920084;
-            background-color: rgba(255,255,255,0.5);
+            background-color: #CAE807;
+        }
+        h3 {
+            margin:0;
+            font-size: 4vmin;
+            color: black;
+            background-color: #FF6515;
         }
         #overlay {
             position: fixed;
             font-size: 5vh;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0,0,0,0.5);
+            background-color: black;
             text-align: center;
         }
         #loading-indicator {
@@ -97,12 +105,13 @@ https://freesound.org/people/HF2010/sounds/110497/
             transform: translate(-50%,0);
         }
 
-        #controls {
+        .controls {
+            margin: 0.25em;
             display: flex;
             flex-direction: row;
             justify-content: center;
         }
-        #controls button {
+        .controls button {
             font-family: 'dpuntillasBtotiptoeRegular';
             font-weight: normal;
             font-style: normal;
@@ -112,8 +121,28 @@ https://freesound.org/people/HF2010/sounds/110497/
             background-color: #920084;
             border: 4px solid black;
         }
-        #controls #click-to-play {
+        .controls #click-to-play {
             background-color: white;
+        }
+
+        #how-text {
+            position: fixed;
+            font-size: 5vh;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            text-align: center;
+            display: none;
+        }
+
+        #credits-text {
+            position: fixed;
+            font-size: 5vh;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            text-align: center;
+            display: none;
         }
     </style>
 
@@ -129,10 +158,31 @@ https://freesound.org/people/HF2010/sounds/110497/
         <label>loading</label>
         <progress max="100" value="0" id="progress"></progress>
     </div>
-    <div id="controls">
+    <div class="controls">
         <button id="how">How to Play</button>
         <button id="click-to-play">click to start</button>
-        <button id="info">Credits</button>
+        <button id="credits">Credits</button>
+    </div>
+</div>
+
+<div id="how-text">
+    <h1>How to Play</h1>
+    <h2>1) aim your spectral vacuum at a monster</h2>
+    <h2>2) hold until it is captured</h2>
+    <h2>3) capture enough before time runs out </h2>
+    <div class="controls">
+        <button id="how-back">Back</button>
+    </div>
+</div>
+
+<div id="credits-text">
+    <h1>Credits</h1>
+    <h2>concept and code by <a href="https://vr.josh.earth/">Josh Marinacci</a></h2>
+    <h3>3D models from <a href="https://sketchfab.com/models/3d7ba66433f64c8585c7fd3ed688c7f2">Inuciian</a> and <a href="https://www.patreon.com/quaternius/posts">Quaternius</a></h3>
+    <h3>music from <a href="http://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_">Loyalty Freak Music</a></h3>
+    <h3>sounds from <a href="https://freesound.org/people/suonidigenova/sounds/55055/">Suoni Di Genova</a> and <a href="https://freesound.org/people/HF2010/sounds/110497/">HF2010</a> </h3>
+    <div class="controls">
+        <button id="credits-back">Back</button>
     </div>
 </div>
 
@@ -517,7 +567,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         roundLabel.color = CONSTS.COLORS.orange
 
         roundLabel.position.set(0,2,-5)
-        roundLabel.setText("start round")
+        roundLabel.setText("Start Monster Zoo")
         roundLabel.font = '48px dpuntillasBtotiptoeRegular';
         scene.add(roundLabel)
     }
@@ -615,23 +665,23 @@ https://freesound.org/people/HF2010/sounds/110497/
         intro_music = new THREE.Audio(audioListener)
         audioLoader.load('./music/Loyalty_Freak_Music_-_01_-_Monster_Parade.mp3',(buffer) => {
             intro_music.setBuffer(buffer)
-            intro_music.setVolume(0.5)
+            intro_music.setVolume(0.75)
             // if(DEBUG.MUSIC) intro_music.play()
         })
         level_music = new THREE.Audio(audioListener)
         audioLoader.load("./music/Loyalty_Freak_Music_-_13_-_Ghost_Surf_Rock.mp3",(buffer) => {
             level_music.setBuffer(buffer)
-            level_music.setVolume(0.5)
+            level_music.setVolume(0.75)
         })
         win_music = new THREE.Audio(audioListener)
         audioLoader.load('./music/Loyalty_Freak_Music_-_12_-_Halloween_Ghost_Party.mp3',(buffer) => {
             win_music.setBuffer(buffer)
-            win_music.setVolume(0.5)
+            win_music.setVolume(0.75)
         })
         lose_music = new THREE.Audio(audioListener)
         audioLoader.load('./music/Loyalty_Freak_Music_-_05_-_We_all_gonna_die_.mp3',(buffer) => {
             lose_music.setBuffer(buffer)
-            lose_music.setVolume(0.5)
+            lose_music.setVolume(0.75)
         })
     }
 
@@ -650,6 +700,13 @@ https://freesound.org/people/HF2010/sounds/110497/
             capture_sound.setBuffer(buffer)
         })
 
+    }
+
+    function setupHTML() {
+        on($("#how"),'click',() =>  $("#how-text").style.display = 'block')
+        on($("#how-back"),'click',() => $("#how-text").style.display = 'none')
+        on($("#credits"),'click',() =>  $("#credits-text").style.display = 'block')
+        on($("#credits-back"),'click',() => $("#credits-text").style.display = 'none')
     }
 
     //called on setup. Customize this
@@ -688,6 +745,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         setupStart()
         setupMusic()
         setupSoundEffects()
+        setupHTML()
     }
 
     function moveTerrain(time) {
