@@ -197,7 +197,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             TIME: 30,
             CAPTURE:2,
             CAPTURE_TIME:1,
-            MONSTER_FREQUENCY:2,
+            MONSTER_FREQUENCY:4,
             MONSTER:MONSTERS.SLIME
         },
         {
@@ -205,7 +205,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             TIME: 30,
             CAPTURE:3,
             CAPTURE_TIME:1.5,
-            MONSTER_FREQUENCY:3,
+            MONSTER_FREQUENCY:6,
             MONSTER: MONSTERS.SKELETON,
         },
         {
@@ -213,7 +213,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             TIME: 30,
             CAPTURE:4,
             CAPTURE_TIME:2,
-            MONSTER_FREQUENCY:4,
+            MONSTER_FREQUENCY:8,
             MONSTER: MONSTERS.BAT
         }
     ]
@@ -977,7 +977,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         if(diff > level.MONSTER_FREQUENCY) {
             lastMonster = time
             const monster = new Monster(level.MONSTER)
-            monster.position.set(rand(-3, 3), 0, -20)
+            monster.position.set(rand(-3, 3), 0, -25)
             monsters.add(monster)
         }
         const remove = []
