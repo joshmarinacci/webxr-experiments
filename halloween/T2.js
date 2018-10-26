@@ -11,6 +11,9 @@ class Tween {
     isAlive() {
         return this.running
     }
+    kill() {
+        this.running = false
+    }
 }
 
 class WaitTween extends Tween {
@@ -144,6 +147,10 @@ class ClipTween extends Tween {
         const diff = time/1000 - this.prevTime
         this.mixer.update(diff)
         this.prevTime = time/1000
+    }
+    kill() {
+        this.action.stop()
+        this.running = false
     }
 }
 

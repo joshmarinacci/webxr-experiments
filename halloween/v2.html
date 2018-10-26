@@ -858,7 +858,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             monster.userData.clickable = false
             this.add(monster)
             if(DEBUG.MONSTER.CLIPS) {
-                t2.parallel()
+                this.userData.animation = t2.parallel()
                     .and(t2.clip({
                         target: master,
                         name: 'Slime_Idle',
@@ -912,7 +912,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             monster.scale.set(s,s,s)
             monster.userData.clickable = false
             this.add(monster)
-            t2.parallel()
+            this.userData.animation = t2.parallel()
                 .and(t2.clip({
                     target:master,
                     name:'Bat_Flying',
@@ -1042,7 +1042,10 @@ https://freesound.org/people/HF2010/sounds/110497/
         monsters.children.forEach(m => {
             m.position.z += level.SPEED
             if(m.position.z > 20) remove.push(m)
-            if(m.userData.shouldRemove) remove.push(m)
+            if(m.userData.shouldRemove) {
+                remove.push(m)
+                if(m.userData.animation) m.userData.animation.kill()
+            }
         })
         remove.forEach(m => m.parent.remove(m))
         stats.setProperty('monsters',monsters.children.length)
