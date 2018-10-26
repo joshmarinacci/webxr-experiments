@@ -587,9 +587,23 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     let monsters
+    let slime_model, skeleton_model, bat_model
     function setupMonsters() {
         monsters = new THREE.Group()
         scene.add(monsters)
+
+        loadGLTF("./Slime.glb").then(model => {
+            slime_model = model
+            // dumpTree(slime_model)
+        })
+        loadGLTF("./Skeleton.glb").then(model => {
+            skeleton_model = model
+            // dumpTree(skeleton_model)
+        })
+        loadGLTF("./Bat.glb").then(model => {
+            bat_model = model
+            // dumpTree(bat_model)
+        })
     }
 
     function setupMusic() {
@@ -721,6 +735,53 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
 
+    const cloneGltf = (gltf) => {
+        const clone = {
+            animations: gltf.animations,
+            scene: gltf.scene.clone(true)
+        };
+
+        const skinnedMeshes = {};
+
+        gltf.scene.traverse(node => {
+            if (node.isSkinnedMesh) {
+                skinnedMeshes[node.name] = node;
+            }
+        });
+
+        const cloneBones = {};
+        const cloneSkinnedMeshes = {};
+
+        clone.scene.traverse(node => {
+            if (node.isBone) {
+                cloneBones[node.name] = node;
+            }
+
+            if (node.isSkinnedMesh) {
+                cloneSkinnedMeshes[node.name] = node;
+            }
+        });
+
+        for (let name in skinnedMeshes) {
+            const skinnedMesh = skinnedMeshes[name];
+            const skeleton = skinnedMesh.skeleton;
+            const cloneSkinnedMesh = cloneSkinnedMeshes[name];
+
+            const orderedCloneBones = [];
+
+            for (let i = 0; i < skeleton.bones.length; ++i) {
+                const cloneBone = cloneBones[skeleton.bones[i].name];
+                orderedCloneBones.push(cloneBone);
+            }
+
+            cloneSkinnedMesh.bind(
+                new THREE.Skeleton(orderedCloneBones, skeleton.boneInverses),
+                cloneSkinnedMesh.matrixWorld);
+        }
+
+        return clone;
+    }
+
     class Monster extends THREE.Object3D {
         constructor(type) {
             super()
@@ -776,15 +837,9 @@ https://freesound.org/people/HF2010/sounds/110497/
 
 
             //load the actual monster model
-            if(type === MONSTERS.SLIME)
-                this.loadMonster("./Slime.glb")
-                    .then(m => this.makeSlime(m))
-            if(type === MONSTERS.SKELETON)
-                this.loadMonster("./Skeleton.glb")
-                    .then(m => this.makeSkeleton(m))
-            if(type === MONSTERS.BAT)
-                this.loadMonster("./Bat.glb")
-                    .then(m => this.makeBat(m))
+            if(type === MONSTERS.SLIME) this.makeSlime(slime_model)
+            if(type === MONSTERS.SKELETON)  this.makeSkeleton(skeleton_model)
+            if(type === MONSTERS.BAT) this.makeBat(bat_model)
         }
         loadMonster(url) {
             return new Promise((res,rej)=>{
@@ -795,6 +850,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             })
         }
         makeSlime(master) {
+            master = cloneGltf(master)
             const monster = master.scene
             monster.rotation.y = toRad(-90)
             const s = 0.4
@@ -823,6 +879,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             }
         }
         makeSkeleton(master) {
+            master = cloneGltf(master)
             const monster = master.scene
             const s = 0.3
             monster.scale.set(s,s,s)
@@ -849,6 +906,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                 .start()
         }
         makeBat(master) {
+            master = cloneGltf(master)
             const monster = master.scene
             const s = 0.3
             monster.scale.set(s,s,s)
