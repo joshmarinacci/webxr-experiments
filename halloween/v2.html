@@ -126,7 +126,9 @@ https://freesound.org/people/HF2010/sounds/110497/
     const DEBUG = {
         FOG:true,
         MUSIC:true,
-        TTF_FONT: false
+        TTF_FONT: false,
+        TERRAIN:false,
+        PARTICLES:false,
     }
 
     const CONSTS = {
@@ -266,6 +268,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             this.rebuildGeometry()
         }
     }
+
     function setupTerrain() {
         function makeWorld(dz) {
             const world = new THREE.Group()
@@ -313,7 +316,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                     if(off.x > -3 && off.x < 3) {
                         continue
                     }
-                    makeRandomTree().then(tree => {
+                    if(DEBUG.TERRAIN) makeRandomTree().then(tree => {
                         tree.position.add(off)
                         world.add(tree)
                     })
@@ -336,7 +339,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             timeLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
         } else {
             timeLabel = new SimpleText(1,1)
-            timeLabel.font = '48px dpuntillasBtotiptoeRegular';
+            timeLabel.font = '64px dpuntillasBtotiptoeRegular';
             timeLabel.backgroundColor = CONSTS.COLORS.purple
             timeLabel.color = CONSTS.COLORS.green
         }
@@ -361,7 +364,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             monstersLabel = new TTFText("./fonts/d-puntillas-B-to-tiptoe.ttf")
         } else {
             monstersLabel = new SimpleText(1,1)
-            monstersLabel.font = '48px dpuntillasBtotiptoeRegular';
+            monstersLabel.font = '64px dpuntillasBtotiptoeRegular';
             monstersLabel.backgroundColor = CONSTS.COLORS.purple
             monstersLabel.color = CONSTS.COLORS.green
         }
@@ -614,7 +617,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         const group = e.target.parent
         const hover = group.userData.hover
         if(hover) hover.material.color.set(0xff0000)
-        makeParticles(group)
+        if(DEBUG.PARTICLES) makeParticles(group)
 
     }
     function makeParticles(target) {
