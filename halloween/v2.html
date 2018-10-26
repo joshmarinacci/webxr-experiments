@@ -125,9 +125,9 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     const DEBUG = {
         FOG:true,
-        MUSIC:true,
+        MUSIC:false,
         TTF_FONT: false,
-        TERRAIN:false,
+        TERRAIN:true,
         PARTICLES:false,
     }
 
@@ -270,6 +270,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function setupTerrain() {
+        let treeCount = 0
         function makeWorld(dz) {
             const world = new THREE.Group()
             world.position.z = dz
@@ -309,6 +310,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                     return obj
                 })
             }
+
             for(let i=-14; i<15; i+=4) {
                 for(let j=6; j>-13; j-=4) {
                     const off = new THREE.Vector3(i+rand(-1,1),0,j+rand(-1,1))
@@ -318,6 +320,8 @@ https://freesound.org/people/HF2010/sounds/110497/
                     }
                     if(DEBUG.TERRAIN) makeRandomTree().then(tree => {
                         tree.position.add(off)
+                        treeCount++
+                        stats.setProperty('trees',treeCount)
                         world.add(tree)
                     })
                 }
@@ -881,6 +885,8 @@ https://freesound.org/people/HF2010/sounds/110497/
             if(m.userData.shouldRemove) remove.push(m)
         })
         remove.forEach(m => m.parent.remove(m))
+
+        stats.setProperty('monsters',monsters.children.length)
     }
 
 

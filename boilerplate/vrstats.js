@@ -22,6 +22,7 @@ export default class VRStats extends THREE.Group {
 
         this.last = 0
         this.lastFrame = 0
+        this.customProps = {}
     }
 
     update(time) {
@@ -40,11 +41,18 @@ export default class VRStats extends THREE.Group {
             c.fillText(`calls: ${this.renderer.info.render.calls}`, 3, 20)
             c.fillText(`tris : ${this.renderer.info.render.triangles}`, 3, 40)
             c.fillText(`fps : ${fps.toFixed(2)}`,3,60)
-
+            Object.keys(this.customProps).forEach((key,i) => {
+                const val = this.customProps[key]
+                c.fillText(`${key} : ${val}`,3,80+i*20)
+            })
             this.cmesh.material.map.needsUpdate = true
             this.last = time
             this.lastFrame = this.renderer.info.render.frame
         }
+    }
+
+    setProperty(name, value) {
+        this.customProps[name] = value
     }
 
 }
