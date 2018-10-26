@@ -163,6 +163,9 @@ https://freesound.org/people/HF2010/sounds/110497/
         TTF_FONT: false,
         TERRAIN:true,
         PARTICLES:false,
+        SPLASH:true,
+        GROUND:true,
+        CAR:true,
     }
 
     const CONSTS = {
@@ -211,7 +214,6 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
     ]
     let currentLevel = 0
-    let slime
 
     let intro_music, level_music, win_music, lose_music
 
@@ -303,32 +305,133 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
     }
 
+    const IDENTITY_VECTOR = new THREE.Vector3(0,0,0)
+    const IDENTITY_EULER = new THREE.Euler(0,0,0,'XYZ')
+    function dumpTree(obj, indent) {
+        if(!obj) return console.error("error")
+        if(!indent) indent = ""
+        let type = 'unknown'
+        let name = 'unknown'
+        if(obj.animations) {
+            type = 'gltf'
+            name = 'gltf'
+        }
+
+        if(obj.name) name = obj.name
+        if(obj.type) type = obj.type
+        console.log(indent,type,name)
+        if(obj.position) {
+            if(!obj.position.equals(IDENTITY_VECTOR)) {
+                console.log(indent,"+ position",obj.position.toArray())
+            }
+        }
+        if(obj.rotation) {
+            // console.log(obj.rotation.distanceTo(IDENTITY_VECTOR))
+            if(!obj.rotation.equals(IDENTITY_EULER)) {
+                console.log(indent, "+ rotation",obj.rotation.toArray())
+            }
+        }
+        if(obj.geometry) console.log(indent, '+ has geo')
+        if(obj.material) console.log(indent, '+ has mat')
+        if(obj.children) obj.children.forEach(ch => dumpTree(ch,indent+'  '))
+        if(obj && obj.scene) obj.scene.children.forEach(ch => dumpTree(ch,indent+'  '))
+    }
+
+    let treemodels = null
     function setupTerrain() {
         let treeCount = 0
-        function makeWorld(dz) {
-            const world = new THREE.Group()
-            world.position.z = dz
 
-            //scroll at constant speed over a flat plane with N seconds to capture M monsters.
-            const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(CONSTS.TERRAIN_SIZE*4, CONSTS.TERRAIN_SIZE*2),
-                new THREE.MeshLambertMaterial({color: CONSTS.COLORS.green})
-            );
-            // ground.material.color.setHSL(rand(0,1),1,0.5)
-            ground.rotation.x = toRad(-90)
-            world.add(ground)
+        const model_urls = [
+            "./models/dead_bush/scene.gltf",
+            "./models/dead_tree/scene.gltf",
+            "./models/autumn_tree_2/scene.gltf",
+        ]
+        const ADJUSTMENTS = [
+            {
+                off: new THREE.Vector3(7, -0.2, 0),
+                scale:1.0,
+            },
+            {
+                off: new THREE.Vector3(2, 1, 15),
+                scale:1.0,
+            },
+            {
+                off: new THREE.Vector3(1, -7.2, 0),
+                scale:0.5,
+            },
+
+        ]
+        Promise.all(model_urls.map(url => loadGLTF(url))).then(models =>{
+            console.log("got the models")
+            console.log("tree fully loaded")
+            treemodels = models
+
+            // const mod = treemodels[0]
+            // dumpTree(mod)
+
+            worlds.push(makeWorld(0))
+            worlds.push(makeWorld(CONSTS.TERRAIN_SIZE*-2))
+            worlds.push(makeWorld(CONSTS.TERRAIN_SIZE*-4))
+            worlds.forEach(w => scene.add(w))
 
 
+            function makeTreeInstance(mod,adj) {
+                const obj = mod.scene.children[0].clone()
+                obj.scale.set(adj.scale,adj.scale,adj.scale)
+                obj.position.set(0,0,0)
+                obj.position.add(adj.off)
+                return obj
+            }
+
+
+            function makeWorld(dz) {
+                const world = new THREE.Group()
+                world.position.z = dz
+
+                //scroll at constant speed over a flat plane with N seconds to capture M monsters.
+                const ground = new THREE.Mesh(
+                    new THREE.PlaneGeometry(CONSTS.TERRAIN_SIZE*4, CONSTS.TERRAIN_SIZE*2),
+                    new THREE.MeshLambertMaterial({color: CONSTS.COLORS.green})
+                );
+                // ground.material.color.setHSL(rand(0,1),1,0.5)
+                ground.rotation.x = toRad(-90)
+                if(DEBUG.GROUND) world.add(ground)
+
+
+
+                for(let i=-14; i<15; i+=4) {
+                    for(let j=6; j>-13; j-=4) {
+                        const off = new THREE.Vector3(i+rand(-1,1),0,j+rand(-1,1))
+                        // const off = new THREE.Vector3(i,0,j)
+                        if(off.x > -3 && off.x < 3) {
+                            continue
+                        }
+                        if(DEBUG.TERRAIN) {
+                            let r = Math.floor(Math.random()*3)
+                            // r = 2
+                            const tree = makeTreeInstance(treemodels[r],ADJUSTMENTS[r])
+                            tree.position.add(off)
+                            treeCount++
+                            stats.setProperty('trees',treeCount)
+                            world.add(tree)
+                        }
+                    }
+                }
+
+
+                return world
+            }
             function makeRandomTree() {
                 let r = Math.floor(Math.random()*3)
-                if(r === 0) return loadGLTF("./models/dead_bush/scene.gltf").then(mod => {
+                r = 2
+                if(r === 0) return loadGLTF().then(mod => {
                     const off = new THREE.Vector3(7, -0.4, 0)
                     const obj = mod.scene.children[0]
                     obj.position.set(0, 0, 0)
                     obj.position.add(off)
                     return obj
                 })
-                if(r === 1) return loadGLTF("./models/dead_tree/scene.gltf").then(mod => {
+                if(r === 1) return loadGLTF().then(mod => {
                     const off = new THREE.Vector3(2, 1, 15)
                     const obj = mod.scene.children[0]
                     obj.position.set(0,0,0)
@@ -336,8 +439,10 @@ https://freesound.org/people/HF2010/sounds/110497/
                     return obj
                 })
                 if(r === 2) return loadGLTF("./models/autumn_tree_2/scene.gltf").then(mod => {
+                    dumpTree(mod)
                     const off = new THREE.Vector3(1, -7.2, 0)
-                    const obj = mod.scene.children[0]
+                    let obj = mod.scene.children[0]
+                    obj = obj.children[0]
                     obj.scale.set(0.5,0.5,0.5)
                     obj.position.set(0,0,0)
                     obj.position.add(off)
@@ -345,27 +450,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                 })
             }
 
-            for(let i=-14; i<15; i+=4) {
-                for(let j=6; j>-13; j-=4) {
-                    const off = new THREE.Vector3(i+rand(-1,1),0,j+rand(-1,1))
-                    // const off = new THREE.Vector3(i,0,j)
-                    if(off.x > -3 && off.x < 3) {
-                        continue
-                    }
-                    if(DEBUG.TERRAIN) makeRandomTree().then(tree => {
-                        tree.position.add(off)
-                        treeCount++
-                        stats.setProperty('trees',treeCount)
-                        world.add(tree)
-                    })
-                }
-            }
-            return world
-        }
-        worlds.push(makeWorld(0))
-        worlds.push(makeWorld(CONSTS.TERRAIN_SIZE*-2))
-        worlds.push(makeWorld(CONSTS.TERRAIN_SIZE*-4))
-        worlds.forEach(w => scene.add(w))
+        })
     }
     function setupBackground() {
         scene.background = 0x000000
@@ -438,6 +523,7 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     let splashShowing = false
     function setupStart() {
+        if(!DEBUG.SPLASH) return
         //show click to start
         //start round
         // when round ends you win or lose depending on how many you got.
@@ -579,7 +665,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         setupOverlay()
         setupMonsters()
         setupVacuum()
-        setupCar()
+        if(DEBUG.CAR) setupCar()
         setupStart()
         setupMusic()
         setupSoundEffects()
