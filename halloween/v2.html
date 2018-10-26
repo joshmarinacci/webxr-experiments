@@ -287,21 +287,21 @@ https://freesound.org/people/HF2010/sounds/110497/
 
             function makeRandomTree() {
                 let r = Math.floor(Math.random()*3)
-                if(r === 0) return loadMonster("./models/dead_bush/scene.gltf").then(mod => {
+                if(r === 0) return loadGLTF("./models/dead_bush/scene.gltf").then(mod => {
                     const off = new THREE.Vector3(7, -0.4, 0)
                     const obj = mod.scene.children[0]
                     obj.position.set(0, 0, 0)
                     obj.position.add(off)
                     return obj
                 })
-                if(r === 1) return loadMonster("./models/dead_tree/scene.gltf").then(mod => {
+                if(r === 1) return loadGLTF("./models/dead_tree/scene.gltf").then(mod => {
                     const off = new THREE.Vector3(2, 1, 15)
                     const obj = mod.scene.children[0]
                     obj.position.set(0,0,0)
                     obj.position.add(off)
                     return obj
                 })
-                if(r === 2) return loadMonster("./models/autumn_tree_2/scene.gltf").then(mod => {
+                if(r === 2) return loadGLTF("./models/autumn_tree_2/scene.gltf").then(mod => {
                     const off = new THREE.Vector3(1, -7.2, 0)
                     const obj = mod.scene.children[0]
                     obj.scale.set(0.5,0.5,0.5)
@@ -596,34 +596,164 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
 
+    class Monster extends THREE.Object3D {
+        constructor(type) {
+            super()
+
+
+            this.showMonster = (e) => {
+                this.hover.visible = true
+            }
+
+            this.grabMonster = (e) => {
+                vacuum_sound.play()
+                captureTarget = this
+                capturing = true
+                clock.start()
+                this.hover.material.color.set(0xff0000)
+            }
+
+            this.releaseMonster = (e) => {
+                if(vacuum_sound.isPlaying) vacuum_sound.stop()
+                capturing = false
+                this.hover.visible = false
+            }
+
+            console.log("Making monster of type",type)
+
+            if(type === MONSTERS.SLIME) {}
+            if(type === MONSTERS.SKELETON) {}
+            if(type === MONSTERS.BAT) {}
+
+            //create a mesh for selection
+            this.grabTarget = new THREE.Mesh(
+                new THREE.SphereGeometry(0.7),
+                new THREE.MeshLambertMaterial({color:'green', wireframe:false})
+            )
+            this.grabTarget.material.visible = false
+            this.grabTarget.position.y = 0.5
+            this.grabTarget.userData.clickable = true
+            this.add(this.grabTarget)
+            on(this.grabTarget, POINTER_ENTER,   this.showMonster)
+            on(this.grabTarget, POINTER_EXIT,    this.releaseMonster)
+            on(this.grabTarget, POINTER_PRESS,   this.grabMonster)
+            on(this.grabTarget, POINTER_RELEASE, this.releaseMonster)
+
+
+            //hover effect
+            this.hover = new THREE.Mesh(
+                new THREE.SphereGeometry(0.7),
+                new THREE.MeshLambertMaterial({color:'blue',transparent:true, opacity:0.5})
+            )
+            this.hover.position.y = 0.5
+            this.hover.visible = false
+            this.add(this.hover)
+
+
+            //load the actual monster model
+            if(type === MONSTERS.SLIME)
+                this.loadMonster("./Slime.glb")
+                    .then(m => this.makeSlime(m))
+            if(type === MONSTERS.SKELETON)
+                this.loadMonster("./Skeleton.glb")
+                    .then(m => this.makeSkeleton(m))
+            if(type === MONSTERS.BAT)
+                this.loadMonster("./Bat.glb")
+                    .then(m => this.makeBat(m))
+        }
+        loadMonster(url) {
+            return new Promise((res,rej)=>{
+                const loader = new THREE.GLTFLoader()
+                loader.load(url,(m)=>{
+                    res(m)
+                })
+            })
+        }
+        makeSlime(master) {
+            const monster = master.scene
+            monster.rotation.y = toRad(-90)
+            const s = 0.4
+            monster.scale.set(s,s,s)
+            monster.userData.clickable = false
+            this.add(monster)
+            t2.parallel()
+                .and(t2.clip({
+                    target:master,
+                    name:'Slime_Idle',
+                    speed:2,
+                    loop:-1,
+                    autoReverse:true
+                }))
+                .and(t2.prop({
+                    target:monster.rotation,
+                    property:'y',
+                    from:toRad(30 - 90),
+                    to:toRad(-30 - 90),
+                    loop:-1,
+                    duration:1.5,
+                    autoReverse: true
+                }))
+                .start()
+        }
+        makeSkeleton(master) {
+            const monster = master.scene
+            const s = 0.3
+            monster.scale.set(s,s,s)
+            monster.userData.clickable = false
+            this.add(monster)
+            t2.parallel()
+                .and(t2.clip({
+                    target:master,
+                    // name:'Slime_Idle',
+                    name:'Skeleton_Attack',
+                    speed:1,
+                    loop:-1,
+                    autoReverse:true
+                }))
+                /*            .and(t2.prop({
+                                target:monster.rotation,
+                                property:'y',
+                                from:toRad(30 - 90),
+                                to:toRad(-30 - 90),
+                                loop:-1,
+                                duration:1.5,
+                                autoReverse: true
+                            }))*/
+                .start()
+        }
+        makeBat(master) {
+            const monster = master.scene
+            const s = 0.3
+            monster.scale.set(s,s,s)
+            monster.userData.clickable = false
+            this.add(monster)
+            t2.parallel()
+                .and(t2.clip({
+                    target:master,
+                    name:'Bat_Flying',
+                    speed:1,
+                    loop:-1,
+                    // autoReverse:true
+                }))
+                /*            .and(t2.prop({
+                                target:monster.rotation,
+                                property:'y',
+                                from:toRad(30 - 90),
+                                to:toRad(-30 - 90),
+                                loop:-1,
+                                duration:1.5,
+                                autoReverse: true
+                            }))*/
+                .start()
+        }
+    }
+
     let capturing = false
     let captureTarget = null
     const clock = new THREE.Clock(true)
-    function showMonster(e) {
-        e.target.material.color.set(0x0000FF)
-        const group = e.target.parent
-        const hover = new THREE.Mesh(
-            new THREE.SphereGeometry(2.0),
-            new THREE.MeshLambertMaterial({color:'blue',transparent:true, opacity:0.5})
-        )
-        hover.position.y = 0.5
-        group.userData.hover = hover
-        group.add(hover)
-    }
 
+    /*
     let particles
-    function grabMonster(e) {
-        vacuum_sound.play()
-        e.target.material.color.set(0xffcccc)
-        captureTarget = e.target
-        capturing = true
-        clock.start()
-        const group = e.target.parent
-        const hover = group.userData.hover
-        if(hover) hover.material.color.set(0xff0000)
-        if(DEBUG.PARTICLES) makeParticles(group)
-
-    }
     function makeParticles(target) {
         const texture_loader = new THREE.TextureLoader()
         scorch_texture = texture_loader.load('../particles/kenney_particlePack/PNG/scorch_01.png')
@@ -661,20 +791,8 @@ https://freesound.org/people/HF2010/sounds/110497/
         target.userData.particles = particles
         scene.add(particles)
     }
-    function releaseMonster(e) {
-        if(vacuum_sound.isPlaying) vacuum_sound.stop()
-        capturing = false
-        e.target.material.color.set(0x00ff00)
-        const group = e.target.parent
-        if(group.userData.hover) {
-            group.remove(group.userData.hover)
-            group.userData.hover = null
-        }
-        if(group.userData.particles) {
-            scene.remove(group.userData.particles)
-            particles = null
-        }
-    }
+    */
+
     function updateCapture() {
         if(!capturing) return
         const level = getCurrentLevel()
@@ -683,7 +801,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             capturing = false
             SCORE.CAPTURED += 1
             monstersLabel.setText(`${SCORE.CAPTURED}`)
-            const monster = captureTarget.parent
+            const monster = captureTarget
             const pos = monster.position.clone()
             t2.sequence()
                 .then(t2.prop({
@@ -712,20 +830,11 @@ https://freesound.org/people/HF2010/sounds/110497/
                 )
                 .then(()=>{
                     monster.userData.shouldRemove = true
-                    const group = captureTarget.parent
-                    if(group.userData.hover) {
-                        group.remove(group.userData.hover)
-                        group.userData.hover = null
-                    }
-                    if(group.userData.particles) {
-                        scene.remove(group.userData.particles)
-                        particles = null
-                    }
                 })
                 .start()
         }
     }
-    function loadMonster(url) {
+    function loadGLTF(url) {
         return new Promise((res,rej)=>{
             const loader = new THREE.GLTFLoader()
             loader.load(url,(m)=>{
@@ -734,149 +843,15 @@ https://freesound.org/people/HF2010/sounds/110497/
         })
     }
 
-    function makeSlime(master) {
-        const monster = master.scene
-        monster.rotation.y = toRad(-90)
-        //create a mesh for selection
-        const grabTarget = new THREE.Mesh(
-            new THREE.SphereGeometry(1.5),
-            new THREE.MeshLambertMaterial({color:'green'})
-        )
-        grabTarget.material.visible = false
-        grabTarget.position.y = 0.8
-        grabTarget.userData.clickable = true
-        monster.add(grabTarget)
-
-        const s = 0.2
-        monster.scale.set(s,s,s)
-        monster.position.set(rand(-3, 3), 0, -20)
-        monster.userData.clickable = true
-        monsters.add(monster)
-        on(grabTarget, POINTER_ENTER,  showMonster)
-        on(grabTarget, POINTER_EXIT,  releaseMonster)
-        on(grabTarget, POINTER_PRESS, grabMonster)
-        on(grabTarget, POINTER_RELEASE, releaseMonster)
-
-
-        t2.parallel()
-            .and(t2.clip({
-                target:master,
-                name:'Slime_Idle',
-                speed:2,
-                loop:-1,
-                autoReverse:true
-            }))
-            .and(t2.prop({
-                target:monster.rotation,
-                property:'y',
-                from:toRad(30 - 90),
-                to:toRad(-30 - 90),
-                loop:-1,
-                duration:1.5,
-                autoReverse: true
-            }))
-            .start()
-    }
-
-    function makeSkeleton(master) {
-        const monster = master.scene
-        // monster.rotation.y = toRad(-90)
-        //create a mesh for selection
-        const grabTarget = new THREE.Mesh(
-            new THREE.SphereGeometry(2.5),
-            new THREE.MeshLambertMaterial({color:'green'})
-        )
-        grabTarget.material.visible = false
-        grabTarget.position.y = 2.5
-        grabTarget.userData.clickable = true
-        monster.add(grabTarget)
-
-        const s = 0.3
-        monster.scale.set(s,s,s)
-        monster.position.set(rand(-3, 3), 0, -20)
-        monster.userData.clickable = true
-        monsters.add(monster)
-        on(grabTarget, POINTER_ENTER,  showMonster)
-        on(grabTarget, POINTER_EXIT,  releaseMonster)
-        on(grabTarget, POINTER_PRESS, grabMonster)
-        on(grabTarget, POINTER_RELEASE, releaseMonster)
-
-
-        t2.parallel()
-            .and(t2.clip({
-                target:master,
-                // name:'Slime_Idle',
-                name:'Skeleton_Attack',
-                speed:1,
-                loop:-1,
-                autoReverse:true
-            }))
-            /*            .and(t2.prop({
-                            target:monster.rotation,
-                            property:'y',
-                            from:toRad(30 - 90),
-                            to:toRad(-30 - 90),
-                            loop:-1,
-                            duration:1.5,
-                            autoReverse: true
-                        }))*/
-            .start()
-    }
-
-    function makeBat(master) {
-        const monster = master.scene
-        // monster.rotation.y = toRad(-90)
-        //create a mesh for selection
-        const grabTarget = new THREE.Mesh(
-            new THREE.SphereGeometry(2.0),
-            new THREE.MeshLambertMaterial({color:'green', wireframe:true})
-        )
-        grabTarget.material.visible = false
-        grabTarget.position.y = 2.5
-        grabTarget.userData.clickable = true
-        monster.add(grabTarget)
-
-        const s = 0.3
-        monster.scale.set(s,s,s)
-        monster.position.set(rand(-3, 3), 0, -20)
-        monster.userData.clickable = true
-        monsters.add(monster)
-        on(grabTarget, POINTER_ENTER,  showMonster)
-        on(grabTarget, POINTER_EXIT,  releaseMonster)
-        on(grabTarget, POINTER_PRESS, grabMonster)
-        on(grabTarget, POINTER_RELEASE, releaseMonster)
-
-
-        t2.parallel()
-            .and(t2.clip({
-                target:master,
-                // name:'Slime_Idle',
-                name:'Bat_Flying',
-                speed:1,
-                loop:-1,
-                // autoReverse:true
-            }))
-            /*            .and(t2.prop({
-                            target:monster.rotation,
-                            property:'y',
-                            from:toRad(30 - 90),
-                            to:toRad(-30 - 90),
-                            loop:-1,
-                            duration:1.5,
-                            autoReverse: true
-                        }))*/
-            .start()
-    }
-
     function updateMonsters(time) {
         if(!running) return
         const diff = (time - lastMonster)
         const level = getCurrentLevel()
         if(diff > level.MONSTER_FREQUENCY) {
             lastMonster = time
-            if(level.MONSTER === MONSTERS.SLIME) loadMonster("./Slime.glb").then(makeSlime)
-            if(level.MONSTER === MONSTERS.SKELETON) loadMonster("./Skeleton.glb").then(makeSkeleton)
-            if(level.MONSTER === MONSTERS.BAT) loadMonster("./Bat.glb").then(makeBat)
+            const monster = new Monster(level.MONSTER)
+            monster.position.set(rand(-3, 3), 0, -20)
+            monsters.add(monster)
         }
         const remove = []
         monsters.children.forEach(m => {
@@ -885,7 +860,6 @@ https://freesound.org/people/HF2010/sounds/110497/
             if(m.userData.shouldRemove) remove.push(m)
         })
         remove.forEach(m => m.parent.remove(m))
-
         stats.setProperty('monsters',monsters.children.length)
     }
 
@@ -985,11 +959,11 @@ https://freesound.org/people/HF2010/sounds/110497/
     function render(time) {
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        if(particles && captureTarget) {
-            const group = captureTarget.parent
-            particles.position.copy(group.position)
-            particles.update(time)
-        }
+        // if(particles && captureTarget) {
+        //     const group = captureTarget.parent
+        //     particles.position.copy(group.position)
+        //     particles.update(time)
+        // }
         moveTerrain(time/1000)
         updateMonsters(time/1000)
         updateCapture(time/1000)
