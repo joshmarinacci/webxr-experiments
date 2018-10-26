@@ -166,6 +166,10 @@ https://freesound.org/people/HF2010/sounds/110497/
         SPLASH:true,
         GROUND:true,
         CAR:true,
+        NUMBER_UPDATES:true,
+        MONSTER: {
+            CLIPS:true
+        }
     }
 
     const CONSTS = {
@@ -236,6 +240,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             this.backgroundColor = 'gray'
         }
         setText(str) {
+            if(!DEBUG.NUMBER_UPDATES) return
             const ctx = this.htmlCanvas.getContext('2d')
             ctx.fillStyle = this.backgroundColor
             ctx.fillRect(0,0,this.htmlCanvas.width, this.htmlCanvas.height)
@@ -796,24 +801,26 @@ https://freesound.org/people/HF2010/sounds/110497/
             monster.scale.set(s,s,s)
             monster.userData.clickable = false
             this.add(monster)
-            t2.parallel()
-                .and(t2.clip({
-                    target:master,
-                    name:'Slime_Idle',
-                    speed:2,
-                    loop:-1,
-                    autoReverse:true
-                }))
-                .and(t2.prop({
-                    target:monster.rotation,
-                    property:'y',
-                    from:toRad(30 - 90),
-                    to:toRad(-30 - 90),
-                    loop:-1,
-                    duration:1.5,
-                    autoReverse: true
-                }))
-                .start()
+            if(DEBUG.MONSTER.CLIPS) {
+                t2.parallel()
+                    .and(t2.clip({
+                        target: master,
+                        name: 'Slime_Idle',
+                        speed: 2,
+                        loop: -1,
+                        autoReverse: true
+                    }))
+                    .and(t2.prop({
+                        target: monster.rotation,
+                        property: 'y',
+                        from: toRad(30 - 90),
+                        to: toRad(-30 - 90),
+                        loop: -1,
+                        duration: 1.5,
+                        autoReverse: true
+                    }))
+                    .start()
+            }
         }
         makeSkeleton(master) {
             const monster = master.scene
@@ -1097,7 +1104,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 25 );
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );

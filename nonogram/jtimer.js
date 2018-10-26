@@ -13,6 +13,6 @@ export default class JTimer {
         if(!this.active[str]) return
         const dur = performance.now() - this.active[str]
         this.active[str] = null
-        console.log(str + " " + dur)
+        console.log(str + " " + dur.toFixed(2))
     }
 }
