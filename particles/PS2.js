@@ -5,12 +5,13 @@
 const UPDATEABLE_ATTRIBUTES = [
     'startPosition', 'endPosition',
     'startColor','endColor',
+    'startVelocity','endVelocity',
 
     'startTime',
     'velocity', 'acceleration',
     'size', 'lifeTime']
 
-const VATTS = ['startPosition','endPosition']
+const VATTS = ['startPosition','endPosition', 'startVelocity','endVelocity', 'startAcceleration','endAcceleration']
 const CATTS = ['startColor','endColor']
 
 const GPUParticleShader = {
@@ -22,11 +23,17 @@ const GPUParticleShader = {
                 uniform bool reverseTime;
                 uniform bool loop;
                 uniform bool autoReverse;
+                uniform bool hold;
                 uniform float fadeIn;
                 uniform float fadeOut;
     
                 attribute vec3 startPosition;
                 attribute vec3 endPosition;
+                attribute vec3 startVelocity;
+                attribute vec3 endVelocity;
+                attribute vec3 startAcceleration;
+                attribute vec3 endAcceleration;
+                
                 attribute float startTime;
                 attribute vec3 velocity;
                 attribute vec3 acceleration;
@@ -54,6 +61,10 @@ const GPUParticleShader = {
                             t = fract(t);
                         }
                     }
+                    
+                    //easing
+                    float tt = 1.0-t;
+                    t = 1.0-tt*tt;
                     //clamp
                     if(t > 1.0) t = 1.0;
                     
@@ -71,9 +82,18 @@ const GPUParticleShader = {
                         alpha = mix(0.0,1.0, (1.0-t)/fadeOut);
                     }
                     
-                    gl_PointSize = 10.0;
+                    if(hold && ((uTime-startTime)/lifeTime) >= 1.0) {
+                        alpha = 1.0;
+                        t = 1.0;
+                    }
                     
-                    vec3 newPosition = mix(startPosition, endPosition, t);
+                    gl_PointSize = 5.0;
+
+
+                    float rt = 1.0-t;
+                    vec3 sp = startPosition + t * startVelocity + startAcceleration*0.5*t*t;
+                    vec3 ep = endPosition +  rt * endVelocity + endAcceleration*0.5*rt*rt;
+                    vec3 newPosition = mix(sp,ep,t);
                     
                     gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
                     vT = t;
@@ -116,6 +136,7 @@ export default class PS2 extends THREE.Object3D {
         this.reverseTime = options.reverseTime
         this.loop = options.loop
         this.autoReverse = options.autoReverse;
+        this.hold = options.hold
         this.fadeIn = options.fadeIn || 1
         if(this.fadeIn === 0) this.fadeIn = 0.001
         this.fadeOut = options.fadeOut || 1
@@ -156,6 +177,9 @@ export default class PS2 extends THREE.Object3D {
                 },
                 autoReverse: {
                     value: this.autoReverse
+                },
+                hold: {
+                    value: this.hold
                 },
                 fadeIn: {
                     value: this.fadeIn
