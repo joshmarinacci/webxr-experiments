@@ -279,6 +279,8 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     let intro_music, level_music, win_music, lose_music
 
+    let captureEffect
+
     class SimpleText extends THREE.Object3D {
         constructor(w,h) {
             super()
@@ -611,8 +613,9 @@ https://freesound.org/people/HF2010/sounds/110497/
         SCORE.TIME_LEFT = 99
         SCORE.START_TIME = Date.now()
     }
-    let scorch_texture
+    let captureTexture
     function setupVacuum() {
+
         //Must focus on monster for 1 full second in a cone of influence to fully capture it.
         //         Reverse particles and is sucked into your vacuum.
         //             Get a point.
@@ -631,6 +634,27 @@ https://freesound.org/people/HF2010/sounds/110497/
         group.add(nozzle)
         group.rotation.x = -90 * Math.PI/180
         group.position.z = -1.0
+
+
+        const textureLoader = new THREE.TextureLoader()
+        captureTexture = textureLoader.load("./capture.png")
+        captureTexture.wrapS = THREE.RepeatWrapping;
+        captureTexture.wrapT = THREE.RepeatWrapping;
+        captureTexture.repeat.set(4,0.2)
+        captureEffect = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.0,0.13,5.0),
+            new THREE.MeshLambertMaterial({
+                color:'purple',
+                map:captureTexture,
+                transparent:true,
+                opacity: 0.2,
+                side: THREE.DoubleSide,
+            })
+        )
+        captureEffect.position.y = 1.5+0.5+1
+        captureEffect.visible = false
+        group.add(captureEffect)
+
         pointer.controller1.add(group)
 
     }
@@ -735,10 +759,11 @@ https://freesound.org/people/HF2010/sounds/110497/
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:true,
+            cameraFollowMouse:false,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
+            enableLaser:false,
 
         })
 
@@ -859,6 +884,7 @@ https://freesound.org/people/HF2010/sounds/110497/
 
             this.grabMonster = (e) => {
                 vacuum_sound.play()
+                captureEffect.visible = true
                 captureTarget = this
                 capturing = true
                 clock.start()
@@ -867,6 +893,7 @@ https://freesound.org/people/HF2010/sounds/110497/
 
             this.releaseMonster = (e) => {
                 if(vacuum_sound.isPlaying) vacuum_sound.stop()
+                captureEffect.visible = false
                 capturing = false
                 this.hover.visible = false
             }
@@ -1084,6 +1111,7 @@ https://freesound.org/people/HF2010/sounds/110497/
                     })
                 )
                 .then(()=>{
+                    captureEffect.visible = false
                     monster.userData.shouldRemove = true
                 })
                 .start()
@@ -1217,6 +1245,9 @@ https://freesound.org/people/HF2010/sounds/110497/
     function render(time) {
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
+        if(captureTexture && captureEffect && captureEffect.visible) {
+            captureTexture.offset.set(0,time/1000)
+        }
         // if(particles && captureTarget) {
         //     const group = captureTarget.parent
         //     particles.position.copy(group.position)
