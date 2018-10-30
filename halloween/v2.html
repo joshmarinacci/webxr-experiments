@@ -871,8 +871,6 @@ https://freesound.org/people/HF2010/sounds/110497/
                 this.hover.visible = false
             }
 
-            console.log("Making monster of type",type)
-
             if(type === MONSTERS.SLIME) {}
             if(type === MONSTERS.SKELETON) {}
             if(type === MONSTERS.BAT) {}
@@ -916,6 +914,8 @@ https://freesound.org/people/HF2010/sounds/110497/
             })
         }
         makeSlime(master) {
+            this.grabTarget.position.y = 0.4
+            this.hover.position.y = 0.4
             master = cloneGltf(master)
             const monster = master.scene
             monster.rotation.y = toRad(-90)
@@ -945,6 +945,8 @@ https://freesound.org/people/HF2010/sounds/110497/
             }
         }
         makeSkeleton(master) {
+            this.grabTarget.position.y = 0.75
+            this.hover.position.y = 0.75
             master = cloneGltf(master)
             const monster = master.scene
             const s = 0.3
@@ -972,6 +974,8 @@ https://freesound.org/people/HF2010/sounds/110497/
                 .start()
         }
         makeBat(master) {
+            this.grabTarget.position.y = 0.75
+            this.hover.position.y = 0.75
             master = cloneGltf(master)
             const monster = master.scene
             const s = 0.3
