@@ -94,9 +94,11 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
             maxParticles: 10000,
             particleSpriteTex: texture,
             blending: THREE.NormalBlending,
-            fadeIn: 0.33,
-            fadeOut: 0.33,
+            fadeIn: 0.001,
+            fadeOut: 0.001,
             // reverseTime:true,
+            loop:true,
+            autoReverse:true,
         })
         parts.position.set(0,1.5,-3)
         for(let i=0; i<360; i++) {

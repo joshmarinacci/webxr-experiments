@@ -3,12 +3,11 @@
  */
 
 const UPDATEABLE_ATTRIBUTES = [
-    // 'position',
     'startPosition', 'endPosition',
     'startColor','endColor',
+
     'startTime',
     'velocity', 'acceleration',
-    // 'color', 'endColor',
     'size', 'lifeTime']
 
 const VATTS = ['startPosition','endPosition']
@@ -21,6 +20,8 @@ const GPUParticleShader = {
                 uniform float uTime;
                 uniform float uScale;
                 uniform bool reverseTime;
+                uniform bool loop;
+                uniform bool autoReverse;
                 uniform float fadeIn;
                 uniform float fadeOut;
     
@@ -44,9 +45,20 @@ const GPUParticleShader = {
                     vStartColor = vec4( startColor, 1.0 );
                     vEndColor = vec4( endColor, 1.0);
                     float t = (uTime-startTime)/lifeTime;
+                    
+                    if(loop) {
+                        bool even = mod(t,2.0) >= 1.0;
+                        if(autoReverse && even) {
+                            t = 1.0 - fract(t);
+                        } else {
+                            t = fract(t);
+                        }
+                    }
+                    //clamp
                     if(t > 1.0) t = 1.0;
                     
-                    if(reverseTime) t = 1.0-t;//timeElapsed = lifeTime - timeElapsed;
+                    
+                    if(reverseTime) t = 1.0-t;
                     
                     alpha = t;
                     if(t < fadeIn) {
@@ -102,6 +114,8 @@ export default class PS2 extends THREE.Object3D {
         this.onTick = options.onTick
 
         this.reverseTime = options.reverseTime
+        this.loop = options.loop
+        this.autoReverse = options.autoReverse;
         this.fadeIn = options.fadeIn || 1
         if(this.fadeIn === 0) this.fadeIn = 0.001
         this.fadeOut = options.fadeOut || 1
@@ -136,6 +150,12 @@ export default class PS2 extends THREE.Object3D {
                 },
                 reverseTime: {
                     value: this.reverseTime
+                },
+                loop: {
+                    value: this.loop
+                },
+                autoReverse: {
+                    value: this.autoReverse
                 },
                 fadeIn: {
                     value: this.fadeIn
