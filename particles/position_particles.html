@@ -103,9 +103,11 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         parts.position.set(0,1.5,-3)
         for(let i=0; i<360; i++) {
             const size = 1.4
-            const theta = toRad(i*3)
+            const theta = toRad(i*2)
             options.startPosition.set(Math.sin(theta*1.5) * size, Math.cos(theta*2.0) * size, 0)
             options.endPosition.set(  Math.sin(theta*2.5) * size, Math.cos(theta*1.5) * size, 0)
+            options.endColor.setHSL(i/360,1.0,0.5)
+            // options.endColor.setHSL(i/360,1.0,0.5)
             options.lifeTime = 4
             parts.spawnParticle(options);
         }
