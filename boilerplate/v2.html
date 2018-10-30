@@ -143,9 +143,20 @@
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
 
+            //turn this off if you provide your own pointer model
             enableLaser: true,
-
         })
+
+
+        const STICK_HEIGHT = 1.0
+        const stick = new THREE.Mesh(
+            new THREE.CylinderBufferGeometry(0.1,0.1,STICK_HEIGHT),
+            new THREE.MeshLambertMaterial({color:'aqua'})
+        )
+        const toRad = (degrees) => degrees*Math.PI/180
+        stick.position.z = -STICK_HEIGHT/2;
+        stick.rotation.x = toRad(-90)
+        pointer.controller1.add(stick)
 
 
         //change cube to red BG when clicking
@@ -155,11 +166,11 @@
         })
         //change cube to green BG when hovering over it
         on(cube,POINTER_ENTER,()=>{
-            console.log("entering the cube")
+            // console.log("entering the cube")
             cube.material.color.set(0x00ff00)
         })
         on(cube,POINTER_EXIT,()=>{
-            console.log('exiting the cube')
+            // console.log('exiting the cube')
             cube.material.color.set(0xffffff)
         })
 

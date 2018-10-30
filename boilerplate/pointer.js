@@ -7,6 +7,8 @@ export const POINTER_RELEASE = "release"
 
 import * as THREE from "./node_modules/three/build/three.module.js"
 
+const toRad = (degrees) => degrees*Math.PI/180
+
 export class Pointer {
     constructor(scene, renderer, camera, opts) {
         this.listeners = {}
@@ -58,6 +60,11 @@ export class Pointer {
             this.controller1 = new THREE.Group()
             this.controller1.position.set(0,1,-2)
             this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, new THREE.Vector3(0,0,1))
+            this.spot = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(0.1),
+                new THREE.MeshLambertMaterial({color: 'red'})
+            )
+            scene.add(this.spot)
         }
 
         this.scene.add(this.controller1);
@@ -115,11 +122,18 @@ export class Pointer {
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         this.raycaster.setFromCamera(mouse, this.camera)
         if(this.opts.mouseSimulatesController) {
-            const dir = this.raycaster.ray.direction.clone()
-            dir.z = -dir.z
-            dir.y = -dir.y
-            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, dir)
-            // this.controller1.quaternion.setFromUnitVectors(dir,THREE.Object3D.DefaultUp)
+            //create target from the mouse controls
+            const target = new THREE.Vector3()
+            target.x = mouse.x
+            target.y = mouse.y
+            target.z = -3
+            //convert to camera space
+            target.add(this.camera.position)
+            this.spot.position.copy(target)
+            this.controller1.lookAt(target)
+            //have to flip over because the UP is down on controllers
+            const flip = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),toRad(180))
+            this.controller1.quaternion.multiply(flip)
         }
         this._processMove()
     }
