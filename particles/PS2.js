@@ -5,12 +5,14 @@
 const UPDATEABLE_ATTRIBUTES = [
     // 'position',
     'startPosition', 'endPosition',
+    'startColor','endColor',
     'startTime',
     'velocity', 'acceleration',
-    'color', 'endColor',
+    // 'color', 'endColor',
     'size', 'lifeTime']
 
 const VATTS = ['startPosition','endPosition']
+const CATTS = ['startColor','endColor']
 
 const GPUParticleShader = {
 
@@ -27,74 +29,56 @@ const GPUParticleShader = {
                 attribute float startTime;
                 attribute vec3 velocity;
                 attribute vec3 acceleration;
-                attribute vec3 color;
+                attribute vec3 startColor;
                 attribute vec3 endColor;
                 attribute float size;
                 attribute float lifeTime;
     
-                varying vec4 vColor;
+                varying vec4 vStartColor;
                 varying vec4 vEndColor;
                 varying float lifeLeft;
                 varying float alpha;
+                varying float vT;
     
                 void main() {
-                    // vColor = vec4( color, 1.0 );
-                    // vEndColor = vec4( endColor, 1.0);
-                    // vec3 newPosition;
-                    float timeElapsed = uTime - startTime;
-                    
+                    vStartColor = vec4( startColor, 1.0 );
+                    vEndColor = vec4( endColor, 1.0);
                     float t = (uTime-startTime)/lifeTime;
                     if(t > 1.0) t = 1.0;
-                    // if(timeElapsed > lifeTime) {
-                    //     timeElapsed = 1.0;
-                    // }
                     
-                    // if(reverseTime) timeElapsed = lifeTime - timeElapsed;
-                    // if(timeElapsed < fadeIn) {
-                    //     alpha = timeElapsed/fadeIn;
-                    // }
-                    // if(timeElapsed >= fadeIn && timeElapsed <= (lifeTime - fadeOut)) {
-                    //     alpha = 1.0;
-                    // }
-                    // if(timeElapsed > (lifeTime - fadeOut)) {
-                    //     alpha = 1.0 - (timeElapsed - (lifeTime-fadeOut))/fadeOut;
-                    // }
-                    //
-                    // lifeLeft = 1.0 - ( timeElapsed / lifeTime );
+                    if(reverseTime) t = 1.0-t;//timeElapsed = lifeTime - timeElapsed;
+                    
+                    alpha = t;
+                    if(t < fadeIn) {
+                        alpha = mix(0.0,1.0,t/fadeIn);
+                    }
+                    if(t >= fadeIn) {
+                        alpha = 1.0;
+                    }
+                    if(t > 1.0-fadeOut) {
+                        alpha = mix(0.0,1.0, (1.0-t)/fadeOut);
+                    }
+                    
                     gl_PointSize = 10.0;
                     
                     vec3 newPosition = mix(startPosition, endPosition, t);
                     
                     gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
-                        
-                        /*
-                    //while active use the new position
-                    if( timeElapsed > 0.0 ) {
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
-                    } else {
-                        //if dead use the initial position and set point size to 0
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-                        lifeLeft = 0.0;
-                        gl_PointSize = 0.;
-                    }
-                    */
+                    vT = t;
                 }
                 `
     ,
 
     fragmentShader: `
-                // varying vec4 vColor;
-                // varying vec4 vEndColor;
+                varying vec4 vStartColor;
+                varying vec4 vEndColor;
+                varying float vT;
                 // varying float lifeLeft;
-                // varying float alpha;
+                varying float alpha;
                 // uniform sampler2D tSprite;
                 void main() {
-                    // color based on particle texture and the lifeLeft. 
-                    // if lifeLeft is 0 then make invisible
-                    // vec4 tex = texture2D( tSprite, gl_PointCoord );
-                    // vec4 color = mix(vColor, vEndColor, 1.0-lifeLeft);
-                    gl_FragColor = vec4(1.0,1.0,0.0,1.0);
-                    // gl_FragColor = vec4( color.rgb*tex.rgb, alpha * tex.a);
+                    vec4 color = mix(vStartColor, vEndColor, vT);
+                    gl_FragColor = vec4(color.rgb,alpha);
                 }
     
             `
@@ -169,7 +153,6 @@ export default class PS2 extends THREE.Object3D {
         this.material.defaultAttributeValues.particlePositionsStartTime = [ 0, 0, 0, 0 ];
         this.material.defaultAttributeValues.particleVelColSizeLife = [ 0, 0, 0, 0 ];
 
-
         // geometry
         this.geometry = new THREE.BufferGeometry();
 
@@ -177,6 +160,9 @@ export default class PS2 extends THREE.Object3D {
         this.geometry.addAttribute('position',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
 
         VATTS.forEach(name => {
+            this.geometry.addAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setDynamic(true))
+        })
+        CATTS.forEach(name => {
             this.geometry.addAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setDynamic(true))
         })
         // this.geometry.addAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
@@ -276,7 +262,7 @@ export default class PS2 extends THREE.Object3D {
         color = options.color !== undefined ? color.copy(options.color) : color.set(0xffffff);
         endColor = options.endColor !== undefined ? endColor.copy(options.endColor) : endColor.copy(color)
 
-        const lifetime = options.lifetime !== undefined ? options.lifetime : 5
+        const lifetime = options.lifeTime !== undefined ? options.lifeTime : 5
         let size = options.size !== undefined ? options.size : 10
         const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0
 
@@ -286,17 +272,18 @@ export default class PS2 extends THREE.Object3D {
 
         // position
         VATTS.forEach(name => {
-            console.log(name)
             const positionStartAttribute = this.geometry.getAttribute(name)
             positionStartAttribute.array[i * 3 + 0] = options[name].x
             positionStartAttribute.array[i * 3 + 1] = options[name].y
             positionStartAttribute.array[i * 3 + 2] = options[name].z
         })
 
-        // const positionEndAttribute = this.geometry.getAttribute('positionEnd')
-        // positionEndAttribute.array[i * 3 + 0] = options.endPosition.x
-        // positionEndAttribute.array[i * 3 + 1] = options.endPosition.y
-        // positionEndAttribute.array[i * 3 + 2] = options.endPosition.z
+        CATTS.forEach(name => {
+            const positionStartAttribute = this.geometry.getAttribute(name)
+            positionStartAttribute.array[i * 3 + 0] = options[name].r
+            positionStartAttribute.array[i * 3 + 1] = options[name].g
+            positionStartAttribute.array[i * 3 + 2] = options[name].b
+        })
 
         velocityAttribute.array[i * 3 + 0] = velocity.x;
         velocityAttribute.array[i * 3 + 1] = velocity.y;
@@ -306,13 +293,13 @@ export default class PS2 extends THREE.Object3D {
         accelerationAttribute.array[i * 3 + 1] = acceleration.y;
         accelerationAttribute.array[i * 3 + 2] = acceleration.z;
 
-        colorAttribute.array[i * 3 + 0] = color.r;
-        colorAttribute.array[i * 3 + 1] = color.g;
-        colorAttribute.array[i * 3 + 2] = color.b;
+        // colorAttribute.array[i * 3 + 0] = color.r;
+        // colorAttribute.array[i * 3 + 1] = color.g;
+        // colorAttribute.array[i * 3 + 2] = color.b;
 
-        endcolorAttribute.array[i * 3 + 0] = endColor.r;
-        endcolorAttribute.array[i * 3 + 1] = endColor.g;
-        endcolorAttribute.array[i * 3 + 2] = endColor.b;
+        // endcolorAttribute.array[i * 3 + 0] = endColor.r;
+        // endcolorAttribute.array[i * 3 + 1] = endColor.g;
+        // endcolorAttribute.array[i * 3 + 2] = endColor.b;
 
         //size, lifetime and starttime
         sizeAttribute.array[i] = size + this.random() * sizeRandomness;

@@ -85,29 +85,26 @@ https://sketchfab.com/models/34eeb35d2a514f499d277d535e7999d9
         const options = {
             startPosition: new THREE.Vector3(1,0,0),
             endPosition: new THREE.Vector3(1,1,1),
-            startColor: new THREE.Color(1.0,0.0,1.0),
-            endColor: new THREE.Color(0.0,1.0,1.0),
-            lifetime: 2.0,
+            startColor: new THREE.Color(1.0,1.0,1.0),
+            endColor:   new THREE.Color(1.0,1.0,1.0),
+            lifetime: 5.0,
         }
 
-        let count = 0
         parts = new GPUPositionParticleSystem({
             maxParticles: 10000,
             particleSpriteTex: texture,
             blending: THREE.NormalBlending,
-            onTick: (system, time) => {
-                if(count === 0) {
-                    count++
-                }
-            }
+            fadeIn: 0.33,
+            fadeOut: 0.33,
+            // reverseTime:true,
         })
         parts.position.set(0,1.5,-3)
         for(let i=0; i<360; i++) {
-            const size = 0.4
+            const size = 1.4
             const theta = toRad(i*3)
-            options.startPosition.set(Math.sin(theta*1.5) * size, Math.cos(theta*2) * size, 0)
+            options.startPosition.set(Math.sin(theta*1.5) * size, Math.cos(theta*2.0) * size, 0)
             options.endPosition.set(  Math.sin(theta*2.5) * size, Math.cos(theta*1.5) * size, 0)
-            options.lifetime = 10.0
+            options.lifeTime = 4
             parts.spawnParticle(options);
         }
 
