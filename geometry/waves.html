@@ -71,15 +71,9 @@
         //set the background color of the scene
         scene.background = new THREE.Color( 0x000000 );
 
-        //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 1, 1, 1 ).normalize();
-        // scene.add( light );
         const ptLight = new THREE.PointLight(0xffffff, 1.0)
         ptLight.position.set(-10,30,-10)
         scene.add(ptLight)
-        // scene.add(new THREE.AmbientLight(0xffffff,0.1))
-        // const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
 
         $("#overlay").style.display = 'none'
 
@@ -94,7 +88,6 @@
             shader.uniforms.time = { value: 0}
             shader.vertexShader = `
                 uniform float time;
-                varying float vTime;
             ` + shader.vertexShader
 
             const token = '#include <begin_vertex>'
@@ -108,7 +101,6 @@
                 transformed.z += sin(angle)*amp;
                 objectNormal = normalize(vec3(-amp * freq * cos(angle),0.0,1.0));
                 vNormal = normalMatrix * objectNormal;
-                vTime = time;
             `
             shader.vertexShader = shader.vertexShader.replace(token,customTransform)
             matShader = shader
