@@ -93,6 +93,7 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const toRad = (deg) => deg*Math.PI/180
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
@@ -106,6 +107,7 @@
     world = new CANNON.World();
     world.gravity.set(0, -9.82, 0);
     const bouncy = new CANNON.Material()
+    let groundMaterial
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -127,10 +129,32 @@
         // scene.add(fog)
     }
 
-    function create_floor(world,scene) {
-        const groundMaterial = new CANNON.Material()
-        const bouncy_ground = new CANNON.ContactMaterial(groundMaterial,bouncy, {friction:1.0, restitution:1.0})
+    function initPhysics() {
+        groundMaterial = new CANNON.Material()
+        const bouncy_ground = new CANNON.ContactMaterial(groundMaterial, bouncy, {friction: 1.0, restitution: 1.0})
         world.addContactMaterial(bouncy_ground)
+    }
+
+    function make_wall(w,h,d, scene, world) {
+        const body = new CANNON.Body({
+            mass: 0,
+            material: groundMaterial,
+        })
+        const shape = new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2))
+        body.addShape(shape)
+        world.addBody(body)
+
+        const wall = new THREE.Mesh(
+            new THREE.BoxGeometry(w,h,d),
+            new THREE.MeshLambertMaterial({color: theme.wall.colors.normal})
+        )
+        wall.userData.body = body
+        scene.add(wall)
+
+        return wall
+    }
+
+    function create_floor(world,scene) {
 
         // Create a plane
         var groundBody = new CANNON.Body({
@@ -149,45 +173,6 @@
         ground.position.set(0,0,0)
         ground.rotation.x = -90*Math.PI/180
         scene.add(ground)
-
-        const toRad = (deg) => deg*Math.PI/180
-
-
-
-        function makeWall(w,h,d) {
-            const body = new CANNON.Body({
-                mass: 0,
-                material: groundMaterial,
-            })
-            const shape = new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2))
-            // body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(-45))
-            // body.position.set(4,2,-5)
-            body.addShape(shape)
-            world.addBody(body)
-
-            const wall = new THREE.Mesh(
-                new THREE.BoxGeometry(w,h,d),
-                new THREE.MeshLambertMaterial({color: theme.wall.colors.normal})
-            )
-            wall.userData.body = body
-            scene.add(wall)
-
-            return wall
-        }
-
-        const wb1 = makeWall(10,4,1)
-        wb1.userData.body.position.z = -6
-        wb1.userData.body.position.x = 4
-        wb1.userData.body.position.y = 2
-        wb1.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
-        walls.push(wb1)
-
-        const wb2 = makeWall(10,4,1)
-        wb2.userData.body.position.z = -6
-        wb2.userData.body.position.x = -4
-        wb2.userData.body.position.y = 2
-        wb2.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
-        walls.push(wb2)
     }
 
     //TODO: three uses extents, Cannon uses half extents.
@@ -210,9 +195,10 @@
     }
 
     let currentLevel = 0
+
     const levels = [
         {
-            title:"easy",
+            title:"easy pieces",
             make: function(world,scene) {
                 const cubes = []
                 for(let x=-1; x<=2.2; x+=1.1) {
@@ -220,11 +206,15 @@
                         cubes.push(make_block(x, y, -7))
                     }
                 }
-                return cubes
+
+                const walls = []
+
+
+                return {cubes,walls:walls}
             }
         },
         {
-            title:"medium",
+            title:"long tunnel",
             make: function(world,scene) {
                 const cubes = []
                 for(let x=-1.5; x<=2; x+=1.5) {
@@ -232,7 +222,24 @@
                         cubes.push(make_block(x, y, -9))
                     }
                 }
-                return cubes
+
+                const walls = []
+                const wb1 = make_wall(20,4,1,scene,world)
+                wb1.userData.body.position.z = -10
+                wb1.userData.body.position.x = 4
+                wb1.userData.body.position.y = 2
+                wb1.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
+                walls.push(wb1)
+
+                const wb2 = make_wall(20,4,1,scene,world)
+                wb2.userData.body.position.z = -10
+                wb2.userData.body.position.x = -4
+                wb2.userData.body.position.y = 2
+                wb2.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
+                walls.push(wb2)
+
+
+                return {cubes,walls:walls}
             }
         },
         {
@@ -244,7 +251,7 @@
                         cubes.push(make_block(x, y, -11))
                     }
                 }
-                return cubes
+                return {cubes,walls:[]}
             }
         },
     ]
@@ -255,7 +262,11 @@
             world.remove(c.userData.body)
             scene.remove(c)
         })
-        blocks = levels[currentLevel].make(world,scene)
+        walls.forEach(w => {
+            world.remove(w.userData.body)
+            scene.remove(w)
+        })
+        loadLevel(currentLevel)
     }
 
     function fire_ball(world,scene,pos,dir) {
@@ -293,6 +304,7 @@
     }
 
     function initContent(scene,camera,renderer) {
+        initPhysics()
         setup_background_and_lighting(scene)
 
         // enable stats visible inside VR
@@ -389,8 +401,14 @@
         text.position.set(0,4,-4)
         scene.add(text)
 
-        blocks = levels[currentLevel].make(world,scene)
-        update_text(`level ${levels[currentLevel].title}`)
+        loadLevel(currentLevel)
+    }
+
+    function loadLevel(num) {
+        const data = levels[num].make(world,scene)
+        blocks = data.cubes
+        walls = data.walls
+        update_text(`level ${levels[num].title}`)
     }
 
     function sync_graphics(obj) {
