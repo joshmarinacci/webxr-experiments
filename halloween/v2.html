@@ -46,7 +46,6 @@ https://freesound.org/people/HF2010/sounds/110497/
     <script src="./node_modules/three/examples/js/libs/opentype.min.js"></script>
 
     <!-- needed to enter VR -->
-    <script src="../boilerplate/webvr.js"></script>
 
     <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/de-puntillas-b-to-tiptoe-regular" type="text/css"/>
 
@@ -62,6 +61,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             margin:0;
             padding:0;
             overflow: hidden;
+            font-family: 'dpuntillasBtotiptoeRegular';
         }
         h1,h2,h3 {
             font-family: 'dpuntillasBtotiptoeRegular';
@@ -94,9 +94,6 @@ https://freesound.org/people/HF2010/sounds/110497/
             background-color: black;
             text-align: center;
         }
-        #loading-indicator {
-            display: block;
-        }
         #click-to-play {
             /*display: none;*/
             color: black;
@@ -113,13 +110,13 @@ https://freesound.org/people/HF2010/sounds/110497/
             transform: translate(-50%,0);
         }
 
-        .controls {
+        #controls {
             margin: 0.25em;
             display: flex;
             flex-direction: row;
             justify-content: center;
         }
-        .controls button {
+        #controls button {
             font-family: 'dpuntillasBtotiptoeRegular';
             font-weight: normal;
             font-style: normal;
@@ -129,7 +126,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             background-color: #920084;
             border: 4px solid black;
         }
-        .controls #click-to-play {
+        #controls #click-to-play {
             background-color: white;
         }
 
@@ -152,6 +149,16 @@ https://freesound.org/people/HF2010/sounds/110497/
             text-align: center;
             display: none;
         }
+
+        #loading-indicator {
+            display: block;
+        }
+        #loading-indicator * {
+            color: white;
+        }
+        #controls {
+            display: none;
+        }
     </style>
 
 </head>
@@ -166,9 +173,9 @@ https://freesound.org/people/HF2010/sounds/110497/
         <label>loading</label>
         <progress max="100" value="0" id="progress"></progress>
     </div>
-    <div class="controls">
+    <div id="controls">
         <button id="how">How to Play</button>
-        <button id="click-to-play">click to start</button>
+        <button id="click-to-play">Play Now</button>
         <button id="credits">Credits</button>
     </div>
 </div>
@@ -202,6 +209,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     import VRStats from "../boilerplate/vrstats.js"
     import {t2} from "./T2.js"
     import GPUParticleSystem from "../particles/GPUParticleSystem2.js"
+    import VRManager, {VR_DETECTED} from "../boilerplate/vrmanager.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -210,7 +218,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     const rand = (min,max) => Math.random()*(max-min) + min
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats;
+    let camera, scene, renderer, pointer, stats, vrmanager;
     let worlds = []
 
     let timeLabel, monstersLabel, roundLabel
@@ -596,7 +604,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         const splashScreen = new SimpleText(6,2)
         splashScreen.backgroundColor = CONSTS.COLORS.blue
         splashScreen.color = CONSTS.COLORS.orange
-        splashScreen.setText("Start Round")
+        splashScreen.setText("Click to Start Round")
         splashScreen.position.set(0,2,-4)
         scene.add(splashScreen)
 
@@ -698,7 +706,6 @@ https://freesound.org/people/HF2010/sounds/110497/
         audioLoader.load('./music/Loyalty_Freak_Music_-_01_-_Monster_Parade.mp3',(buffer) => {
             intro_music.setBuffer(buffer)
             intro_music.setVolume(0.75)
-            // if(DEBUG.MUSIC) intro_music.play()
         })
         level_music = new THREE.Audio(audioListener)
         audioLoader.load("./music/Loyalty_Freak_Music_-_13_-_Ghost_Surf_Rock.mp3",(buffer) => {
@@ -739,6 +746,20 @@ https://freesound.org/people/HF2010/sounds/110497/
         on($("#how-back"),'click',() => $("#how-text").style.display = 'none')
         on($("#credits"),'click',() =>  $("#credits-text").style.display = 'block')
         on($("#credits-back"),'click',() => $("#credits-text").style.display = 'none')
+
+        const play = $("#click-to-play")
+        play.innerText = "Play Now"
+        on(play,'click',()=>{
+            $("#overlay").style.visibility = 'hidden'
+            console.log("starting the music")
+            if(DEBUG.MUSIC) intro_music.play()
+        })
+
+        on(vrmanager,VR_DETECTED,()=>{
+            on(play,'click',()=> {
+                vrmanager.enterVR()
+            })
+        })
     }
 
     //called on setup. Customize this
@@ -763,7 +784,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
-            enableLaser:false,
+            enableLaser:true,
 
         })
 
@@ -1273,7 +1294,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         renderer.gammaOutput = true
         renderer.vr.enabled = true;
         container.appendChild( renderer.domElement );
-        document.body.appendChild( WEBVR.createButton( renderer ) );
+        vrmanager = new VRManager(renderer)
 
         initContent(scene,camera,renderer)
 
@@ -1288,15 +1309,9 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
         THREE.DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
-            // console.log("really setting it up now")
+            console.log("really setting it up now")
             $('#loading-indicator').style.display = 'none'
-            $('#click-to-play').style.display = 'block'
-            const overlay = $('#overlay')
-            $("#click-to-play").addEventListener('click',()=>{
-                overlay.style.visibility = 'hidden'
-                if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
-                if(DEBUG.MUSIC) intro_music.play()
-            })
+            $('#controls').style.display = 'block'
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
             // console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
