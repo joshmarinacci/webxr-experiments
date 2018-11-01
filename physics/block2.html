@@ -66,9 +66,9 @@
     import VRStats from "../boilerplate/vrstats.js"
 
     const CONSTS = {
-        INITIAL_BALL_VELOCITY: 10,
-        BALL_MASS: 50,
-        BALL_RADIUS:0.1,
+        INITIAL_BALL_VELOCITY: 20,
+        BALL_MASS: 10,
+        BALL_RADIUS:0.4,
     }
     const theme = {
         blocks: {
@@ -80,6 +80,11 @@
         floor: {
             colors: {
                 normal: 0xcccccc,
+            }
+        },
+        wall: {
+            colors: {
+                normal: 0xff0000,
             }
         }
     }
@@ -95,6 +100,12 @@
     let sphere, world, fixedTimeStep, maxSubSteps, lastTime
     let htmlCanvas, shots_left, canvas_texture
     let blocks = []
+    let walls = []
+
+    // Setup our world
+    world = new CANNON.World();
+    world.gravity.set(0, -9.82, 0);
+    const bouncy = new CANNON.Material()
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -114,10 +125,13 @@
 
         scene.fog = new THREE.Fog(0x88ff88,10,20)
         // scene.add(fog)
-
     }
 
     function create_floor(world,scene) {
+        const groundMaterial = new CANNON.Material()
+        const bouncy_ground = new CANNON.ContactMaterial(groundMaterial,bouncy, {friction:1.0, restitution:1.0})
+        world.addContactMaterial(bouncy_ground)
+
         // Create a plane
         var groundBody = new CANNON.Body({
             mass: 0 // mass == 0 makes the body static
@@ -135,6 +149,45 @@
         ground.position.set(0,0,0)
         ground.rotation.x = -90*Math.PI/180
         scene.add(ground)
+
+        const toRad = (deg) => deg*Math.PI/180
+
+
+
+        function makeWall(w,h,d) {
+            const body = new CANNON.Body({
+                mass: 0,
+                material: groundMaterial,
+            })
+            const shape = new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2))
+            // body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(-45))
+            // body.position.set(4,2,-5)
+            body.addShape(shape)
+            world.addBody(body)
+
+            const wall = new THREE.Mesh(
+                new THREE.BoxGeometry(w,h,d),
+                new THREE.MeshLambertMaterial({color: theme.wall.colors.normal})
+            )
+            wall.userData.body = body
+            scene.add(wall)
+
+            return wall
+        }
+
+        const wb1 = makeWall(10,4,1)
+        wb1.userData.body.position.z = -6
+        wb1.userData.body.position.x = 4
+        wb1.userData.body.position.y = 2
+        wb1.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
+        walls.push(wb1)
+
+        const wb2 = makeWall(10,4,1)
+        wb2.userData.body.position.z = -6
+        wb2.userData.body.position.x = -4
+        wb2.userData.body.position.y = 2
+        wb2.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
+        walls.push(wb2)
     }
 
     //TODO: three uses extents, Cannon uses half extents.
@@ -219,7 +272,8 @@
             mass: CONSTS.BALL_MASS,
             shape: new CANNON.Sphere(rad),
             position: new CANNON.Vec3(pos.x, pos.y, pos.z),
-            velocity: new CANNON.Vec3(dir.x,dir.y,dir.z)
+            velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
+            material: bouncy
         })
         world.add(sphereBody)
         ball.userData.body = sphereBody
@@ -259,9 +313,6 @@
 
         })
 
-        // Setup our world
-        world = new CANNON.World();
-        world.gravity.set(0, -9.82, 0);
 
 
         const UP = new THREE.Quaternion()
@@ -352,6 +403,7 @@
             world.step(fixedTimeStep, dt, maxSubSteps)
             blocks.forEach((c) => sync_graphics(c))
             if(sphere) sync_graphics(sphere)
+            walls.forEach(w => sync_graphics(w))
         }
         lastTime = time
     }
