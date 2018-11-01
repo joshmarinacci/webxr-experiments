@@ -194,11 +194,12 @@
         return cube
     }
 
-    let currentLevel = 0
+    let currentLevel = 4
 
     const levels = [
         {
             title:"easy pieces",
+            gravity: new CANNON.Vec3(0,-9.8,0),
             make: function(world,scene) {
                 const cubes = []
                 for(let x=-1; x<=2.2; x+=1.1) {
@@ -215,6 +216,7 @@
         },
         {
             title:"long tunnel",
+            gravity: new CANNON.Vec3(0,-9.8,0),
             make: function(world,scene) {
                 const cubes = []
                 for(let x=-1.5; x<=2; x+=1.5) {
@@ -243,17 +245,48 @@
             }
         },
         {
-            title:"hard",
+            title:"low gravity",
+            gravity: new CANNON.Vec3(0,-2.0,0),
             make: function(world,scene) {
                 const cubes = []
                 for(let x=-2; x<=2; x+=2) {
                     for (let y = 1; y < 3; y+=2) {
-                        cubes.push(make_block(x, y, -11))
+                        cubes.push(make_block(x, y, -5))
                     }
                 }
                 return {cubes,walls:[]}
             }
         },
+        {
+            title:"high gravity",
+            gravity: new CANNON.Vec3(0,-30.0,0),
+            make: function(world,scene) {
+                const cubes = []
+                for(let x=-2; x<=2; x+=2) {
+                    for (let y = 1; y < 3; y+=2) {
+                        cubes.push(make_block(x, y, -5))
+                    }
+                }
+                return {cubes,walls:[]}
+            }
+        },
+        {
+            title: "wall bounce",
+            gravity: new CANNON.Vec3(0,-10,0),
+            make: function(world,scene) {
+                const cubes = []
+                cubes.push(make_block(0,5,-8))
+                const walls = []
+                const wall = make_wall(4,4,1,scene,world)
+                wall.userData.body.position.set(-2,0,-5)
+                walls.push(wall)
+                const wall2 = make_wall(10,4,1,scene,world)
+                wall2.userData.body.position.set(5,0,-5)
+                wall2.userData.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),toRad(90))
+                walls.push(wall2)
+                return {cubes,walls}
+            }
+        }
     ]
 
     function restart_level() {
@@ -405,7 +438,9 @@
     }
 
     function loadLevel(num) {
-        const data = levels[num].make(world,scene)
+        const level = levels[num]
+        world.gravity.copy(level.gravity)
+        const data = level.make(world,scene)
         blocks = data.cubes
         walls = data.walls
         update_text(`level ${levels[num].title}`)
