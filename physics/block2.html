@@ -65,6 +65,11 @@
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
 
+    const CONSTS = {
+        INITIAL_BALL_VELOCITY: 10,
+        BALL_MASS: 50,
+        BALL_RADIUS:0.1,
+    }
     const theme = {
         blocks: {
             colors: {
@@ -200,25 +205,26 @@
         blocks = levels[currentLevel].make(world,scene)
     }
 
-    function fire_ball(world,scene,dir) {
+    function fire_ball(world,scene,pos,dir) {
         dir.normalize()
-        dir.multiplyScalar(10)
-        const rad = 0.6
-        const sphere = new THREE.Mesh(
+        dir.multiplyScalar(CONSTS.INITIAL_BALL_VELOCITY)
+        const rad = CONSTS.BALL_RADIUS
+        const ball = new THREE.Mesh(
             new THREE.SphereGeometry(rad),
             new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
         )
-        scene.add(sphere)
+        ball.position.copy(pos)
+        scene.add(ball)
         const sphereBody = new CANNON.Body({
-            mass: 5,
+            mass: CONSTS.BALL_MASS,
             shape: new CANNON.Sphere(rad),
-            position: new CANNON.Vec3(0, 1.5, 0),
+            position: new CANNON.Vec3(pos.x, pos.y, pos.z),
             velocity: new CANNON.Vec3(dir.x,dir.y,dir.z)
         })
         world.add(sphereBody)
-        sphere.userData.body = sphereBody
+        ball.userData.body = sphereBody
         shots_left--
-        return sphere
+        return ball
     }
 
     function update_text(str) {
@@ -307,7 +313,7 @@
         on(click_sphere,POINTER_CLICK,(e)=> {
             if(waiting) return
             waiting = true
-            sphere = fire_ball(world,scene,e.point.clone())
+            sphere = fire_ball(world,scene,pointer.controller1.position,e.point.clone())
             setTimeout(check_level_complete,3000)
         })
 
