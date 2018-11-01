@@ -14,6 +14,7 @@ export class Pointer {
         this.listeners = {}
         this.opts = opts || {}
         this.opts.enableLaser = (opts.enableLaser !== undefined) ? opts.enableLaser : true
+        this.opts.laserLength = (opts.laserLength !== undefined) ? opts.laserLength : 3
         this.scene = scene
         this.renderer = renderer
         this.canvas = renderer.domElement
@@ -75,7 +76,7 @@ export class Pointer {
         if(this.opts.enableLaser) {
             //create visible lines for the two controllers
             const geometry = new THREE.BufferGeometry()
-            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
+            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -this.opts.laserLength], 3));
             geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
 
             const material = new THREE.LineBasicMaterial({

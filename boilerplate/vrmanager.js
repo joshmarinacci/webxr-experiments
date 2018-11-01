@@ -21,7 +21,7 @@ export default class VRManager {
             console.log("has webxr")
             navigator.xr.requestDevice().then((device) => {
                 device.supportsSession({immersive: true, exclusive: true /* DEPRECATED */})
-                    .then(function () {
+                    .then(() => {
                         this.device = device
                         this.fire(VR_DETECTED,{})
                     })
@@ -31,20 +31,20 @@ export default class VRManager {
         } else if ('getVRDisplays' in navigator) {
             console.log("has webvr")
 
-            window.addEventListener( 'vrdisplayconnect', function ( event ) {
+            window.addEventListener( 'vrdisplayconnect', ( event ) => {
                 this.device = event.display
                 this.fire(VR_CONNECTED)
             }, false );
 
-            window.addEventListener( 'vrdisplaydisconnect', function ( event ) {
+            window.addEventListener( 'vrdisplaydisconnect', ( event )  => {
                 this.fire(VR_DISCONNECTED)
             }, false );
 
-            window.addEventListener( 'vrdisplaypresentchange', function ( event ) {
+            window.addEventListener( 'vrdisplaypresentchange', ( event ) => {
                 this.fire(VR_PRESENTCHANGE)
             }, false );
 
-            window.addEventListener( 'vrdisplayactivate', function ( event ) {
+            window.addEventListener( 'vrdisplayactivate',  ( event ) => {
                 this.device = event.display
                 this.device.requestPresent([{source:this.renderer.domElement}])
                 this.fire(VR_ACTIVATED)
@@ -80,6 +80,7 @@ export default class VRManager {
     fire(type,evt) {
         if(!evt) evt = {}
         evt.type = type
+        if(!this.listeners[type]) this.listeners[type] = []
         this.listeners[type].forEach(cb => cb(evt))
     }
 

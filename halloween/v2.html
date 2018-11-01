@@ -167,7 +167,7 @@ https://freesound.org/people/HF2010/sounds/110497/
 
 <div id="overlay">
     <h1>Monster Zoo</h1>
-    <h2>The monsters have escaped. Capture them
+    <h2>The monsters have escaped. Target and hold them
     with your spectral vacuum!</h2>
     <div id="loading-indicator">
         <label>loading</label>
@@ -301,8 +301,6 @@ https://freesound.org/people/HF2010/sounds/110497/
                 new THREE.MeshLambertMaterial({map:this.canvas_texture})
             )
             this.add(this.mesh)
-            // text.position.set(0,4,-4)
-            // scene.add(text)
             this.font = '36px sans-serif'
             this.color = 'black';
             this.backgroundColor = 'gray'
@@ -314,11 +312,16 @@ https://freesound.org/people/HF2010/sounds/110497/
             ctx.fillRect(0,0,this.htmlCanvas.width, this.htmlCanvas.height)
             ctx.font = this.font
             ctx.fillStyle = this.color
-            const metrics = ctx.measureText(str)
-            ctx.fillText(str,
-                this.htmlCanvas.width/2-metrics.width/2,
-                (36/2+this.htmlCanvas.height/2))
-            this.canvas_texture.needsUpdate = true
+            const lines = str.split("\n")
+            const top = (36*lines.length)/2+this.htmlCanvas.height/2 - lines.length*36/2
+            lines.forEach((line,i) => {
+                const metrics = ctx.measureText(line)
+                ctx.fillText(line,
+                    this.htmlCanvas.width/2-metrics.width/2,
+                    top+i*36
+                )
+                this.canvas_texture.needsUpdate = true
+            })
         }
     }
 
@@ -594,28 +597,28 @@ https://freesound.org/people/HF2010/sounds/110497/
         return LEVELS[currentLevel]
     }
 
-    let splashShowing = false
+    // let splashShowing = false
     function setupStart() {
-        if(!DEBUG.SPLASH) return
+        // if(!DEBUG.SPLASH) return
         //show click to start
         //start round
         // when round ends you win or lose depending on how many you got.
 
-        const splashScreen = new SimpleText(6,2)
-        splashScreen.backgroundColor = CONSTS.COLORS.blue
-        splashScreen.color = CONSTS.COLORS.orange
-        splashScreen.setText("Click to Start Round")
-        splashScreen.position.set(0,2,-4)
-        scene.add(splashScreen)
+        // const splashScreen = new SimpleText(6,2)
+        // splashScreen.backgroundColor = CONSTS.COLORS.blue
+        // splashScreen.color = CONSTS.COLORS.orange
+        // splashScreen.setText("Click to start round\nTarget and hold monsters")
+        // splashScreen.position.set(0,2,-4)
+        // scene.add(splashScreen)
 
-        splashShowing = true
-        pointer.on(POINTER_CLICK,()=>{
-            if(!splashShowing) return
-            splashShowing = false
-            splashScreen.visible = false
-            if(intro_music.isPlaying) intro_music.stop()
-            restartGame()
-        })
+        // splashShowing = false
+        // pointer.on(POINTER_CLICK,()=>{
+            // if(!splashShowing) return
+            // splashShowing = false
+            // splashScreen.visible = false
+            // if(intro_music.isPlaying) intro_music.stop()
+            // restartGame()
+        // })
 
         SCORE.CAPTURED = 0
         SCORE.TIME_LEFT = 99
@@ -634,7 +637,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         hose.position.y = -0.25
         const nozzle = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1,0.14,0.1),
-            new THREE.MeshLambertMaterial({color:0xccff00})
+            new THREE.MeshLambertMaterial({color:CONSTS.COLORS.orange})
         )
         nozzle.position.y = 0.5
         const group = new THREE.Group()
@@ -749,17 +752,15 @@ https://freesound.org/people/HF2010/sounds/110497/
 
         const play = $("#click-to-play")
         play.innerText = "Play Now"
+        let detected = false
         on(play,'click',()=>{
             $("#overlay").style.visibility = 'hidden'
-            console.log("starting the music")
-            if(DEBUG.MUSIC) intro_music.play()
+            if(!level_music.isPlaying) level_music.play()
+            if(detected) vrmanager.enterVR()
+            restartGame()
         })
 
-        on(vrmanager,VR_DETECTED,()=>{
-            on(play,'click',()=> {
-                vrmanager.enterVR()
-            })
-        })
+        on(vrmanager,VR_DETECTED,()=> detected = true)
     }
 
     //called on setup. Customize this
@@ -785,6 +786,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
             enableLaser:true,
+            laserLength: 20,
 
         })
 
