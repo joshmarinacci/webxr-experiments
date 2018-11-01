@@ -120,6 +120,9 @@
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
+        stats = new VRStats(renderer)
+        camera.add(stats)
+        scene.add(camera)
         //set the background color of the scene
         scene.background = new THREE.Color( 0x444444 );
 
@@ -131,6 +134,7 @@
         scene.add( light2 );
         scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
+        scene.add
 
         $("#overlay").style.display = 'none'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
