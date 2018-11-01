@@ -107,7 +107,7 @@
     world = new CANNON.World();
     world.gravity.set(0, -9.82, 0);
     const bouncy = new CANNON.Material()
-    let groundMaterial
+    let groundMaterial, bouncy_ground
 
     //called on setup. Customize this
     function setup_background_and_lighting(scene) {
@@ -131,7 +131,7 @@
 
     function initPhysics() {
         groundMaterial = new CANNON.Material()
-        const bouncy_ground = new CANNON.ContactMaterial(groundMaterial, bouncy, {friction: 1.0, restitution: 1.0})
+        bouncy_ground = new CANNON.ContactMaterial(groundMaterial, bouncy, {friction: 1.0, restitution: 0.0})
         world.addContactMaterial(bouncy_ground)
     }
 
@@ -272,6 +272,7 @@
         },
         {
             title: "wall bounce",
+            restitution:1.0,
             gravity: new CANNON.Vec3(0,-10,0),
             make: function(world,scene) {
                 const cubes = []
@@ -440,6 +441,7 @@
     function loadLevel(num) {
         const level = levels[num]
         world.gravity.copy(level.gravity)
+        if(level.restitution) bouncy_ground.restitution = level.restitution
         const data = level.make(world,scene)
         blocks = data.cubes
         walls = data.walls
