@@ -247,6 +247,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             black: '#000000',
         },
         TERRAIN_SIZE: 10,
+        SPEED_SCALE:50,
     }
     const SCORE = {
         TIME_LEFT: 0,
@@ -804,10 +805,10 @@ https://freesound.org/people/HF2010/sounds/110497/
         setupHTML()
     }
 
-    function moveTerrain(time) {
+    function moveTerrain(time,delta) {
         const level = getCurrentLevel()
         worlds.forEach(w => {
-            w.position.z += level.SPEED
+            w.position.z += delta*level.SPEED*CONSTS.SPEED_SCALE
             if(w.position.z > CONSTS.TERRAIN_SIZE*2) {
                 w.position.z = -CONSTS.TERRAIN_SIZE*4
             }
@@ -1149,19 +1150,19 @@ https://freesound.org/people/HF2010/sounds/110497/
         })
     }
 
-    function updateMonsters(time) {
+    function updateMonsters(time,delta) {
         if(!running) return
         const diff = (time - lastMonster)
         const level = getCurrentLevel()
         if(diff > level.MONSTER_FREQUENCY) {
             lastMonster = time
             const monster = new Monster(level.MONSTER)
-            monster.position.set(rand(-3, 3), 0, -25)
+            monster.position.set(rand(-3, 3), 0, -20)
             monsters.add(monster)
         }
         const remove = []
         monsters.children.forEach(m => {
-            m.position.z += level.SPEED
+            m.position.z += delta*level.SPEED*CONSTS.SPEED_SCALE
             if(m.position.z > 20) remove.push(m)
             if(m.userData.shouldRemove) {
                 remove.push(m)
@@ -1265,6 +1266,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         }
     }
 
+    const diff = new THREE.Clock()
     function render(time) {
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
@@ -1276,8 +1278,9 @@ https://freesound.org/people/HF2010/sounds/110497/
         //     particles.position.copy(group.position)
         //     particles.update(time)
         // }
-        moveTerrain(time/1000)
-        updateMonsters(time/1000)
+        const delta = diff.getDelta()
+        moveTerrain(time/1000,delta)
+        updateMonsters(time/1000,delta)
         updateCapture(time/1000)
         updateTime(time)
         t2.update()
