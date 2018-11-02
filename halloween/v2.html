@@ -226,7 +226,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     const DEBUG = {
         FOG:true,
         STATS:true,
-        MUSIC:true,
+        MUSIC:false,
         TTF_FONT: false,
         TERRAIN:true,
         PARTICLES:false,
@@ -235,7 +235,8 @@ https://freesound.org/people/HF2010/sounds/110497/
         NUMBER_UPDATES:true,
         MONSTER: {
             CLIPS:true
-        }
+        },
+        ANIMS:true
     }
 
     const CONSTS = {
@@ -549,7 +550,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         timeLabel.rotation.x = toRad(30)
         scene.add(timeLabel)
 
-        t2.prop({
+        if(DEBUG.ANIMS) t2.prop({
             target:timeLabel.rotation,
             property:'z',
             from:toRad(-10),
@@ -574,7 +575,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         monstersLabel.rotation.x = toRad(30)
         scene.add(monstersLabel)
 
-        t2.prop({
+        if(DEBUG.ANIMS) t2.prop({
             target:monstersLabel.rotation,
             property:'z',
             from:toRad(10),
@@ -986,25 +987,17 @@ https://freesound.org/people/HF2010/sounds/110497/
             monster.scale.set(s,s,s)
             monster.userData.clickable = false
             this.add(monster)
-            t2.parallel()
-                .and(t2.clip({
-                    target:master,
-                    // name:'Slime_Idle',
-                    name:'Skeleton_Attack',
-                    speed:1,
-                    loop:-1,
-                    autoReverse:true
-                }))
-                /*            .and(t2.prop({
-                                target:monster.rotation,
-                                property:'y',
-                                from:toRad(30 - 90),
-                                to:toRad(-30 - 90),
-                                loop:-1,
-                                duration:1.5,
-                                autoReverse: true
-                            }))*/
-                .start()
+            if(DEBUG.MONSTER.CLIPS) {
+                this.userData.animation = t2.parallel()
+                    .and(t2.clip({
+                        target: master,
+                        name: 'Skeleton_Attack',
+                        speed: 1,
+                        loop: -1,
+                        autoReverse: true
+                    }))
+                    .start()
+            }
         }
         makeBat(master) {
             this.grabTarget.position.y = 0.75
@@ -1015,24 +1008,17 @@ https://freesound.org/people/HF2010/sounds/110497/
             monster.scale.set(s,s,s)
             monster.userData.clickable = false
             this.add(monster)
-            this.userData.animation = t2.parallel()
-                .and(t2.clip({
-                    target:master,
-                    name:'Bat_Flying',
-                    speed:1,
-                    loop:-1,
-                    // autoReverse:true
-                }))
-                /*            .and(t2.prop({
-                                target:monster.rotation,
-                                property:'y',
-                                from:toRad(30 - 90),
-                                to:toRad(-30 - 90),
-                                loop:-1,
-                                duration:1.5,
-                                autoReverse: true
-                            }))*/
-                .start()
+            if(DEBUG.MONSTER.CLIPS) {
+                this.userData.animation = t2.parallel()
+                    .and(t2.clip({
+                        target: master,
+                        name: 'Bat_Flying',
+                        speed: 1,
+                        loop: -1,
+                        // autoReverse:true
+                    }))
+                    .start()
+            }
         }
     }
 
@@ -1091,36 +1077,41 @@ https://freesound.org/people/HF2010/sounds/110497/
             monstersLabel.setText(`${SCORE.CAPTURED}`)
             const monster = captureTarget
             const pos = monster.position.clone()
-            t2.sequence()
-                .then(t2.prop({
-                    target:monster.position,
-                    property:'y',
-                    from:pos.y,
-                    to:  pos.y+1.0,
-                    duration: 0.3,
-                }))
-                .then(t2.prop({
-                    target:monster.position,
-                    property:'x',
-                    from:pos.x-0.2,
-                    to:  pos.x+0.2,
-                    duration: 0.05,
-                    autoReverse:true,
-                    loop:10
-                }))
-                .then(t2.parallel()
-                    .and(makeScaleAnim(monster,monster.scale.x,0.03))
-                    .and(makePositionToAnim(monster,pointer.controller1.position.clone()))
-                    .and(()=>{
-                        if(capture_sound.isPlaying) capture_sound.stop()
-                        capture_sound.play()
+            if(DEBUG.ANIMS) {
+                t2.sequence()
+                    .then(t2.prop({
+                        target: monster.position,
+                        property: 'y',
+                        from: pos.y,
+                        to: pos.y + 1.0,
+                        duration: 0.3,
+                    }))
+                    .then(t2.prop({
+                        target: monster.position,
+                        property: 'x',
+                        from: pos.x - 0.2,
+                        to: pos.x + 0.2,
+                        duration: 0.05,
+                        autoReverse: true,
+                        loop: 10
+                    }))
+                    .then(t2.parallel()
+                        .and(makeScaleAnim(monster, monster.scale.x, 0.03))
+                        .and(makePositionToAnim(monster, pointer.controller1.position.clone()))
+                        .and(() => {
+                            if (capture_sound.isPlaying) capture_sound.stop()
+                            capture_sound.play()
+                        })
+                    )
+                    .then(() => {
+                        captureEffect.visible = false
+                        monster.userData.shouldRemove = true
                     })
-                )
-                .then(()=>{
-                    captureEffect.visible = false
-                    monster.userData.shouldRemove = true
-                })
-                .start()
+                    .start()
+            } else {
+                captureEffect.visible = false
+                monster.userData.shouldRemove = true
+            }
         }
     }
     function loadGLTF(url) {
