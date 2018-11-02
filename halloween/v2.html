@@ -225,11 +225,11 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     const DEBUG = {
         FOG:true,
+        STATS:true,
         MUSIC:true,
         TTF_FONT: false,
         TERRAIN:true,
         PARTICLES:false,
-        SPLASH:true,
         GROUND:true,
         CAR:true,
         NUMBER_UPDATES:true,
@@ -598,29 +598,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         return LEVELS[currentLevel]
     }
 
-    // let splashShowing = false
     function setupStart() {
-        // if(!DEBUG.SPLASH) return
-        //show click to start
-        //start round
-        // when round ends you win or lose depending on how many you got.
-
-        // const splashScreen = new SimpleText(6,2)
-        // splashScreen.backgroundColor = CONSTS.COLORS.blue
-        // splashScreen.color = CONSTS.COLORS.orange
-        // splashScreen.setText("Click to start round\nTarget and hold monsters")
-        // splashScreen.position.set(0,2,-4)
-        // scene.add(splashScreen)
-
-        // splashShowing = false
-        // pointer.on(POINTER_CLICK,()=>{
-            // if(!splashShowing) return
-            // splashShowing = false
-            // splashScreen.visible = false
-            // if(intro_music.isPlaying) intro_music.stop()
-            // restartGame()
-        // })
-
         SCORE.CAPTURED = 0
         SCORE.TIME_LEFT = 99
         SCORE.START_TIME = Date.now()
@@ -701,6 +679,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
 
     function setupMusic() {
+        if(!DEBUG.MUSIC) return
         const audioListener = new THREE.AudioListener()
         camera.add(audioListener)
 
@@ -745,6 +724,15 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     }
 
+    let last_music = null
+    function playMusic(music) {
+        if(!DEBUG.MUSIC) return
+        if(last_music && last_music !== music) {
+            if(last_music.isPlaying) last_music.stop()
+        }
+        last_music = music
+        if(!last_music.isPlaying) last_music.play()
+    }
     function setupHTML() {
         on($("#how"),'click',() =>  $("#how-text").style.display = 'block')
         on($("#how-back"),'click',() => $("#how-text").style.display = 'none')
@@ -756,7 +744,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         let detected = false
         on(play,'click',()=>{
             $("#overlay").style.visibility = 'hidden'
-            if(!level_music.isPlaying) level_music.play()
+            playMusic(level_music)
             if(detected) vrmanager.enterVR()
             restartGame()
         })
@@ -772,8 +760,10 @@ https://freesound.org/people/HF2010/sounds/110497/
         scene.add( light );
         scene.add(new THREE.AmbientLight(0xffffff,0.2))
         stats = new VRStats(renderer)
-        // camera.add(stats)
-        scene.add(camera)
+        if(DEBUG.STATS) {
+            camera.add(stats)
+            scene.add(camera)
+        }
 
 
         //class which handles mouse and VR controller
@@ -955,14 +945,6 @@ https://freesound.org/people/HF2010/sounds/110497/
             if(type === MONSTERS.SLIME) this.makeSlime(slime_model)
             if(type === MONSTERS.SKELETON)  this.makeSkeleton(skeleton_model)
             if(type === MONSTERS.BAT) this.makeBat(bat_model)
-        }
-        loadMonster(url) {
-            return new Promise((res,rej)=>{
-                const loader = new THREE.GLTFLoader()
-                loader.load(url,(m)=>{
-                    res(m)
-                })
-            })
         }
         makeSlime(master) {
             this.grabTarget.position.y = 0.4
@@ -1182,7 +1164,7 @@ https://freesound.org/people/HF2010/sounds/110497/
         startLevel()
     }
     function startLevel() {
-        level_music.play()
+        playMusic(level_music)
         running = true
         SCORE.START_TIME = Date.now()
         SCORE.CAPTURED = 0
@@ -1213,14 +1195,12 @@ https://freesound.org/people/HF2010/sounds/110497/
     }
     function showLoseScreen() {
         running = false
-        level_music.stop()
-        lose_music.play()
+        playMusic(lose_music)
         roundLabel.setText("game over. click to play again")
         roundLabel.visible = true
         const handler = () => {
             pointer.off(POINTER_CLICK,handler)
             roundLabel.visible = false
-            lose_music.stop()
             restartGame()
         }
         pointer.on(POINTER_CLICK,handler)
@@ -1228,14 +1208,12 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     function showWinScreen() {
         running = false
-        level_music.stop()
-        win_music.play()
+        playMusic(win_music)
         roundLabel.setText("you win. click to play again")
         roundLabel.visible = true
         const handler = () => {
             pointer.off(POINTER_CLICK,handler)
             roundLabel.visible = false
-            win_music.stop()
             restartGame()
         }
         pointer.on(POINTER_CLICK,handler)
