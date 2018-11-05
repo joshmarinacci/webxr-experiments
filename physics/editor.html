@@ -78,7 +78,11 @@
         constructor() {
             this.blocks = []
         }
-        addSelection(obj) {
+        clear() {
+            this.blocks.forEach(obj=>obj.unselectSelf())
+            this.blocks = []
+        }
+        add(obj) {
             this.blocks.push(obj)
             obj.selectSelf()
         }
@@ -134,7 +138,8 @@
             this.obj.userData.clickable = true
 
             on(this.obj,'click',()=>{
-                this.selectSelf()
+                selection.clear()
+                selection.add(this)
             })
         }
         positionSet(x,y,z) {
@@ -147,6 +152,9 @@
 
         selectSelf() {
             this.obj.material.color.set(0xff0000)
+        }
+        unselectSelf() {
+            this.obj.material.color.set(0x00ff00)
         }
     }
 
@@ -167,7 +175,7 @@
             scene.add(b.getObject3D())
         })
 
-        selection.addSelection(block1)
+        selection.add(block1)
     }
 
     class Label2D {
@@ -274,6 +282,13 @@
         makePropControls('roty',75)
 
 
+        comps.push(new Button2D()
+            .set('text','dump')
+            .set('x',5)
+            .set('y',400)
+            .on('click',()=>{
+                console.log('dumping the structure',blocks)
+            }))
 
         function redraw() {
             const ctx = canvas.getContext('2d')
@@ -293,6 +308,8 @@
                 }
             }
         })
+
+
     }
 
     //called on setup. Customize this
