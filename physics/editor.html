@@ -96,6 +96,9 @@
                     b.position.z -= 0.1
                     b.obj.position.z = b.position.z
                 }
+                if(name === 'roty') {
+                    b.obj.rotation.y -= 0.1
+                }
             })
         }
         incrementProperty(name) {
@@ -111,6 +114,9 @@
                 if(name === 'z') {
                     b.position.z += 0.1
                     b.obj.position.z = b.position.z
+                }
+                if(name === 'roty') {
+                    b.obj.rotation.y += 0.1
                 }
             })
         }
@@ -247,39 +253,25 @@
         scene.add(panel)
 
         const comps = []
-        const xlabel = new Label2D()
-        xlabel.x = 5
-        xlabel.text = 'X'
-        comps.push(xlabel)
-
-        const xless = new Button2D()
-        xless.x = 30
-        xless.text = "-"
-        on(xless,'click',()=>selection.decrementProperty('x'))
-        comps.push(xless)
-
-        comps.push(new Button2D()
-            .set('x',60)
-            .set('text','+')
-            .on('click',()=>selection.incrementProperty('x'))
-        )
 
         function makePropControls(name,y) {
             comps.push(new Label2D()
                 .set('x',5).set('y',y).set('text',name.toUpperCase())
             )
             comps.push(new Button2D()
-                .set('x',30).set('y',y).set('text','-')
+                .set('x',40).set('y',y).set('text','-')
                 .on('click',()=>selection.decrementProperty(name))
             )
             comps.push(new Button2D()
-                .set('x',60).set('y',y).set('text','+')
+                .set('x',70).set('y',y).set('text','+')
                 .on('click',()=>selection.incrementProperty(name))
             )
         }
 
+        makePropControls('x',0)
         makePropControls('y',25)
         makePropControls('z',50)
+        makePropControls('roty',75)
 
 
 
