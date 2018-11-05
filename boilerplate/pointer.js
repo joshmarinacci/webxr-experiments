@@ -203,7 +203,7 @@ export class Pointer {
             const it = intersects[0]
             const obj = it.object
             if (!obj) return
-            this.fire(obj, POINTER_MOVE, {type: POINTER_MOVE, point: it.point})
+            this.fire(obj, POINTER_MOVE, {type: POINTER_MOVE, point: it.point, intersection:it})
             if (obj === this.hoverTarget) {
                 //still inside
             } else {
@@ -226,7 +226,7 @@ export class Pointer {
                 .filter(it => this.intersectionFilter(it.object))
         if(intersects.length > 0) {
             const it = intersects[0]
-            this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point})
+            this.fire(it.object, POINTER_CLICK, {type: POINTER_CLICK, point: it.point, intersection:it})
         }
 
         this.fireSelf(POINTER_CLICK, {})
@@ -248,7 +248,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point})
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point, intersection:it})
         })
     }
     mouseUp(e) {
@@ -260,7 +260,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE, point: it.point})
+            this.fire(it.object, POINTER_RELEASE, {type: POINTER_RELEASE, point: it.point, intersection:it})
         })
     }
 
@@ -269,7 +269,7 @@ export class Pointer {
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
             .filter(it => this.intersectionFilter(it.object))
         intersects.forEach((it) => {
-            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point})
+            this.fire(it.object, POINTER_PRESS, {type: POINTER_PRESS, point: it.point, intersection:it})
         })
     }
 

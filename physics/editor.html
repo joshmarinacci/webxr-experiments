@@ -59,7 +59,7 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
 
     //JQuery-like selector
@@ -205,12 +205,25 @@
             this.w = this.text.length*this.fsize
             this.h = 20
             this.listeners = {}
+            this.bg = 'white'
+
+            this.on(POINTER_ENTER,()=>{
+                this.bg = 'red'
+                this.fire('changed',{type:'changed',target:this})
+            })
+            this.on(POINTER_EXIT,()=>{
+                this.bg = 'white'
+                this.fire('changed',{type:'changed',target:this})
+            })
         }
         draw(ctx) {
+            this.w = this.text.length * this.fsize
+
+            ctx.fillStyle = this.bg
+            ctx.fillRect(this.x,this.y,this.w,this.h)
             ctx.fillStyle = 'black'
             ctx.fillText(this.text,this.x+3,this.y+10)
             ctx.strokeStyle = 'black'
-            this.w = this.text.length * this.fsize
             ctx.strokeRect(this.x,this.y,this.w,this.h)
         }
         addEventListener(type,cb) {
@@ -225,6 +238,7 @@
             return true
         }
         fire(type) {
+            if(!this.listeners[type]) this.listeners[type] = []
             this.listeners[type].forEach(cb => cb())
         }
         set(key,value) {
@@ -285,6 +299,15 @@
 
         const comps = []
 
+        function redraw() {
+            const ctx = canvas.getContext('2d')
+            ctx.fillStyle = 'white'
+            ctx.fillRect(0,0,canvas.width,canvas.height)
+            comps.forEach(comp => comp.draw(ctx))
+            canvasTexture.needsUpdate = true
+        }
+
+
         function makePropControls(name,y) {
             comps.push(new Label2D()
                 .set('x',5).set('y',y).set('text',name.toUpperCase())
@@ -292,11 +315,15 @@
             comps.push(new Button2D()
                 .set('x',40).set('y',y).set('text','-')
                 .on('click',()=>selection.decrementProperty(name))
+                .on('changed',redraw)
             )
+
             comps.push(new Button2D()
                 .set('x',70).set('y',y).set('text','+')
                 .on('click',()=>selection.incrementProperty(name))
+                .on('changed',redraw)
             )
+
         }
 
         makePropControls('x',0)
@@ -309,28 +336,46 @@
             .set('text','dump')
             .set('x',5)
             .set('y',400)
-            .on('click',dumpStructure))
-
-        function redraw() {
-            const ctx = canvas.getContext('2d')
-            ctx.fillStyle = 'white'
-            ctx.fillRect(0,0,canvas.width,canvas.height)
-            comps.forEach(comp => comp.draw(ctx))
-        }
+            .on('click',dumpStructure)
+            .on('changed',redraw)
+        )
 
         redraw()
 
-        on(panel,'click',(e)=>{
-            const diff = e.point.sub(panel.position)
-            const fpt = new THREE.Vector2((diff.x+0.5)*256,-diff.y*256 + 256)
+        let inside = null
+        on(panel,POINTER_MOVE,(e)=>{
+            const uv = e.intersection.uv
+            const fpt = new THREE.Vector2(uv.x*256, 512-uv.y*512)
+            if(inside && !inside.contains(fpt)) {
+                console.log("left the old one")
+                inside.fire(POINTER_EXIT)
+                inside = null
+            }
             for(let i=0; i<comps.length; i++) {
-                if(comps[i].contains(fpt)) {
-                    comps[i].fire('click')
+                const comp = comps[i]
+                if(comp.contains(fpt)) {
+                    if(inside !== comp){
+                        if(inside) inside.fire(POINTER_EXIT)
+                        inside = null
+                    }
+                    comp.fire(POINTER_ENTER)
+                    inside = comp
+                }
+            }
+        })
+        on(panel,POINTER_CLICK,(e)=>{
+            const uv = e.intersection.uv
+            const fpt = new THREE.Vector2(uv.x*256, 512-uv.y*512)
+            for(let i=0; i<comps.length; i++) {
+                const comp = comps[i]
+                if(comp.contains(fpt)) {
+                    comp.fire(POINTER_CLICK)
                 }
             }
         })
 
 
+        panel.lookAt(camera.position)
     }
 
     //called on setup. Customize this
@@ -375,6 +420,8 @@
         initFloor(scene)
 
         $("#overlay").style.visibility = 'hidden'
+        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+
     }
 
     function initFloor(scene) {
