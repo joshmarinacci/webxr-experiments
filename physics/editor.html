@@ -78,7 +78,45 @@
         constructor() {
             this.blocks = []
         }
+        addSelection(obj) {
+            this.blocks.push(obj)
+            obj.selectSelf()
+        }
+        decrementProperty(name) {
+            this.blocks.forEach(b => {
+                if(name === 'x') {
+                    b.position.x -= 0.1
+                    b.obj.position.x = b.position.x
+                }
+                if(name === 'y') {
+                    b.position.y -= 0.1
+                    b.obj.position.y = b.position.y
+                }
+                if(name === 'z') {
+                    b.position.z -= 0.1
+                    b.obj.position.z = b.position.z
+                }
+            })
+        }
+        incrementProperty(name) {
+            this.blocks.forEach(b => {
+                if(name === 'x') {
+                    b.position.x += 0.1
+                    b.obj.position.x = b.position.x
+                }
+                if(name === 'y') {
+                    b.position.y += 0.1
+                    b.obj.position.y = b.position.y
+                }
+                if(name === 'z') {
+                    b.position.z += 0.1
+                    b.obj.position.z = b.position.z
+                }
+            })
+        }
     }
+
+    const selection = new BlockSelection()
 
     class Block {
         constructor() {
@@ -122,7 +160,71 @@
         blocks.forEach(b => {
             scene.add(b.getObject3D())
         })
+
+        selection.addSelection(block1)
     }
+
+    class Label2D {
+        constructor() {
+            this.text = 'foo'
+            this.x = 0
+            this.y = 0
+        }
+        draw(ctx) {
+            ctx.fillStyle = 'black'
+            ctx.fillText(this.text,this.x,this.y+10)
+        }
+        contains() {
+            return false
+        }
+        set(key,value) {
+            this[key] = value
+            return this
+        }
+    }
+    class Button2D {
+        constructor() {
+            this.text = 'foo'
+            this.x = 0
+            this.y = 0
+            this.fsize = 20
+            this.w = this.text.length*this.fsize
+            this.h = 20
+            this.listeners = {}
+        }
+        draw(ctx) {
+            ctx.fillStyle = 'black'
+            ctx.fillText(this.text,this.x+3,this.y+10)
+            ctx.strokeStyle = 'black'
+            this.w = this.text.length * this.fsize
+            ctx.strokeRect(this.x,this.y,this.w,this.h)
+        }
+        addEventListener(type,cb) {
+            if(!this.listeners[type]) this.listeners[type] = []
+            this.listeners[type].push(cb)
+        }
+        contains(pt) {
+            if(pt.x < this.x) return false
+            if(pt.x > this.x + this.w) return false
+            if(pt.y < this.y) return false
+            if(pt.y > this.y + this.h) return false
+            return true
+        }
+        fire(type) {
+            this.listeners[type].forEach(cb => cb())
+        }
+        set(key,value) {
+            this[key] = value
+            return this
+        }
+        on(type,cb) {
+            this.addEventListener(type,cb)
+            return this
+        }
+    }
+
+
+
 
     function initPanel(scene) {
         const canvas = document.createElement('canvas')
@@ -136,11 +238,69 @@
 
         const panel = new THREE.Mesh(
             new THREE.PlaneGeometry(1,2),
-            new THREE.MeshLambertMaterial({color:'white',map:canvasTexture})
+            new THREE.MeshBasicMaterial({color:'white',map:canvasTexture})
+        )
+        panel.userData.clickable = true
+
+        panel.position.set(-1.5,1.5,-2)
+        panel.rotation.y = 0.0
+        scene.add(panel)
+
+        const comps = []
+        const xlabel = new Label2D()
+        xlabel.x = 5
+        xlabel.text = 'X'
+        comps.push(xlabel)
+
+        const xless = new Button2D()
+        xless.x = 30
+        xless.text = "-"
+        on(xless,'click',()=>selection.decrementProperty('x'))
+        comps.push(xless)
+
+        comps.push(new Button2D()
+            .set('x',60)
+            .set('text','+')
+            .on('click',()=>selection.incrementProperty('x'))
         )
 
-        panel.position.set(2,2,-3)
-        scene.add(panel)
+        function makePropControls(name,y) {
+            comps.push(new Label2D()
+                .set('x',5).set('y',y).set('text',name.toUpperCase())
+            )
+            comps.push(new Button2D()
+                .set('x',30).set('y',y).set('text','-')
+                .on('click',()=>selection.decrementProperty(name))
+            )
+            comps.push(new Button2D()
+                .set('x',60).set('y',y).set('text','+')
+                .on('click',()=>selection.incrementProperty(name))
+            )
+        }
+
+        makePropControls('y',25)
+        makePropControls('z',50)
+
+
+
+        function redraw() {
+            const ctx = canvas.getContext('2d')
+            ctx.fillStyle = 'white'
+            ctx.fillRect(0,0,canvas.width,canvas.height)
+            comps.forEach(comp => comp.draw(ctx))
+        }
+
+        redraw()
+
+        on(panel,'click',(e)=>{
+            const diff = e.point.sub(panel.position)
+            const fpt = new THREE.Vector2((diff.x+0.5)*256,-diff.y*256 + 256)
+            for(let i=0; i<comps.length; i++) {
+                if(comps[i].contains(fpt)) {
+                    comps[i].fire('click')
+                }
+            }
+        })
     }
 
     //called on setup. Customize this
