@@ -238,6 +238,29 @@
     }
 
 
+    function dumpStructure() {
+        console.log("blocks are")
+
+        const level = {}
+        level.children = blocks.map(b => {
+            const bb = {
+                type:'block',
+                position: {
+                    x:b.position.x,
+                    y:b.position.y,
+                    z:b.position.z
+                },
+                size: {
+                    width:1,
+                    height:1,
+                    depth:1,
+                }
+            }
+            return bb
+        })
+        console.log(JSON.stringify(level,null,'  '))
+    }
+
 
 
     function initPanel(scene) {
@@ -286,9 +309,7 @@
             .set('text','dump')
             .set('x',5)
             .set('y',400)
-            .on('click',()=>{
-                console.log('dumping the structure',blocks)
-            }))
+            .on('click',dumpStructure))
 
         function redraw() {
             const ctx = canvas.getContext('2d')
