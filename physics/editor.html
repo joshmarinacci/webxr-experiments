@@ -11,6 +11,7 @@
     <script src="../boilerplate/webvr.js"></script>
     <!-- stats (fps, polygons, fps) -->
     <script src="../boilerplate/vrstats.js" type="module"></script>
+    <script src="./node_modules/cannon/build/cannon.js"></script>
 
     <style type="text/css">
         html, body {
@@ -75,6 +76,7 @@
 
     let cube
     let blocks = []
+    let click_sphere
 
 
     class BlockSelection {
@@ -169,6 +171,13 @@
                 selection.add(this)
             })
             this.rebuildGeometry()
+
+            this.body = new CANNON.Body({
+                mass: 1,//kg
+                position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
+                shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
+            })
+            world.addBody(this.body)
         }
         getWidth() {
             return this.width
@@ -194,6 +203,9 @@
         positionSet(x,y,z) {
             this.position.set(x,y,z)
             this.obj.position.set(x,y,z)
+            this.body.position.x = x
+            this.body.position.y = y
+            this.body.position.z = z
         }
         getObject3D() {
             return this.obj
@@ -213,6 +225,13 @@
         setPosition(v3) {
             this.position.copy(v3)
             this.obj.position.copy(v3)
+            this.body.position.x = this.position.x
+            this.body.position.y = this.position.y
+            this.body.position.z = this.position.z
+        }
+        sync() {
+            this.obj.position.copy(this.body.position)
+            this.obj.quaternion.copy(this.body.quaternion)
         }
         makeClone() {
             const b = new Block()
@@ -251,17 +270,76 @@
         selection.clear()
         newBlocks.forEach(b => selection.add(b))
     }
+
+
+    let world = new CANNON.World();
+    let lastTime
+    let fixedTimeStep = 1.0 / 60.0; // seconds
+    let maxSubSteps = 3;
+    world.gravity.set(0, -9.82, 0);
+
+    let playing = false
+    let play_game_button = null
+    function togglePlayGame() {
+        if(playing) {
+            disableGame()
+        } else {
+            enableGame()
+        }
+    }
+
+    let last_block_positions = []
+    let last_block_quaternions = []
+    function enableGame() {
+        click_sphere.visible = true
+        play_game_button.set('text','stop')
+        last_block_positions = blocks.map(b => b.position.clone())
+        last_block_quaternions = blocks.map(b => b.obj.quaternion.clone())
+        playing = true
+    }
+    function disableGame() {
+        play_game_button.set('text','play')
+        //reset the blocks
+        blocks.forEach((b,i) => {
+            b.setPosition(last_block_positions[i])
+            b.obj.quaternion.copy(last_block_quaternions[i])
+            b.body.quaternion.copy(last_block_quaternions[i])
+        })
+        playing = false
+        //nuke the ball
+        click_sphere.visible = false
+
+        if(ball) {
+            scene.remove(ball)
+            world.remove(ball.userData.body)
+        }
+    }
+
+    function update_physics(time) {
+        if(world && lastTime) {
+            var dt = (time - lastTime)/1000
+            world.step(fixedTimeStep, dt, maxSubSteps)
+            blocks.forEach((c) => c.sync())
+            if(ball) {
+                ball.position.copy(ball.userData.body.position)
+                ball.quaternion.copy(ball.userData.body.quaternion)
+            }
+        }
+        lastTime = time
+    }
+
+
     function initBlocks(scene) {
         const block1 = new Block()
-        block1.positionSet(0,0.5,-5)
+        block1.positionSet(0,1.1,-5)
         blocks.push(block1)
 
         const block2 = new Block()
-        block2.positionSet(-2,0.5,-5)
+        block2.positionSet(-2,1.1,-5)
         blocks.push(block2)
 
         const block3 = new Block()
-        block3.positionSet(2,0.5,-5)
+        block3.positionSet(2,1.1,-5)
         blocks.push(block3)
 
         blocks.forEach(b => {
@@ -351,6 +429,13 @@
             .on('changed',()=>panel.redraw())
         )
 
+        play_game_button = new Button2D()
+            .set('text','play')
+            .set('x',5)
+            .set('y',460)
+            .on('click',togglePlayGame)
+            .on('changed',()=>panel.redraw())
+        panel.push(play_game_button)
 
         panel.redraw()
         panel.position.set(-1.5,1.5,-2)
@@ -399,6 +484,8 @@
 
         initFloor(scene)
 
+        initBall(scene)
+
         $("#overlay").style.visibility = 'hidden'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
@@ -411,6 +498,58 @@
         )
         floor.rotation.x = toRad(-90)
         scene.add(floor)
+
+        // Create a plane
+        var groundBody = new CANNON.Body({
+            mass: 0 // mass == 0 makes the body static
+        });
+        var groundShape = new CANNON.Plane();
+        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+        groundBody.addShape(groundShape);
+        world.addBody(groundBody);
+
+
+
+    }
+
+    let ball
+    function fire_ball(world, scene, pos, dir) {
+        dir.sub(new THREE.Vector3(0,1.5,0))
+        console.log("dir is",dir)
+        pos.set(0,1,-1)
+        dir.normalize()
+        dir.multiplyScalar(10)
+        const rad = 0.5
+        const ball = new THREE.Mesh(
+            new THREE.SphereGeometry(rad),
+            new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
+        )
+        ball.position.copy(pos)
+        scene.add(ball)
+        const sphereBody = new CANNON.Body({
+            mass: 5,
+            shape: new CANNON.Sphere(rad),
+            position: new CANNON.Vec3(pos.x, pos.y, pos.z),
+            velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
+            // material: bouncy
+        })
+        world.add(sphereBody)
+        ball.userData.body = sphereBody
+        return ball
+    }
+    function initBall(scene) {
+        click_sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(4),
+            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:true, opacity:0.3})
+        )
+        click_sphere.visible = false
+        click_sphere.userData.clickable = true
+        click_sphere.position.set(0,0,0)
+        scene.add(click_sphere)
+
+        on(click_sphere,POINTER_CLICK,(e)=> {
+            ball = fire_ball(world,scene,pointer.controller1.position,e.point.clone())
+        })
     }
 
     //called on every frame. customize this
@@ -420,6 +559,7 @@
         if(stats) stats.update(time)
         //rotate the cube on every tick
         if(cube) cube.rotation.y += 0.002
+        if(playing) update_physics(time)
         renderer.render( scene, camera );
     }
 

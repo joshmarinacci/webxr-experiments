@@ -48,6 +48,7 @@ export default class Button2D {
     }
     set(key,value) {
         this[key] = value
+        this.fire('changed',{type:'changed',target:this})
         return this
     }
     on(type,cb) {
