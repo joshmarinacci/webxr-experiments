@@ -734,6 +734,8 @@ https://freesound.org/people/HF2010/sounds/110497/
         last_music = music
         if(!last_music.isPlaying) last_music.play()
     }
+    let detected = false
+    let resumeGameOnAnyClick = false
     function setupHTML() {
         on($("#how"),'click',() =>  $("#how-text").style.display = 'block')
         on($("#how-back"),'click',() => $("#how-text").style.display = 'none')
@@ -742,7 +744,6 @@ https://freesound.org/people/HF2010/sounds/110497/
 
         const play = $("#click-to-play")
         play.innerText = "Play Now"
-        let detected = false
         on(play,'click',playGame)
         on(vrmanager,VR_DETECTED,()=> detected = true)
         on(vrmanager,VR_PRESENTCHANGE,()=> resumeGameOnAnyClick = !vrmanager.device.isPresenting)
