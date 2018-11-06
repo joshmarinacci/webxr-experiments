@@ -209,6 +209,19 @@
         rebuildGeometry() {
             this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
         }
+
+        setPosition(v3) {
+            this.position.copy(v3)
+            this.obj.position.copy(v3)
+        }
+        makeClone() {
+            const b = new Block()
+            b.setWidth(this.getWidth())
+            b.setHeight(this.getHeight())
+            b.setDepth(this.getDepth())
+            b.setPosition(this.position.clone())
+            return b
+        }
     }
 
     function addBlock() {
@@ -225,6 +238,18 @@
             blocks = blocks.filter(bl => bl !== b)
         })
         selection.clear()
+    }
+    function cloneBlock() {
+        const newBlocks = selection.getBlocks().map(b => {
+            const bb = b.makeClone()
+            const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
+            bb.setPosition(v3)
+            scene.add(bb.getObject3D())
+            blocks.push(bb)
+            return bb
+        })
+        selection.clear()
+        newBlocks.forEach(b => selection.add(b))
     }
     function initBlocks(scene) {
         const block1 = new Block()
@@ -292,19 +317,12 @@
 
         }
 
-        makePropControls('x',0)
-        makePropControls('y',50)
-        makePropControls('z',100)
-        makePropControls('roty',150)
-        makePropControls('w',200)
-        makePropControls('h',250)
-        makePropControls('d',300)
-
+        ['x','y','z','roty','w','h','d'].forEach((name,i) => makePropControls(name,40*i))
 
         panel.push(new Button2D()
             .set('text','add')
             .set('x',5)
-            .set('y',350)
+            .set('y',300)
             .on('click',addBlock)
             .on('changed',()=>panel.redraw())
         )
@@ -312,15 +330,23 @@
         panel.push(new Button2D()
             .set('text','delete')
             .set('x',5)
-            .set('y',400)
+            .set('y',340)
             .on('click',deleteBlock)
+            .on('changed',()=>panel.redraw())
+        )
+
+        panel.push(new Button2D()
+            .set('text','clone')
+            .set('x',5)
+            .set('y',380)
+            .on('click',cloneBlock)
             .on('changed',()=>panel.redraw())
         )
 
         panel.push(new Button2D()
             .set('text','dump')
             .set('x',5)
-            .set('y',450)
+            .set('y',420)
             .on('click',dumpStructure)
             .on('changed',()=>panel.redraw())
         )

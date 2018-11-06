@@ -5,7 +5,7 @@ export default class Button2D {
         this.text = 'foo'
         this.x = 0
         this.y = 0
-        this.fsize = 30
+        this.fsize = 20
         this.w = this.text.length*this.fsize
         this.h = 20
         this.listeners = {}
