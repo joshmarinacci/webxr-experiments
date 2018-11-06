@@ -81,9 +81,9 @@ export class Pointer {
 
             const material = new THREE.LineBasicMaterial({
                 vertexColors: false,
-                color: 0xff0000,
+                color: 0x880000,
                 linewidth: 5,
-                blending: THREE.AdditiveBlending
+                blending: THREE.NormalBlending
             })
 
             this.controller1.add(new THREE.Line(geometry, material));

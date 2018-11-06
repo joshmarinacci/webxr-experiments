@@ -232,13 +232,13 @@
                 .set('x',5).set('y',y).set('text',name.toUpperCase())
             )
             panel.push(new Button2D()
-                .set('x',40).set('y',y).set('text','-')
+                .set('x',100).set('y',y).set('text','-')
                 .on('click',()=>selection.decrementProperty(name))
                 .on('changed',()=>panel.redraw())
             )
 
             panel.push(new Button2D()
-                .set('x',70).set('y',y).set('text','+')
+                .set('x',150).set('y',y).set('text','+')
                 .on('click',()=>selection.incrementProperty(name))
                 .on('changed',()=>panel.redraw())
             )
@@ -246,9 +246,9 @@
         }
 
         makePropControls('x',0)
-        makePropControls('y',25)
-        makePropControls('z',50)
-        makePropControls('roty',75)
+        makePropControls('y',50)
+        makePropControls('z',100)
+        makePropControls('roty',150)
 
 
         panel.push(new Button2D()
@@ -262,7 +262,7 @@
         panel.push(new Button2D()
             .set('text','delete')
             .set('x',5)
-            .set('y',375)
+            .set('y',400)
             .on('click',deleteBlock)
             .on('changed',()=>panel.redraw())
         )
@@ -270,7 +270,7 @@
         panel.push(new Button2D()
             .set('text','dump')
             .set('x',5)
-            .set('y',400)
+            .set('y',450)
             .on('click',dumpStructure)
             .on('changed',()=>panel.redraw())
         )
@@ -312,6 +312,7 @@
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
             enableLaser: true,
+            laserLength:8,
         })
 
 

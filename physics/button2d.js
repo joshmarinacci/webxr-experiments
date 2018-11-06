@@ -5,7 +5,7 @@ export default class Button2D {
         this.text = 'foo'
         this.x = 0
         this.y = 0
-        this.fsize = 11
+        this.fsize = 30
         this.w = this.text.length*this.fsize
         this.h = 20
         this.listeners = {}
@@ -22,11 +22,12 @@ export default class Button2D {
     }
     draw(ctx) {
         this.w = this.text.length * this.fsize
-
+        this.h = 5 + this.fsize + 5
+        ctx.font = `${this.fsize}px sans-serif`
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
         ctx.fillStyle = 'black'
-        ctx.fillText(this.text,this.x+3,this.y+10)
+        ctx.fillText(this.text,this.x+3,this.y+this.fsize)
         ctx.strokeStyle = 'black'
         ctx.strokeRect(this.x,this.y,this.w,this.h)
     }
