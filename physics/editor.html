@@ -89,6 +89,9 @@
             this.blocks.push(obj)
             obj.selectSelf()
         }
+        getBlocks() {
+            return this.blocks
+        }
         decrementProperty(name) {
             this.blocks.forEach(b => {
                 if(name === 'x') {
@@ -169,6 +172,13 @@
         selection.clear()
         selection.add(block)
     }
+    function deleteBlock() {
+        selection.getBlocks().forEach((b)=>{
+            scene.remove(b.getObject3D())
+            blocks = blocks.filter(bl => bl !== b)
+        })
+        selection.clear()
+    }
     function initBlocks(scene) {
         const block1 = new Block()
         block1.positionSet(0,0.5,-5)
@@ -242,6 +252,22 @@
 
 
         panel.push(new Button2D()
+            .set('text','add')
+            .set('x',5)
+            .set('y',350)
+            .on('click',addBlock)
+            .on('changed',()=>panel.redraw())
+        )
+
+        panel.push(new Button2D()
+            .set('text','delete')
+            .set('x',5)
+            .set('y',375)
+            .on('click',deleteBlock)
+            .on('changed',()=>panel.redraw())
+        )
+
+        panel.push(new Button2D()
             .set('text','dump')
             .set('x',5)
             .set('y',400)
@@ -249,13 +275,6 @@
             .on('changed',()=>panel.redraw())
         )
 
-        panel.push(new Button2D()
-            .set('text','add')
-            .set('x',5)
-            .set('y',375)
-            .on('click',addBlock)
-            .on('changed',()=>panel.redraw())
-        )
 
         panel.redraw()
         panel.mesh.lookAt(camera.position)
