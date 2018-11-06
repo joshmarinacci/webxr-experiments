@@ -78,6 +78,7 @@
     let blocks = []
     let click_sphere
 
+    const POSITION_NAMES = ['x','y','z']
 
     class BlockSelection {
         constructor() {
@@ -96,17 +97,9 @@
         }
         decrementProperty(name) {
             this.blocks.forEach(b => {
-                if(name === 'x') {
-                    b.position.x -= 0.1
-                    b.obj.position.x = b.position.x
-                }
-                if(name === 'y') {
-                    b.position.y -= 0.1
-                    b.obj.position.y = b.position.y
-                }
-                if(name === 'z') {
-                    b.position.z -= 0.1
-                    b.obj.position.z = b.position.z
+                if(POSITION_NAMES.indexOf(name) >= 0) {
+                    b.set(name, b.get(name)-0.1)
+                    return
                 }
                 if(name === 'roty') {
                     b.obj.rotation.y -= 0.1
@@ -124,17 +117,9 @@
         }
         incrementProperty(name) {
             this.blocks.forEach(b => {
-                if(name === 'x') {
-                    b.position.x += 0.1
-                    b.obj.position.x = b.position.x
-                }
-                if(name === 'y') {
-                    b.position.y += 0.1
-                    b.obj.position.y = b.position.y
-                }
-                if(name === 'z') {
-                    b.position.z += 0.1
-                    b.obj.position.z = b.position.z
+                if(POSITION_NAMES.indexOf(name) >= 0) {
+                    b.set(name, b.get(name)+0.1)
+                    return
                 }
                 if(name === 'roty') {
                     b.obj.rotation.y += 0.1
@@ -178,6 +163,18 @@
                 shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
             })
             world.addBody(this.body)
+        }
+        get(name) {
+            if(POSITION_NAMES.indexOf(name) >= 0) return this.position[name]
+            throw new Error("unknown property to get",name)
+        }
+        set(name, value) {
+            if(POSITION_NAMES.indexOf(name) >= 0) {
+                this.position[name] = value
+                this.obj.position[name] = value
+                this.body.position[name] = value
+            }
+            throw new Error("unknown property to set",name)
         }
         getWidth() {
             return this.width
