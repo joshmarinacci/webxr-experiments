@@ -59,7 +59,7 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_RELEASE, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
     import Button2D from "./button2d.js"
     import Label2D from "./label2d.js"
@@ -224,7 +224,7 @@
 
     function initPanel(scene) {
 
-        const panel = new Panel2D()
+        const panel = new Panel2D(scene,camera)
         scene.add(panel)
 
         function makePropControls(name,y) {
@@ -277,7 +277,8 @@
 
 
         panel.redraw()
-        panel.mesh.lookAt(camera.position)
+        panel.position.set(-1.5,1.5,-2)
+        panel.lookAt(camera.position)
     }
 
     //called on setup. Customize this

@@ -1,11 +1,16 @@
+import {POINTER_RELEASE} from '../boilerplate/pointer'
+
 const $ = (sel) => document.querySelector(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
 import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
 
 export default class Panel2D extends THREE.Object3D {
-    constructor() {
+    constructor(scene,camera) {
         super()
+
+        this.scene = scene
+        this.camera = camera
         this.canvas = document.createElement('canvas')
         this.canvas.width = 256
         this.canvas.height = 512
@@ -20,13 +25,9 @@ export default class Panel2D extends THREE.Object3D {
             new THREE.MeshBasicMaterial({color:'white',map:this.canvasTexture})
         )
         this.mesh.userData.clickable = true
-
-        this.mesh.position.set(-1.5,1.5,-2)
-        this.mesh.rotation.y = 0.0
         this.comps = []
 
         this.add(this.mesh)
-
 
         let inside = null
         on(this.mesh,POINTER_MOVE,(e)=>{
@@ -58,6 +59,22 @@ export default class Panel2D extends THREE.Object3D {
                 }
             }
         })
+
+        this.header = new THREE.Mesh(
+            new THREE.BoxGeometry(1.0,0.1,0.1),
+            new THREE.MeshBasicMaterial({color:'goldenrod'})
+        )
+        this.header.userData.clickable = true
+        this.header.position.set(0,1.1,0)
+        this.add(this.header)
+
+        on(this.header,POINTER_ENTER,(e)=>{
+            this.header.material.color.set('yellow')
+        })
+        on(this.header,POINTER_EXIT,(e)=>{
+            this.header.material.color.set('goldenrod')
+        })
+        on(this.header,POINTER_PRESS,e => this.startDrag())
     }
 
     push(comp) {
@@ -72,5 +89,36 @@ export default class Panel2D extends THREE.Object3D {
         this.canvasTexture.needsUpdate = true
     }
 
+    startDrag() {
+        this.header.userData.clickable = false
+        this.mesh.userData.clickable = false
 
+        this.dragSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(4,32,32),
+            new THREE.MeshLambertMaterial({
+                color:'green',
+                wireframe:true,
+                side: THREE.BackSide
+            })
+        )
+        this.dragSphere.userData.clickable = true
+        this.scene.add(this.dragSphere)
+
+        on(this.dragSphere,POINTER_MOVE,(e)=> this.moveDrag(e))
+        on(this.dragSphere,POINTER_RELEASE,(e)=> this.endDrag(e))
+
+    }
+    endDrag() {
+        this.scene.remove(this.dragSphere)
+        this.dragSphere.userData.clickable = false
+        this.header.userData.clickable = true
+        this.mesh.userData.clickable = true
+    }
+
+
+    moveDrag(e) {
+        this.position.copy(e.point)
+        this.position.add(new THREE.Vector3(0,-1,0))
+        this.lookAt(this.camera.position)
+    }
 }
