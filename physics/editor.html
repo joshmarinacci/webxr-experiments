@@ -109,6 +109,15 @@
                 if(name === 'roty') {
                     b.obj.rotation.y -= 0.1
                 }
+                if(name === 'w') {
+                    b.setWidth(b.getWidth()-0.1)
+                }
+                if(name === 'h') {
+                    b.setHeight(b.getHeight()-0.1)
+                }
+                if(name === 'd') {
+                    b.setDepth(b.getDepth()-0.1)
+                }
             })
         }
         incrementProperty(name) {
@@ -128,6 +137,15 @@
                 if(name === 'roty') {
                     b.obj.rotation.y += 0.1
                 }
+                if(name === 'w') {
+                    b.setWidth(b.getWidth()+0.1)
+                }
+                if(name === 'h') {
+                    b.setHeight(b.getHeight()+0.1)
+                }
+                if(name === 'd') {
+                    b.setDepth(b.getDepth()+0.1)
+                }
             })
         }
     }
@@ -136,9 +154,12 @@
 
     class Block {
         constructor() {
+            this.width = 1
+            this.height = 2
+            this.depth = 1
             this.position = new THREE.Vector3(0,1,0)
             this.obj = new THREE.Mesh(
-                new THREE.BoxGeometry(1,1,1),
+                new THREE.BoxGeometry(this.width,this.height,this.depth),
                 new THREE.MeshLambertMaterial({color:'green'})
             )
             this.obj.userData.clickable = true
@@ -147,6 +168,28 @@
                 selection.clear()
                 selection.add(this)
             })
+            this.rebuildGeometry()
+        }
+        getWidth() {
+            return this.width
+        }
+        setWidth(w) {
+            this.width = w
+            this.rebuildGeometry()
+        }
+        getHeight() {
+            return this.height
+        }
+        setHeight(h) {
+            this.height = h
+            this.rebuildGeometry()
+        }
+        getDepth() {
+            return this.depth
+        }
+        setDepth(w) {
+            this.depth = w
+            this.rebuildGeometry()
         }
         positionSet(x,y,z) {
             this.position.set(x,y,z)
@@ -161,6 +204,10 @@
         }
         unselectSelf() {
             this.obj.material.color.set(0x00ff00)
+        }
+
+        rebuildGeometry() {
+            this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
         }
     }
 
@@ -249,6 +296,9 @@
         makePropControls('y',50)
         makePropControls('z',100)
         makePropControls('roty',150)
+        makePropControls('w',200)
+        makePropControls('h',250)
+        makePropControls('d',300)
 
 
         panel.push(new Button2D()
