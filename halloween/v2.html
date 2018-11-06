@@ -116,7 +116,7 @@ https://freesound.org/people/HF2010/sounds/110497/
             flex-direction: row;
             justify-content: center;
         }
-        #controls button {
+        button {
             font-family: 'dpuntillasBtotiptoeRegular';
             font-weight: normal;
             font-style: normal;
@@ -209,7 +209,7 @@ https://freesound.org/people/HF2010/sounds/110497/
     import VRStats from "../boilerplate/vrstats.js"
     import {t2} from "./T2.js"
     import GPUParticleSystem from "../particles/GPUParticleSystem2.js"
-    import VRManager, {VR_DETECTED} from "../boilerplate/vrmanager.js"
+    import VRManager, {VR_DETECTED, VR_PRESENTCHANGE} from "../boilerplate/vrmanager.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -225,7 +225,7 @@ https://freesound.org/people/HF2010/sounds/110497/
 
     const DEBUG = {
         FOG:true,
-        STATS:true,
+        STATS:false,
         MUSIC:false,
         TTF_FONT: false,
         TERRAIN:true,
@@ -743,14 +743,23 @@ https://freesound.org/people/HF2010/sounds/110497/
         const play = $("#click-to-play")
         play.innerText = "Play Now"
         let detected = false
-        on(play,'click',()=>{
-            $("#overlay").style.visibility = 'hidden'
-            playMusic(level_music)
-            if(detected) vrmanager.enterVR()
-            restartGame()
-        })
-
+        on(play,'click',playGame)
         on(vrmanager,VR_DETECTED,()=> detected = true)
+        on(vrmanager,VR_PRESENTCHANGE,()=> resumeGameOnAnyClick = !vrmanager.device.isPresenting)
+        on($("body"),'click',evt => {
+	        if(resumeGameOnAnyClick) {
+		        evt.preventDefault()
+		        evt.stopPropagation()
+		        restartGame()
+	        }
+        })
+    }
+    
+    function playGame() {
+        $("#overlay").style.visibility = 'hidden'
+        playMusic(level_music)
+        if(detected) vrmanager.enterVR()
+        restartGame()
     }
 
     //called on setup. Customize this
