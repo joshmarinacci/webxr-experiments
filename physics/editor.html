@@ -61,9 +61,9 @@
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
-    import Button2D from "./button2d"
-    import Label2D from "./label2d"
-    import Panel2D from './panel2d'
+    import Button2D from "./button2d.js"
+    import Label2D from "./label2d.js"
+    import Panel2D from './panel2d.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -161,6 +161,14 @@
         }
     }
 
+    function addBlock() {
+        const block = new Block()
+        block.positionSet(0,0.5,-7)
+        blocks.push(block)
+        scene.add(block.getObject3D())
+        selection.clear()
+        selection.add(block)
+    }
     function initBlocks(scene) {
         const block1 = new Block()
         block1.positionSet(0,0.5,-5)
@@ -238,6 +246,14 @@
             .set('x',5)
             .set('y',400)
             .on('click',dumpStructure)
+            .on('changed',()=>panel.redraw())
+        )
+
+        panel.push(new Button2D()
+            .set('text','add')
+            .set('x',5)
+            .set('y',375)
+            .on('click',addBlock)
             .on('changed',()=>panel.redraw())
         )
 
