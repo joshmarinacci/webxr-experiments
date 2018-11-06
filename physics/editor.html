@@ -306,13 +306,11 @@
             b.body.quaternion.copy(last_block_quaternions[i])
         })
         playing = false
-        //nuke the ball
         click_sphere.visible = false
-
-        if(ball) {
+        balls.forEach(ball => {
             scene.remove(ball)
             world.remove(ball.userData.body)
-        }
+        })
     }
 
     function update_physics(time) {
@@ -320,10 +318,10 @@
             var dt = (time - lastTime)/1000
             world.step(fixedTimeStep, dt, maxSubSteps)
             blocks.forEach((c) => c.sync())
-            if(ball) {
+            balls.forEach( ball => {
                 ball.position.copy(ball.userData.body.position)
                 ball.quaternion.copy(ball.userData.body.quaternion)
-            }
+            })
         }
         lastTime = time
     }
@@ -512,7 +510,7 @@
 
     }
 
-    let ball
+    let balls = []
     function fire_ball(world, scene, pos, dir) {
         dir.sub(new THREE.Vector3(0,1.5,0))
         console.log("dir is",dir)
@@ -548,7 +546,7 @@
         scene.add(click_sphere)
 
         on(click_sphere,POINTER_CLICK,(e)=> {
-            ball = fire_ball(world,scene,pointer.controller1.position,e.point.clone())
+            balls.push(fire_ball(world,scene,pointer.controller1.position,e.point.clone()))
         })
     }
 
