@@ -65,6 +65,7 @@
     import Button2D from "./button2d.js"
     import Label2D from "./label2d.js"
     import Panel2D from './panel2d.js'
+    import Group2D from "./group2d.js"
     import {BlockService} from "./BlockService.js"
 
     //JQuery-like selector
@@ -78,7 +79,7 @@
     let blockService
     let click_sphere
 
-    const POSITION_NAMES = ['x','y','z']
+    const PROP_NAMES = ['x','y','z','rotx','roty','rotz','w','h','d']
 
     class BlockSelection {
         constructor() {
@@ -97,41 +98,17 @@
         }
         decrementProperty(name) {
             this.blocks.forEach(b => {
-                if(POSITION_NAMES.indexOf(name) >= 0) {
+                if(PROP_NAMES.indexOf(name) >= 0) {
                     b.set(name, b.get(name)-0.1)
                     return
-                }
-                if(name === 'roty') {
-                    b.obj.rotation.y -= 0.1
-                }
-                if(name === 'w') {
-                    b.setWidth(b.getWidth()-0.1)
-                }
-                if(name === 'h') {
-                    b.setHeight(b.getHeight()-0.1)
-                }
-                if(name === 'd') {
-                    b.setDepth(b.getDepth()-0.1)
                 }
             })
         }
         incrementProperty(name) {
             this.blocks.forEach(b => {
-                if(POSITION_NAMES.indexOf(name) >= 0) {
+                if(PROP_NAMES.indexOf(name) >= 0) {
                     b.set(name, b.get(name)+0.1)
                     return
-                }
-                if(name === 'roty') {
-                    b.obj.rotation.y += 0.1
-                }
-                if(name === 'w') {
-                    b.setWidth(b.getWidth()+0.1)
-                }
-                if(name === 'h') {
-                    b.setHeight(b.getHeight()+0.1)
-                }
-                if(name === 'd') {
-                    b.setDepth(b.getDepth()+0.1)
                 }
             })
         }
@@ -256,25 +233,87 @@
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
 
+        const posPanel = new Group2D()
+            .set('x',5).set('y',40)
+            .set('w',200).set('h',200)
+            .set('visible',true)
+            .on('changed',()=>panel.redraw())
+        panel.push(posPanel)
+
+        const sizPanel = new Group2D()
+            .set('x',5).set('y',40)
+            .set('w',200).set('h',200)
+            .set('visible',false)
+            .on('changed',()=>panel.redraw())
+        panel.push(sizPanel)
+
+        const rotPanel = new Group2D()
+            .set('x',5).set('y',40)
+            .set('w',200).set('h',200)
+            .set('visible',false)
+            .on('changed',()=>panel.redraw())
+        panel.push(rotPanel)
+
+        panel.push(new Button2D()
+            .set('text','pos')
+            .set('x',5).set('y',5)
+            .on('changed',()=>panel.redraw())
+            .on('click',()=> {
+                posPanel.set('visible',true)
+                sizPanel.set('visible',false)
+                rotPanel.set('visible',false)
+            })
+        )
+        panel.push(new Button2D()
+            .set('text','siz')
+            .set('x',75).set('y',5)
+            .on('changed',()=>panel.redraw())
+            .on('click',()=> {
+                posPanel.set('visible',false)
+                sizPanel.set('visible',true)
+                rotPanel.set('visible',false)
+            })
+        )
+        panel.push(new Button2D()
+            .set('text','rot')
+            .set('x',150).set('y',5)
+            .on('changed',()=>panel.redraw())
+            .on('click',()=>{
+                posPanel.set('visible',false)
+                sizPanel.set('visible',false)
+                rotPanel.set('visible',true)
+            })
+        )
+
+
         function makePropControls(name,y) {
-            panel.push(new Label2D()
-                .set('x',5).set('y',y).set('text',name.toUpperCase())
-            )
-            panel.push(new Button2D()
+            return [new Label2D()
+                .set('x',5).set('y',y).set('text',name.toUpperCase()),
+                new Button2D()
                 .set('x',100).set('y',y).set('text','-')
                 .on('click',()=>selection.decrementProperty(name))
-                .on('changed',()=>panel.redraw())
-            )
-
-            panel.push(new Button2D()
+                .on('changed',()=>panel.redraw()),
+                new Button2D()
                 .set('x',150).set('y',y).set('text','+')
                 .on('click',()=>selection.incrementProperty(name))
                 .on('changed',()=>panel.redraw())
-            )
-
+                ]
         }
 
-        ['x','y','z','roty','w','h','d'].forEach((name,i) => makePropControls(name,40*i))
+        ['x','y','z'].forEach((name,i) => {
+            let cons = makePropControls(name,40*i)
+            posPanel.addAll(cons)
+        });
+
+        ["w","h","d"].forEach((name, i)=>{
+            let cons = makePropControls(name,40*i)
+            sizPanel.addAll(cons)
+        });
+
+        ["rotx","roty","rotz"].forEach((name, i)=>{
+            let cons = makePropControls(name,40*i)
+            rotPanel.addAll(cons)
+        });
 
         panel.push(new Button2D()
             .set('text','add')

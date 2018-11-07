@@ -37,27 +37,30 @@ export default class Panel2D extends THREE.Object3D {
                 inside.fire(POINTER_EXIT)
                 inside = null
             }
-            for(let i=0; i<this.comps.length; i++) {
-                const comp = this.comps[i]
-                if(comp.contains(fpt)) {
+            const comp = this.findAt(fpt)
+            // for(let i=0; i<this.comps.length; i++) {
+            //     const comp = this.comps[i]
+            //     if(comp.contains(fpt)) {
                     if(inside !== comp){
                         if(inside) inside.fire(POINTER_EXIT)
                         inside = null
                     }
-                    comp.fire(POINTER_ENTER)
+                    if(comp) comp.fire(POINTER_ENTER)
                     inside = comp
-                }
-            }
+                // }
+            // }
         })
         on(this.mesh,POINTER_CLICK,(e)=>{
             const uv = e.intersection.uv
             const fpt = new THREE.Vector2(uv.x*256, 512-uv.y*512)
-            for(let i=0; i<this.comps.length; i++) {
-                const comp = this.comps[i]
-                if(comp.contains(fpt)) {
-                    comp.fire(POINTER_CLICK)
-                }
-            }
+            const comp = this.findAt(fpt)
+            if(comp) comp.fire(POINTER_CLICK)
+            // for(let i=0; i<this.comps.length; i++) {
+            //     const comp = this.comps[i]
+            //     if(comp.contains(fpt)) {
+            //         comp.fire(POINTER_CLICK)
+            //     }
+            // }
         })
 
         this.header = new THREE.Mesh(
@@ -75,6 +78,18 @@ export default class Panel2D extends THREE.Object3D {
             this.header.material.color.set('goldenrod')
         })
         on(this.header,POINTER_PRESS,e => this.startDrag())
+    }
+    findAt(pt) {
+        // console.log("looking for point",pt)
+        for(let i=0; i<this.comps.length; i++) {
+            const comp = this.comps[i]
+            const res = comp.findAt({x:pt.x-comp.x,y:pt.y-comp.y})
+            if(res) {
+                // console.log("returning early with",comp,res)
+                return res
+            }
+        }
+        return null
     }
 
     push(comp) {

@@ -1,36 +1,27 @@
+
 import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
 
-export default class Button2D {
+export default class Group2D {
     constructor() {
-        this.type = 'button'
-        this.text = 'foo'
         this.x = 0
         this.y = 0
-        this.fsize = 20
-        this.w = this.text.length*this.fsize
-        this.h = 20
+        this.w = 100
+        this.h = 100
         this.listeners = {}
         this.bg = 'white'
-
-        this.on(POINTER_ENTER,()=>{
-            this.bg = 'red'
-            this.fire('changed',{type:'changed',target:this})
-        })
-        this.on(POINTER_EXIT,()=>{
-            this.bg = 'white'
-            this.fire('changed',{type:'changed',target:this})
-        })
+        this.visible = true
+        this.comps = []
     }
     draw(ctx) {
-        this.w = this.text.length * this.fsize
-        this.h = 5 + this.fsize + 5
-        ctx.font = `${this.fsize}px sans-serif`
+        if(!this.visible) return
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
-        ctx.fillStyle = 'black'
-        ctx.fillText(this.text,this.x+3,this.y+this.fsize)
         ctx.strokeStyle = 'black'
         ctx.strokeRect(this.x,this.y,this.w,this.h)
+        ctx.save()
+        ctx.translate(this.x+5,this.y+5)
+        this.comps.forEach(comp => comp.draw(ctx))
+        ctx.restore()
     }
     addEventListener(type,cb) {
         if(!this.listeners[type]) this.listeners[type] = []
@@ -44,11 +35,17 @@ export default class Button2D {
         return true
     }
     findAt(pt) {
-        if(pt.x < 0) return null
-        if(pt.x > 0 + this.w) return null
-        if(pt.y < 0) return null
-        if(pt.y > 0 + this.h) return null
-        return this
+        if(!this.visible) return null
+        // console.log("looking for point",pt)
+        for(let i=0; i<this.comps.length; i++) {
+            const comp = this.comps[i]
+            const res = comp.findAt({x:pt.x-comp.x-5,y:pt.y-comp.y-5})
+            if(res) {
+                // console.log("returning early with",comp,res)
+                return res
+            }
+        }
+        return null
     }
     fire(type) {
         if(!this.listeners[type]) this.listeners[type] = []
@@ -59,8 +56,16 @@ export default class Button2D {
         this.fire('changed',{type:'changed',target:this})
         return this
     }
+    get(key) {
+        return this[key]
+    }
+
     on(type,cb) {
         this.addEventListener(type,cb)
         return this
+    }
+
+    addAll(all) {
+        all.forEach(c => this.comps.push(c))
     }
 }

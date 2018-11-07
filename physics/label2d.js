@@ -13,6 +13,9 @@ export default class Label2D {
     contains() {
         return false
     }
+    findAt() {
+        return null
+    }
     set(key,value) {
         this[key] = value
         return this

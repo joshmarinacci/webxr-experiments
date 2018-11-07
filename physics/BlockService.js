@@ -9,13 +9,14 @@ world.gravity.set(0, -9.82, 0);
 let playing = false
 
 const POSITION_NAMES = ['x','y','z']
-
+const ROTATION_NAMES = ['rotx','roty','rotz']
 export class Block {
     constructor() {
         this.width = 1
         this.height = 2
         this.depth = 1
         this.position = new THREE.Vector3(0,1,0)
+        this.rotation = new THREE.Vector3(0,0,0)
         this.obj = new THREE.Mesh(
             new THREE.BoxGeometry(this.width,this.height,this.depth),
             new THREE.MeshLambertMaterial({color:'green'})
@@ -33,6 +34,13 @@ export class Block {
     }
     get(name) {
         if(POSITION_NAMES.indexOf(name) >= 0) return this.position[name]
+        if(ROTATION_NAMES.indexOf(name) >= 0) {
+            name = name.substring(3)
+            return this.rotation[name]
+        }
+        if(name === 'w') return this.getWidth()
+        if(name === 'h') return this.getHeight()
+        if(name === 'd') return this.getDepth()
         throw new Error("unknown property to get",name)
     }
     set(name, value) {
@@ -42,6 +50,16 @@ export class Block {
             this.body.position[name] = value
             return
         }
+        if(ROTATION_NAMES.indexOf(name) >= 0) {
+            name = name.substring(3)
+            this.rotation[name] = value
+            this.obj.rotation[name] = value
+            // this.body.rotation[name] = value
+            return
+        }
+        if(name === 'w') return this.setWidth(value)
+        if(name === 'h') return this.setHeight(value)
+        if(name === 'd') return this.setDepth(value)
         throw new Error("unknown property to set",name)
     }
     getWidth() {
