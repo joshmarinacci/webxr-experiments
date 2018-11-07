@@ -65,6 +65,7 @@
     import Button2D from "./button2d.js"
     import Label2D from "./label2d.js"
     import Panel2D from './panel2d.js'
+    import {Block, BlockService} from "./BlockService.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -74,8 +75,7 @@
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let cube
-    let blocks = []
+    let blockService
     let click_sphere
 
     const POSITION_NAMES = ['x','y','z']
@@ -139,209 +139,69 @@
 
     const selection = new BlockSelection()
 
-    class Block {
-        constructor() {
-            this.width = 1
-            this.height = 2
-            this.depth = 1
-            this.position = new THREE.Vector3(0,1,0)
-            this.obj = new THREE.Mesh(
-                new THREE.BoxGeometry(this.width,this.height,this.depth),
-                new THREE.MeshLambertMaterial({color:'green'})
-            )
-            this.obj.userData.clickable = true
-
-            on(this.obj,'click',()=>{
-                selection.clear()
-                selection.add(this)
-            })
-            this.rebuildGeometry()
-
-            this.body = new CANNON.Body({
-                mass: 1,//kg
-                position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
-                shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
-            })
-            world.addBody(this.body)
-        }
-        get(name) {
-            if(POSITION_NAMES.indexOf(name) >= 0) return this.position[name]
-            throw new Error("unknown property to get",name)
-        }
-        set(name, value) {
-            if(POSITION_NAMES.indexOf(name) >= 0) {
-                this.position[name] = value
-                this.obj.position[name] = value
-                this.body.position[name] = value
-            }
-            throw new Error("unknown property to set",name)
-        }
-        getWidth() {
-            return this.width
-        }
-        setWidth(w) {
-            this.width = w
-            this.rebuildGeometry()
-        }
-        getHeight() {
-            return this.height
-        }
-        setHeight(h) {
-            this.height = h
-            this.rebuildGeometry()
-        }
-        getDepth() {
-            return this.depth
-        }
-        setDepth(w) {
-            this.depth = w
-            this.rebuildGeometry()
-        }
-        positionSet(x,y,z) {
-            this.position.set(x,y,z)
-            this.obj.position.set(x,y,z)
-            this.body.position.x = x
-            this.body.position.y = y
-            this.body.position.z = z
-        }
-        getObject3D() {
-            return this.obj
-        }
-
-        selectSelf() {
-            this.obj.material.color.set(0xff0000)
-        }
-        unselectSelf() {
-            this.obj.material.color.set(0x00ff00)
-        }
-
-        rebuildGeometry() {
-            this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
-        }
-
-        setPosition(v3) {
-            this.position.copy(v3)
-            this.obj.position.copy(v3)
-            this.body.position.x = this.position.x
-            this.body.position.y = this.position.y
-            this.body.position.z = this.position.z
-        }
-        sync() {
-            this.obj.position.copy(this.body.position)
-            this.obj.quaternion.copy(this.body.quaternion)
-        }
-        makeClone() {
-            const b = new Block()
-            b.setWidth(this.getWidth())
-            b.setHeight(this.getHeight())
-            b.setDepth(this.getDepth())
-            b.setPosition(this.position.clone())
-            return b
-        }
-    }
-
-    function addBlock() {
-        const block = new Block()
-        block.positionSet(0,0.5,-7)
-        blocks.push(block)
-        scene.add(block.getObject3D())
-        selection.clear()
-        selection.add(block)
-    }
-    function deleteBlock() {
-        selection.getBlocks().forEach((b)=>{
-            scene.remove(b.getObject3D())
-            blocks = blocks.filter(bl => bl !== b)
-        })
-        selection.clear()
-    }
-    function cloneBlock() {
-        const newBlocks = selection.getBlocks().map(b => {
-            const bb = b.makeClone()
-            const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
-            bb.setPosition(v3)
-            scene.add(bb.getObject3D())
-            blocks.push(bb)
-            return bb
-        })
-        selection.clear()
-        newBlocks.forEach(b => selection.add(b))
-    }
-
-
-    let world = new CANNON.World();
-    let lastTime
-    let fixedTimeStep = 1.0 / 60.0; // seconds
-    let maxSubSteps = 3;
-    world.gravity.set(0, -9.82, 0);
-
-    let playing = false
     let play_game_button = null
     function togglePlayGame() {
-        if(playing) {
+        if(blockService.isPlaying()) {
             disableGame()
         } else {
             enableGame()
         }
     }
 
-    let last_block_positions = []
-    let last_block_quaternions = []
     function enableGame() {
         click_sphere.visible = true
         play_game_button.set('text','stop')
-        last_block_positions = blocks.map(b => b.position.clone())
-        last_block_quaternions = blocks.map(b => b.obj.quaternion.clone())
-        playing = true
+        blockService.startPlaying()
     }
     function disableGame() {
-        play_game_button.set('text','play')
-        //reset the blocks
-        blocks.forEach((b,i) => {
-            b.setPosition(last_block_positions[i])
-            b.obj.quaternion.copy(last_block_quaternions[i])
-            b.body.quaternion.copy(last_block_quaternions[i])
-        })
-        playing = false
         click_sphere.visible = false
-        balls.forEach(ball => {
-            scene.remove(ball)
-            world.remove(ball.userData.body)
+        play_game_button.set('text','play')
+        blockService.stopPlaying()
+    }
+
+    function addBlock() {
+        const block = blockService.makeBlock()
+        block.positionSet(0,0.5,-7)
+        selection.clear()
+        selection.add(block)
+    }
+
+    function deleteBlock() {
+        selection.getBlocks().forEach((b)=> blockService.remove(b))
+        selection.clear()
+    }
+
+    function cloneBlock() {
+        const newBlocks = selection.getBlocks().map(b => {
+            const bb = blockService.cloneBlock(b)
+            const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
+            bb.setPosition(v3)
+            return bb
         })
-        balls = []
+        selection.clear()
+        newBlocks.forEach(b => selection.add(b))
     }
-
-    function update_physics(time) {
-        if(world && lastTime) {
-            var dt = (time - lastTime)/1000
-            world.step(fixedTimeStep, dt, maxSubSteps)
-            blocks.forEach((c) => c.sync())
-            balls.forEach( ball => {
-                ball.position.copy(ball.userData.body.position)
-                ball.quaternion.copy(ball.userData.body.quaternion)
-            })
-        }
-        lastTime = time
-    }
-
 
     function initBlocks(scene) {
-        const block1 = new Block()
+        blockService = new BlockService(scene)
+        const block1 = blockService.makeBlock()
         block1.positionSet(0,1.1,-5)
-        blocks.push(block1)
-
-        const block2 = new Block()
-        block2.positionSet(-2,1.1,-5)
-        blocks.push(block2)
-
-        const block3 = new Block()
-        block3.positionSet(2,1.1,-5)
-        blocks.push(block3)
-
-        blocks.forEach(b => {
-            scene.add(b.getObject3D())
+        on(block1.getObject3D(),'click',()=>{
+            selection.clear()
+            selection.add(block1)
         })
-
+        const block2 = blockService.makeBlock()
+        block2.positionSet(-2,1.1,-5)
+        on(block2.getObject3D(),'click',()=>{
+            selection.clear()
+            selection.add(block2)
+        })
+        const block3 = blockService.makeBlock()
+        block3.positionSet(2,1.1,-5)
+        on(block3.getObject3D(),'click',()=>{
+            selection.clear()
+            selection.add(block3)
+        })
         selection.add(block1)
     }
 
@@ -502,37 +362,9 @@
         var groundShape = new CANNON.Plane();
         groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
         groundBody.addShape(groundShape);
-        world.addBody(groundBody);
-
-
-
+        blockService.getWorld().addBody(groundBody);
     }
 
-    let balls = []
-    function fire_ball(world, scene, pos, dir) {
-        dir.sub(new THREE.Vector3(0,1.5,0))
-        console.log("dir is",dir)
-        pos.set(0,1,-1)
-        dir.normalize()
-        dir.multiplyScalar(10)
-        const rad = 0.5
-        const ball = new THREE.Mesh(
-            new THREE.SphereGeometry(rad),
-            new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
-        )
-        ball.position.copy(pos)
-        scene.add(ball)
-        const sphereBody = new CANNON.Body({
-            mass: 5,
-            shape: new CANNON.Sphere(rad),
-            position: new CANNON.Vec3(pos.x, pos.y, pos.z),
-            velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
-            // material: bouncy
-        })
-        world.add(sphereBody)
-        ball.userData.body = sphereBody
-        return ball
-    }
     function initBall(scene) {
         click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
@@ -544,7 +376,7 @@
         scene.add(click_sphere)
 
         on(click_sphere,POINTER_CLICK,(e)=> {
-            balls.push(fire_ball(world,scene,pointer.controller1.position,e.point.clone()))
+            blockService.fireBall(pointer.controller1.position, e.point.clone())
         })
     }
 
@@ -553,9 +385,7 @@
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        //rotate the cube on every tick
-        if(cube) cube.rotation.y += 0.002
-        if(playing) update_physics(time)
+        blockService.update(time)
         renderer.render( scene, camera );
     }
 
