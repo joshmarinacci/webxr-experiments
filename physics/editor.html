@@ -65,7 +65,7 @@
     import Button2D from "./button2d.js"
     import Label2D from "./label2d.js"
     import Panel2D from './panel2d.js'
-    import {Block, BlockService} from "./BlockService.js"
+    import {BlockService} from "./BlockService.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -205,27 +205,50 @@
         selection.add(block1)
     }
 
-    function dumpStructure() {
-        console.log("blocks are")
+    const BASE_URL = "https://vr.josh.earth/360/doc/"
+    const docid = "tumble_level1"
 
-        const level = {}
-        level.children = blocks.map(b => {
-            const bb = {
-                type:'block',
-                position: {
-                    x:b.position.x,
-                    y:b.position.y,
-                    z:b.position.z
-                },
-                size: {
-                    width:1,
-                    height:1,
-                    depth:1,
-                }
-            }
-            return bb
+    function saveStructure() {
+        console.log("blocks are")
+        const blockData = blockService.generateJSON()
+        const doc = {
+            id:docid,
+            type:'tumble-v1',
+            data:{
+                blocks:blockData
+            },
+        }
+        console.log(JSON.stringify(doc,null,'  '))
+        fetch(`${BASE_URL}${docid}`,{
+            method:'POST',
+            mode:'cors',
+            headers: {
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify(doc)
         })
-        console.log(JSON.stringify(level,null,'  '))
+            .then(resp => resp.json())
+            .then(resp => {
+                console.log("real response is",resp)
+            })
+            .catch(e => {
+                console.log(e)
+            })
+
+    }
+
+    function loadStructure() {
+        fetch(`${BASE_URL}${docid}`)
+            .then(res => res.json())
+            .then(res => {
+                const blocks = blockService.loadFromJSON(res)
+                blocks.forEach(b => {
+                    on(b.getObject3D(), 'click', () => {
+                        selection.clear()
+                        selection.add(b)
+                    })
+                })
+            })
     }
 
     function initPanel(scene) {
@@ -278,10 +301,10 @@
         )
 
         panel.push(new Button2D()
-            .set('text','dump')
+            .set('text','save')
             .set('x',5)
             .set('y',420)
-            .on('click',dumpStructure)
+            .on('click',saveStructure)
             .on('changed',()=>panel.redraw())
         )
 
@@ -345,6 +368,7 @@
         $("#overlay").style.visibility = 'hidden'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
+        loadStructure()
     }
 
     function initFloor(scene) {

@@ -202,4 +202,40 @@ export class BlockService {
         ball.userData.body = sphereBody
         this.balls.push(ball)
     }
+
+    generateJSON() {
+        return this.blocks.map(b => {
+            const bb = {
+                type:'block',
+                position: {
+                    x:b.position.x,
+                    y:b.position.y,
+                    z:b.position.z
+                },
+                size: {
+                    width:1,
+                    height:1,
+                    depth:1,
+                }
+            }
+            return bb
+        })
+    }
+
+    loadFromJSON(doc) {
+        console.log("loading level",doc)
+        this.blocks.forEach(b => {
+            this.scene.remove(b.getObject3D())
+            world.remove(b.body)
+        })
+        this.blocks = []
+        const newBlocks = doc.data.blocks.map(b => {
+            console.log("adding block",b)
+            const b2 = this.makeBlock()
+            const p = b.position
+            b2.positionSet(p.x,p.y,p.z)
+            return b2
+        })
+        return newBlocks
+    }
 }
