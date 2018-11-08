@@ -119,21 +119,14 @@
     let play_game_button = null
     function togglePlayGame() {
         if(blockService.isPlaying()) {
-            disableGame()
+            click_sphere.visible = false
+            play_game_button.set('text','play')
+            blockService.stopPlaying()
         } else {
-            enableGame()
+            click_sphere.visible = true
+            play_game_button.set('text','stop')
+            blockService.startPlaying()
         }
-    }
-
-    function enableGame() {
-        click_sphere.visible = true
-        play_game_button.set('text','stop')
-        blockService.startPlaying()
-    }
-    function disableGame() {
-        click_sphere.visible = false
-        play_game_button.set('text','play')
-        blockService.stopPlaying()
     }
 
     function addBlock() {
@@ -215,7 +208,7 @@
     }
 
     function loadStructure() {
-        fetch(`${BASE_URL}${docid}`)
+        fetch(`${BASE_URL}${docid}?cachebust=${Math.random()}`)
             .then(res => res.json())
             .then(res => {
                 const blocks = blockService.loadFromJSON(res)
