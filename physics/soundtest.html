@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<button id="button">play</button>
+<script>
+
+    const context = new AudioContext()
+
+    function getData(cb) {
+
+        const source = context.createBufferSource();
+        var request = new XMLHttpRequest();
+
+        request.open('GET', 'sounds/plink.wav', true);
+
+        request.responseType = 'arraybuffer';
+        request.onload = function() {
+            var audioData = request.response;
+            console.log('decoding')
+
+            context.decodeAudioData(audioData, function(buffer) {
+                cb(buffer)
+                },
+
+                function(e){ console.log("Error with decoding audio data" + e.err);
+            }
+                );
+
+        }
+        request.send();
+    }
+
+    let audioBuffer
+    getData((buffer)=>{
+        audioBuffer = buffer
+        // source.buffer = buffer;
+        // source.connect(context.destination);
+        // source.loop = false;
+        // cb(source)
+        // source.start(0)
+        console.log("got the audio buffer")
+    })
+
+    document.querySelector('#button').addEventListener('click',()=>{
+        console.log("clicked")
+
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        source.loop = false;
+        source.start(0)
+    })
+</script>
+</body>
+</html>
