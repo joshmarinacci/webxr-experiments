@@ -175,11 +175,15 @@ export class BlockService {
         }
         lastTime = time
     }
+
+    collided(e) {
+        console.log('collided',e)
+    }
     startPlaying() {
         last_block_positions = this.blocks.map(b => b.position.clone())
         last_block_quaternions = this.blocks.map(b => b.obj.quaternion.clone())
         playing = true
-
+        this.blocks.forEach(b => b.body.addEventListener('collide',this.collided))
     }
 
     stopPlaying() {
@@ -187,6 +191,7 @@ export class BlockService {
             b.setPosition(last_block_positions[i])
             b.obj.quaternion.copy(last_block_quaternions[i])
             b.body.quaternion.copy(last_block_quaternions[i])
+            b.body.removeEventListener('collide',this.collided)
         })
         playing = false
         this.balls.forEach(ball => {
