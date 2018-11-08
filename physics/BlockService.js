@@ -21,6 +21,7 @@ export class Block {
             new THREE.BoxGeometry(this.width,this.height,this.depth),
             new THREE.MeshLambertMaterial({color:'green'})
         )
+        this.obj.castShadow = true
         this.obj.userData.clickable = true
 
 
@@ -211,6 +212,7 @@ export class BlockService {
             new THREE.SphereGeometry(rad),
             new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
         )
+        ball.castShadow = true
         ball.position.copy(pos)
         this.scene.add(ball)
         const sphereBody = new CANNON.Body({

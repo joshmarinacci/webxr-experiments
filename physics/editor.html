@@ -385,13 +385,25 @@
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
+        renderer.shadowMap.enabled = true
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
         //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 2, 1, 1 ).normalize();
+        const light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        light.castShadow = true
+        light.shadow.mapSize.width = 512
+        light.shadow.mapSize.height = 512
+        light.shadow.camera.right = 10
+        light.shadow.camera.top = 10
+        light.position.set( 0, 1, 1 ).normalize();
         scene.add( light );
+
+        scene.add(new THREE.AmbientLight(0xffffff,0.5))
+
+
 
 
 
@@ -435,10 +447,11 @@
 
     function initFloor(scene) {
         const floor =new THREE.Mesh(
-            new THREE.PlaneGeometry(30,30),
+            new THREE.PlaneGeometry(30,30,32,32),
             new THREE.MeshLambertMaterial({color:'aqua'})
         )
         floor.rotation.x = toRad(-90)
+        floor.receiveShadow = true
         scene.add(floor)
 
         // Create a plane
