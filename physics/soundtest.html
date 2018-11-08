@@ -10,51 +10,29 @@
 <script>
 
     const context = new AudioContext()
+    let audioBuffer
 
-    function getData(cb) {
-
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    //fetch audio file from URL and decode into an audio buffer
+    function getAudioFile(url) {
+        return fetch(url,{responseType:'arraybuffer'})
+            .then(resp => resp.arrayBuffer())
+            .then(arr => context.decodeAudioData(arr))
+    }
+    //play an audio buffer once
+    function playSource(buffer) {
         const source = context.createBufferSource();
-        var request = new XMLHttpRequest();
-
-        request.open('GET', 'sounds/plink.wav', true);
-
-        request.responseType = 'arraybuffer';
-        request.onload = function() {
-            var audioData = request.response;
-            console.log('decoding')
-
-            context.decodeAudioData(audioData, function(buffer) {
-                cb(buffer)
-                },
-
-                function(e){ console.log("Error with decoding audio data" + e.err);
-            }
-                );
-
-        }
-        request.send();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start(0)
     }
 
-    let audioBuffer
-    getData((buffer)=>{
-        audioBuffer = buffer
-        // source.buffer = buffer;
-        // source.connect(context.destination);
-        // source.loop = false;
-        // cb(source)
-        // source.start(0)
-        console.log("got the audio buffer")
-    })
+    //get the audio file and save the buffer as 'audioBuffer'
+    getAudioFile('./sounds/plink.wav').then(buffer=> audioBuffer = buffer)
+    //on button click, play the sound
+    on($('#button'),'click',()=>playSource(audioBuffer))
 
-    document.querySelector('#button').addEventListener('click',()=>{
-        console.log("clicked")
-
-        const source = context.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(context.destination);
-        source.loop = false;
-        source.start(0)
-    })
 </script>
 </body>
 </html>
