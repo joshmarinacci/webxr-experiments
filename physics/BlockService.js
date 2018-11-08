@@ -231,10 +231,16 @@ export class BlockService {
                     z:b.position.z
                 },
                 size: {
-                    width:1,
-                    height:1,
-                    depth:1,
+                    width:b.getWidth(),
+                    height:b.getHeight(),
+                    depth:b.getDepth(),
+                },
+                rotation: {
+                    x: b.rotation.x,
+                    y: b.rotation.y,
+                    z: b.rotation.z,
                 }
+
             }
             return bb
         })
@@ -252,6 +258,12 @@ export class BlockService {
             const b2 = this.makeBlock()
             const p = b.position
             b2.positionSet(p.x,p.y,p.z)
+            b2.setWidth(b.size.width)
+            b2.setHeight(b.size.height)
+            b2.setDepth(b.size.depth)
+            b2.set('rotx',b.rotation.x)
+            b2.set('roty',b.rotation.y)
+            b2.set('rotz',b.rotation.z)
             return b2
         })
         return newBlocks
