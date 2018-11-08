@@ -78,6 +78,7 @@
 
     let blockService
     let click_sphere
+    let floorBody
 
     const PROP_NAMES = ['x','y','z','rotx','roty','rotz','w','h','d']
 
@@ -157,8 +158,32 @@
         newBlocks.forEach(b => selection.add(b))
     }
 
+    const context = new AudioContext()
+    let audioBuffer
+    function getAudioFile(url) {
+        return fetch(url,{responseType:'arraybuffer'})
+            .then(resp => resp.arrayBuffer())
+            .then(arr => context.decodeAudioData(arr))
+    }
+    function playSource(buffer) {
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start(0)
+    }
+    //get the audio file and save the buffer as 'audioBuffer'
+    getAudioFile('./sounds/plink.wav').then(buffer=> audioBuffer = buffer)
+
+
+    function handleCollision(e) {
+        if(e.body.id === floorBody.id) return
+        if(!e.contact.userData) e.contact.userData = {}
+        if(e.contact.userData.soundPlayed === true) return
+        playSource(audioBuffer)
+        e.contact.userData.soundPlayed = true
+    }
     function initBlocks(scene) {
-        blockService = new BlockService(scene)
+        blockService = new BlockService(scene,handleCollision)
         const block1 = blockService.makeBlock()
         block1.positionSet(0,1.1,-5)
         on(block1.getObject3D(),'click',()=>{
@@ -424,6 +449,7 @@
         groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
         groundBody.addShape(groundShape);
         blockService.getWorld().addBody(groundBody);
+        floorBody = groundBody
     }
 
     function initBall(scene) {
