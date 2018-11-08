@@ -146,6 +146,11 @@
             const bb = blockService.cloneBlock(b)
             const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
             bb.setPosition(v3)
+            on(bb.getObject3D(), 'click', () => {
+                selection.clear()
+                selection.add(bb)
+            })
+
             return bb
         })
         selection.clear()

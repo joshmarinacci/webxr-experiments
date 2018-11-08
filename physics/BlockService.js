@@ -23,14 +23,8 @@ export class Block {
         )
         this.obj.userData.clickable = true
 
-        this.rebuildGeometry()
 
-        this.body = new CANNON.Body({
-            mass: 1,//kg
-            position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
-            shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
-        })
-        world.addBody(this.body)
+        this.rebuildGeometry()
     }
     get(name) {
         if(POSITION_NAMES.indexOf(name) >= 0) return this.position[name]
@@ -54,7 +48,7 @@ export class Block {
             name = name.substring(3)
             this.rotation[name] = value
             this.obj.rotation[name] = value
-            // this.body.rotation[name] = value
+            this.body.quaternion.setFromEuler(this.rotation.x,this.rotation.y,this.rotation.z,'XYZ')
             return
         }
         if(name === 'w') return this.setWidth(value)
@@ -103,6 +97,13 @@ export class Block {
 
     rebuildGeometry() {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
+        if(this.body) world.remove(this.body)
+        this.body = new CANNON.Body({
+            mass: 1,//kg
+            position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
+            shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
+        })
+        world.addBody(this.body)
     }
 
     setPosition(v3) {
