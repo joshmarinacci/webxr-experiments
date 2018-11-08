@@ -83,7 +83,7 @@
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let group
+    let cloud
 
 
     const map = (val, smin, smax, emin, emax) => (emax-emin)*(val-smin)/(smax-smin) + emin
@@ -113,11 +113,9 @@
 
         jitter(geo,0.2)
         chopBottom(geo,-0.5)
-        geo.colorsNeedUpdate = true
         geo.computeFlatVertexNormals()
-        geo.verticesNeedUpdate = true
 
-        return group = new THREE.Mesh(
+        return new THREE.Mesh(
             geo,
             new THREE.MeshLambertMaterial({
                 color:'white',
@@ -142,16 +140,14 @@
         scene.add( light2 );
         scene.add(new THREE.AmbientLight(0xffffff,0.3))
 
-        scene.add
-
         $("#overlay").style.display = 'none'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
 
 
-        group = makeCloud()
-        group.position.z = -10
-        scene.add(group)
+        cloud = makeCloud()
+        cloud.position.z = -10
+        scene.add(cloud)
     }
 
     //called on every frame. customize this
@@ -159,7 +155,7 @@
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        if(group) group.rotation.y -= 0.005
+        if(cloud) cloud.rotation.y -= 0.005
         renderer.render( scene, camera );
     }
 
