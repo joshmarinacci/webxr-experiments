@@ -235,13 +235,12 @@ export class BlockService {
         this.balls = []
     }
 
-    fireBall(pos, dir) {
-        //balls.push(fire_ball(world,scene,pointer.controller1.position,e.point.clone()))
+    fireBall(pos, dir, strength) {
         dir.sub(new THREE.Vector3(0,1.5,0))
         pos.set(0,1,-1)
         pos.sub(this.group.position)
         dir.normalize()
-        dir.multiplyScalar(10)
+        dir.multiplyScalar(strength*30)
         const rad = 0.5
         const ball = new THREE.Mesh(
             new THREE.SphereGeometry(rad),

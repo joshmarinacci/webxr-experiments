@@ -62,7 +62,7 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_PRESS,POINTER_RELEASE,Pointer} from '../boilerplate/pointer.js'
     import {t2 as T2} from "./t2.js"
     import VRStats from "../boilerplate/vrstats.js"
     import Button2D from "./button2d.js"
@@ -523,6 +523,30 @@
         floorBody = groundBody
     }
 
+    const clock = new THREE.Clock()
+    let press_sphere
+    function startPressSphere() {
+        clock.start()
+        press_sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        press_sphere.scale.set(0.1,0.1,0.1)
+        press_sphere.position.set(0,2,-2)
+        scene.add(press_sphere)
+    }
+    function updatePressSphere() {
+        if(press_sphere) {
+            const strength = Math.min(1.0,clock.getElapsedTime()/2.0)
+            press_sphere.scale.set(strength,strength,strength)
+        }
+    }
+    function endPressSphere(e) {
+        scene.remove(press_sphere)
+        const strength = Math.min(1.0,clock.getElapsedTime()/2.0)
+        clock.stop()
+        blockService.fireBall(pointer.controller1.position, e.point.clone(),strength)
+    }
     function initBall(scene) {
         click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
@@ -533,9 +557,11 @@
         click_sphere.position.set(0,0,0)
         scene.add(click_sphere)
 
-        on(click_sphere,POINTER_CLICK,(e)=> {
-            blockService.fireBall(pointer.controller1.position, e.point.clone())
-        })
+        on(click_sphere,POINTER_PRESS,startPressSphere)
+        on(click_sphere,POINTER_RELEASE,endPressSphere)
+        // on(click_sphere,POINTER_CLICK,(e)=> {
+        //     blockService.fireBall(pointer.controller1.position, e.point.clone())
+        // })
     }
 
     //called on every frame. customize this
@@ -545,6 +571,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         blockService.update(time)
+        updatePressSphere(time)
         renderer.render( scene, camera );
     }
 
