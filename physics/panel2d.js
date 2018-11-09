@@ -1,9 +1,8 @@
-import {POINTER_RELEASE} from '../boilerplate/pointer'
+import {POINTER_RELEASE, POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
 
 const $ = (sel) => document.querySelector(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
-import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
 
 export default class Panel2D extends THREE.Object3D {
     constructor(scene,camera) {
