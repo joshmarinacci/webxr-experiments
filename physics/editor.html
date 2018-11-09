@@ -120,12 +120,15 @@
     const selection = new BlockSelection()
 
     let play_game_button = null
+    let bg_music
     function togglePlayGame() {
         if(blockService.isPlaying()) {
             click_sphere.visible = false
             play_game_button.set('text','play')
             blockService.stopPlaying()
+            if(bg_music) bg_music.stop()
         } else {
+            bg_music = playSource(musicBuffer)
             click_sphere.visible = true
             play_game_button.set('text','stop')
             blockService.startPlaying()
@@ -162,7 +165,7 @@
 
     window.AudioContext = window.AudioContext || window.webkitAudioContext
     let context = new window.AudioContext()
-    let audioBuffer
+    let audioBuffer, musicBuffer
     function getAudioFile(url) {
         return fetch(url,{responseType:'arraybuffer'})
             .then(resp => resp.arrayBuffer())
@@ -173,9 +176,11 @@
         source.buffer = buffer;
         source.connect(context.destination);
         source.start(0)
+        return source
     }
     //get the audio file and save the buffer as 'audioBuffer'
     getAudioFile('./sounds/plink.wav').then(buffer=> audioBuffer = buffer)
+    getAudioFile("./music/Visager_-_09_-_Bug_Band_Loop.mp3").then(b => musicBuffer = b)
 
 
     function handleCollision(e) {
