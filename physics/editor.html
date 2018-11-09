@@ -63,6 +63,7 @@
 
 <script type="module">
     import {POINTER_CLICK, Pointer} from '../boilerplate/pointer.js'
+    import {t2 as T2} from "./t2.js"
     import VRStats from "../boilerplate/vrstats.js"
     import Button2D from "./button2d.js"
     import Label2D from "./label2d.js"
@@ -491,6 +492,7 @@
 
     //called on every frame. customize this
     function render(time) {
+        T2.update(time)
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)

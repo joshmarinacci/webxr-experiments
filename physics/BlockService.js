@@ -1,3 +1,4 @@
+import {t2 as T2} from "./t2.js"
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 const world = new CANNON.World();
@@ -183,6 +184,36 @@ export class BlockService {
         last_block_quaternions = this.blocks.map(b => b.obj.quaternion.clone())
         playing = true
         this.blocks.forEach(b => b.body.addEventListener('collide',this.handleCollision))
+        this.blocks.forEach((b,i) => {
+            b.obj.scale.set(0.0,0.0,0.0)
+            const len = 0.3
+            T2.sequence()
+                .then(T2.wait(0.5+i*0.05))
+                .then(T2.parallel()
+                .and(T2.prop({
+                    target: b.obj.scale,
+                    property: 'x',
+                    from:0.0,
+                    to:1.0,
+                    duration: len
+                }))
+                .and(T2.prop({
+                    target: b.obj.scale,
+                    property: 'y',
+                    from:0.0,
+                    to:1.0,
+                    duration: len
+                }))
+                .and(T2.prop({
+                    target: b.obj.scale,
+                    property: 'z',
+                    from:0.0,
+                    to:1.0,
+                    duration: len
+                }))
+                )
+                .start()
+        })
     }
 
     stopPlaying() {
