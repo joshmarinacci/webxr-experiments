@@ -111,6 +111,9 @@
             obj.selectSelf()
             this.fire('changed')
         }
+        addAll(arr) {
+            arr.forEach(b => this.add(b))
+        }
         getBlocks() {
             return this.blocks
         }
@@ -422,6 +425,16 @@
             .on('changed',redraw)
         )
 
+        panel.push(new Button2D()
+            .set('text','all')
+            .set('x',180)
+            .set('y',390)
+            .on('click',()=>{
+                selection.clear()
+                selection.addAll(blockService.getAllBlocks())
+            })
+            .on('changed',redraw)
+        )
 
         panel.redraw()
         panel.position.set(-1.5,1.5,-2)

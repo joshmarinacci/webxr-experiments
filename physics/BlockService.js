@@ -238,7 +238,6 @@ export class BlockService {
     fireBall(pos, dir) {
         //balls.push(fire_ball(world,scene,pointer.controller1.position,e.point.clone()))
         dir.sub(new THREE.Vector3(0,1.5,0))
-        console.log("dir is",dir)
         pos.set(0,1,-1)
         pos.sub(this.group.position)
         dir.normalize()
@@ -289,14 +288,14 @@ export class BlockService {
     }
 
     loadFromJSON(doc) {
-        console.log("loading level",doc)
+        // console.log("loading level",doc)
         this.blocks.forEach(b => {
             this.group.remove(b.getObject3D())
             world.remove(b.body)
         })
         this.blocks = []
         const newBlocks = doc.data.blocks.map(b => {
-            console.log("adding block",b)
+            // console.log("adding block",b)
             const b2 = this.makeBlock()
             const p = b.position
             b2.positionSet(p.x,p.y,p.z)
@@ -316,5 +315,9 @@ export class BlockService {
     }
     switchToTopView() {
         this.group.rotation.x = toRad(90)
+    }
+
+    getAllBlocks() {
+        return this.blocks.slice()
     }
 }
