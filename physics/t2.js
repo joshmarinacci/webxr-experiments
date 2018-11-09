@@ -61,6 +61,11 @@ class ForeverTween extends Tween {
         this.fn(diff)
     }
 }
+
+export const PROP_TYPES = {
+    SINGLE:'single',
+    COMPOUND:'compound',
+}
 class PropTween extends Tween {
     constructor(opts) {
         super()
@@ -70,6 +75,7 @@ class PropTween extends Tween {
         if(typeof this.duration === 'undefined') throw new Error("duration is missing")
         this.property = opts.property
         if(typeof this.property === 'undefined') throw new Error("property is missing")
+        this.propertyType = opts.propertyType || PROP_TYPES.SINGLE
         this.from = opts.from
         this.to = opts.to
 
@@ -89,8 +95,7 @@ class PropTween extends Tween {
         if(t > 1.0) {
             t = 1.0
         }
-        const v = this.lerp(this.from, this.to, this.reversed?(1-t):t)
-        this.target[this.property] = v
+        this.setPropertyValue(this.from,this.to,this.reversed?(1-t):t)
         if(t === 1.0) {
             this.loopCount++
             if(this.autoReverse) {
@@ -103,6 +108,17 @@ class PropTween extends Tween {
                 }
             }
             this.startTime = time
+        }
+    }
+
+    setPropertyValue(from,to,t,target,name) {
+        if(this.propertyType === PROP_TYPES.SINGLE) {
+            this.target[this.property] = this.lerp(this.from, this.to, this.reversed ? (1 - t) : t)
+        }
+        if(this.propertyType === PROP_TYPES.COMPOUND) {
+            Object.keys(this.from).forEach(name => {
+                this.target[this.property][name] = this.lerp(this.from[name], this.to[name], this.reversed ? (1 - t) : t)
+            })
         }
     }
 

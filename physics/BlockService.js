@@ -1,4 +1,5 @@
 import {t2 as T2} from "./t2.js"
+import {PROP_TYPES} from './t2'
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
 
@@ -193,29 +194,14 @@ export class BlockService {
             const len = 0.3
             T2.sequence()
                 .then(T2.wait(0.5+i*0.05))
-                .then(T2.parallel()
-                .and(T2.prop({
-                    target: b.obj.scale,
-                    property: 'x',
-                    from:0.0,
-                    to:1.0,
-                    duration: len
+                .then(T2.prop({
+                    target:b.obj,
+                    property:'scale',
+                    propertyType:PROP_TYPES.COMPOUND,
+                    from:{x:0,y:0,z:0},
+                    to:{x:1.0,y:1.0,z:1.0},
+                    duration:len,
                 }))
-                .and(T2.prop({
-                    target: b.obj.scale,
-                    property: 'y',
-                    from:0.0,
-                    to:1.0,
-                    duration: len
-                }))
-                .and(T2.prop({
-                    target: b.obj.scale,
-                    property: 'z',
-                    from:0.0,
-                    to:1.0,
-                    duration: len
-                }))
-                )
                 .start()
         })
     }
