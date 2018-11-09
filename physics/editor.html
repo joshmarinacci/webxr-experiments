@@ -129,6 +129,7 @@
             if(bg_music) bg_music.stop()
         } else {
             bg_music = playSource(musicBuffer)
+            bg_music.loop = true
             click_sphere.visible = true
             play_game_button.set('text','stop')
             blockService.startPlaying()
