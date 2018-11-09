@@ -1,5 +1,5 @@
 import {t2 as T2} from "./t2.js"
-import {PROP_TYPES} from './t2'
+import {LERP_TYPES, PROP_TYPES} from './t2'
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
 
@@ -191,13 +191,14 @@ export class BlockService {
         this.blocks.forEach(b => b.body.addEventListener('collide',this.handleCollision))
         this.blocks.forEach((b,i) => {
             b.obj.scale.set(0.0,0.0,0.0)
-            const len = 0.3
+            const len = 0.5
             T2.sequence()
                 .then(T2.wait(0.5+i*0.05))
                 .then(T2.prop({
                     target:b.obj,
                     property:'scale',
                     propertyType:PROP_TYPES.COMPOUND,
+                    lerpType:LERP_TYPES.ELASTIC,
                     from:{x:0,y:0,z:0},
                     to:{x:1.0,y:1.0,z:1.0},
                     duration:len,

@@ -66,6 +66,18 @@ export const PROP_TYPES = {
     SINGLE:'single',
     COMPOUND:'compound',
 }
+export const LERP_TYPES = {
+    LINEAR:'linear',
+    ELASTIC:'elastic'
+}
+
+function easeOutElastic(t) {
+    var p = 0.3;
+    return Math.pow(2,-10*t) * Math.sin((t-p/4)*(2*Math.PI)/p) + 1;
+}
+function easeLinear(from,to,t) {
+    return (to - from) * t + from
+}
 class PropTween extends Tween {
     constructor(opts) {
         super()
@@ -78,6 +90,7 @@ class PropTween extends Tween {
         this.propertyType = opts.propertyType || PROP_TYPES.SINGLE
         this.from = opts.from
         this.to = opts.to
+        this.lerp_type = opts.lerpType || LERP_TYPES.LINEAR
 
         this.loop = opts.loop
         if(typeof this.loop === 'undefined') this.loop = 1
@@ -123,7 +136,10 @@ class PropTween extends Tween {
     }
 
     lerp(from,to,t) {
-        return (to-from)*t + from
+        if(this.lerp_type === LERP_TYPES.LINEAR)  return easeLinear(from,to,t)
+        if(this.lerp_type === LERP_TYPES.ELASTIC) return easeLinear(from,to,easeOutElastic(t))
+        console.log("invalid LERP_TYPE")
+        return from
     }
 }
 
