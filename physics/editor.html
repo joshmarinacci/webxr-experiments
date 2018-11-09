@@ -9,8 +9,10 @@
     <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
+
     <!-- stats (fps, polygons, fps) -->
     <script src="../boilerplate/vrstats.js" type="module"></script>
+
     <script src="./node_modules/cannon/build/cannon.js"></script>
 
     <style type="text/css">
@@ -158,7 +160,8 @@
         newBlocks.forEach(b => selection.add(b))
     }
 
-    const context = new AudioContext()
+    window.AudioContext = window.AudioContext || window.webkitAudioContext
+    let context = new window.AudioContext()
     let audioBuffer
     function getAudioFile(url) {
         return fetch(url,{responseType:'arraybuffer'})
