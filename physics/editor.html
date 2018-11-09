@@ -88,14 +88,28 @@
     class BlockSelection {
         constructor() {
             this.blocks = []
+            this.listeners = {}
+        }
+        on(type,cb) {
+            this.addEventListener(type,cb)
+        }
+        addEventListener(type,cb) {
+            if(!this.listeners[type]) this.listeners[type] = []
+            this.listeners[type].push(cb)
+        }
+        fire(type) {
+            if(!this.listeners[type]) this.listeners[type] = []
+            this.listeners[type].forEach(cb => cb())
         }
         clear() {
             this.blocks.forEach(obj=>obj.unselectSelf())
             this.blocks = []
+            this.fire('changed')
         }
         add(obj) {
             this.blocks.push(obj)
             obj.selectSelf()
+            this.fire('changed')
         }
         getBlocks() {
             return this.blocks
@@ -107,6 +121,7 @@
                     return
                 }
             })
+            this.fire('changed')
         }
         incrementProperty(name) {
             this.blocks.forEach(b => {
@@ -115,6 +130,15 @@
                     return
                 }
             })
+            this.fire('changed')
+        }
+        getProperty(name) {
+            if(this.blocks.length <= 0) return -1
+            const block = this.blocks[0]
+            if(PROP_NAMES.indexOf(name) >= 0) {
+                return block.get(name)
+            }
+            return -1
         }
     }
 
@@ -268,21 +292,21 @@
 
         const posPanel = new Group2D()
             .set('x',5).set('y',40)
-            .set('w',200).set('h',200)
+            .set('w',245).set('h',200)
             .set('visible',true)
             .on('changed',()=>panel.redraw())
         panel.push(posPanel)
 
         const sizPanel = new Group2D()
             .set('x',5).set('y',40)
-            .set('w',200).set('h',200)
+            .set('w',245).set('h',200)
             .set('visible',false)
             .on('changed',()=>panel.redraw())
         panel.push(sizPanel)
 
         const rotPanel = new Group2D()
             .set('x',5).set('y',40)
-            .set('w',200).set('h',200)
+            .set('w',245).set('h',200)
             .set('visible',false)
             .on('changed',()=>panel.redraw())
         panel.push(rotPanel)
@@ -319,34 +343,26 @@
         )
 
 
+        function redraw() {
+            panel.redraw()
+        }
         function makePropControls(name,y) {
-            return [new Label2D()
-                .set('x',5).set('y',y).set('text',name.toUpperCase()),
-                new Button2D()
-                .set('x',100).set('y',y).set('text','-')
-                .on('click',()=>selection.decrementProperty(name))
-                .on('changed',()=>panel.redraw()),
-                new Button2D()
-                .set('x',150).set('y',y).set('text','+')
-                .on('click',()=>selection.incrementProperty(name))
-                .on('changed',()=>panel.redraw())
-                ]
+            const label = new Label2D().set('x',0).set('y',y).set('text',name.toUpperCase())
+            const value = new Label2D().set('x',150).set('y',y).set('text','0')
+            const inc   = new Button2D().set('x',90).set('y',y).set('text','-').on('changed',redraw)
+                    .on('click',()=> selection.decrementProperty(name))
+            const dec   = new Button2D().set('x',120).set('y',y).set('text','+').on('changed',redraw)
+                    .on('click',()=> selection.incrementProperty(name))
+            on(selection,'changed',()=>{
+                value.set('text',''+selection.getProperty(name))
+                redraw()
+            })
+            return [label,inc,dec,value]
         }
 
-        ['x','y','z'].forEach((name,i) => {
-            let cons = makePropControls(name,40*i)
-            posPanel.addAll(cons)
-        });
-
-        ["w","h","d"].forEach((name, i)=>{
-            let cons = makePropControls(name,40*i)
-            sizPanel.addAll(cons)
-        });
-
-        ["rotx","roty","rotz"].forEach((name, i)=>{
-            let cons = makePropControls(name,40*i)
-            rotPanel.addAll(cons)
-        });
+        ['x','y','z'].forEach((name,i) => posPanel.addAll(makePropControls(name,40*i)));
+        ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name,40*i)));
+        ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name,40*i)));
 
         panel.push(new Button2D()
             .set('text','add')
