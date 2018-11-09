@@ -1,4 +1,4 @@
-import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_MOVE, Pointer} from '../boilerplate/pointer.js'
+import {POINTER_ENTER, POINTER_EXIT} from '../boilerplate/pointer.js'
 
 export default class Button2D {
     constructor() {
@@ -22,9 +22,10 @@ export default class Button2D {
         })
     }
     draw(ctx) {
-        this.w = this.text.length * this.fsize
-        this.h = 5 + this.fsize + 5
         ctx.font = `${this.fsize}px sans-serif`
+        const metrics = ctx.measureText(this.text)
+        this.w = 5 + metrics.width + 5
+        this.h = 5 + this.fsize + 5
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
         ctx.fillStyle = 'black'
