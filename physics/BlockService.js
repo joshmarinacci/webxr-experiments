@@ -12,7 +12,7 @@ let playing = false
 
 const POSITION_NAMES = ['x','y','z']
 const ROTATION_NAMES = ['rotx','roty','rotz']
-export class Block {
+class Block {
     constructor() {
         this.width = 1
         this.height = 2
