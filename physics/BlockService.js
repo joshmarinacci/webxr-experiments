@@ -1,5 +1,6 @@
 import {t2 as T2} from "./t2.js"
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
+const toRad = (deg) => deg * Math.PI/180
 
 const world = new CANNON.World();
 let lastTime
@@ -136,7 +137,9 @@ let last_block_quaternions = []
 
 export class BlockService {
     constructor(scene, collisionCB) {
-        this.scene = scene
+        this.group = new THREE.Group()
+        this.group.position.set(0,0,-5)
+        scene.add(this.group)
         this.blocks = []
         this.balls = []
         this.collisionCB = collisionCB
@@ -148,16 +151,17 @@ export class BlockService {
     makeBlock() {
         const block = new Block()
         this.blocks.push(block)
-        this.scene.add(block.getObject3D())
+        this.group.add(block.getObject3D())
         return block
     }
     remove(block) {
-        this.scene.remove(block.getObject3D())
+        this.group.remove(block.getObject3D())
         this.blocks = this.blocks.filter(bl => bl !== block)
+        world.remove(block.body)
     }
     cloneBlock(block) {
         const b =  block.makeClone()
-        this.scene.add(b.getObject3D())
+        this.group.add(b.getObject3D())
         this.blocks.push(b)
         return b
     }
@@ -225,7 +229,7 @@ export class BlockService {
         })
         playing = false
         this.balls.forEach(ball => {
-            this.scene.remove(ball)
+            this.group.remove(ball)
             world.remove(ball.userData.body)
         })
         this.balls = []
@@ -236,6 +240,7 @@ export class BlockService {
         dir.sub(new THREE.Vector3(0,1.5,0))
         console.log("dir is",dir)
         pos.set(0,1,-1)
+        pos.sub(this.group.position)
         dir.normalize()
         dir.multiplyScalar(10)
         const rad = 0.5
@@ -245,7 +250,7 @@ export class BlockService {
         )
         ball.castShadow = true
         ball.position.copy(pos)
-        this.scene.add(ball)
+        this.group.add(ball)
         const sphereBody = new CANNON.Body({
             mass: 5,
             shape: new CANNON.Sphere(rad),
@@ -286,7 +291,7 @@ export class BlockService {
     loadFromJSON(doc) {
         console.log("loading level",doc)
         this.blocks.forEach(b => {
-            this.scene.remove(b.getObject3D())
+            this.group.remove(b.getObject3D())
             world.remove(b.body)
         })
         this.blocks = []
@@ -304,5 +309,12 @@ export class BlockService {
             return b2
         })
         return newBlocks
+    }
+
+    switchToFrontView() {
+        this.group.rotation.x = toRad(0)
+    }
+    switchToTopView() {
+        this.group.rotation.x = toRad(90)
     }
 }

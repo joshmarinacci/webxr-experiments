@@ -163,7 +163,11 @@
 
     function addBlock() {
         const block = blockService.makeBlock()
-        block.positionSet(0,0.5,-7)
+        block.positionSet(0,1.0,0)
+        on(block.getObject3D(), 'click', () => {
+            selection.clear()
+            selection.add(block)
+        })
         selection.clear()
         selection.add(block)
     }
@@ -182,7 +186,6 @@
                 selection.clear()
                 selection.add(bb)
             })
-
             return bb
         })
         selection.clear()
@@ -404,6 +407,22 @@
             .on('changed',()=>panel.redraw())
         panel.push(play_game_button)
 
+        panel.push(new Button2D()
+            .set('text','front')
+            .set('x',180)
+            .set('y',300)
+            .on('click',()=>blockService.switchToFrontView())
+            .on('changed',redraw)
+        )
+        panel.push(new Button2D()
+            .set('text','top')
+            .set('x',180)
+            .set('y',335)
+            .on('click',()=>blockService.switchToTopView())
+            .on('changed',redraw)
+        )
+
+
         panel.redraw()
         panel.position.set(-1.5,1.5,-2)
         panel.lookAt(camera.position)
@@ -478,7 +497,7 @@
         )
         floor.rotation.x = toRad(-90)
         floor.receiveShadow = true
-        scene.add(floor)
+        // scene.add(floor)
 
         // Create a plane
         var groundBody = new CANNON.Body({
