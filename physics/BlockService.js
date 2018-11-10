@@ -26,8 +26,7 @@ class Block {
         )
         this.obj.castShadow = true
         this.obj.userData.clickable = true
-
-
+        this.physicsType = "dynamic"
         this.rebuildGeometry()
     }
     get(name) {
@@ -58,6 +57,7 @@ class Block {
         if(name === 'w') return this.setWidth(value)
         if(name === 'h') return this.setHeight(value)
         if(name === 'd') return this.setDepth(value)
+        if(name === 'physicstype') return this.setPhysicsType(value)
         throw new Error("unknown property to set",name)
     }
     getWidth() {
@@ -96,14 +96,30 @@ class Block {
         this.obj.material.color.set(0xff0000)
     }
     unselectSelf() {
-        this.obj.material.color.set(0x00ff00)
+        if(this.physicsType === 'dynamic') {
+            this.obj.material.color.set(0x00ff00)
+        }
+        if(this.physicsType === 'fixed') {
+            this.obj.material.color.set(0xaa00aa)
+        }
+    }
+
+    setPhysicsType(type) {
+        if(type) this.physicsType = type
+        this.unselectSelf()
+        this.rebuildGeometry()
     }
 
     rebuildGeometry() {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
         if(this.body) world.remove(this.body)
+        let type = CANNON.Body.DYNAMIC
+        if(this.physicsType === 'fixed') {
+            type = CANNON.Body.KINEMATIC
+        }
         this.body = new CANNON.Body({
             mass: 1,//kg
+            type: type,
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
             shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
         })
@@ -252,6 +268,7 @@ export class BlockService {
         return this.blocks.map(b => {
             const bb = {
                 type:'block',
+                physicstype:b.physicsType,
                 position: {
                     x:b.position.x,
                     y:b.position.y,
@@ -291,6 +308,7 @@ export class BlockService {
             b2.set('rotx',b.rotation.x)
             b2.set('roty',b.rotation.y)
             b2.set('rotz',b.rotation.z)
+            b2.set('physicstype',b.physicstype)
             return b2
         })
         return newBlocks

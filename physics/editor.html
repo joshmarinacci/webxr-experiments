@@ -143,6 +143,11 @@
             }
             return -1
         }
+        setPropertyValue(name,value) {
+            this.blocks.forEach(b => {
+                b.set(name,value)
+            })
+        }
     }
 
     const selection = new BlockSelection()
@@ -296,11 +301,19 @@
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
 
+        const subPanels = []
+        function switchTo(panel) {
+            subPanels.forEach(p => {
+                p.set('visible',(p===panel))
+            })
+        }
+
         const posPanel = new Group2D()
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',true)
             .on('changed',()=>panel.redraw())
+        subPanels.push(posPanel)
         panel.push(posPanel)
 
         const sizPanel = new Group2D()
@@ -308,6 +321,7 @@
             .set('w',245).set('h',200)
             .set('visible',false)
             .on('changed',()=>panel.redraw())
+        subPanels.push(sizPanel)
         panel.push(sizPanel)
 
         const rotPanel = new Group2D()
@@ -316,37 +330,60 @@
             .set('visible',false)
             .on('changed',()=>panel.redraw())
         panel.push(rotPanel)
+        subPanels.push(rotPanel)
 
         panel.push(new Button2D()
             .set('text','pos')
             .set('x',5).set('y',5)
             .on('changed',()=>panel.redraw())
-            .on('click',()=> {
-                posPanel.set('visible',true)
-                sizPanel.set('visible',false)
-                rotPanel.set('visible',false)
-            })
+            .on('click',()=> switchTo(posPanel))
         )
         panel.push(new Button2D()
             .set('text','siz')
-            .set('x',75).set('y',5)
+            .set('x',50).set('y',5)
             .on('changed',()=>panel.redraw())
-            .on('click',()=> {
-                posPanel.set('visible',false)
-                sizPanel.set('visible',true)
-                rotPanel.set('visible',false)
-            })
+            .on('click',()=> switchTo(sizPanel))
         )
         panel.push(new Button2D()
             .set('text','rot')
-            .set('x',150).set('y',5)
+            .set('x',87).set('y',5)
+            .on('changed',()=>panel.redraw())
+            .on('click',()=>switchTo(rotPanel))
+        )
+
+        const typePanel = new Group2D()
+            .set('x',5).set('y',40)
+            .set('w',245).set('h',200)
+            .set('visible',false)
+            .on('changed',()=>panel.redraw())
+        subPanels.push(typePanel)
+        panel.push(typePanel)
+
+        panel.push(new Button2D()
+            .set('text','type')
+            .set('x',125).set('y',5)
             .on('changed',()=>panel.redraw())
             .on('click',()=>{
-                posPanel.set('visible',false)
-                sizPanel.set('visible',false)
-                rotPanel.set('visible',true)
+                switchTo(typePanel)
             })
         )
+
+        typePanel.addAll([
+            new Button2D()
+                .set('text','movable')
+                .on('changed',()=>panel.redraw())
+                .on('click',()=>{
+                    selection.setPropertyValue('physicstype',"dynamic")
+                })
+            ,
+            new Button2D()
+                .set('text','fixed').set('x',90)
+                .on('changed',()=>panel.redraw())
+                .on('click',()=>{
+                    selection.setPropertyValue('physicstype',"fixed")
+                })
+        ])
+
 
 
         function redraw() {
