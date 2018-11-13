@@ -46,7 +46,7 @@ class Block {
         this.obj.castShadow = true
         this.obj.userData.clickable = true
         this.obj.userData.block = this
-        this.physicsType = "dynamic"
+        this.physicsType = BLOCK_TYPES.BLOCK
         this.rebuildGeometry()
     }
     get(name) {
@@ -164,6 +164,7 @@ class Block {
         b.setHeight(this.getHeight())
         b.setDepth(this.getDepth())
         b.setPosition(this.position.clone())
+        b.setPhysicsType(this.physicsType)
         return b
     }
 }
