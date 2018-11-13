@@ -277,6 +277,12 @@ export class BlockService {
         world.add(sphereBody)
         ball.userData.body = sphereBody
         this.balls.push(ball)
+        return ball
+    }
+
+    removeBall(ballMesh) {
+        this.group.remove(ballMesh)
+        world.removeBody(ballMesh.userData.body)
     }
 
     generateJSON() {

@@ -167,6 +167,7 @@ https://opengameart.org/content/cloudy-sky
     let play_game_button = null
     let bg_music
     let ignore_collisions = false
+    let intervalId
     function togglePlayGame() {
         if(blockService.isPlaying()) {
             click_sphere.visible = false
@@ -174,6 +175,7 @@ https://opengameart.org/content/cloudy-sky
             blockService.stopPlaying()
             parts.forEach(part => scene.remove(part))
             parts = []
+            clearInterval(intervalId)
             if(bg_music) bg_music.stop()
         } else {
             ignore_collisions = true
@@ -185,6 +187,12 @@ https://opengameart.org/content/cloudy-sky
             click_sphere.visible = true
             play_game_button.set('text','stop')
             blockService.startPlaying()
+            intervalId = setInterval(()=>{
+                console.log("checking", blockService.getAllBlocks()
+                    .filter(b => b.physicsType === 'dynamic')
+                    .filter(b => b.obj.visible)
+                    .length)
+            },1*1000)
         }
     }
 
@@ -690,7 +698,11 @@ https://opengameart.org/content/cloudy-sky
         scene.remove(press_sphere)
         const strength = Math.min(1.0,clock.getElapsedTime()/2.0)
         clock.stop()
-        blockService.fireBall(pointer.controller1.position, e.point.clone(),strength)
+        const ball = blockService.fireBall(pointer.controller1.position, e.point.clone(),strength)
+        setTimeout(()=>{
+            console.log("must remove the ball")
+            blockService.removeBall(ball)
+        },3*1000)
     }
     function initBall(scene) {
         click_sphere = new THREE.Mesh(
