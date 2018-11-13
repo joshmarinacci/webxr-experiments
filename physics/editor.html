@@ -94,6 +94,7 @@ https://opengameart.org/content/cloudy-sky
         sound: {
             musicBuffer:null,
             clickSound:null,
+            bg_music:null,
         },
         physics: {
             floorBody: null,
@@ -101,7 +102,14 @@ https://opengameart.org/content/cloudy-sky
         click_sphere:null,
         ui: {
             play_game_button:null
+        },
+        actions: {
+            fire_ball:null
         }
+    }
+    const editor = {
+        BASE_URL: "https://vr.josh.earth/360/doc/",
+        docid: "tumble_level3",
     }
 
 
@@ -112,7 +120,6 @@ https://opengameart.org/content/cloudy-sky
     }
 
 
-    let bg_music
     let ignore_collisions = false
     let intervalId
     function togglePlayGame() {
@@ -123,14 +130,14 @@ https://opengameart.org/content/cloudy-sky
             parts.forEach(part => scene.remove(part))
             parts = []
             clearInterval(intervalId)
-            if(bg_music) bg_music.stop()
+            if(game.sound.bg_music) game.sound.bg_music.stop()
         } else {
             ignore_collisions = true
             setTimeout(()=>{
                 ignore_collisions = false
             },500)
-            bg_music = playSource(game.sound.musicBuffer)
-            bg_music.loop = true
+            game.sound.bg_music = playSource(game.sound.musicBuffer)
+            game.sound.bg_music.loop = true
             game.click_sphere.visible = true
             game.ui.play_game_button.set('text','stop')
             blockService.startPlaying()
@@ -228,18 +235,17 @@ https://opengameart.org/content/cloudy-sky
         scene.add(part)
         parts.push(part)
     }
+
     function ballHitMovableBlock(target) {
         //play glass break sound
         playSource(game.sound.clickSound)
         //remove the block from the scene and simulation
         //must do in a timeout because we are currently in a collide callback
-        setTimeout(()=>{
-            blockService.removeFromSimulation(target)
-        },0)
+        setTimeout(()=>blockService.removeFromSimulation(target),0)
+        //add explosion effects
         const v = new THREE.Vector3()
         target.userData.block.obj.localToWorld(v)
         playParticles(v)
-        //add explosion effects
     }
 
     function handleCollision(e) {
@@ -255,22 +261,13 @@ https://opengameart.org/content/cloudy-sky
         // console.log(e.body.jtype, 'hit', e.target.jtype, e.target.type)
 
         //ignore the ball hitting a static body
-        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.KINEMATIC) {
-            // console.log("ball hit a fixed block")
-            return
-        }
+        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.KINEMATIC) return
 
-        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.DYNAMIC) {
-            console.log("ball hit a movable block")
-            ballHitMovableBlock(e.target)
-            return
-        }
+        //when ball hits moving block,
+        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.DYNAMIC) return ballHitMovableBlock(e.target)
 
-        //if the floor hit a block
-        if(e.body.jtype === BLOCK_TYPES.FLOOR && e.target.jtype === BLOCK_TYPES.BLOCK) {
-            console.log("a block hit the floor")
-            return;
-        }
+        //if the floor hit a block, ignore
+        if(e.body.jtype === BLOCK_TYPES.FLOOR && e.target.jtype === BLOCK_TYPES.BLOCK) return
 
         console.log("contact",e)
         if(e.body.id === game.physics.floorBody.id) return
@@ -278,6 +275,7 @@ https://opengameart.org/content/cloudy-sky
         if(e.contact.userData.soundPlayed === true) return
         e.contact.userData.soundPlayed = true
     }
+
     function initBlocks(scene) {
         blockService = new BlockService(scene,handleCollision)
         const block2 = blockService.makeBlock()
@@ -292,21 +290,17 @@ https://opengameart.org/content/cloudy-sky
         selection.add(block1)
     }
 
-    const BASE_URL = "https://vr.josh.earth/360/doc/"
-    const docid = "tumble_level3"
-
     function saveStructure() {
-        console.log("blocks are")
         const blockData = blockService.generateJSON()
         const doc = {
-            id:docid,
+            id:editor.docid,
             type:'tumble-v1',
             data:{
                 blocks:blockData
             },
         }
-        console.log(JSON.stringify(doc,null,'  '))
-        fetch(`${BASE_URL}${docid}`,{
+        console.log('saving document', JSON.stringify(doc,null,'  '))
+        fetch(`${editor.BASE_URL}${editor.docid}`,{
             method:'POST',
             mode:'cors',
             headers: {
@@ -325,7 +319,7 @@ https://opengameart.org/content/cloudy-sky
     }
 
     function loadStructure() {
-        fetch(`${BASE_URL}${docid}?cachebust=${Math.random()}`)
+        fetch(`${editor.BASE_URL}${editor.docid}?cachebust=${Math.random()}`)
             .then(res => res.json())
             .then(res => {
                 const blocks = blockService.loadFromJSON(res)
@@ -517,7 +511,6 @@ https://opengameart.org/content/cloudy-sky
         panel.lookAt(camera.position)
     }
 
-    //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -610,32 +603,38 @@ https://opengameart.org/content/cloudy-sky
         ))
     }
 
-    const clock = new THREE.Clock()
-    let press_sphere
-    function startPressSphere() {
-        clock.start()
-        press_sphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.2),
-            new THREE.MeshLambertMaterial({color:'red'})
-        )
-        press_sphere.scale.set(0.1,0.1,0.1)
-        press_sphere.position.set(0,2,-2)
-        scene.add(press_sphere)
-    }
-    function updatePressSphere() {
-        if(press_sphere) {
-            const strength = Math.min(1.0,clock.getElapsedTime()/2.0)
-            press_sphere.scale.set(strength,strength,strength)
+
+    class FireBallAction {
+        constructor(scene, controller) {
+            this.clock = new THREE.Clock()
+            this.press_sphere = null
+            this.startPressSphere = () => {
+                this.clock.start()
+                this.press_sphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.2),
+                    new THREE.MeshLambertMaterial({color: 'red'})
+                )
+                this.press_sphere.scale.set(0.1, 0.1, 0.1)
+                this.press_sphere.position.set(0, 2, -2)
+                scene.add(this.press_sphere)
+            }
+            this.endPressSphere = (e) => {
+                scene.remove(this.press_sphere)
+                const strength = Math.min(1.0, this.clock.getElapsedTime() / 2.0)
+                this.clock.stop()
+                const ball = blockService.fireBall(controller.position, e.point.clone(), strength)
+                //remove the ball after 3 sec
+                setTimeout(() => blockService.removeBall(ball), 3 * 1000)
+            }
+        }
+        updatePressSphere(time) {
+            if (this.press_sphere) {
+                const strength = Math.min(1.0, this.clock.getElapsedTime() / 2.0)
+                this.press_sphere.scale.set(strength, strength, strength)
+            }
         }
     }
-    function endPressSphere(e) {
-        scene.remove(press_sphere)
-        const strength = Math.min(1.0,clock.getElapsedTime()/2.0)
-        clock.stop()
-        const ball = blockService.fireBall(pointer.controller1.position, e.point.clone(),strength)
-        //remove the ball after 3 sec
-        setTimeout(()=> blockService.removeBall(ball),3*1000)
-    }
+
     function initBall(scene) {
         game.click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
@@ -646,8 +645,9 @@ https://opengameart.org/content/cloudy-sky
         game.click_sphere.position.set(0,0,0)
         scene.add(game.click_sphere)
 
-        on(game.click_sphere,POINTER_PRESS,startPressSphere)
-        on(game.click_sphere,POINTER_RELEASE,endPressSphere)
+        game.actions.fire_ball = new FireBallAction(scene, pointer.controller1)
+        on(game.click_sphere,POINTER_PRESS,game.actions.fire_ball.startPressSphere)
+        on(game.click_sphere,POINTER_RELEASE,game.actions.fire_ball.endPressSphere)
     }
 
     //called on every frame. customize this
@@ -658,7 +658,7 @@ https://opengameart.org/content/cloudy-sky
         if(stats) stats.update(time)
         parts.forEach(part =>  part.update(time))
         blockService.update(time)
-        updatePressSphere(time)
+        if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );
     }
 
