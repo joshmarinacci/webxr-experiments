@@ -14,9 +14,20 @@ let playing = false
 
 export const BLOCK_TYPES = {
     FLOOR:'FLOOR',
+    WALL:'WALL',
     BALL:'BALL',
     BLOCK:'BLOCK',
+    CRYSTAL:'CRYSTAL',
 }
+
+export const BLOCK_COLORS = {
+    FLOOR:0x666666,
+    BALL:0xff00ff,
+    WALL:0xaa00aa, //purple/magenta
+    CRYSTAL:0xccccff, //light pale blue
+    BLOCK:0x00ff00, //full blue
+}
+const SELECTED_COLOR = 0xffff00 //yellow
 
 
 const POSITION_NAMES = ['x','y','z']
@@ -102,15 +113,10 @@ class Block {
     }
 
     selectSelf() {
-        this.obj.material.color.set(0xff0000)
+        this.obj.material.color.set(SELECTED_COLOR)
     }
     unselectSelf() {
-        if(this.physicsType === 'dynamic') {
-            this.obj.material.color.set(0x00ff00)
-        }
-        if(this.physicsType === 'fixed') {
-            this.obj.material.color.set(0xaa00aa)
-        }
+        this.obj.material.color.set(BLOCK_COLORS[this.physicsType])
     }
 
     setPhysicsType(type) {
@@ -126,7 +132,7 @@ class Block {
             world.remove(this.body)
         }
         let type = CANNON.Body.DYNAMIC
-        if(this.physicsType === 'fixed') {
+        if(this.physicsType === BLOCK_TYPES.WALL) {
             type = CANNON.Body.KINEMATIC
         }
         this.body = new CANNON.Body({
@@ -135,7 +141,7 @@ class Block {
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
             shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
         })
-        this.body.jtype = BLOCK_TYPES.BLOCK
+        this.body.jtype = this.physicsType
         this.body.userData = {}
         this.body.userData.block = this
         world.addBody(this.body)

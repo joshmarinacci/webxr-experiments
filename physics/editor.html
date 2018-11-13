@@ -51,6 +51,9 @@
     <!--
 https://opengameart.org/content/cloudy-sky
 
+https://freesound.org/people/JohanDeecke/sounds/368335/
+
+
     -->
 
 </head>
@@ -94,6 +97,7 @@ https://opengameart.org/content/cloudy-sky
         sound: {
             musicBuffer:null,
             clickSound:null,
+            crashSound:null,
             bg_music:null,
         },
         physics: {
@@ -143,7 +147,7 @@ https://opengameart.org/content/cloudy-sky
             blockService.startPlaying()
             intervalId = setInterval(()=>{
                 console.log("checking", blockService.getAllBlocks()
-                    .filter(b => b.physicsType === 'dynamic')
+                    .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
                     .filter(b => b.obj.visible)
                     .length)
             },1*1000)
@@ -191,6 +195,7 @@ https://opengameart.org/content/cloudy-sky
     }
     //get the audio file and save the buffer as 'clickSound'
     getAudioFile('./sounds/plink.wav').then(buffer=> game.sound.clickSound = buffer)
+    getAudioFile('./sounds/crash1.wav').then(buffer=> game.sound.crashSound = buffer)
     getAudioFile("./music/Visager_-_09_-_Bug_Band_Loop.mp3").then(b => game.sound.musicBuffer = b)
 
 
@@ -236,9 +241,9 @@ https://opengameart.org/content/cloudy-sky
         parts.push(part)
     }
 
-    function ballHitMovableBlock(target) {
+    function destroyCrystal(target) {
         //play glass break sound
-        playSource(game.sound.clickSound)
+        playSource(game.sound.crashSound)
         //remove the block from the scene and simulation
         //must do in a timeout because we are currently in a collide callback
         setTimeout(()=>blockService.removeFromSimulation(target),0)
@@ -253,27 +258,49 @@ https://opengameart.org/content/cloudy-sky
 
         //ignore the ball hitting the floor
         //this is never called. why?
-        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.jtype === BLOCK_TYPES.FLOOR) {
-            console.log("floor")
-            return
-        }
+        // if(e.body.jtype === BLOCK_TYPES.BALL && e.target.jtype === BLOCK_TYPES.FLOOR) {
+        //     console.log("floor")
+        //     return
+        // }
 
         // console.log(e.body.jtype, 'hit', e.target.jtype, e.target.type)
 
         //ignore the ball hitting a static body
-        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.KINEMATIC) return
+        // if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.KINEMATIC) return
 
         //when ball hits moving block,
-        if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.DYNAMIC) return ballHitMovableBlock(e.target)
+        if(e.body.jtype === BLOCK_TYPES.BALL) {
+            if (e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
+            if (e.target.jtype === BLOCK_TYPES.BLOCK) {
+                //hit a block, just make the thunk sound
+                playSource(game.sound.clickSound)
+            }
+        }
+        //when crystal hits a block
+        // if(e.body.jtype === BLOCK_TYPES.CRYSTAL) {
+        //     if(e.target.jtype === BLOCK_TYPES.BLOCK) {
+        //         console.log("crystal hit a block")
+        //     }
+        //     if(e.target.jtype === BLOCK_TYPES.FLOOR) {
+        //         console.log("crystal hit the floor")
+        //     }
+        // }
+
+        //if floor hits a crystal
+        if(e.body.jtype === BLOCK_TYPES.FLOOR) {
+            if(e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
+        }
 
         //if the floor hit a block, ignore
-        if(e.body.jtype === BLOCK_TYPES.FLOOR && e.target.jtype === BLOCK_TYPES.BLOCK) return
+        // if(e.body.jtype === BLOCK_TYPES.FLOOR && e.target.jtype === BLOCK_TYPES.BLOCK) return
 
-        console.log("contact",e)
+        // console.log("contact",e)
+        /*
         if(e.body.id === game.physics.floorBody.id) return
         if(!e.contact.userData) e.contact.userData = {}
         if(e.contact.userData.soundPlayed === true) return
         e.contact.userData.soundPlayed = true
+        */
     }
 
     function initBlocks(scene) {
@@ -403,18 +430,24 @@ https://opengameart.org/content/cloudy-sky
 
         typePanel.addAll([
             new Button2D()
-                .set('text','movable')
+                .set('text','block').set('x',0).set('y',0)
                 .on('changed',()=>panel.redraw())
                 .on('click',()=>{
-                    selection.setPropertyValue('physicstype',"dynamic")
+                    selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)
                 })
             ,
             new Button2D()
-                .set('text','fixed').set('x',90)
+                .set('text','wall').set('x',60)
                 .on('changed',()=>panel.redraw())
                 .on('click',()=>{
-                    selection.setPropertyValue('physicstype',"fixed")
-                })
+                    selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)
+                }),
+            new Button2D()
+                .set('text','crystal').set('x',110).set('y',0)
+                .on('changed',()=>panel.redraw())
+                .on('click',()=>{
+                    selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL)
+                }),
         ])
 
 
