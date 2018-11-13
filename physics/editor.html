@@ -77,10 +77,11 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     import Label2D from "./label2d.js"
     import Panel2D from './panel2d.js'
     import Group2D from "./group2d.js"
-    import {BlockService} from "./BlockService.js"
+    import {BlockService,BLOCK_TYPES} from "./BlockService.js"
     import GPUParticleSystem from "../particles/GPUParticleSystem.js"
     import BlockSelection from "./BlockSelection.js"
-    import {BLOCK_TYPES} from './BlockService'
+    import SimpleText from "./SimpleText.js"
+
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -105,7 +106,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         },
         click_sphere:null,
         ui: {
-            play_game_button:null
+            play_game_button:null,
+            crystalCountText:null,
         },
         actions: {
             fire_ball:null
@@ -135,6 +137,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             parts = []
             clearInterval(intervalId)
             if(game.sound.bg_music) game.sound.bg_music.stop()
+            scene.remove(game.ui.crystalCountText)
         } else {
             ignore_collisions = true
             setTimeout(()=>{
@@ -146,11 +149,18 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             game.ui.play_game_button.set('text','stop')
             blockService.startPlaying()
             intervalId = setInterval(()=>{
-                console.log("checking", blockService.getAllBlocks()
+                const count = blockService.getAllBlocks()
                     .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
                     .filter(b => b.obj.visible)
-                    .length)
+                    .length
+                game.ui.crystalCountText.setText(`crystals ${count}`)
             },1*1000)
+
+
+            game.ui.crystalCountText = new SimpleText(2,1);
+            game.ui.crystalCountText.setText("playing")
+            game.ui.crystalCountText.position.set(0,3,-2)
+            scene.add(game.ui.crystalCountText)
         }
     }
 
