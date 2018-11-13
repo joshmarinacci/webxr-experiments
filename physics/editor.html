@@ -123,6 +123,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     function blockClicked(e) {
         selection.clear()
         selection.add(e.target.userData.block)
+        game.ui.blockCount.set('text',`blocks: ${blockService.getAllBlocks().length}`)
     }
 
 
@@ -554,6 +555,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('fsize',15)
             .set('x',100).set('y',480)
         )
+
+        game.ui.blockCount = new Label2D()
+            .set('text',`blocks:`)
+            .set('fsize',15)
+            .set('x',100).set('y',460);
+        panel.push(game.ui.blockCount)
 
         panel.redraw()
         panel.position.set(-1.5,1.5,-2)
