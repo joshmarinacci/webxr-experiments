@@ -11,6 +11,14 @@ world.gravity.set(0, -9.82, 0);
 
 let playing = false
 
+
+export const BLOCK_TYPES = {
+    FLOOR:'FLOOR',
+    BALL:'BALL',
+    BLOCK:'BLOCK',
+}
+
+
 const POSITION_NAMES = ['x','y','z']
 const ROTATION_NAMES = ['rotx','roty','rotz']
 class Block {
@@ -127,7 +135,7 @@ class Block {
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
             shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
         })
-        this.body.jtype = 'block'
+        this.body.jtype = BLOCK_TYPES.BLOCK
         this.body.userData = {}
         this.body.userData.block = this
         world.addBody(this.body)
@@ -273,7 +281,7 @@ export class BlockService {
             velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
             // material: bouncy
         })
-        sphereBody.jtype = 'ball'
+        sphereBody.jtype = BLOCK_TYPES.BALL
         world.add(sphereBody)
         ball.userData.body = sphereBody
         this.balls.push(ball)

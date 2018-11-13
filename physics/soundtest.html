@@ -28,7 +28,7 @@
         source.start(0)
     }
 
-    //get the audio file and save the buffer as 'audioBuffer'
+    //get the audio file and save the buffer as 'clickSound'
     getAudioFile('./sounds/plink.wav').then(buffer=> audioBuffer = buffer)
     //on button click, play the sound
     on($('#button'),'click',()=>playSource(audioBuffer))
