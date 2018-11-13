@@ -66,6 +66,8 @@
     import VRStats from "../boilerplate/vrstats.js"
     import {BlockService,BLOCK_TYPES} from "./BlockService.js"
     import FireBallAction from "./FireBallAction.js"
+    import AudioService from "./AudioService.js"
+    import {t2 as T2} from "./t2.js"
 
     const CONSTS = {
         BASE_URL: "https://vr.josh.earth/360/doc/",
@@ -78,8 +80,10 @@
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
+    let ignore_collisions
     const game = {
         blockService:null,
+        audioService:null,
         click_sphere: null,
         texture_loader: new THREE.TextureLoader(),
         actions: {
@@ -90,8 +94,18 @@
         }
     }
 
+    function destroyCrystal(target) {
+        //play glass break sound
+        game.audioService.play("crash")
+        //remove the block from the scene and simulation
+        //must do in a timeout because we are currently in a collide callback
+        setTimeout(()=>game.blockService.removeFromSimulation(target),0)
+        //add explosion effects
+        // const v = new THREE.Vector3()
+        // target.userData.block.obj.localToWorld(v)
+        // playParticles(v)
+    }
     function handleCollision(e) {
-        /*
         if(ignore_collisions) return
 
         //when ball hits moving block,
@@ -99,14 +113,14 @@
             if (e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
             if (e.target.jtype === BLOCK_TYPES.BLOCK) {
                 //hit a block, just make the thunk sound
-                playSource(game.sound.clickSound)
+                game.audioService.play('click')
             }
         }
 
         //if floor hits a crystal
         if(e.body.jtype === BLOCK_TYPES.FLOOR) {
             if(e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
-        }*/
+        }
     }
 
 
@@ -115,9 +129,7 @@
             .then(res => res.json())
             .then(res => {
                 const blocks = game.blockService.loadFromJSON(res)
-                blocks.forEach(b => {
-                    // on(b.getObject3D(), 'click', blockClicked)
-                })
+                game.blockService.startPlaying()
             })
     }
 
@@ -190,9 +202,22 @@
         ))
     }
 
+    function initAudio() {
+        game.audioService = new AudioService()
+        game.audioService.load("click","./sounds/plink.wav")
+        game.audioService.load("crash","./sounds/crash1.wav")
+        game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
+    }
+
     function initContent(scene,camera,renderer) {
         game.blockService = new BlockService(scene,handleCollision)
-        game.blockService.startPlaying()
+
+        ignore_collisions = true
+        setTimeout(()=>{
+            ignore_collisions = false
+        },500)
+
+        initAudio()
 
         initLights()
 
@@ -241,6 +266,7 @@
     function render(time) {
         if(stats) stats.update(time)
         if(pointer) pointer.tick(time)
+        T2.update(time)
         game.blockService.update(time)
         if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );

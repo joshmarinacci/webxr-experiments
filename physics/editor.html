@@ -82,6 +82,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     import GPUParticleSystem from "../particles/GPUParticleSystem.js"
     import BlockSelection from "./BlockSelection.js"
     import SimpleText from "./SimpleText.js"
+    import FireBallAction from "./FireBallAction.js"
+    import AudioService from "./AudioService.js"
 
 
     //JQuery-like selector
@@ -93,9 +95,9 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
 
-    let blockService
-
     const game = {
+        blockService:null,
+        audioService:null,
         sound: {
             musicBuffer:null,
             clickSound:null,
@@ -126,17 +128,17 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         selection.clear()
         selection.add(e.target.userData.block)
         editor.control.attach(e.target.userData.block.obj)
-        game.ui.blockCount.set('text',`blocks: ${blockService.getAllBlocks().length}`)
+        game.ui.blockCount.set('text',`blocks: ${game.blockService.getAllBlocks().length}`)
     }
 
 
     let ignore_collisions = false
     let intervalId
     function togglePlayGame() {
-        if(blockService.isPlaying()) {
+        if(game.blockService.isPlaying()) {
             game.click_sphere.visible = false
             game.ui.play_game_button.set('text','play')
-            blockService.stopPlaying()
+            game.blockService.stopPlaying()
             parts.forEach(part => scene.remove(part))
             parts = []
             clearInterval(intervalId)
@@ -147,13 +149,13 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             setTimeout(()=>{
                 ignore_collisions = false
             },500)
-            game.sound.bg_music = playSource(game.sound.musicBuffer)
+            game.sound.bg_music = game.audioService.play("bg")
             game.sound.bg_music.loop = true
             game.click_sphere.visible = true
             game.ui.play_game_button.set('text','stop')
-            blockService.startPlaying()
+            game.blockService.startPlaying()
             intervalId = setInterval(()=>{
-                const count = blockService.getAllBlocks()
+                const count = game.blockService.getAllBlocks()
                     .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
                     .filter(b => b.obj.visible)
                     .length
@@ -169,7 +171,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     }
 
     function addBlock() {
-        const block = blockService.makeBlock()
+        const block = game.blockService.makeBlock()
         block.positionSet(0,1.0,0)
         on(block.getObject3D(), 'click', blockClicked)
         selection.clear()
@@ -177,13 +179,13 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     }
 
     function deleteBlock() {
-        selection.getBlocks().forEach((b)=> blockService.remove(b))
+        selection.getBlocks().forEach((b)=> game.blockService.remove(b))
         selection.clear()
     }
 
     function cloneBlock() {
         const newBlocks = selection.getBlocks().map(b => {
-            const bb = blockService.cloneBlock(b)
+            const bb = game.blockService.cloneBlock(b)
             const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
             bb.setPosition(v3)
             on(bb.getObject3D(), 'click', blockClicked)
@@ -193,24 +195,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         newBlocks.forEach(b => selection.add(b))
     }
 
-    window.AudioContext = window.AudioContext || window.webkitAudioContext
-    let context = new window.AudioContext()
-    function getAudioFile(url) {
-        return fetch(url,{responseType:'arraybuffer'})
-            .then(resp => resp.arrayBuffer())
-            .then(arr => context.decodeAudioData(arr))
+    function initAudio() {
+        game.audioService = new AudioService()
+        game.audioService.load("click","./sounds/plink.wav")
+        game.audioService.load("crash","./sounds/crash1.wav")
+        game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
     }
-    function playSource(buffer) {
-        const source = context.createBufferSource();
-        source.buffer = buffer;
-        source.connect(context.destination);
-        source.start(0)
-        return source
-    }
-    //get the audio file and save the buffer as 'clickSound'
-    getAudioFile('./sounds/plink.wav').then(buffer=> game.sound.clickSound = buffer)
-    getAudioFile('./sounds/crash1.wav').then(buffer=> game.sound.crashSound = buffer)
-    getAudioFile("./music/Visager_-_09_-_Bug_Band_Loop.mp3").then(b => game.sound.musicBuffer = b)
 
 
     const texture_loader = new THREE.TextureLoader()
@@ -257,10 +247,10 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
     function destroyCrystal(target) {
         //play glass break sound
-        playSource(game.sound.crashSound)
+        game.audioService.play('crash')
         //remove the block from the scene and simulation
         //must do in a timeout because we are currently in a collide callback
-        setTimeout(()=>blockService.removeFromSimulation(target),0)
+        setTimeout(()=>game.blockService.removeFromSimulation(target),0)
         //add explosion effects
         const v = new THREE.Vector3()
         target.userData.block.obj.localToWorld(v)
@@ -287,7 +277,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             if (e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
             if (e.target.jtype === BLOCK_TYPES.BLOCK) {
                 //hit a block, just make the thunk sound
-                playSource(game.sound.clickSound)
+                game.audioService.play('click')
             }
         }
         //when crystal hits a block
@@ -318,21 +308,20 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     }
 
     function initBlocks(scene) {
-        blockService = new BlockService(scene,handleCollision)
-        const block2 = blockService.makeBlock()
+        const block2 = game.blockService.makeBlock()
         block2.positionSet(-2,1,0)
         on(block2.getObject3D(),'click',blockClicked)
-        const block1 = blockService.makeBlock()
+        const block1 = game.blockService.makeBlock()
         block1.positionSet(0,1,0)
         on(block1.getObject3D(),'click',blockClicked)
-        const block3 = blockService.makeBlock()
+        const block3 = game.blockService.makeBlock()
         block3.positionSet(2,1,0)
         on(block3.getObject3D(),'click',blockClicked)
         selection.add(block1)
     }
 
     function saveStructure() {
-        const blockData = blockService.generateJSON()
+        const blockData = game.blockService.generateJSON()
         const doc = {
             id:editor.docid,
             type:'tumble-v1',
@@ -363,7 +352,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         fetch(`${editor.BASE_URL}${editor.docid}?cachebust=${Math.random()}`)
             .then(res => res.json())
             .then(res => {
-                const blocks = blockService.loadFromJSON(res)
+                const blocks = game.blockService.loadFromJSON(res)
                 blocks.forEach(b => {
                     on(b.getObject3D(), 'click', blockClicked)
                 })
@@ -531,14 +520,14 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('text','front')
             .set('x',180)
             .set('y',300)
-            .on('click',()=>blockService.switchToFrontView())
+            .on('click',()=>game.blockService.switchToFrontView())
             .on('changed',redraw)
         )
         panel.push(new Button2D()
             .set('text','top')
             .set('x',180)
             .set('y',335)
-            .on('click',()=>blockService.switchToTopView())
+            .on('click',()=>game.blockService.switchToTopView())
             .on('changed',redraw)
         )
 
@@ -548,7 +537,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('y',390)
             .on('click',()=>{
                 selection.clear()
-                selection.addAll(blockService.getAllBlocks())
+                selection.addAll(game.blockService.getAllBlocks())
             })
             .on('changed',redraw)
         )
@@ -574,7 +563,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         editor.control = new THREE.TransformControls(camera,renderer.domElement)
         editor.control.setTranslationSnap(0.1)
         // on(editor.control,'change',(e)=>{
-            console.log("trnasform control chnaged",e.target)
+        //     console.log("trnasform control chnaged",e.target)
         // })
         on(editor.control,'dragging-changed',(e)=>{
             const blk = selection.getBlocks()[0]
@@ -584,6 +573,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     }
 
     function initContent(scene,camera,renderer) {
+        game.blockService = new BlockService(scene,handleCollision)
+        initAudio()
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
@@ -663,7 +654,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         var groundShape = new CANNON.Plane();
         game.physics.floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
         game.physics.floorBody.addShape(groundShape);
-        blockService.getWorld().addBody(game.physics.floorBody);
+        game.blockService.getWorld().addBody(game.physics.floorBody);
         game.physics.floorBody.jtype = BLOCK_TYPES.FLOOR
 
         //background image
@@ -701,7 +692,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         parts.forEach(part =>  part.update(time))
-        blockService.update(time)
+        game.blockService.update(time)
         if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );
     }
