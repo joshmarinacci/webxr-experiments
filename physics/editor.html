@@ -7,6 +7,7 @@
 
     <!-- required -->
     <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
+    <script src="../boilerplate/node_modules/three/examples/js/controls/TransformControls.js"></script>
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
 
@@ -116,6 +117,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     const editor = {
         BASE_URL: "https://vr.josh.earth/360/doc/",
         docid: "tumble_level3",
+        control:null
     }
 
 
@@ -123,6 +125,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     function blockClicked(e) {
         selection.clear()
         selection.add(e.target.userData.block)
+        editor.control.attach(e.target.userData.block.obj)
         game.ui.blockCount.set('text',`blocks: ${blockService.getAllBlocks().length}`)
     }
 
@@ -567,6 +570,18 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         panel.lookAt(camera.position)
     }
 
+    function initTransformControls(scene) {
+        editor.control = new THREE.TransformControls(camera,renderer.domElement)
+        editor.control.setTranslationSnap(0.1)
+        // on(editor.control,'change',(e)=>{
+            console.log("trnasform control chnaged",e.target)
+        // })
+        on(editor.control,'dragging-changed',(e)=>{
+            const blk = selection.getBlocks()[0]
+            blk.setPosition(blk.obj.position.clone())
+        })
+        scene.add(editor.control)
+    }
     function initContent(scene,camera,renderer) {
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -621,6 +636,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         initFloor(scene)
 
         initBall(scene)
+
+        initTransformControls(scene)
 
         $("#overlay").style.visibility = 'hidden'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
