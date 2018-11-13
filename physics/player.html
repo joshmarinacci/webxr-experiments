@@ -68,6 +68,7 @@
     import FireBallAction from "./FireBallAction.js"
     import AudioService from "./AudioService.js"
     import {t2 as T2} from "./t2.js"
+    import SimpleText from "./SimpleText.js"
 
     const CONSTS = {
         BASE_URL: "https://vr.josh.earth/360/doc/",
@@ -209,6 +210,22 @@
         game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
     }
 
+    function initCount() {
+        game.crystalCountText = new SimpleText(2,1);
+        game.crystalCountText.setText("playing")
+        game.crystalCountText.position.set(0,3,-2)
+        scene.add(game.crystalCountText)
+
+        const intervalId = setInterval(()=>{
+            const count = game.blockService.getAllBlocks()
+                .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
+                .filter(b => b.obj.visible)
+                .length
+            game.crystalCountText.setText(`crystals ${count}`)
+        },1*1000)
+
+    }
+
     function initContent(scene,camera,renderer) {
         game.blockService = new BlockService(scene,handleCollision)
 
@@ -222,6 +239,8 @@
         initLights()
 
         initBackground()
+
+        initCount()
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
