@@ -113,7 +113,10 @@ class Block {
 
     rebuildGeometry() {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
-        if(this.body) world.remove(this.body)
+        if(this.body) {
+            this.body.userData.block = null
+            world.remove(this.body)
+        }
         let type = CANNON.Body.DYNAMIC
         if(this.physicsType === 'fixed') {
             type = CANNON.Body.KINEMATIC
@@ -124,6 +127,9 @@ class Block {
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
             shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
         })
+        this.body.jtype = 'block'
+        this.body.userData = {}
+        this.body.userData.block = this
         world.addBody(this.body)
     }
 
@@ -224,17 +230,24 @@ export class BlockService {
         })
     }
 
+    removeFromSimulation(body) {
+        body.world.removeBody(body)
+        body.userData.block.getObject3D().visible = false
+    }
+
     stopPlaying() {
         this.blocks.forEach((b,i) => {
             b.setPosition(last_block_positions[i])
             b.obj.quaternion.copy(last_block_quaternions[i])
             b.body.quaternion.copy(last_block_quaternions[i])
             b.body.removeEventListener('collide',this.handleCollision)
+            b.rebuildGeometry()
+            b.obj.visible = true
         })
         playing = false
         this.balls.forEach(ball => {
             this.group.remove(ball)
-            world.remove(ball.userData.body)
+            world.removeBody(ball.userData.body)
         })
         this.balls = []
     }
@@ -260,6 +273,7 @@ export class BlockService {
             velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
             // material: bouncy
         })
+        sphereBody.jtype = 'ball'
         world.add(sphereBody)
         ball.userData.body = sphereBody
         this.balls.push(ball)

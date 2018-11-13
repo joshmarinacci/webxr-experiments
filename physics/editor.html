@@ -75,11 +75,13 @@ https://opengameart.org/content/cloudy-sky
     import Panel2D from './panel2d.js'
     import Group2D from "./group2d.js"
     import {BlockService} from "./BlockService.js"
+    import GPUParticleSystem from "../particles/GPUParticleSystem.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     const toRad = (deg) => deg * Math.PI/180
+    const rand = (min,max) => Math.random()*(max-min) + min
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
@@ -164,13 +166,20 @@ https://opengameart.org/content/cloudy-sky
 
     let play_game_button = null
     let bg_music
+    let ignore_collisions = false
     function togglePlayGame() {
         if(blockService.isPlaying()) {
             click_sphere.visible = false
             play_game_button.set('text','play')
             blockService.stopPlaying()
+            parts.forEach(part => scene.remove(part))
+            parts = []
             if(bg_music) bg_music.stop()
         } else {
+            ignore_collisions = true
+            setTimeout(()=>{
+                ignore_collisions = false
+            },500)
             bg_music = playSource(musicBuffer)
             bg_music.loop = true
             click_sphere.visible = true
@@ -224,7 +233,101 @@ https://opengameart.org/content/cloudy-sky
     getAudioFile("./music/Visager_-_09_-_Bug_Band_Loop.mp3").then(b => musicBuffer = b)
 
 
+    const texture_loader = new THREE.TextureLoader()
+    const spark_texture = texture_loader.load('../particles/spark.png')
+    let parts = []
+
+    function playParticles(pos) {
+        const options = {
+            position: new THREE.Vector3(0,0,0),
+            positionRandomness: 0.0,
+            velocity: new THREE.Vector3(0.0, 0, 0.0),
+            velocityRandomness: 1.0,
+            acceleration: new THREE.Vector3(0.0,0.0,0.0),
+
+            color: new THREE.Color(1.0,1.0,1.0),
+            endColor: new THREE.Color(1.0,1.0,1.0),
+
+            lifetime: 1.0,
+            fadeIn:0.001,
+            fadeOut:0.001,
+            size: 30,
+            sizeRandomness: 0.0,
+        }
+        const time = new THREE.Clock()
+        time.start()
+        const part = new GPUParticleSystem({
+            maxParticles: 10000,
+            particleSpriteTex: spark_texture,
+            blending: THREE.NormalBlending,
+            onTick: (system, t) => {
+                if (time.getElapsedTime() > 1.0) return
+                const s = 1.0
+                for(let i=0; i<10; i++) {
+                    options.velocity.set(rand(-s, s), rand(-s, s), rand(-s, s))
+                    options.position.copy( options.velocity)
+                    system.spawnParticle(options)
+                }
+            }
+        })
+        part.position.copy(pos)
+        scene.add(part)
+        parts.push(part)
+    }
+    function ballHitMovableBlock(target) {
+        //play glass break sound
+        //remove the block from the scene and simulation
+        //must do in a timeout because we are currently in a collide callback
+        setTimeout(()=>{
+            blockService.removeFromSimulation(target)
+        },0)
+        const v = new THREE.Vector3()
+        target.userData.block.obj.localToWorld(v)
+        playParticles(v)
+        //add explosion effects
+    }
+    /*
+    ignore the settle time (1 second?)
+    ignore the ball hitting the floor
+
+    find dynamic body hitting the floor
+    find ball hitting dynamic body
+
+
+
+    only create bodies when starting to play, remove completely other times. shouldn't be in the block at all?
+     */
     function handleCollision(e) {
+        if(ignore_collisions) return
+
+        //ignore the ball hitting the floor
+        //this is never called. why?
+        if(e.body.jtype === 'ball' && e.target.jtype === 'floor') {
+            console.log("floor")
+            return
+        }
+
+        // console.log(e.body.jtype, 'hit', e.target.jtype, e.target.type)
+
+        //ignore the ball hitting a static body
+        if(e.body.jtype === 'ball' && e.target.type === CANNON.Body.KINEMATIC) {
+            // console.log("ball hit a fixed block")
+            return
+        }
+
+        if(e.body.jtype === 'ball' && e.target.type === CANNON.Body.DYNAMIC) {
+            console.log("ball hit a movable block")
+            ballHitMovableBlock(e.target)
+            return
+        }
+
+        //if the floor hit a block
+        if(e.body.jtype === 'floor' && e.target.jtype === 'block') {
+            console.log("a block hit the floor")
+            return;
+        }
+
+        console.log("contact",e)
         if(e.body.id === floorBody.id) return
         if(!e.contact.userData) e.contact.userData = {}
         if(e.contact.userData.soundPlayed === true) return
@@ -550,9 +653,9 @@ https://opengameart.org/content/cloudy-sky
         groundBody.addShape(groundShape);
         blockService.getWorld().addBody(groundBody);
         floorBody = groundBody
+        floorBody.jtype = 'floor'
 
 
-        const texture_loader = new THREE.TextureLoader()
         const bg = texture_loader.load('./textures/sky2.jpg')
         const backdrop = new THREE.Mesh(
             new THREE.SphereGeometry(20),
@@ -612,6 +715,7 @@ https://opengameart.org/content/cloudy-sky
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
+        parts.forEach(part =>  part.update(time))
         blockService.update(time)
         updatePressSphere(time)
         renderer.render( scene, camera );
