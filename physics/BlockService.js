@@ -129,7 +129,7 @@ class Block {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
         if(this.body) {
             this.body.userData.block = null
-            world.remove(this.body)
+            world.removeBody(this.body)
         }
         let type = CANNON.Body.DYNAMIC
         if(this.physicsType === BLOCK_TYPES.WALL) {
@@ -196,7 +196,7 @@ export class BlockService {
     remove(block) {
         this.group.remove(block.getObject3D())
         this.blocks = this.blocks.filter(bl => bl !== block)
-        world.remove(block.body)
+        world.removeBody(block.body)
     }
     cloneBlock(block) {
         const b =  block.makeClone()
@@ -246,7 +246,7 @@ export class BlockService {
     }
 
     removeFromSimulation(body) {
-        body.world.removeBody(body)
+        world.removeBody(body)
         body.userData.block.getObject3D().visible = false
     }
 
@@ -330,7 +330,7 @@ export class BlockService {
         // console.log("loading level",doc)
         this.blocks.forEach(b => {
             this.group.remove(b.getObject3D())
-            world.remove(b.body)
+            world.removeBody(b.body)
         })
         this.blocks = []
         const newBlocks = doc.data.blocks.map(b => {
