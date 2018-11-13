@@ -543,7 +543,7 @@
     function initFloor(scene) {
         const floor =new THREE.Mesh(
             new THREE.PlaneGeometry(30,30,32,32),
-            new THREE.MeshLambertMaterial({color:'aqua'})
+            new THREE.MeshLambertMaterial({color:'brown'})
         )
         floor.rotation.x = toRad(-90)
         floor.receiveShadow = true
@@ -558,6 +558,19 @@
         groundBody.addShape(groundShape);
         blockService.getWorld().addBody(groundBody);
         floorBody = groundBody
+
+
+        const texture_loader = new THREE.TextureLoader()
+        const bg = texture_loader.load('./textures/sky2.jpg')
+        const backdrop = new THREE.Mesh(
+            new THREE.SphereGeometry(20),
+            new THREE.MeshBasicMaterial({
+                color:'white',
+                map:bg,
+                side: THREE.BackSide
+            })
+        )
+        scene.add(backdrop)
     }
 
     const clock = new THREE.Clock()
