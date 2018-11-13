@@ -26,6 +26,7 @@ class Block {
         )
         this.obj.castShadow = true
         this.obj.userData.clickable = true
+        this.obj.userData.block = this
         this.physicsType = "dynamic"
         this.rebuildGeometry()
     }

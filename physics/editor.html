@@ -48,6 +48,11 @@
         }
     </style>
 
+    <!--
+https://opengameart.org/content/cloudy-sky
+
+    -->
+
 </head>
 <body>
 
@@ -151,6 +156,11 @@
     }
 
     const selection = new BlockSelection()
+    function blockClicked(e) {
+        selection.clear()
+        selection.add(e.target.userData.block)
+    }
+
 
     let play_game_button = null
     let bg_music
@@ -172,10 +182,7 @@
     function addBlock() {
         const block = blockService.makeBlock()
         block.positionSet(0,1.0,0)
-        on(block.getObject3D(), 'click', () => {
-            selection.clear()
-            selection.add(block)
-        })
+        on(block.getObject3D(), 'click', blockClicked)
         selection.clear()
         selection.add(block)
     }
@@ -190,10 +197,7 @@
             const bb = blockService.cloneBlock(b)
             const v3 = b.getObject3D().position.clone().add(new THREE.Vector3(1.5,0,0))
             bb.setPosition(v3)
-            on(bb.getObject3D(), 'click', () => {
-                selection.clear()
-                selection.add(bb)
-            })
+            on(bb.getObject3D(), 'click', blockClicked)
             return bb
         })
         selection.clear()
@@ -231,22 +235,13 @@
         blockService = new BlockService(scene,handleCollision)
         const block2 = blockService.makeBlock()
         block2.positionSet(-2,1,0)
-        on(block2.getObject3D(),'click',()=>{
-            selection.clear()
-            selection.add(block2)
-        })
+        on(block2.getObject3D(),'click',blockClicked)
         const block1 = blockService.makeBlock()
         block1.positionSet(0,1,0)
-        on(block1.getObject3D(),'click',()=>{
-            selection.clear()
-            selection.add(block1)
-        })
+        on(block1.getObject3D(),'click',blockClicked)
         const block3 = blockService.makeBlock()
         block3.positionSet(2,1,0)
-        on(block3.getObject3D(),'click',()=>{
-            selection.clear()
-            selection.add(block3)
-        })
+        on(block3.getObject3D(),'click',blockClicked)
         selection.add(block1)
     }
 
@@ -288,10 +283,7 @@
             .then(res => {
                 const blocks = blockService.loadFromJSON(res)
                 blocks.forEach(b => {
-                    on(b.getObject3D(), 'click', () => {
-                        selection.clear()
-                        selection.add(b)
-                    })
+                    on(b.getObject3D(), 'click', blockClicked)
                 })
             })
     }
