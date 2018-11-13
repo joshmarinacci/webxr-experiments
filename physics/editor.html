@@ -473,7 +473,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             const dec   = new Button2D().set('x',120).set('y',y).set('text','+').on('changed',redraw)
                     .on('click',()=> selection.incrementProperty(name))
             on(selection,'changed',()=>{
-                value.set('text',''+selection.getProperty(name))
+                value.set('text',''+selection.getProperty(name).toFixed(2))
                 redraw()
             })
             return [label,inc,dec,value]
@@ -547,6 +547,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
                 selection.addAll(blockService.getAllBlocks())
             })
             .on('changed',redraw)
+        )
+
+        panel.push(new Label2D()
+            .set('text',`editing ${editor.docid}`)
+            .set('fsize',15)
+            .set('x',100).set('y',480)
         )
 
         panel.redraw()
