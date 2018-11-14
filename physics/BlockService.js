@@ -273,7 +273,7 @@ export class BlockService {
         pos.sub(this.group.position)
         dir.normalize()
         dir.multiplyScalar(strength*30)
-        const rad = 0.5
+        const rad = 0.25
         const ball = new THREE.Mesh(
             new THREE.SphereGeometry(rad),
             new THREE.MeshPhongMaterial({color:BLOCK_COLORS.BALL, flatShading:true})
