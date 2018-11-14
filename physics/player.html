@@ -208,12 +208,18 @@
         game.audioService.load("click","./sounds/plink.wav")
         game.audioService.load("crash","./sounds/crash1.wav")
         game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
+
+        setTimeout(()=>{
+            game.bg_music = game.audioService.play("bg")
+            game.bg_music.loop = true
+        },2000)
+
     }
 
     function initCount() {
         game.crystalCountText = new SimpleText(2,1);
         game.crystalCountText.setText("playing")
-        game.crystalCountText.position.set(0,3,-2)
+        game.crystalCountText.position.set(0,0,-1.5)
         scene.add(game.crystalCountText)
 
         const intervalId = setInterval(()=>{
