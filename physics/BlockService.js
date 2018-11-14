@@ -141,6 +141,7 @@ class Block {
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
             shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
         })
+        this.body.quaternion.setFromEuler(this.rotation.x,this.rotation.y,this.rotation.z,'XYZ')
         this.body.jtype = this.physicsType
         this.body.userData = {}
         this.body.userData.block = this
@@ -172,6 +173,10 @@ class Block {
 
 let last_block_positions = []
 let last_block_quaternions = []
+
+const DEBUG = {
+    INTRO_TRANSITION:false
+}
 
 
 export class BlockService {
@@ -226,8 +231,11 @@ export class BlockService {
         last_block_positions = this.blocks.map(b => b.position.clone())
         last_block_quaternions = this.blocks.map(b => b.obj.quaternion.clone())
         playing = true
+        this.blocks.forEach((b)=>{
+            b.rebuildGeometry()
+        })
         this.blocks.forEach(b => b.body.addEventListener('collide',this.handleCollision))
-        this.blocks.forEach((b,i) => {
+        if(DEBUG.INTRO_TRANSITION)   this.blocks.forEach((b,i) => {
             b.obj.scale.set(0.0,0.0,0.0)
             const len = 0.5
             T2.sequence()
