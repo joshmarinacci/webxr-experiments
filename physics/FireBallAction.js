@@ -2,7 +2,9 @@ export default class FireBallAction {
     constructor(scene, controller, blockService) {
         this.clock = new THREE.Clock()
         this.press_sphere = null
+        this.enabled = false
         this.startPressSphere = () => {
+            if(!this.enabled)return
             this.clock.start()
             this.press_sphere = new THREE.Mesh(
                 new THREE.SphereGeometry(0.2),
@@ -13,6 +15,7 @@ export default class FireBallAction {
             scene.add(this.press_sphere)
         }
         this.endPressSphere = (e) => {
+            if(!this.enabled)return
             scene.remove(this.press_sphere)
             const strength = Math.min(1.0, this.clock.getElapsedTime() / 2.0)
             this.clock.stop()
@@ -22,9 +25,14 @@ export default class FireBallAction {
         }
     }
     updatePressSphere(time) {
+        if(!this.enabled)return
         if (this.press_sphere) {
             const strength = Math.min(1.0, this.clock.getElapsedTime() / 2.0)
             this.press_sphere.scale.set(strength, strength, strength)
         }
+    }
+
+    setEnabled(val) {
+        this.enabled = val
     }
 }

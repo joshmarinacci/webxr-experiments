@@ -118,7 +118,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
     }
     const editor = {
         BASE_URL: "https://vr.josh.earth/360/doc/",
-        docid: "tumble_level3",
+        docid: "tumble_level2",
         control:null
     }
 
@@ -144,11 +144,13 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             clearInterval(intervalId)
             if(game.sound.bg_music) game.sound.bg_music.stop()
             scene.remove(game.ui.crystalCountText)
+            game.actions.fire_ball.setEnabled(false)
         } else {
             ignore_collisions = true
             setTimeout(()=>{
                 ignore_collisions = false
             },500)
+            game.actions.fire_ball.setEnabled(true)
             game.sound.bg_music = game.audioService.play("bg")
             game.sound.bg_music.loop = true
             game.click_sphere.visible = true

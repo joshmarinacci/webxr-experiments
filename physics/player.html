@@ -77,6 +77,7 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const off = (elem, type, cb) => elem.removeEventListener(type,cb)
     const toRad = (deg) => deg * Math.PI/180
 
     // global constants and variables for your app go here
@@ -92,7 +93,13 @@
         },
         physics:{
             floorBody:null,
-        }
+        },
+        currentLevel:0,
+        levels: [
+            "tumble_level2",
+            "tumble_level3",
+            "tumble_level1",
+        ]
     }
 
     function destroyCrystal(target) {
@@ -126,11 +133,10 @@
 
 
     function loadStructure() {
-        fetch(`${CONSTS.BASE_URL}${CONSTS.docid}?cachebust=${Math.random()}`)
+        return fetch(`${CONSTS.BASE_URL}${game.levels[game.currentLevel]}?cachebust=${Math.random()}`)
             .then(res => res.json())
             .then(res => {
-                const blocks = game.blockService.loadFromJSON(res)
-                game.blockService.startPlaying()
+                return game.blockService.loadFromJSON(res)
             })
     }
 
@@ -147,6 +153,7 @@
         game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game.blockService)
         on(game.click_sphere,POINTER_PRESS,game.actions.fire_ball.startPressSphere)
         on(game.click_sphere,POINTER_RELEASE,game.actions.fire_ball.endPressSphere)
+        game.actions.fire_ball.setEnabled(false)
     }
 
     function initLights() {
@@ -222,14 +229,52 @@
         game.crystalCountText.position.set(0,0,-1.5)
         scene.add(game.crystalCountText)
 
-        const intervalId = setInterval(()=>{
-            const count = game.blockService.getAllBlocks()
-                .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
-                .filter(b => b.obj.visible)
-                .length
-            game.crystalCountText.setText(`crystals ${count}`)
-        },1*1000)
+    }
 
+    function initText() {
+        game.text = new SimpleText(3,2);
+        game.text.setText("Block Basher Beta\ndestroy blue blocks\nclick to play")
+        game.text.position.set(0,3,-3)
+        scene.add(game.text)
+    }
+
+    function startLevel() {
+        console.log("starting the level")
+        game.text.visible = false
+        loadStructure().then(()=>{
+            game.blockService.startPlaying()
+            game.actions.fire_ball.setEnabled(true)
+            const intervalId = setInterval(()=>{
+                const count = game.blockService.getAllBlocks()
+                    .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
+                    .filter(b => b.obj.visible)
+                    .length
+                game.crystalCountText.setText(`crystals ${count}`)
+                if(count <= 0) {
+                    clearInterval(intervalId)
+                    game.currentLevel++
+                    endLevel()
+                }
+            },0.5*1000)
+        })
+    }
+    function endLevel() {
+        game.actions.fire_ball.setEnabled(false)
+        game.text.visible = true
+        game.text.setText("next level!")
+        const cb = () => {
+            game.blockService.stopPlaying()
+            startLevel()
+            off(game.click_sphere,POINTER_CLICK,cb)
+        }
+        on(game.click_sphere,POINTER_CLICK,cb)
+    }
+    function startMainMenu() {
+        const cb = () => {
+            startLevel()
+            off(game.click_sphere,POINTER_CLICK,cb)
+        }
+        on(game.click_sphere,POINTER_CLICK,cb)
     }
 
     function initContent(scene,camera,renderer) {
@@ -247,6 +292,8 @@
         initBackground()
 
         initCount()
+
+        initText()
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
@@ -285,7 +332,7 @@
         $("#overlay").style.visibility = 'hidden'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
 
-        loadStructure()
+        loadStructure().then(startMainMenu)
     }
 
     function render(time) {

@@ -345,6 +345,7 @@ export class BlockService {
             b2.set('roty',b.rotation.y)
             b2.set('rotz',b.rotation.z)
             b2.set('physicstype',b.physicstype)
+            b2.rebuildGeometry()
             return b2
         })
         return newBlocks
