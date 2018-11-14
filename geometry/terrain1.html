@@ -139,8 +139,8 @@
         //assign vert data from the canvas
         for(let j=0; j<data.height; j++) {
             for (let i = 0; i < data.width; i++) {
-                const n =  (j*(data.width)  +i)
-                const nn = (j*(data.width+1)+i)
+                const n =  (j*(data.height)  +i)
+                const nn = (j*(data.height+1)+i)
                 const col = data.data[n*4] // the red channel
                 const v1 = geo.vertices[nn]
                 v1.z = map(col,0,255,-10,10) //map from 0:255 to -10:10
