@@ -231,7 +231,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         const part = new GPUParticleSystem({
             maxParticles: 10000,
             particleSpriteTex: spark_texture,
-            blending: THREE.NormalBlending,
+            blending: THREE.AdditiveBlending,
             onTick: (system, t) => {
                 if (time.getElapsedTime() > 1.0) return
                 const s = 1.0
@@ -261,6 +261,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
     function handleCollision(e) {
         if(ignore_collisions) return
+        //ignore tiny collisions
+        if(Math.abs(e.contact.getImpactVelocityAlongNormal() < 1.0)) return
 
         //ignore the ball hitting the floor
         //this is never called. why?
@@ -678,6 +680,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:true, opacity:0.3})
         )
         game.click_sphere.visible = false
+        game.click_sphere.material.visible = false
         game.click_sphere.userData.clickable = true
         game.click_sphere.position.set(0,0,0)
         scene.add(game.click_sphere)
