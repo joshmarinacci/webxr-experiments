@@ -82,7 +82,6 @@
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
-    let ignore_collisions
     const game = {
         blockService:null,
         audioService:null,
@@ -96,9 +95,9 @@
         },
         currentLevel:0,
         levels: [
+            "tumble_level1",
             "tumble_level2",
             "tumble_level3",
-            "tumble_level1",
         ]
     }
 
@@ -114,7 +113,8 @@
         // playParticles(v)
     }
     function handleCollision(e) {
-        if(ignore_collisions) return
+        //ignore tiny collisions
+        if(Math.abs(e.contact.getImpactVelocityAlongNormal() < 1.0)) return
 
         //when ball hits moving block,
         if(e.body.jtype === BLOCK_TYPES.BALL) {
@@ -253,10 +253,26 @@
                 if(count <= 0) {
                     clearInterval(intervalId)
                     game.currentLevel++
-                    endLevel()
+                    if(game.currentLevel >= game.levels.length) {
+                        winGame()
+                    } else {
+                        endLevel()
+                    }
                 }
             },0.5*1000)
         })
+    }
+    function winGame() {
+        game.actions.fire_ball.setEnabled(false)
+        game.text.visible = true
+        game.text.setText("you won!\nplay again?")
+        const cb = () => {
+            game.blockService.stopPlaying()
+            game.currentLevel = 0
+            startLevel()
+            off(game.click_sphere,POINTER_CLICK,cb)
+        }
+        on(game.click_sphere,POINTER_CLICK,cb)
     }
     function endLevel() {
         game.actions.fire_ball.setEnabled(false)
@@ -279,11 +295,6 @@
 
     function initContent(scene,camera,renderer) {
         game.blockService = new BlockService(scene,handleCollision)
-
-        ignore_collisions = true
-        setTimeout(()=>{
-            ignore_collisions = false
-        },500)
 
         initAudio()
 
