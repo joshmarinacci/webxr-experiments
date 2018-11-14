@@ -137,7 +137,7 @@
     function initBall(scene) {
         game.click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
-            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:true, opacity:0.3})
+            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:true, opacity:0.0})
         )
         game.click_sphere.visible = true
         game.click_sphere.userData.clickable = true
@@ -163,7 +163,7 @@
         light.shadow.mapSize.height = 512
         light.shadow.camera.right = 10
         light.shadow.camera.top = 10
-        light.position.set( 0, 1, 1 ).normalize();
+        light.position.set( 0, 1, 0.5 ).normalize();
         scene.add( light );
 
         scene.add(new THREE.AmbientLight(0xffffff,0.5))

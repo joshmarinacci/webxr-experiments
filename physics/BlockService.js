@@ -22,9 +22,9 @@ export const BLOCK_TYPES = {
 
 export const BLOCK_COLORS = {
     FLOOR:0x666666,
-    BALL:0xff00ff,
-    WALL:0xaa00aa, //purple/magenta
-    CRYSTAL:0xccccff, //light pale blue
+    BALL:0xdd0000,// red
+    WALL:0x666666, //purple/magenta
+    CRYSTAL:0x00ccff, //light pale blue
     BLOCK:0x00ff00, //full blue
 }
 const SELECTED_COLOR = 0xffff00 //yellow
@@ -276,7 +276,7 @@ export class BlockService {
         const rad = 0.5
         const ball = new THREE.Mesh(
             new THREE.SphereGeometry(rad),
-            new THREE.MeshPhongMaterial({color:'gray', flatShading:true})
+            new THREE.MeshPhongMaterial({color:BLOCK_COLORS.BALL, flatShading:true})
         )
         ball.castShadow = true
         ball.position.copy(pos)
