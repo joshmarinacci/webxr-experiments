@@ -349,7 +349,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             id:editor.docid,
             type:'tumble-v1',
             data:{
-                blocks:blockData
+                blocks:blockData,
+                ballMass:game.blockService.ballMass,
+                ballRadius:game.blockService.ballRadius,
+                wallFriction:game.blockService.wallFriction,
+                wallRestitution:game.blockService.wallRestitution,
+                gravity: {x:0,y:-9.8,z:0},
             },
         }
         console.log('saving document', JSON.stringify(doc,null,'  '))
@@ -371,6 +376,22 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
     }
 
+    class EventMaker {
+        constructor() {
+            this.listeners = {}
+        }
+        addEventListener(type,cb) {
+            if(!this.listeners[type]) this.listeners[type] = []
+            this.listeners[type].push(cb)
+        }
+        fire(type,evt) {
+            if(!this.listeners[type]) this.listeners[type] = []
+            this.listeners[type].forEach(cb => cb(evt))
+        }
+
+    }
+    const dataChanger = new EventMaker()
+
     function loadStructure() {
         fetch(`${editor.BASE_URL}${editor.docid}?cachebust=${Math.random()}`)
             .then(res => res.json())
@@ -379,6 +400,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
                 blocks.forEach(b => {
                     on(b.getObject3D(), 'click', blockClicked)
                 })
+                dataChanger.fire('changed',{})
             })
     }
 
@@ -386,6 +408,10 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
+
+        function redraw() {
+            panel.redraw()
+        }
 
         const subPanels = []
         function switchTo(panel) {
@@ -478,9 +504,76 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
 
 
-        function redraw() {
-            panel.redraw()
+
+
+
+        const settingsPanel = new Group2D()
+            .set('x',5).set('y',40)
+            .set('w',245).set('h',200)
+            .set('visible',false)
+            .on('changed',()=>panel.redraw())
+        subPanels.push(settingsPanel)
+        panel.push(settingsPanel)
+
+        panel.push(new Button2D()
+            .set('text','settings')
+            .set('x',175).set('y',5)
+            .on('changed',()=>panel.redraw())
+            .on('click',()=>{ switchTo(settingsPanel) })
+        )
+
+        function makeValueSetter(name,y, getter, setter, step) {
+            const value = new Label2D()
+                .set('text',getter().toFixed(2))
+                .set('x',150).set('y',y).set('fsize',20)
+            const dec = () => setter(getter()-step)
+            const inc = () => setter(getter()+step)
+            on(dataChanger,'changed',()=>{
+                value.set('text',getter().toFixed(2))
+                redraw()
+            })
+            return [
+                new Label2D().set('text',name).set('x',0).set('y',y).set('fsize',20),
+                new Button2D().set('x',100).set('y',y).set('text','-').on('changed',redraw).on('click',dec),
+                new Button2D().set('x',120).set('y',y).set('text','+').on('changed',redraw).on('click',inc),
+                value,
+            ]
         }
+        settingsPanel.addAll(makeValueSetter('ball radius', 0,
+            ()=> game.blockService.ballRadius,
+            (v)=> {
+                game.blockService.ballRadius = v
+                dataChanger.fire('changed')
+            },
+            0.1 ))
+        settingsPanel.addAll(makeValueSetter('ball mass',   35,
+            ()=> game.blockService.ballMass,
+            (v)=> {
+                game.blockService.ballMass = v
+                dataChanger.fire('changed')
+            },
+            2.0))
+        settingsPanel.addAll(makeValueSetter('friction',    70,
+            ()=> game.blockService.wallFriction,
+            (v)=> {
+                game.blockService.wallFriction = v
+                game.blockService.rebuildWallMaterial()
+                dataChanger.fire('changed')
+            },
+            0.1
+            ))
+        settingsPanel.addAll(makeValueSetter('restitution', 105,
+            ()=> game.blockService.wallRestitution,
+            (v)=> {
+                game.blockService.wallRestitution = v
+                game.blockService.rebuildWallMaterial()
+                dataChanger.fire('changed')
+            },
+            0.1
+            ))
+
+
+
         function makePropControls(name,y) {
             const label = new Label2D().set('x',0).set('y',y).set('text',name.toUpperCase())
             const value = new Label2D().set('x',150).set('y',y).set('text','0')

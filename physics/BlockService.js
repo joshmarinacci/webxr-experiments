@@ -9,6 +9,9 @@ const fixedTimeStep = 1.0 / 60.0; // seconds
 const maxSubSteps = 3;
 world.gravity.set(0, -9.82, 0);
 
+const wallMaterial = new CANNON.Material()
+const ballMaterial = new CANNON.Material()
+
 let playing = false
 
 
@@ -139,7 +142,8 @@ class Block {
             mass: 1,//kg
             type: type,
             position: new CANNON.Vec3(this.position.x,this.position.y,this.position.z),
-            shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2))
+            shape: new CANNON.Box(new CANNON.Vec3(this.width/2,this.height/2,this.depth/2)),
+            material: wallMaterial,
         })
         this.body.quaternion.setFromEuler(this.rotation.x,this.rotation.y,this.rotation.z,'XYZ')
         this.body.jtype = this.physicsType
@@ -188,6 +192,13 @@ export class BlockService {
         this.balls = []
         this.collisionCB = collisionCB
         this.handleCollision = (e) => this.collisionCB(e)
+
+        this.ballRadius = 0.25
+        this.ballMass = 5.0
+        this.wallFriction = 0.0
+        this.wallRestitution = 0.0
+
+        this.rebuildWallMaterial()
     }
     getWorld() {
         return world
@@ -276,25 +287,25 @@ export class BlockService {
     }
 
     fireBall(pos, dir, strength) {
+        console.log("firing ball with mass = ", this.ballMass, 'radius',this.ballRadius)
         dir.sub(new THREE.Vector3(0,1.5,0))
         pos.set(0,1,-1)
         pos.sub(this.group.position)
         dir.normalize()
         dir.multiplyScalar(strength*30)
-        const rad = 0.25
         const ball = new THREE.Mesh(
-            new THREE.SphereGeometry(rad),
+            new THREE.SphereGeometry(this.ballRadius),
             new THREE.MeshPhongMaterial({color:BLOCK_COLORS.BALL, flatShading:true})
         )
         ball.castShadow = true
         ball.position.copy(pos)
         this.group.add(ball)
         const sphereBody = new CANNON.Body({
-            mass: 5,
-            shape: new CANNON.Sphere(rad),
+            mass: this.ballMass,
+            shape: new CANNON.Sphere(this.ballRadius),
             position: new CANNON.Vec3(pos.x, pos.y, pos.z),
             velocity: new CANNON.Vec3(dir.x,dir.y,dir.z),
-            // material: bouncy
+            material: ballMaterial,
         })
         sphereBody.jtype = BLOCK_TYPES.BALL
         world.add(sphereBody)
@@ -334,8 +345,14 @@ export class BlockService {
         })
     }
 
+    rebuildWallMaterial() {
+        console.log("setting the wall friction",this.wallFriction, this.wallRestitution)
+        world.addContactMaterial(new CANNON.ContactMaterial(wallMaterial,ballMaterial,
+            {friction:this.wallFriction, restitution: this.wallRestitution}))
+    }
+
     loadFromJSON(doc) {
-        // console.log("loading level",doc)
+        console.log("loading level",doc)
         this.blocks.forEach(b => {
             this.group.remove(b.getObject3D())
             world.removeBody(b.body)
@@ -356,7 +373,26 @@ export class BlockService {
             b2.rebuildGeometry()
             return b2
         })
+
+        this.ballRadius = doc.data.ballRadius
+        if(!doc.data.ballRadius) this.ballRadius = 0.25
+        this.ballMass = doc.data.ballMass
+        if(!doc.data.ballMass) this.ballMass = 5
+
+        if(typeof doc.data.wallFriction !== 'undefined') {
+            this.wallFriction = doc.data.wallFriction
+            this.wallRestitution = doc.data.wallRestitution
+            this.rebuildWallMaterial()
+        }
+
+        if(typeof doc.data.gravity !== 'undefined') {
+            // console.log('setting gravity to', doc.data.gravity)
+            // const g = doc.data.gravity
+            // world.gravity.set(g.x,g.y,g.z)
+        }
+
         return newBlocks
+
     }
 
     switchToFrontView() {
