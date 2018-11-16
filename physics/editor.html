@@ -197,6 +197,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         on(block.getObject3D(), 'click', blockClicked)
         selection.clear()
         selection.add(block)
+        editor.control.attach(block.getObject3D())
     }
 
     function deleteBlock() {
@@ -215,6 +216,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         })
         selection.clear()
         newBlocks.forEach(b => selection.add(b))
+        if(newBlocks.length > 0) editor.control.attach(newBlocks[0].getObject3D())
+
     }
 
     function initAudio() {
