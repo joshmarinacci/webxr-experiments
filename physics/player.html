@@ -74,6 +74,27 @@
         BASE_URL: "https://vr.josh.earth/360/doc/",
         docid: "tumble_level3",
     }
+
+
+    function parseOptions(opts) {
+        let loc = document.location
+        if (loc.search) {
+            const parts = loc.search.substring(1).split('&')
+            parts.forEach((part)=>{
+                const keyval = part.split('=')
+                opts[keyval[0]] = keyval[1]
+            })
+        }
+        return opts;
+    }
+
+    const opts = parseOptions({
+        docid:"tumble_level3"
+    })
+    CONSTS.docid = opts.docid
+    console.log(CONSTS)
+
+
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
@@ -100,6 +121,8 @@
             "tumble_level3",
         ]
     }
+
+    game.levels.unshift(CONSTS.docid)
 
     function destroyCrystal(target) {
         //play glass break sound

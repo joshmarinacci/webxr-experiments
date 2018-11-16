@@ -116,11 +116,30 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             fire_ball:null
         }
     }
+
+    function parseOptions(opts) {
+        let loc = document.location
+        if (loc.search) {
+            const parts = loc.search.substring(1).split('&')
+            parts.forEach((part)=>{
+                const keyval = part.split('=')
+                opts[keyval[0]] = keyval[1]
+            })
+        }
+        return opts;
+    }
+
     const editor = {
         BASE_URL: "https://vr.josh.earth/360/doc/",
         docid: "tumble_level1",
         control:null
     }
+
+    const opts = parseOptions({docid:'tumble_level1'})
+    console.log(opts)
+    editor.docid = opts.docid
+
+    console.log("Loading the doc",editor.docid)
 
 
     const selection = new BlockSelection()
