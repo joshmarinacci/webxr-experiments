@@ -102,27 +102,15 @@
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
-        scene.background = new THREE.CubeTextureLoader()
-            .setPath('../../three.js/examples/textures/cube/pisa/')
-            .load( [ 'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png' ] )
-        // scene.background = new THREE.TextureLoader().load('../physics/textures/Castle Day.jpg')
 
+        new THREE.GLTFLoader().load("./kenneytest01.glb",obj => {
+            // console.log("got it",obj)
+            scene.add(obj.scene)
+        })
         //create a cube
         cube = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(1),
-            new THREE.MeshPhysicalMaterial({
-                color:0x6699ff,
-                roughness: 0.1,
-                metalness: 0.0,
-                clearCoat: 1.0,
-                clearCoatRoughness: 0.5,
-                reflectivity:1.0,
-                // transparent: false,
-                // opacity: 0.8,
-                envMap: scene.background,
-                // side: THREE.DoubleSide,
-                // map:texture
-            })
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'white', map:texture})
         )
         //camera is at z=0, so move the cube back so we can see it
         cube.position.z = -5
@@ -132,33 +120,13 @@
         cube.userData.clickable = true
         scene.add(cube)
 
-        const box = new THREE.Mesh(
-            new THREE.BoxGeometry(2,2,2),
-            new THREE.MeshLambertMaterial({
-                color:'red'
-            })
-        )
-        box.position.z = -8
-        box.rotation.y = 45 * Math.PI/180
-        scene.add(box)
-
         //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
 
-        const pt1 = new THREE.PointLight(0xffffff,0.5,100)
-        pt1.position.set(-10,10,0)
-        scene.add(pt1)
-
-        const pt2 = new THREE.PointLight(0xffffff,0.5,100)
-        pt2.position.set(0,-10,0)
-        scene.add(pt2)
 
 
-        const pt3 = new THREE.PointLight(0xffffff,0.5,100)
-        pt3.position.set(10,0,0)
-        scene.add(pt3)
 
 
         // enable stats visible inside VR
@@ -174,7 +142,7 @@
             intersectionFilter: ((o) => o.userData.clickable),
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
@@ -208,7 +176,7 @@
         })
         on(cube,POINTER_EXIT,()=>{
             // console.log('exiting the cube')
-            cube.material.color.set(0x0000ff)
+            cube.material.color.set(0xffffff)
         })
 
 
