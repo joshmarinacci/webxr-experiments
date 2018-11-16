@@ -201,6 +201,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
 
     function deleteBlock() {
         selection.getBlocks().forEach((b)=> game.blockService.remove(b))
+        editor.control.detach()
         selection.clear()
     }
 
