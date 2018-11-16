@@ -21,7 +21,7 @@ export default class FireBallAction {
             this.clock.stop()
             const ball = blockService.fireBall(controller.position, e.point.clone(), strength)
             //remove the ball after 3 sec
-            setTimeout(() => blockService.removeBall(ball), 3 * 1000)
+            setTimeout(() => blockService.removeBall(ball), 10 * 1000)
         }
     }
     updatePressSphere(time) {
