@@ -12,9 +12,14 @@ export default class Group2D {
         this.visible = true
         this.comps = []
         this.redrawHandler = (e) => this.fire('changed',e)
+
+        this.layout = (comp) => {
+            console.log("not laying out anything")
+        }
     }
     draw(ctx) {
         if(!this.visible) return
+        this.layout(this)
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
         ctx.strokeStyle = 'black'

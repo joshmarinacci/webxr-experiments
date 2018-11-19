@@ -455,10 +455,28 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .on('click',()=>switchTo(rotPanel))
         )
 
+        const rowLayout = (panel)=>{
+            let x = 0
+            panel.comps.forEach((c)=>{
+                c.x=x
+                c.y=0
+                x += c.w+5
+            })
+        }
+        const colLayout = (panel) => {
+            let y = 0
+            panel.comps.forEach((c)=>{
+                c.x=0
+                c.y=y
+                y += c.h+5
+            })
+        }
+
         const typePanel = new Group2D()
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
+            .set('layout',rowLayout)
         subPanels.push(typePanel)
         panel.add(typePanel)
 
@@ -469,14 +487,11 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         )
 
         typePanel.addAll([
-            new Button2D()
-                .set('text','block').set('x',0).set('y',0)
+            new Button2D().set('text','block')
                 .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)),
-            new Button2D()
-                .set('text','wall').set('x',60)
+            new Button2D().set('text','wall')
                 .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)),
-            new Button2D()
-                .set('text','crystal').set('x',110).set('y',0)
+            new Button2D().set('text','crystal')
                 .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL))
         ])
 
@@ -566,40 +581,26 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name,40*i)));
         ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name,40*i)));
 
-        panel.add(new Button2D()
-            .set('text','add')
+        const actionGroup = new Group2D()
             .set('x',5)
-            .set('y',300)
-            .on('click',addBlock)
-        )
+            .set('y',250)
+            .set('w',100)
+            .set('h',250)
+            .set('layout',colLayout)
+        panel.add(actionGroup)
 
-        panel.add(new Button2D()
-            .set('text','delete')
-            .set('x',5)
-            .set('y',340)
-            .on('click',deleteBlock)
+        actionGroup.add(new Button2D().set('text','select all')
+            .on('click',()=>{
+                selection.clear()
+                selection.addAll(game.blockService.getAllBlocks())
+            })
         )
-
-        panel.add(new Button2D()
-            .set('text','clone')
-            .set('x',5)
-            .set('y',380)
-            .on('click',cloneBlock)
-        )
-
-        panel.add(new Button2D()
-            .set('text','save')
-            .set('x',5)
-            .set('y',420)
-            .on('click',saveStructure)
-        )
-
-        game.ui.play_game_button = new Button2D()
-            .set('text','play')
-            .set('x',5)
-            .set('y',460)
-            .on('click',togglePlayGame)
-        panel.add(game.ui.play_game_button)
+        actionGroup.add(new Button2D().set('text','add').on('click',addBlock))
+        actionGroup.add(new Button2D().set('text','delete').on('click',deleteBlock))
+        actionGroup.add(new Button2D().set('text','clone').on('click',cloneBlock))
+        actionGroup.add(new Button2D().set('text','save').on('click',saveStructure))
+        game.ui.play_game_button = new Button2D().set('text','play').on('click',togglePlayGame)
+        actionGroup.add(game.ui.play_game_button)
 
         panel.add(new Button2D()
             .set('text','front')
@@ -612,16 +613,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',180)
             .set('y',335)
             .on('click',()=>game.blockService.switchToTopView())
-        )
-
-        panel.add(new Button2D()
-            .set('text','all')
-            .set('x',180)
-            .set('y',390)
-            .on('click',()=>{
-                selection.clear()
-                selection.addAll(game.blockService.getAllBlocks())
-            })
         )
 
         panel.add(new Label2D()
