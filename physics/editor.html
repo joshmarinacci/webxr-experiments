@@ -417,6 +417,16 @@ https://freesound.org/people/Reitanna/sounds/323725/
     }
 
     function initPanel(scene) {
+        function makeGridLayout(cols) {
+            return (panel) => {
+                panel.comps.forEach((c,i)=>{
+                    const col = i%4
+                    const row = Math.floor(i/4)
+                    c.x = cols[col]
+                    c.y=row*25
+                })
+            }
+        }
 
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
@@ -430,12 +440,14 @@ https://freesound.org/people/Reitanna/sounds/323725/
             .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',true)
+            .set('layout',makeGridLayout([0,50,70,100]))
         subPanels.push(posPanel)
         panel.add(posPanel)
 
         const sizPanel = new Group2D()
             .set('x',5).set('y',35)
             .set('w',245).set('h',200)
+            .set('layout',makeGridLayout([0,50,70,100]))
             .set('visible',false)
         subPanels.push(sizPanel)
         panel.add(sizPanel)
@@ -443,6 +455,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         const rotPanel = new Group2D()
             .set('x',5).set('y',35)
             .set('w',245).set('h',200)
+            .set('layout',makeGridLayout([0,50,70,100]))
             .set('visible',false)
         panel.add(rotPanel)
         subPanels.push(rotPanel)
@@ -507,16 +520,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
 
 
-        function makeGridLayout(cols) {
-            return (panel) => {
-                panel.comps.forEach((c,i)=>{
-                    const col = i%4
-                    const row = Math.floor(i/4)
-                    c.x = cols[col]
-                    c.y=row*25
-                })
-            }
-        }
 
         const settingsPanel = new Group2D()
             .set('x',5).set('y',35)
@@ -591,10 +594,10 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
 
         function makePropControls(name,y) {
-            const label = new Label2D().set('x',0).set('y',y).set('text',name.toUpperCase())
-            const value = new Label2D().set('x',150).set('y',y).set('text','0')
-            const inc   = new Button2D().set('x',90).set('y',y).set('text','-').on('click',()=> selection.decrementProperty(name))
-            const dec   = new Button2D().set('x',120).set('y',y).set('text','+').on('click',()=> selection.incrementProperty(name))
+            const label = new Label2D().set('text',name.toUpperCase()).set('fsize',15)
+            const value = new Label2D().set('text','0').set('fsize',15)
+            const inc   = new Button2D().set('text','-').on('click',()=> selection.decrementProperty(name)).set('fsize',15)
+            const dec   = new Button2D().set('text','+').on('click',()=> selection.incrementProperty(name)).set('fsize',15)
             on(selection,'changed',()=>{
                 value.set('text',''+selection.getProperty(name).toFixed(2))
                 panel.redraw()
@@ -602,9 +605,9 @@ https://freesound.org/people/Reitanna/sounds/323725/
             return [label,inc,dec,value]
         }
 
-        ['x','y','z'].forEach((name,i) => posPanel.addAll(makePropControls(name,40*i)));
-        ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name,40*i)));
-        ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name,40*i)));
+        ['x','y','z'].forEach((name,i) => posPanel.addAll(makePropControls(name)));
+        ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name)));
+        ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name)));
 
         const actionGroup = new Group2D()
             .set('x',5)
