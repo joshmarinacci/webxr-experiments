@@ -413,15 +413,9 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
 
-        function redraw() {
-            panel.redraw()
-        }
-
         const subPanels = []
         function switchTo(panel) {
-            subPanels.forEach(p => {
-                p.set('visible',(p===panel))
-            })
+            subPanels.forEach(p =>  p.set('visible',(p===panel)))
         }
 
         const posPanel = new Group2D()
@@ -429,33 +423,33 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('w',245).set('h',200)
             .set('visible',true)
         subPanels.push(posPanel)
-        panel.push(posPanel)
+        panel.add(posPanel)
 
         const sizPanel = new Group2D()
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
         subPanels.push(sizPanel)
-        panel.push(sizPanel)
+        panel.add(sizPanel)
 
         const rotPanel = new Group2D()
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
-        panel.push(rotPanel)
+        panel.add(rotPanel)
         subPanels.push(rotPanel)
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','pos')
             .set('x',5).set('y',5)
             .on('click',()=> switchTo(posPanel))
         )
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','siz')
             .set('x',50).set('y',5)
             .on('click',()=> switchTo(sizPanel))
         )
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','rot')
             .set('x',87).set('y',5)
             .on('click',()=>switchTo(rotPanel))
@@ -466,33 +460,24 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('w',245).set('h',200)
             .set('visible',false)
         subPanels.push(typePanel)
-        panel.push(typePanel)
+        panel.add(typePanel)
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','type')
             .set('x',125).set('y',5)
-            .on('click',()=>{
-                switchTo(typePanel)
-            })
+            .on('click',()=> switchTo(typePanel))
         )
 
         typePanel.addAll([
             new Button2D()
                 .set('text','block').set('x',0).set('y',0)
-                .on('click',()=>{
-                    selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)
-                })
-            ,
+                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)),
             new Button2D()
                 .set('text','wall').set('x',60)
-                .on('click',()=>{
-                    selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)
-                }),
+                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)),
             new Button2D()
                 .set('text','crystal').set('x',110).set('y',0)
-                .on('click',()=>{
-                    selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL)
-                }),
+                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL))
         ])
 
 
@@ -505,9 +490,9 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('w',245).set('h',200)
             .set('visible',false)
         subPanels.push(settingsPanel)
-        panel.push(settingsPanel)
+        panel.add(settingsPanel)
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','settings')
             .set('x',175).set('y',5)
             .on('click',()=>{ switchTo(settingsPanel) })
@@ -521,12 +506,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             const inc = () => setter(getter()+step)
             on(dataChanger,'changed',()=>{
                 value.set('text',getter().toFixed(2))
-                redraw()
+                panel.redraw()
             })
             return [
                 new Label2D().set('text',name).set('x',0).set('y',y).set('fsize',20),
-                new Button2D().set('x',100).set('y',y).set('text','-').on('changed',redraw).on('click',dec),
-                new Button2D().set('x',120).set('y',y).set('text','+').on('changed',redraw).on('click',inc),
+                new Button2D().set('x',100).set('y',y).set('text','-').on('click',dec),
+                new Button2D().set('x',120).set('y',y).set('text','+').on('click',inc),
                 value,
             ]
         }
@@ -568,13 +553,11 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         function makePropControls(name,y) {
             const label = new Label2D().set('x',0).set('y',y).set('text',name.toUpperCase())
             const value = new Label2D().set('x',150).set('y',y).set('text','0')
-            const inc   = new Button2D().set('x',90).set('y',y).set('text','-')
-                    .on('click',()=> selection.decrementProperty(name))
-            const dec   = new Button2D().set('x',120).set('y',y).set('text','+')
-                    .on('click',()=> selection.incrementProperty(name))
+            const inc   = new Button2D().set('x',90).set('y',y).set('text','-').on('click',()=> selection.decrementProperty(name))
+            const dec   = new Button2D().set('x',120).set('y',y).set('text','+').on('click',()=> selection.incrementProperty(name))
             on(selection,'changed',()=>{
                 value.set('text',''+selection.getProperty(name).toFixed(2))
-                redraw()
+                panel.redraw()
             })
             return [label,inc,dec,value]
         }
@@ -583,28 +566,28 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name,40*i)));
         ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name,40*i)));
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','add')
             .set('x',5)
             .set('y',300)
             .on('click',addBlock)
         )
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','delete')
             .set('x',5)
             .set('y',340)
             .on('click',deleteBlock)
         )
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','clone')
             .set('x',5)
             .set('y',380)
             .on('click',cloneBlock)
         )
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','save')
             .set('x',5)
             .set('y',420)
@@ -616,22 +599,22 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',460)
             .on('click',togglePlayGame)
-        panel.push(game.ui.play_game_button)
+        panel.add(game.ui.play_game_button)
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','front')
             .set('x',180)
             .set('y',300)
             .on('click',()=>game.blockService.switchToFrontView())
         )
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','top')
             .set('x',180)
             .set('y',335)
             .on('click',()=>game.blockService.switchToTopView())
         )
 
-        panel.push(new Button2D()
+        panel.add(new Button2D()
             .set('text','all')
             .set('x',180)
             .set('y',390)
@@ -641,7 +624,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             })
         )
 
-        panel.push(new Label2D()
+        panel.add(new Label2D()
             .set('text',`editing ${editor.docid}`)
             .set('fsize',15)
             .set('x',100).set('y',480)
@@ -651,7 +634,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('text',`blocks:`)
             .set('fsize',15)
             .set('x',100).set('y',460);
-        panel.push(game.ui.blockCount)
+        panel.add(game.ui.blockCount)
 
         panel.redraw()
         panel.position.set(-1.5,1.5,-2)

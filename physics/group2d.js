@@ -37,14 +37,10 @@ export default class Group2D {
     }
     findAt(pt) {
         if(!this.visible) return null
-        // console.log("looking for point",pt)
         for(let i=0; i<this.comps.length; i++) {
             const comp = this.comps[i]
             const res = comp.findAt({x:pt.x-comp.x-5,y:pt.y-comp.y-5})
-            if(res) {
-                // console.log("returning early with",comp,res)
-                return res
-            }
+            if(res) return res
         }
         return null
     }
@@ -66,10 +62,11 @@ export default class Group2D {
         return this
     }
 
+    add(comp) {
+        this.comps.push(comp)
+        comp.addEventListener('changed',this.redrawHandler)
+    }
     addAll(all) {
-        all.forEach(c => {
-            this.comps.push(c)
-            c.addEventListener('changed',this.redrawHandler)
-        })
+        all.forEach(c => this.add(c))
     }
 }

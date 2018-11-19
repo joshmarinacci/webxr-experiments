@@ -73,13 +73,9 @@ export default class Panel2D extends THREE.Object3D {
         this.header.position.set(0,1.1,0)
         this.add(this.header)
 
-        on(this.header,POINTER_ENTER,(e)=>{
-            this.header.material.color.set('yellow')
-        })
-        on(this.header,POINTER_EXIT,(e)=>{
-            this.header.material.color.set('goldenrod')
-        })
-        on(this.header,POINTER_PRESS,e => this.startDrag())
+        on(this.header,POINTER_ENTER, e => this.header.material.color.set('yellow'))
+        on(this.header,POINTER_EXIT,  e => this.header.material.color.set('goldenrod'))
+        on(this.header,POINTER_PRESS, e => this.startDrag())
     }
 
     fire(type,payload) {
@@ -88,21 +84,21 @@ export default class Panel2D extends THREE.Object3D {
     }
 
     findAt(pt) {
-        // console.log("looking for point",pt)
         for(let i=0; i<this.comps.length; i++) {
             const comp = this.comps[i]
             const res = comp.findAt({x:pt.x-comp.x,y:pt.y-comp.y})
-            if(res) {
-                // console.log("returning early with",comp,res)
-                return res
-            }
+            if(res) return res
         }
         return null
     }
 
-    push(comp) {
-        this.comps.push(comp)
-        on(comp,'changed',this.redrawHandler)
+    add(comp) {
+        if(comp instanceof THREE.Object3D) {
+            super.add(comp)
+        } else {
+            this.comps.push(comp)
+            on(comp, 'changed', this.redrawHandler)
+        }
     }
 
     redraw() {
