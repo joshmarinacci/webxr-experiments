@@ -428,7 +428,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',true)
-            .on('changed',()=>panel.redraw())
         subPanels.push(posPanel)
         panel.push(posPanel)
 
@@ -436,7 +435,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
-            .on('changed',()=>panel.redraw())
         subPanels.push(sizPanel)
         panel.push(sizPanel)
 
@@ -444,26 +442,22 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
-            .on('changed',()=>panel.redraw())
         panel.push(rotPanel)
         subPanels.push(rotPanel)
 
         panel.push(new Button2D()
             .set('text','pos')
             .set('x',5).set('y',5)
-            .on('changed',()=>panel.redraw())
             .on('click',()=> switchTo(posPanel))
         )
         panel.push(new Button2D()
             .set('text','siz')
             .set('x',50).set('y',5)
-            .on('changed',()=>panel.redraw())
             .on('click',()=> switchTo(sizPanel))
         )
         panel.push(new Button2D()
             .set('text','rot')
             .set('x',87).set('y',5)
-            .on('changed',()=>panel.redraw())
             .on('click',()=>switchTo(rotPanel))
         )
 
@@ -471,14 +465,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
-            .on('changed',()=>panel.redraw())
         subPanels.push(typePanel)
         panel.push(typePanel)
 
         panel.push(new Button2D()
             .set('text','type')
             .set('x',125).set('y',5)
-            .on('changed',()=>panel.redraw())
             .on('click',()=>{
                 switchTo(typePanel)
             })
@@ -487,20 +479,17 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         typePanel.addAll([
             new Button2D()
                 .set('text','block').set('x',0).set('y',0)
-                .on('changed',()=>panel.redraw())
                 .on('click',()=>{
                     selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)
                 })
             ,
             new Button2D()
                 .set('text','wall').set('x',60)
-                .on('changed',()=>panel.redraw())
                 .on('click',()=>{
                     selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)
                 }),
             new Button2D()
                 .set('text','crystal').set('x',110).set('y',0)
-                .on('changed',()=>panel.redraw())
                 .on('click',()=>{
                     selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL)
                 }),
@@ -515,14 +504,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5).set('y',40)
             .set('w',245).set('h',200)
             .set('visible',false)
-            .on('changed',()=>panel.redraw())
         subPanels.push(settingsPanel)
         panel.push(settingsPanel)
 
         panel.push(new Button2D()
             .set('text','settings')
             .set('x',175).set('y',5)
-            .on('changed',()=>panel.redraw())
             .on('click',()=>{ switchTo(settingsPanel) })
         )
 
@@ -581,9 +568,9 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         function makePropControls(name,y) {
             const label = new Label2D().set('x',0).set('y',y).set('text',name.toUpperCase())
             const value = new Label2D().set('x',150).set('y',y).set('text','0')
-            const inc   = new Button2D().set('x',90).set('y',y).set('text','-').on('changed',redraw)
+            const inc   = new Button2D().set('x',90).set('y',y).set('text','-')
                     .on('click',()=> selection.decrementProperty(name))
-            const dec   = new Button2D().set('x',120).set('y',y).set('text','+').on('changed',redraw)
+            const dec   = new Button2D().set('x',120).set('y',y).set('text','+')
                     .on('click',()=> selection.incrementProperty(name))
             on(selection,'changed',()=>{
                 value.set('text',''+selection.getProperty(name).toFixed(2))
@@ -601,7 +588,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',300)
             .on('click',addBlock)
-            .on('changed',()=>panel.redraw())
         )
 
         panel.push(new Button2D()
@@ -609,7 +595,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',340)
             .on('click',deleteBlock)
-            .on('changed',()=>panel.redraw())
         )
 
         panel.push(new Button2D()
@@ -617,7 +602,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',380)
             .on('click',cloneBlock)
-            .on('changed',()=>panel.redraw())
         )
 
         panel.push(new Button2D()
@@ -625,7 +609,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',420)
             .on('click',saveStructure)
-            .on('changed',()=>panel.redraw())
         )
 
         game.ui.play_game_button = new Button2D()
@@ -633,7 +616,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',5)
             .set('y',460)
             .on('click',togglePlayGame)
-            .on('changed',()=>panel.redraw())
         panel.push(game.ui.play_game_button)
 
         panel.push(new Button2D()
@@ -641,14 +623,12 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             .set('x',180)
             .set('y',300)
             .on('click',()=>game.blockService.switchToFrontView())
-            .on('changed',redraw)
         )
         panel.push(new Button2D()
             .set('text','top')
             .set('x',180)
             .set('y',335)
             .on('click',()=>game.blockService.switchToTopView())
-            .on('changed',redraw)
         )
 
         panel.push(new Button2D()
@@ -659,7 +639,6 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
                 selection.clear()
                 selection.addAll(game.blockService.getAllBlocks())
             })
-            .on('changed',redraw)
         )
 
         panel.push(new Label2D()

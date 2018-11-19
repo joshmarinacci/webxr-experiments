@@ -8,12 +8,15 @@ export default class Panel2D extends THREE.Object3D {
     constructor(scene,camera) {
         super()
 
+        this.type = 'panel2d'
+        this.listeners = {}
         this.scene = scene
         this.camera = camera
         this.canvas = document.createElement('canvas')
         this.canvas.width = 256
         this.canvas.height = 512
         this.canvasTexture = new THREE.CanvasTexture(this.canvas)
+        this.redrawHandler = (e) => this.redraw()
 
         const c = this.canvas.getContext('2d')
         c.fillStyle = 'red'
@@ -78,6 +81,12 @@ export default class Panel2D extends THREE.Object3D {
         })
         on(this.header,POINTER_PRESS,e => this.startDrag())
     }
+
+    fire(type,payload) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].forEach(cb => cb(payload))
+    }
+
     findAt(pt) {
         // console.log("looking for point",pt)
         for(let i=0; i<this.comps.length; i++) {
@@ -93,6 +102,7 @@ export default class Panel2D extends THREE.Object3D {
 
     push(comp) {
         this.comps.push(comp)
+        on(comp,'changed',this.redrawHandler)
     }
 
     redraw() {

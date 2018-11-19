@@ -11,6 +11,7 @@ export default class Group2D {
         this.bg = 'white'
         this.visible = true
         this.comps = []
+        this.redrawHandler = (e) => this.fire('changed',e)
     }
     draw(ctx) {
         if(!this.visible) return
@@ -47,9 +48,9 @@ export default class Group2D {
         }
         return null
     }
-    fire(type) {
+    fire(type,e) {
         if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb())
+        this.listeners[type].forEach(cb => cb(e))
     }
     set(key,value) {
         this[key] = value
@@ -66,6 +67,9 @@ export default class Group2D {
     }
 
     addAll(all) {
-        all.forEach(c => this.comps.push(c))
+        all.forEach(c => {
+            this.comps.push(c)
+            c.addEventListener('changed',this.redrawHandler)
+        })
     }
 }

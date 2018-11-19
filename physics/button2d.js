@@ -51,9 +51,9 @@ export default class Button2D {
         if(pt.y > 0 + this.h) return null
         return this
     }
-    fire(type) {
+    fire(type,payload) {
         if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb())
+        this.listeners[type].forEach(cb => cb(payload))
     }
     set(key,value) {
         this[key] = value
