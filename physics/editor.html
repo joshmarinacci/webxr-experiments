@@ -606,18 +606,11 @@ https://freesound.org/people/Reitanna/sounds/323725/
         game.ui.play_game_button = new Button2D().set('text','play').on('click',togglePlayGame)
         actionGroup.add(game.ui.play_game_button)
 
-        panel.add(new Button2D()
-            .set('text','CCW')
-            .set('x',180)
-            .set('y',300)
-            .on('click',()=>game.blockService.switchToFrontView())
-        )
-        panel.add(new Button2D()
-            .set('text','CW')
-            .set('x',180)
-            .set('y',335)
-            .on('click',()=>game.blockService.switchToTopView())
-        )
+        const viewGroup = new Group2D().set('x',110).set('y',250).set('w',100).set('h',130).set('layout',colLayout)
+        panel.add(viewGroup)
+        viewGroup.add(new Button2D().set('text','CCW').on('click',()=>game.blockService.rotateCCW()))
+        viewGroup.add(new Button2D().set('text','CW').on('click',()=>game.blockService.rotateCW()))
+        viewGroup.add(new Button2D().set('text','RST').on('click',()=>game.blockService.rotateReset()))
 
         panel.add(new Label2D()
             .set('text',`editing ${editor.docid}`)
@@ -723,7 +716,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
             new THREE.MeshLambertMaterial({color:'brown'})
         )
         floor.rotation.x = toRad(-90)
-        floor.receiveShadow = true
         scene.add(floor)
 
         //physics for the floor
@@ -745,6 +737,16 @@ https://freesound.org/people/Reitanna/sounds/323725/
                 side: THREE.BackSide
             })
         ))
+
+        //floor of the game area
+        const gameFloor = new THREE.Mesh(
+            new THREE.CircleGeometry(3),
+            new THREE.MeshLambertMaterial({color:'magenta'})
+        )
+        gameFloor.rotation.x = toRad(-90)
+        gameFloor.position.y = 0.01
+        gameFloor.receiveShadow = true
+        game.blockService.group.add(gameFloor)
     }
 
 

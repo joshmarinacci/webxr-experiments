@@ -406,11 +406,14 @@ export class BlockService {
 
     }
 
-    switchToFrontView() {
+    rotateCCW() {
         this.group.rotation.y += toRad(10)
     }
-    switchToTopView() {
+    rotateCW() {
         this.group.rotation.y -= toRad(10)
+    }
+    rotateReset() {
+        this.group.rotation.y = 0
     }
 
     getAllBlocks() {
