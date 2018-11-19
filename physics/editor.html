@@ -223,6 +223,10 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
     }
 
+    function setRoomType(type) {
+        console.log("setting the room type to",type)
+    }
+
     function initAudio() {
         game.audioService = new AudioService()
         game.audioService.load("click","./sounds/plink.wav")
@@ -423,21 +427,21 @@ https://freesound.org/people/Reitanna/sounds/323725/
         }
 
         const posPanel = new Group2D()
-            .set('x',5).set('y',40)
+            .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',true)
         subPanels.push(posPanel)
         panel.add(posPanel)
 
         const sizPanel = new Group2D()
-            .set('x',5).set('y',40)
+            .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',false)
         subPanels.push(sizPanel)
         panel.add(sizPanel)
 
         const rotPanel = new Group2D()
-            .set('x',5).set('y',40)
+            .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',false)
         panel.add(rotPanel)
@@ -477,7 +481,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         }
 
         const typePanel = new Group2D()
-            .set('x',5).set('y',40)
+            .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',false)
             .set('layout',rowLayout)
@@ -503,11 +507,22 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
 
 
+        function makeGridLayout(cols) {
+            return (panel) => {
+                panel.comps.forEach((c,i)=>{
+                    const col = i%4
+                    const row = Math.floor(i/4)
+                    c.x = cols[col]
+                    c.y=row*25
+                })
+            }
+        }
 
         const settingsPanel = new Group2D()
-            .set('x',5).set('y',40)
+            .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',false)
+            .set('layout',makeGridLayout([0,85,105,130]))
         subPanels.push(settingsPanel)
         panel.add(settingsPanel)
 
@@ -518,9 +533,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         )
 
         function makeValueSetter(name,y, getter, setter, step) {
-            const value = new Label2D()
-                .set('text',getter().toFixed(2))
-                .set('x',150).set('y',y).set('fsize',20)
+            const value = new Label2D().set('text',getter().toFixed(2)).set('fsize',15)
             const dec = () => setter(getter()-step)
             const inc = () => setter(getter()+step)
             on(dataChanger,'changed',()=>{
@@ -528,9 +541,9 @@ https://freesound.org/people/Reitanna/sounds/323725/
                 panel.redraw()
             })
             return [
-                new Label2D().set('text',name).set('x',0).set('y',y).set('fsize',20),
-                new Button2D().set('x',100).set('y',y).set('text','-').on('click',dec),
-                new Button2D().set('x',120).set('y',y).set('text','+').on('click',inc),
+                new Label2D().set('text',name).set('fsize',15),
+                new Button2D().set('text','-').on('click',dec).set('fsize',15),
+                new Button2D().set('text','+').on('click',inc).set('fsize',15),
                 value,
             ]
         }
@@ -566,6 +579,14 @@ https://freesound.org/people/Reitanna/sounds/323725/
             },
             0.1
             ))
+
+
+        const roomTypePanel = new Group2D().set('w',235).set('h',100).set('layout',rowLayout)
+        settingsPanel.add(roomTypePanel)
+        roomTypePanel.add(new Label2D().set('text','room type').set('fsize',15))
+        roomTypePanel.add(new Button2D().set('text','plane').set('fsize',15).on('click',()=>setRoomType('plane')))
+        roomTypePanel.add(new Button2D().set('text','sphere').set('fsize',15).on('click',()=>setRoomType('sphere')))
+        roomTypePanel.add(new Button2D().set('text','cube').set('fsize',15).on('click',()=>setRoomType('cube')))
 
 
 

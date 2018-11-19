@@ -25,7 +25,7 @@ export default class Button2D {
         ctx.font = `${this.fsize}px sans-serif`
         const metrics = ctx.measureText(this.text)
         this.w = 5 + metrics.width + 5
-        this.h = 5 + this.fsize + 5
+        this.h = 2 + this.fsize + 2
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
         ctx.fillStyle = 'black'
