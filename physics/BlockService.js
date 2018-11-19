@@ -152,12 +152,25 @@ class Block {
         world.addBody(this.body)
     }
 
+    getPosition() {
+        return this.position
+    }
     setPosition(v3) {
         this.position.copy(v3)
         this.obj.position.copy(v3)
         this.body.position.x = this.position.x
         this.body.position.y = this.position.y
         this.body.position.z = this.position.z
+    }
+    getRotation() {
+        return this.rotation
+    }
+    setRotation(rot) {
+        this.rotation.copy(rot)
+        this.obj.rotation.x = this.rotation.x
+        this.obj.rotation.y = this.rotation.y
+        this.obj.rotation.z = this.rotation.z
+        this.body.quaternion.setFromEuler(this.rotation.x,this.rotation.y,this.rotation.z,'XYZ')
     }
     sync() {
         this.obj.position.copy(this.body.position)
@@ -168,7 +181,8 @@ class Block {
         b.setWidth(this.getWidth())
         b.setHeight(this.getHeight())
         b.setDepth(this.getDepth())
-        b.setPosition(this.position.clone())
+        b.setPosition(this.getPosition())
+        b.setRotation(this.getRotation())
         b.setPhysicsType(this.physicsType)
         return b
     }
