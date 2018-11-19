@@ -287,10 +287,7 @@ export class BlockService {
     }
 
     fireBall(pos, dir, strength) {
-        console.log("firing ball with mass = ", this.ballMass, 'radius',this.ballRadius)
-        dir.sub(new THREE.Vector3(0,1.5,0))
-        pos.set(0,1,-1)
-        pos.sub(this.group.position)
+        this.group.worldToLocal(pos)
         dir.normalize()
         dir.multiplyScalar(strength*30)
         const ball = new THREE.Mesh(
