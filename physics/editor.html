@@ -54,6 +54,8 @@ https://opengameart.org/content/cloudy-sky
 
 https://freesound.org/people/JohanDeecke/sounds/368335/
 
+https://freesound.org/people/Reitanna/sounds/323725/
+
 
     -->
 
@@ -102,6 +104,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             musicBuffer:null,
             clickSound:null,
             crashSound:null,
+            thunkSound:null,
             bg_music:null,
         },
         physics: {
@@ -161,7 +164,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
             parts.forEach(part => scene.remove(part))
             parts = []
             clearInterval(intervalId)
-            if(game.sound.bg_music) game.sound.bg_music.stop()
+            // if(game.sound.bg_music) game.sound.bg_music.stop()
             scene.remove(game.ui.crystalCountText)
             game.actions.fire_ball.setEnabled(false)
         } else {
@@ -170,8 +173,8 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
                 ignore_collisions = false
             },500)
             game.actions.fire_ball.setEnabled(true)
-            game.sound.bg_music = game.audioService.play("bg")
-            game.sound.bg_music.loop = true
+            // game.sound.bg_music = game.audioService.play("bg")
+            // game.sound.bg_music.loop = true
             game.click_sphere.visible = true
             game.ui.play_game_button.set('text','stop')
             game.blockService.startPlaying()
@@ -224,6 +227,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         game.audioService = new AudioService()
         game.audioService.load("click","./sounds/plink.wav")
         game.audioService.load("crash","./sounds/crash1.wav")
+        game.audioService.load("thunk","./sounds/thunk.wav")
         game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
     }
 
@@ -754,7 +758,7 @@ https://freesound.org/people/JohanDeecke/sounds/368335/
         game.click_sphere.position.set(0,0,0)
         scene.add(game.click_sphere)
 
-        game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game.blockService)
+        game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game)
         on(game.click_sphere,POINTER_PRESS,game.actions.fire_ball.startPressSphere)
         on(game.click_sphere,POINTER_RELEASE,game.actions.fire_ball.endPressSphere)
     }

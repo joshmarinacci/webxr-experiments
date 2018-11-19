@@ -1,5 +1,5 @@
 export default class FireBallAction {
-    constructor(scene, controller, blockService) {
+    constructor(scene, controller, game) {
         this.clock = new THREE.Clock()
         this.press_sphere = null
         this.enabled = false
@@ -19,9 +19,10 @@ export default class FireBallAction {
             scene.remove(this.press_sphere)
             const strength = Math.min(1.0, this.clock.getElapsedTime() / 2.0)
             this.clock.stop()
-            const ball = blockService.fireBall(controller.position, e.point.clone(), strength)
-            //remove the ball after 3 sec
-            setTimeout(() => blockService.removeBall(ball), 10 * 1000)
+            const ball = game.blockService.fireBall(controller.position, e.point.clone(), strength)
+            game.audioService.play('thunk')
+            //remove the ball after 10 sec
+            setTimeout(() => game.blockService.removeBall(ball), 10 * 1000)
         }
     }
     updatePressSphere(time) {
