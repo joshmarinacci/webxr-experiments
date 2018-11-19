@@ -407,10 +407,10 @@ export class BlockService {
     }
 
     switchToFrontView() {
-        this.group.rotation.x = toRad(0)
+        this.group.rotation.y += toRad(10)
     }
     switchToTopView() {
-        this.group.rotation.x = toRad(90)
+        this.group.rotation.y -= toRad(10)
     }
 
     getAllBlocks() {

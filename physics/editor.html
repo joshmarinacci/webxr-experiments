@@ -607,13 +607,13 @@ https://freesound.org/people/Reitanna/sounds/323725/
         actionGroup.add(game.ui.play_game_button)
 
         panel.add(new Button2D()
-            .set('text','front')
+            .set('text','CCW')
             .set('x',180)
             .set('y',300)
             .on('click',()=>game.blockService.switchToFrontView())
         )
         panel.add(new Button2D()
-            .set('text','top')
+            .set('text','CW')
             .set('x',180)
             .set('y',335)
             .on('click',()=>game.blockService.switchToTopView())
@@ -639,6 +639,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
     function initTransformControls(scene) {
         editor.control = new THREE.TransformControls(camera,renderer.domElement)
         editor.control.setTranslationSnap(0.1)
+        editor.control.setSpace('local')
         editor.control.setSize(3)
         // on(editor.control,'change',(e)=>{
         //     console.log("trnasform control chnaged",e.target)
