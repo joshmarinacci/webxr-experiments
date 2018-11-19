@@ -12,6 +12,9 @@ export default class Group2D {
         this.visible = true
         this.comps = []
         this.redrawHandler = (e) => this.fire('changed',e)
+        this.childProps = {}
+        this.padding = 5
+        this.border = 1
 
         this.layout = (comp) => {
             console.log("not laying out anything")
@@ -22,10 +25,12 @@ export default class Group2D {
         this.layout(this)
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
-        ctx.strokeStyle = 'black'
-        ctx.strokeRect(this.x,this.y,this.w,this.h)
+        if(this.border > 0) {
+            ctx.strokeStyle = 'black'
+            ctx.strokeRect(this.x, this.y, this.w, this.h)
+        }
         ctx.save()
-        ctx.translate(this.x+5,this.y+5)
+        ctx.translate(this.x+this.padding,this.y+this.padding)
         this.comps.forEach(comp => comp.draw(ctx))
         ctx.restore()
     }
@@ -58,6 +63,10 @@ export default class Group2D {
         this.fire('changed',{type:'changed',target:this})
         return this
     }
+    childSet(key,value) {
+        this.childProps[key] = value
+        return this
+    }
     get(key) {
         return this[key]
     }
@@ -70,6 +79,9 @@ export default class Group2D {
     add(comp) {
         this.comps.push(comp)
         comp.addEventListener('changed',this.redrawHandler)
+        Object.keys(this.childProps).forEach(key => {
+            comp.set(key,this.childProps[key])
+        })
     }
     addAll(all) {
         all.forEach(c => this.add(c))

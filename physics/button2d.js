@@ -25,11 +25,11 @@ export default class Button2D {
         ctx.font = `${this.fsize}px sans-serif`
         const metrics = ctx.measureText(this.text)
         this.w = 5 + metrics.width + 5
-        this.h = 2 + this.fsize + 2
+        this.h = 0 + this.fsize + 4
         ctx.fillStyle = this.bg
         ctx.fillRect(this.x,this.y,this.w,this.h)
         ctx.fillStyle = 'black'
-        ctx.fillText(this.text,this.x+3,this.y+this.fsize)
+        ctx.fillText(this.text,this.x+3,this.y+this.fsize-2)
         ctx.strokeStyle = 'black'
         ctx.strokeRect(this.x,this.y,this.w,this.h)
     }

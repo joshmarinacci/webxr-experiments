@@ -427,6 +427,23 @@ https://freesound.org/people/Reitanna/sounds/323725/
                 })
             }
         }
+        const rowLayout = (panel)=>{
+            let x = 0
+            panel.comps.forEach((c)=>{
+                c.x=x
+                c.y=0
+                x += c.w+panel.padding
+            })
+        }
+        const colLayout = (panel) => {
+            let y = 0
+            panel.comps.forEach((c)=>{
+                c.x=0
+                c.y=y
+                y += c.h+panel.padding
+            })
+        }
+
 
         const panel = new Panel2D(scene,camera)
         scene.add(panel)
@@ -436,62 +453,31 @@ https://freesound.org/people/Reitanna/sounds/323725/
             subPanels.forEach(p =>  p.set('visible',(p===panel)))
         }
 
-        const posPanel = new Group2D()
-            .set('x',5).set('y',35)
-            .set('w',245).set('h',200)
-            .set('visible',true)
+
+        const posPanel = new Group2D().set('x',5).set('y',35).set('w',245).set('h',200).set('visible',true)
             .set('layout',makeGridLayout([0,50,70,100]))
+            .childSet('fsize',15)
         subPanels.push(posPanel)
         panel.add(posPanel)
 
-        const sizPanel = new Group2D()
-            .set('x',5).set('y',35)
-            .set('w',245).set('h',200)
-            .set('layout',makeGridLayout([0,50,70,100]))
+        const sizPanel = new Group2D().set('x',5).set('y',35).set('w',245).set('h',200).set('layout',makeGridLayout([0,50,70,100]))
+            .childSet('fsize',15)
             .set('visible',false)
         subPanels.push(sizPanel)
         panel.add(sizPanel)
 
-        const rotPanel = new Group2D()
-            .set('x',5).set('y',35)
-            .set('w',245).set('h',200)
-            .set('layout',makeGridLayout([0,50,70,100]))
+        const rotPanel = new Group2D().set('x',5).set('y',35).set('w',245).set('h',200).set('layout',makeGridLayout([0,50,70,100]))
+            .childSet('fsize',15)
             .set('visible',false)
         panel.add(rotPanel)
         subPanels.push(rotPanel)
 
-        panel.add(new Button2D()
-            .set('text','pos')
-            .set('x',5).set('y',5)
-            .on('click',()=> switchTo(posPanel))
-        )
-        panel.add(new Button2D()
-            .set('text','siz')
-            .set('x',50).set('y',5)
-            .on('click',()=> switchTo(sizPanel))
-        )
-        panel.add(new Button2D()
-            .set('text','rot')
-            .set('x',87).set('y',5)
-            .on('click',()=>switchTo(rotPanel))
-        )
+        const tabPanel = new Group2D().set('x',0).set('y',0).set('w',250).set('h',32).set('layout',rowLayout).set('padding',0).set('border',0)
+        tabPanel.add(new Button2D().set('text','pos').on('click',()=> switchTo(posPanel)))
+        tabPanel.add(new Button2D().set('text','siz').on('click',()=> switchTo(sizPanel)))
+        tabPanel.add(new Button2D().set('text','rot').on('click',()=>switchTo(rotPanel)))
+        panel.add(tabPanel)
 
-        const rowLayout = (panel)=>{
-            let x = 0
-            panel.comps.forEach((c)=>{
-                c.x=x
-                c.y=0
-                x += c.w+5
-            })
-        }
-        const colLayout = (panel) => {
-            let y = 0
-            panel.comps.forEach((c)=>{
-                c.x=0
-                c.y=y
-                y += c.h+5
-            })
-        }
 
         const typePanel = new Group2D()
             .set('x',5).set('y',35)
@@ -501,11 +487,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         subPanels.push(typePanel)
         panel.add(typePanel)
 
-        panel.add(new Button2D()
-            .set('text','type')
-            .set('x',125).set('y',5)
-            .on('click',()=> switchTo(typePanel))
-        )
+        tabPanel.add(new Button2D().set('text','type').on('click',()=> switchTo(typePanel)))
 
         typePanel.addAll([
             new Button2D().set('text','block')
@@ -526,17 +508,14 @@ https://freesound.org/people/Reitanna/sounds/323725/
             .set('w',245).set('h',200)
             .set('visible',false)
             .set('layout',makeGridLayout([0,85,105,130]))
+            .childSet('fsize',15)
         subPanels.push(settingsPanel)
         panel.add(settingsPanel)
 
-        panel.add(new Button2D()
-            .set('text','settings')
-            .set('x',175).set('y',5)
-            .on('click',()=>{ switchTo(settingsPanel) })
-        )
+        tabPanel.add(new Button2D().set('text','settings').on('click',()=>{ switchTo(settingsPanel) }))
 
         function makeValueSetter(name,y, getter, setter, step) {
-            const value = new Label2D().set('text',getter().toFixed(2)).set('fsize',15)
+            const value = new Label2D().set('text',getter().toFixed(2))
             const dec = () => setter(getter()-step)
             const inc = () => setter(getter()+step)
             on(dataChanger,'changed',()=>{
@@ -544,9 +523,9 @@ https://freesound.org/people/Reitanna/sounds/323725/
                 panel.redraw()
             })
             return [
-                new Label2D().set('text',name).set('fsize',15),
-                new Button2D().set('text','-').on('click',dec).set('fsize',15),
-                new Button2D().set('text','+').on('click',inc).set('fsize',15),
+                new Label2D().set('text',name),
+                new Button2D().set('text','-').on('click',dec),
+                new Button2D().set('text','+').on('click',inc),
                 value,
             ]
         }
@@ -584,20 +563,20 @@ https://freesound.org/people/Reitanna/sounds/323725/
             ))
 
 
-        const roomTypePanel = new Group2D().set('w',235).set('h',100).set('layout',rowLayout)
+        const roomTypePanel = new Group2D().set('w',235).set('h',30).set('layout',rowLayout).childSet('fsize',15).set('border',0).set('padding',0)
         settingsPanel.add(roomTypePanel)
-        roomTypePanel.add(new Label2D().set('text','room type').set('fsize',15))
-        roomTypePanel.add(new Button2D().set('text','plane').set('fsize',15).on('click',()=>setRoomType('plane')))
-        roomTypePanel.add(new Button2D().set('text','sphere').set('fsize',15).on('click',()=>setRoomType('sphere')))
-        roomTypePanel.add(new Button2D().set('text','cube').set('fsize',15).on('click',()=>setRoomType('cube')))
+        roomTypePanel.add(new Label2D().set('text','room type'))
+        roomTypePanel.add(new Button2D().set('text','plane').on('click',()=>setRoomType('plane')))
+        roomTypePanel.add(new Button2D().set('text','sphere').on('click',()=>setRoomType('sphere')))
+        roomTypePanel.add(new Button2D().set('text','cube').on('click',()=>setRoomType('cube')))
 
 
 
         function makePropControls(name,y) {
-            const label = new Label2D().set('text',name.toUpperCase()).set('fsize',15)
-            const value = new Label2D().set('text','0').set('fsize',15)
-            const inc   = new Button2D().set('text','-').on('click',()=> selection.decrementProperty(name)).set('fsize',15)
-            const dec   = new Button2D().set('text','+').on('click',()=> selection.incrementProperty(name)).set('fsize',15)
+            const label = new Label2D().set('text',name.toUpperCase())
+            const value = new Label2D().set('text','0')
+            const inc   = new Button2D().set('text','-').on('click',()=> selection.decrementProperty(name))
+            const dec   = new Button2D().set('text','+').on('click',()=> selection.incrementProperty(name))
             on(selection,'changed',()=>{
                 value.set('text',''+selection.getProperty(name).toFixed(2))
                 panel.redraw()
@@ -609,12 +588,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         ["w","h","d"].forEach((name, i)=> sizPanel.addAll(makePropControls(name)));
         ["rotx","roty","rotz"].forEach((name, i)=> rotPanel.addAll(makePropControls(name)));
 
-        const actionGroup = new Group2D()
-            .set('x',5)
-            .set('y',250)
-            .set('w',100)
-            .set('h',250)
-            .set('layout',colLayout)
+        const actionGroup = new Group2D().set('x',5).set('y',250).set('w',80).set('h',150).set('layout',colLayout).childSet('fsize',15)
         panel.add(actionGroup)
 
         actionGroup.add(new Button2D().set('text','select all')
@@ -630,22 +604,15 @@ https://freesound.org/people/Reitanna/sounds/323725/
         game.ui.play_game_button = new Button2D().set('text','play').on('click',togglePlayGame)
         actionGroup.add(game.ui.play_game_button)
 
-        const viewGroup = new Group2D().set('x',110).set('y',250).set('w',100).set('h',130).set('layout',colLayout)
+        const viewGroup = new Group2D().set('x',90).set('y',250).set('w',55).set('h',150).set('layout',colLayout).childSet('fsize',15)
         panel.add(viewGroup)
         viewGroup.add(new Button2D().set('text','CCW').on('click',()=>game.blockService.rotateCCW()))
         viewGroup.add(new Button2D().set('text','CW').on('click',()=>game.blockService.rotateCW()))
-        viewGroup.add(new Button2D().set('text','RST').on('click',()=>game.blockService.rotateReset()))
+        viewGroup.add(new Button2D().set('text','reset').on('click',()=>game.blockService.rotateReset()))
 
-        panel.add(new Label2D()
-            .set('text',`editing ${editor.docid}`)
-            .set('fsize',15)
-            .set('x',100).set('y',480)
-        )
+        panel.add(new Label2D().set('text',`editing ${editor.docid}`).set('fsize',15).set('x',100).set('y',480))
 
-        game.ui.blockCount = new Label2D()
-            .set('text',`blocks:`)
-            .set('fsize',15)
-            .set('x',100).set('y',460);
+        game.ui.blockCount = new Label2D().set('text',`blocks:`).set('fsize',15).set('x',100).set('y',460);
         panel.add(game.ui.blockCount)
 
         panel.redraw()
