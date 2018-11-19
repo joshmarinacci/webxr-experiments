@@ -13,6 +13,7 @@ export default class AudioService {
         })
     }
     play(name) {
+        if(!this.sounds[name]) console.warn("could not find buffer for sound named ",name)
         return this.playSource(this.sounds[name])
     }
     getAudioFile(url) {

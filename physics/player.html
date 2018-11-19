@@ -177,7 +177,7 @@
         game.click_sphere.position.set(0,0,0)
         scene.add(game.click_sphere)
 
-        game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game.blockService)
+        game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game)
         on(game.click_sphere,POINTER_PRESS,game.actions.fire_ball.startPressSphere)
         on(game.click_sphere,POINTER_RELEASE,game.actions.fire_ball.endPressSphere)
         game.actions.fire_ball.setEnabled(false)
@@ -241,6 +241,7 @@
         game.audioService = new AudioService()
         game.audioService.load("click","./sounds/plink.wav")
         game.audioService.load("crash","./sounds/crash1.wav")
+        game.audioService.load("thunk","./sounds/thunk.wav")
         game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
 
         setTimeout(()=>{
