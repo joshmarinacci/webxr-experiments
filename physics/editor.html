@@ -87,6 +87,8 @@ https://freesound.org/people/Reitanna/sounds/323725/
     import FireBallAction from "./FireBallAction.js"
     import AudioService from "./AudioService.js"
     import ToggleGroup from './togglegroup2d'
+    import {ROOM_TYPES} from './BlockService'
+    import ToggleButton2D from './togglebutton2d'
 
 
     //JQuery-like selector
@@ -116,9 +118,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
             crashSound:null,
             thunkSound:null,
             bg_music:null,
-        },
-        physics: {
-            floorBody: null,
         },
         click_sphere:null,
         ui: {
@@ -171,13 +170,13 @@ https://freesound.org/people/Reitanna/sounds/323725/
             game.click_sphere.visible = false
             game.ui.play_game_button.set('text','play')
             game.blockService.stopPlaying()
-            parts.forEach(part => scene.remove(part))
-            parts = []
             clearInterval(intervalId)
             // if(game.sound.bg_music) game.sound.bg_music.stop()
             scene.remove(game.ui.crystalCountText)
             game.actions.fire_ball.setEnabled(false)
+            game.blockService.group.add(editor.designFloor)
         } else {
+            game.blockService.group.remove(editor.designFloor)
             ignore_collisions = true
             setTimeout(()=>{
                 ignore_collisions = false
@@ -234,7 +233,8 @@ https://freesound.org/people/Reitanna/sounds/323725/
     }
 
     function setRoomType(type) {
-        console.log("setting the room type to",type)
+        game.blockService.setRoomType(type)
+        dataChanger.fire('changed')
     }
 
     function initAudio() {
@@ -247,46 +247,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
 
     const texture_loader = new THREE.TextureLoader()
-    const spark_texture = texture_loader.load('../particles/spark.png')
-    let parts = []
-
-    function playParticles(pos) {
-        const options = {
-            position: new THREE.Vector3(0,0,0),
-            positionRandomness: 0.0,
-            velocity: new THREE.Vector3(0.0, 0, 0.0),
-            velocityRandomness: 1.0,
-            acceleration: new THREE.Vector3(0.0,0.0,0.0),
-
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,1.0,1.0),
-
-            lifetime: 1.0,
-            fadeIn:0.001,
-            fadeOut:0.001,
-            size: 30,
-            sizeRandomness: 0.0,
-        }
-        const time = new THREE.Clock()
-        time.start()
-        const part = new GPUParticleSystem({
-            maxParticles: 10000,
-            particleSpriteTex: spark_texture,
-            blending: THREE.AdditiveBlending,
-            onTick: (system, t) => {
-                if (time.getElapsedTime() > 1.0) return
-                const s = 1.0
-                for(let i=0; i<10; i++) {
-                    options.velocity.set(rand(-s, s), rand(-s, s), rand(-s, s))
-                    options.position.copy( options.velocity)
-                    system.spawnParticle(options)
-                }
-            }
-        })
-        part.position.copy(pos)
-        scene.add(part)
-        parts.push(part)
-    }
 
     function destroyCrystal(target) {
         //play glass break sound
@@ -297,7 +257,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
         //add explosion effects
         const v = new THREE.Vector3()
         target.userData.block.obj.localToWorld(v)
-        playParticles(v)
     }
 
     function handleCollision(e) {
@@ -376,7 +335,9 @@ https://freesound.org/people/Reitanna/sounds/323725/
                 ballRadius:game.blockService.ballRadius,
                 wallFriction:game.blockService.wallFriction,
                 wallRestitution:game.blockService.wallRestitution,
+                hasGravity:game.blockService.hasGravity,
                 gravity: {x:0,y:-9.8,z:0},
+                roomType:game.blockService.roomType,
             },
         }
         console.log('saving document', JSON.stringify(doc,null,'  '))
@@ -586,9 +547,27 @@ https://freesound.org/people/Reitanna/sounds/323725/
         const roomTypePanel = new Group2D().set('w',235).set('h',30).set('layout',rowLayout).childSet('fsize',15).set('border',0).set('padding',0)
         settingsPanel.add(roomTypePanel)
         roomTypePanel.add(new Label2D().set('text','room type'))
-        roomTypePanel.add(new Button2D().set('text','plane').on('click',()=>setRoomType('plane')))
-        roomTypePanel.add(new Button2D().set('text','sphere').on('click',()=>setRoomType('sphere')))
-        roomTypePanel.add(new Button2D().set('text','cube').on('click',()=>setRoomType('cube')))
+        const setFloorButton = new ToggleButton2D().set('text','floor').on('click',()=>setRoomType(ROOM_TYPES.FLOOR))
+        const setCubeButton  = new ToggleButton2D().set('text','cube').on('click',()=>setRoomType(ROOM_TYPES.CUBE))
+        roomTypePanel.add(setFloorButton)
+        roomTypePanel.add(setCubeButton)
+        on(dataChanger,'changed',()=>  {
+            setFloorButton.set('selected',game.blockService.roomType === ROOM_TYPES.FLOOR)
+            setCubeButton.set('selected',game.blockService.roomType === ROOM_TYPES.CUBE)
+        })
+
+
+        settingsPanel.add(new Label2D().set('text',''))
+        settingsPanel.add(new Label2D().set('text',''))
+        settingsPanel.add(new Label2D().set('text',''))
+
+        const enableGravity = new ToggleButton2D().set('text','gravity').on('selected',(t)=> game.blockService.hasGravity = t.get('selected'))
+        settingsPanel.add(enableGravity)
+        on(dataChanger,'changed',()=>  enableGravity.set('selected',game.blockService.hasGravity))
+
+        const g = game.blockService.gravity
+        const gravityLabel = new Label2D().set('text',`${g.x},${g.y},${g.z}`)
+        settingsPanel.add(gravityLabel)
 
 
 
@@ -721,23 +700,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
     }
 
     function initFloor(scene) {
-        //mesh for the floor
-        const floor =new THREE.Mesh(
-            new THREE.PlaneGeometry(30,30,32,32),
-            new THREE.MeshLambertMaterial({color:'brown'})
-        )
-        floor.rotation.x = toRad(-90)
-        scene.add(floor)
-
-        //physics for the floor
-        game.physics.floorBody = new CANNON.Body({
-            mass: 0 // mass == 0 makes the body static
-        });
-        var groundShape = new CANNON.Plane();
-        game.physics.floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-        game.physics.floorBody.addShape(groundShape);
-        game.blockService.getWorld().addBody(game.physics.floorBody);
-        game.physics.floorBody.jtype = BLOCK_TYPES.FLOOR
 
         //background image
         scene.add(new THREE.Mesh(
@@ -750,14 +712,15 @@ https://freesound.org/people/Reitanna/sounds/323725/
         ))
 
         //floor of the game area
-        const gameFloor = new THREE.Mesh(
+        const designFloor = new THREE.Mesh(
             new THREE.CircleGeometry(3),
             new THREE.MeshLambertMaterial({color:'magenta'})
         )
-        gameFloor.rotation.x = toRad(-90)
-        gameFloor.position.y = 0.01
-        gameFloor.receiveShadow = true
-        game.blockService.group.add(gameFloor)
+        designFloor.rotation.x = toRad(-90)
+        designFloor.position.y = 0.01
+        designFloor.receiveShadow = true
+        editor.designFloor = designFloor
+        game.blockService.group.add(designFloor)
     }
 
 
@@ -784,7 +747,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
-        parts.forEach(part =>  part.update(time))
         game.blockService.update(time)
         if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );

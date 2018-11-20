@@ -23,6 +23,11 @@ export const BLOCK_TYPES = {
     CRYSTAL:'CRYSTAL',
 }
 
+export const ROOM_TYPES = {
+    FLOOR:'FLOOR',
+    CUBE:'CUBE',
+}
+
 export const BLOCK_COLORS = {
     FLOOR:0x666666,
     BALL:0xdd0000,// red
@@ -212,6 +217,9 @@ export class BlockService {
         this.ballMass = 5.0
         this.wallFriction = 0.0
         this.wallRestitution = 0.0
+        this.roomType = ROOM_TYPES.FLOOR
+        this.gravity = {x:0,y:-9.8,z:0}
+        this.hasGravity = true
 
         this.rebuildWallMaterial()
     }
@@ -253,6 +261,9 @@ export class BlockService {
         lastTime = time
     }
 
+    setRoomType(type) {
+        this.roomType = type
+    }
     startPlaying() {
         last_block_positions = this.blocks.map(b => b.position.clone())
         last_block_quaternions = this.blocks.map(b => b.obj.quaternion.clone())
@@ -277,6 +288,68 @@ export class BlockService {
                 }))
                 .start()
         })
+
+
+        this.floors = []
+        if(this.roomType === ROOM_TYPES.FLOOR) this.startFloorRoom()
+        if(this.roomType === ROOM_TYPES.CUBE) this.startCubeRoom()
+
+        if(this.hasGravity) {
+            const g = this.gravity
+            world.gravity.set(g.x,g.y,g.z)
+        } else {
+            world.gravity.set(0,0,0)
+        }
+
+    }
+
+    startFloorRoom() {
+        //add floor
+        const floorBody = new CANNON.Body({
+            mass: 0 // mass == 0 makes the body static
+        });
+        floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+        floorBody.addShape(new CANNON.Plane());
+        this.getWorld().addBody(floorBody);
+        floorBody.jtype = BLOCK_TYPES.FLOOR
+        const floorObj =new THREE.Mesh(
+            new THREE.PlaneGeometry(20,20,32,32),
+            new THREE.MeshLambertMaterial({color:'brown'})
+        )
+        floorObj.rotation.x = toRad(-90)
+        this.group.add(floorObj)
+        floorBody.userData = {obj:floorObj}
+        this.floors.push(floorBody)
+    }
+
+    startCubeRoom() {
+        const makeFloor = (axis,angle,pos, color) => {
+            const floorBody = new CANNON.Body({ mass:0 })
+            floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(axis[0],axis[1],axis[2]),angle);
+            floorBody.addShape(new CANNON.Plane())
+            floorBody.position.set(pos[0],pos[1],pos[2])
+            this.getWorld().addBody(floorBody);
+            floorBody.jtype = BLOCK_TYPES.FLOOR
+            const floorObj =new THREE.Mesh(
+                new THREE.PlaneGeometry(10,10),
+                new THREE.MeshLambertMaterial({color:color, side: THREE.DoubleSide})
+            )
+            floorObj.quaternion.setFromAxisAngle(new THREE.Vector3(axis[0],axis[1],axis[2]),angle);
+            floorObj.position.set(pos[0],pos[1],pos[2])
+            this.group.add(floorObj)
+            floorBody.userData = { obj: floorObj}
+            return floorBody
+        }
+
+        const size = 5.5
+        this.floors.push(makeFloor([0,1,0],toRad(90), [-size,0,0], 'teal'))
+        this.floors.push(makeFloor([0,1,0],toRad(-90),[+size,0,0], 'teal'))
+
+        this.floors.push(makeFloor([1,0,0],toRad(-90), [-0,-size,0], 'teal'))
+        this.floors.push(makeFloor([1,0,0],toRad(90), [+0,+size,0], 'teal'))
+
+        this.floors.push(makeFloor([1,0,0],toRad(0), [+0,0,-size], 'teal'))
+        this.floors.push(makeFloor([1,0,0],toRad(180), [+0,0,size], 'teal'))
     }
 
     removeFromSimulation(body) {
@@ -299,6 +372,15 @@ export class BlockService {
             world.removeBody(ball.userData.body)
         })
         this.balls = []
+        this.stopRoom()
+    }
+
+    stopRoom() {
+        this.floors.forEach(floor=>{
+            world.removeBody(floor)
+            this.group.remove(floor.userData.obj)
+        })
+        this.floors = []
     }
 
     fireBall(pos, dir, strength) {
@@ -398,9 +480,14 @@ export class BlockService {
         }
 
         if(typeof doc.data.gravity !== 'undefined') {
-            // console.log('setting gravity to', doc.data.gravity)
-            // const g = doc.data.gravity
-            // world.gravity.set(g.x,g.y,g.z)
+            const g = doc.data.gravity
+            world.gravity.set(g.x,g.y,g.z)
+        }
+        if(typeof doc.data.hasGravity !== 'undefined') {
+            this.hasGravity = doc.data.hasGravity
+        }
+        if(typeof doc.data.roomType !== 'undefined') {
+            this.roomType = doc.data.roomType
         }
 
         return newBlocks
