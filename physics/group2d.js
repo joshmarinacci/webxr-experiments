@@ -37,6 +37,7 @@ export default class Group2D {
     addEventListener(type,cb) {
         if(!this.listeners[type]) this.listeners[type] = []
         this.listeners[type].push(cb)
+        return this
     }
     contains(pt) {
         if(pt.x < this.x) return false
@@ -65,6 +66,7 @@ export default class Group2D {
     }
     childSet(key,value) {
         this.childProps[key] = value
+        this.comps.forEach(ch=>ch.set(key,value))
         return this
     }
     get(key) {

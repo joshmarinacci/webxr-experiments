@@ -61,7 +61,8 @@ class Block {
         if(name === 'w') return this.getWidth()
         if(name === 'h') return this.getHeight()
         if(name === 'd') return this.getDepth()
-        throw new Error("unknown property to get",name)
+        if(name === 'physicstype') return this.physicsType
+        throw new Error(`unknown property to get ${name}`)
     }
     set(name, value) {
         if(POSITION_NAMES.indexOf(name) >= 0) {

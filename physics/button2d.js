@@ -10,14 +10,16 @@ export default class Button2D {
         this.w = this.text.length*this.fsize
         this.h = 20
         this.listeners = {}
-        this.bg = 'white'
+        this.normalBg = 'white'
+        this.hoverBg = 'red'
+        this.bg = this.normalBg
 
         this.on(POINTER_ENTER,()=>{
-            this.bg = 'red'
+            this.bg = this.hoverBg
             this.fire('changed',{type:'changed',target:this})
         })
         this.on(POINTER_EXIT,()=>{
-            this.bg = 'white'
+            this.bg = this.normalBg
             this.fire('changed',{type:'changed',target:this})
         })
     }
@@ -36,6 +38,7 @@ export default class Button2D {
     addEventListener(type,cb) {
         if(!this.listeners[type]) this.listeners[type] = []
         this.listeners[type].push(cb)
+        return this
     }
     contains(pt) {
         if(pt.x < this.x) return false
@@ -59,6 +62,9 @@ export default class Button2D {
         this[key] = value
         this.fire('changed',{type:'changed',target:this})
         return this
+    }
+    get(key) {
+        return this[key]
     }
     on(type,cb) {
         this.addEventListener(type,cb)

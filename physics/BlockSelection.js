@@ -1,4 +1,4 @@
-const PROP_NAMES = ['x','y','z','rotx','roty','rotz','w','h','d']
+const PROP_NAMES = ['x','y','z','rotx','roty','rotz','w','h','d','physicstype']
 
 export default class BlockSelection {
     constructor() {
@@ -31,6 +31,9 @@ export default class BlockSelection {
     }
     getBlocks() {
         return this.blocks
+    }
+    isEmpty() {
+        return this.blocks.length === 0
     }
     decrementProperty(name) {
         this.blocks.forEach(b => {

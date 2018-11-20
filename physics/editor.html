@@ -86,6 +86,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
     import SimpleText from "./SimpleText.js"
     import FireBallAction from "./FireBallAction.js"
     import AudioService from "./AudioService.js"
+    import ToggleGroup from './togglegroup2d'
 
 
     //JQuery-like selector
@@ -93,6 +94,15 @@ https://freesound.org/people/Reitanna/sounds/323725/
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     const toRad = (deg) => deg * Math.PI/180
     const rand = (min,max) => Math.random()*(max-min) + min
+    function keyForValue(obj,val) {
+        const keys = Object.keys(obj)
+        for(let i=0; i<keys.length; i++) {
+            const key = keys[i]
+            if(obj[key] === val) return key
+        }
+        return null
+    }
+
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
@@ -475,7 +485,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
         const tabPanel = new Group2D().set('x',0).set('y',0).set('w',250).set('h',32).set('layout',rowLayout).set('padding',0).set('border',0)
         tabPanel.add(new Button2D().set('text','pos').on('click',()=> switchTo(posPanel)))
         tabPanel.add(new Button2D().set('text','siz').on('click',()=> switchTo(sizPanel)))
-        tabPanel.add(new Button2D().set('text','rot').on('click',()=>switchTo(rotPanel)))
+        tabPanel.add(new Button2D().set('text','rot').on('click',()=> switchTo(rotPanel)))
         panel.add(tabPanel)
 
 
@@ -483,20 +493,30 @@ https://freesound.org/people/Reitanna/sounds/323725/
             .set('x',5).set('y',35)
             .set('w',245).set('h',200)
             .set('visible',false)
-            .set('layout',rowLayout)
+            .set('layout',colLayout)
         subPanels.push(typePanel)
         panel.add(typePanel)
 
         tabPanel.add(new Button2D().set('text','type').on('click',()=> switchTo(typePanel)))
 
-        typePanel.addAll([
-            new Button2D().set('text','block')
-                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.BLOCK)),
-            new Button2D().set('text','wall')
-                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.WALL)),
-            new Button2D().set('text','crystal')
-                .on('click',()=> selection.setPropertyValue('physicstype',BLOCK_TYPES.CRYSTAL))
-        ])
+
+        const types = {
+            'block':BLOCK_TYPES.BLOCK,
+            'wall':BLOCK_TYPES.WALL,
+            'crystal':BLOCK_TYPES.CRYSTAL
+        }
+        const typeSelector = new ToggleGroup(types).set('w',200).set('h',30).set('value','wall')
+            .childSet('fsize',15)
+                .on('selected',(group)=> selection.setPropertyValue('physicstype',types[group.get('value')]))
+        on(selection,'changed',()=>{
+            if(selection.isEmpty()) return
+            const type = selection.getProperty('physicstype')
+            const key = keyForValue(types,type)
+            typeSelector.set('value',key)
+        })
+        typePanel.add(typeSelector)
+
+
 
 
 
