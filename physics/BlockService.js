@@ -1,6 +1,6 @@
-import {t2 as T2} from "./t2.js"
-import {LERP_TYPES, PROP_TYPES} from './t2.js'
+import {LERP_TYPES, PROP_TYPES, t2 as T2} from "./t2.js"
 import EventMaker from './EventMaker'
+
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
 
@@ -27,6 +27,12 @@ export const BLOCK_TYPES = {
 export const ROOM_TYPES = {
     FLOOR:'FLOOR',
     CUBE:'CUBE',
+}
+
+export const BALL_TYPES = {
+    PLAIN:'PLAIN',
+    ORNAMENT1:'ornament1',
+    ORNAMENT2:'ornament2',
 }
 
 export const BLOCK_COLORS = {
@@ -215,15 +221,19 @@ export class BlockService extends EventMaker {
         this.handleCollision = (e) => this.fire('collision',e)
         this.ballRadius = 0.25
         this.ballMass = 5.0
+        this.ballType = BALL_TYPES.ORNAMENT2
         this.wallFriction = 0.0
         this.wallRestitution = 0.0
         this.roomType = ROOM_TYPES.FLOOR
         this.gravity = {x:0,y:-9.8,z:0}
         this.hasGravity = true
         this.ignore_collisions = false
+        this.textures = {}
 
 
         this.rebuildWallMaterial()
+
+        this.generateBallTextures()
     }
     getWorld() {
         return world
@@ -390,14 +400,102 @@ export class BlockService extends EventMaker {
         this.floors = []
     }
 
+    generateBallTextures() {
+        {
+            const canvas = document.createElement('canvas')
+            canvas.width = 64
+            canvas.height = 16
+            const c = canvas.getContext('2d')
+
+
+            c.fillStyle = 'black'
+            c.fillRect(0, 0, canvas.width, canvas.height)
+            c.fillStyle = 'red'
+            c.fillRect(0, 0, 30, canvas.height)
+            c.fillStyle = 'white'
+            c.fillRect(30, 0, 4, canvas.height)
+            c.fillStyle = 'green'
+            c.fillRect(34, 0, 30, canvas.height)
+
+            this.textures.ornament1 = new THREE.CanvasTexture(canvas)
+            this.textures.ornament1.wrapS = THREE.RepeatWrapping
+            this.textures.ornament1.repeat.set(8, 1)
+        }
+
+
+        {
+            const canvas = document.createElement('canvas')
+            canvas.width = 128
+            canvas.height = 128
+            const c = canvas.getContext('2d')
+            c.fillStyle = 'black'
+            c.fillRect(0,0,canvas.width, canvas.height)
+
+            c.fillStyle = 'red'
+            c.fillRect(0, 0, canvas.width, canvas.height/2)
+            c.fillStyle = 'white'
+            c.fillRect(0, canvas.height/2, canvas.width, canvas.height/2)
+
+            const tex = new THREE.CanvasTexture(canvas)
+            tex.wrapS = THREE.RepeatWrapping
+            tex.wrapT = THREE.RepeatWrapping
+            tex.repeat.set(6,6)
+            this.textures.ornament2 = tex
+            console.log("made the texture",this.textures.ornament2)
+        }
+
+
+    }
+    generateBallMesh(rad,type) {
+        if(type === BALL_TYPES.PLAIN) {
+            return new THREE.Mesh(
+                new THREE.SphereGeometry(this.ballRadius),
+                new THREE.MeshPhongMaterial({color: BLOCK_COLORS.BALL, flatShading: true})
+            )
+        }
+
+        if(type === BALL_TYPES.ORNAMENT1) {
+            let points = [];
+            for (let i = 0; i <= 16; i++) {
+                points.push(new THREE.Vector2(Math.sin(i * 0.195) * rad, i * rad / 7));
+            }
+            var geometry = new THREE.LatheBufferGeometry(points);
+            geometry.center()
+            return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                // wireframe:true,
+                color: 'white',
+                metalness: 0.3,
+                roughness: 0.3,
+                // vertexColors: THREE.VertexColors,
+                map: this.textures.ornament1,
+                // flatShading:true,
+            }))
+        }
+
+        if(type === BALL_TYPES.ORNAMENT2) {
+            const geo = new THREE.Geometry()
+            geo.merge(new THREE.SphereGeometry(rad,32))
+            const stem = new THREE.CylinderGeometry(rad/4,rad/4,0.5,8)
+            stem.translate(0,rad/4,0)
+            geo.merge(stem)
+            return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                // wireframe:true,
+                color: 'white',
+                metalness: 0.3,
+                roughness: 0.3,
+                // vertexColors: THREE.VertexColors,
+                //required for flat shading
+                map: this.textures.ornament2,
+                // flatShading:true,
+            }))
+        }
+    }
+
     fireBall(pos, dir, strength) {
         this.group.worldToLocal(pos)
         dir.normalize()
         dir.multiplyScalar(strength*30)
-        const ball = new THREE.Mesh(
-            new THREE.SphereGeometry(this.ballRadius),
-            new THREE.MeshPhongMaterial({color:BLOCK_COLORS.BALL, flatShading:true})
-        )
+        const ball = this.generateBallMesh(this.ballRadius,this.ballType)
         ball.castShadow = true
         ball.position.copy(pos)
         this.group.add(ball)
