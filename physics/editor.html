@@ -178,10 +178,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
             game.blockService.group.add(editor.designFloor)
         } else {
             game.blockService.group.remove(editor.designFloor)
-            ignore_collisions = true
-            setTimeout(()=>{
-                ignore_collisions = false
-            },500)
             game.actions.fire_ball.setEnabled(true)
             // game.sound.bg_music = game.audioService.play("bg")
             // game.sound.bg_music.loop = true
@@ -261,55 +257,27 @@ https://freesound.org/people/Reitanna/sounds/323725/
     }
 
     function handleCollision(e) {
-        if(ignore_collisions) return
+        if(game.blockService.ignore_collisions) return
+
         //ignore tiny collisions
         if(Math.abs(e.contact.getImpactVelocityAlongNormal() < 1.0)) return
 
-        //ignore the ball hitting the floor
-        //this is never called. why?
-        // if(e.body.jtype === BLOCK_TYPES.BALL && e.target.jtype === BLOCK_TYPES.FLOOR) {
-        //     console.log("floor")
-        //     return
-        // }
-
-        // console.log(e.body.jtype, 'hit', e.target.jtype, e.target.type)
-
-        //ignore the ball hitting a static body
-        // if(e.body.jtype === BLOCK_TYPES.BALL && e.target.type === CANNON.Body.KINEMATIC) return
-
         //when ball hits moving block,
         if(e.body.jtype === BLOCK_TYPES.BALL) {
-            if (e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
             if (e.target.jtype === BLOCK_TYPES.BLOCK) {
                 //hit a block, just make the thunk sound
                 game.audioService.play('click')
             }
         }
-        //when crystal hits a block
-        // if(e.body.jtype === BLOCK_TYPES.CRYSTAL) {
-        //     if(e.target.jtype === BLOCK_TYPES.BLOCK) {
-        //         console.log("crystal hit a block")
-        //     }
-        //     if(e.target.jtype === BLOCK_TYPES.FLOOR) {
-        //         console.log("crystal hit the floor")
-        //     }
-        // }
 
-        //if floor hits a crystal
-        if(e.body.jtype === BLOCK_TYPES.FLOOR) {
-            if(e.target.jtype === BLOCK_TYPES.CRYSTAL) return destroyCrystal(e.target)
+
+        //if crystal hits anything and the impact was strong enought
+        if(e.body.jtype === BLOCK_TYPES.CRYSTAL || e.target.jtype === BLOCK_TYPES.CRYSTAL) {
+            if(Math.abs(e.contact.getImpactVelocityAlongNormal() >= 1.0)) {
+                return destroyCrystal(e.target)
+            }
         }
-
-        //if the floor hit a block, ignore
-        // if(e.body.jtype === BLOCK_TYPES.FLOOR && e.target.jtype === BLOCK_TYPES.BLOCK) return
-
-        // console.log("contact",e)
-        /*
-        if(e.body.id === game.physics.floorBody.id) return
-        if(!e.contact.userData) e.contact.userData = {}
-        if(e.contact.userData.soundPlayed === true) return
-        e.contact.userData.soundPlayed = true
-        */
+        // console.log(`collision: body ${e.body.jtype} target ${e.target.jtype}`)
     }
 
     function initBlocks(scene) {

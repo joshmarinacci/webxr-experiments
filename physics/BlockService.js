@@ -220,6 +220,8 @@ export class BlockService extends EventMaker {
         this.roomType = ROOM_TYPES.FLOOR
         this.gravity = {x:0,y:-9.8,z:0}
         this.hasGravity = true
+        this.ignore_collisions = false
+
 
         this.rebuildWallMaterial()
     }
@@ -287,6 +289,7 @@ export class BlockService extends EventMaker {
                     duration:len,
                 }))
                 .start()
+
         })
 
 
@@ -301,6 +304,10 @@ export class BlockService extends EventMaker {
             world.gravity.set(0,0,0)
         }
 
+        this.ignore_collisions = true
+        setTimeout(()=>{
+            this.ignore_collisions = false
+        },500)
     }
 
     startFloorRoom() {
