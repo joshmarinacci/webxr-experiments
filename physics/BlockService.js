@@ -1,5 +1,6 @@
 import {t2 as T2} from "./t2.js"
 import {LERP_TYPES, PROP_TYPES} from './t2.js'
+import EventMaker from './EventMaker'
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
 
@@ -203,16 +204,15 @@ const DEBUG = {
 }
 
 
-export class BlockService {
-    constructor(scene, collisionCB) {
+export class BlockService extends EventMaker {
+    constructor(scene) {
+        super()
         this.group = new THREE.Group()
         this.group.position.set(0,0,-5)
         scene.add(this.group)
         this.blocks = []
         this.balls = []
-        this.collisionCB = collisionCB
-        this.handleCollision = (e) => this.collisionCB(e)
-
+        this.handleCollision = (e) => this.fire('collision',e)
         this.ballRadius = 0.25
         this.ballMass = 5.0
         this.wallFriction = 0.0
@@ -405,10 +405,13 @@ export class BlockService {
         world.add(sphereBody)
         ball.userData.body = sphereBody
         this.balls.push(ball)
+        this.fire('fireball',ball)
         return ball
     }
 
     removeBall(ballMesh) {
+        const n = this.balls.indexOf(ballMesh)
+        this.balls.splice(n,1)
         this.group.remove(ballMesh)
         world.removeBody(ballMesh.userData.body)
     }

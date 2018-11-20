@@ -89,6 +89,7 @@ https://freesound.org/people/Reitanna/sounds/323725/
     import ToggleGroup from './togglegroup2d'
     import {ROOM_TYPES} from './BlockService'
     import ToggleButton2D from './togglebutton2d'
+    import EventMaker from './EventMaker'
 
 
     //JQuery-like selector
@@ -359,20 +360,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
 
     }
 
-    class EventMaker {
-        constructor() {
-            this.listeners = {}
-        }
-        addEventListener(type,cb) {
-            if(!this.listeners[type]) this.listeners[type] = []
-            this.listeners[type].push(cb)
-        }
-        fire(type,evt) {
-            if(!this.listeners[type]) this.listeners[type] = []
-            this.listeners[type].forEach(cb => cb(evt))
-        }
-
-    }
     const dataChanger = new EventMaker()
 
     function loadStructure() {
@@ -635,7 +622,8 @@ https://freesound.org/people/Reitanna/sounds/323725/
     }
 
     function initContent(scene,camera,renderer) {
-        game.blockService = new BlockService(scene,handleCollision)
+        game.blockService = new BlockService(scene)
+        on(game.blockService,'collision',handleCollision)
         initAudio()
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap

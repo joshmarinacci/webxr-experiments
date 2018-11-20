@@ -101,6 +101,10 @@
     const off = (elem, type, cb) => elem.removeEventListener(type,cb)
     const toRad = (deg) => deg * Math.PI/180
 
+    const DEBUG = {
+        SCORE:false
+    }
+
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
     const game = {
@@ -115,6 +119,8 @@
             floorBody:null,
         },
         currentLevel:0,
+        ballcount:0,
+        crystalcount:999,
         levels: [
             "tumble_level1",
             "tumble_level2",
@@ -203,28 +209,6 @@
         scene.add(new THREE.AmbientLight(0xffffff,0.5))
     }
 
-    function initFloor() {
-        //mesh for the floor
-        const floor =new THREE.Mesh(
-            new THREE.PlaneGeometry(30,30,32,32),
-            new THREE.MeshLambertMaterial({color:'brown'})
-        )
-        floor.rotation.x = toRad(-90)
-        floor.receiveShadow = true
-        scene.add(floor)
-
-        //physics for the floor
-        game.physics.floorBody = new CANNON.Body({
-            mass: 0 // mass == 0 makes the body static
-        });
-        var groundShape = new CANNON.Plane();
-        game.physics.floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-        game.physics.floorBody.addShape(groundShape);
-        game.blockService.getWorld().addBody(game.physics.floorBody);
-        game.physics.floorBody.jtype = BLOCK_TYPES.FLOOR
-
-    }
-
     function initBackground() {
         //background image
         scene.add(new THREE.Mesh(
@@ -252,11 +236,11 @@
     }
 
     function initCount() {
+        if(!DEBUG.SCORE) return
         game.crystalCountText = new SimpleText(2,1);
         game.crystalCountText.setText("playing")
         game.crystalCountText.position.set(0,0,-1.5)
         scene.add(game.crystalCountText)
-
     }
 
     function initText() {
@@ -272,30 +256,61 @@
         loadStructure().then(()=>{
             game.blockService.startPlaying()
             game.actions.fire_ball.setEnabled(true)
-            const intervalId = setInterval(()=>{
-                const count = game.blockService.getAllBlocks()
-                    .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
-                    .filter(b => b.obj.visible)
-                    .length
-                game.crystalCountText.setText(`crystals ${count}`)
-                if(count <= 0) {
-                    clearInterval(intervalId)
-                    game.currentLevel++
-                    if(game.currentLevel >= game.levels.length) {
-                        winGame()
-                    } else {
-                        endLevel()
-                    }
-                }
-            },0.5*1000)
         })
     }
+
+    let lastScoreUpdate = 0
+    function updateScore(time) {
+        if(!game.blockService.isPlaying()) return
+        if(time-lastScoreUpdate < 1.0) return
+        lastScoreUpdate = time
+
+
+        game.crystalcount = game.blockService.getAllBlocks()
+            .filter(b => b.physicsType === BLOCK_TYPES.CRYSTAL)
+            .filter(b => b.obj.visible)
+            .length
+        if(DEBUG.SCORE) game.crystalCountText.setText(`crystals ${count}`)
+        // console.log("updating ball count",game.ballcount,'current level',game.currentLevel, 'crystals left',game.crystalcount)
+
+        const activeBalls = game.blockService.balls.length
+        // console.log('active balls',activeBalls)
+        if(game.ballcount >= 3 && game.crystalcount > 0 && activeBalls <= 0) {
+            // console.log("used up our balls and still have crystals left")
+            restartLevel()
+            return
+        }
+
+        if(game.crystalcount <= 0) {
+            game.currentLevel++
+            if(game.currentLevel >= game.levels.length) {
+                winGame()
+            } else {
+                endLevel()
+            }
+            return
+        }
+    }
+
+    function restartLevel() {
+        game.ballcount = 0
+        game.blockService.stopPlaying()
+        game.actions.fire_ball.setEnabled(false)
+        game.text.visible = true
+        game.text.setText("out of balls\nrestarting")
+        const cb = () => {
+            startLevel()
+            off(game.click_sphere,POINTER_CLICK,cb)
+        }
+        on(game.click_sphere,POINTER_CLICK,cb)
+    }
     function winGame() {
+        game.ballcount = 0
+        game.blockService.stopPlaying()
         game.actions.fire_ball.setEnabled(false)
         game.text.visible = true
         game.text.setText("you won!\nplay again?")
         const cb = () => {
-            game.blockService.stopPlaying()
             game.currentLevel = 0
             startLevel()
             off(game.click_sphere,POINTER_CLICK,cb)
@@ -303,11 +318,12 @@
         on(game.click_sphere,POINTER_CLICK,cb)
     }
     function endLevel() {
+        game.ballcount = 0
+        game.blockService.stopPlaying()
         game.actions.fire_ball.setEnabled(false)
         game.text.visible = true
         game.text.setText("next level!")
         const cb = () => {
-            game.blockService.stopPlaying()
             startLevel()
             off(game.click_sphere,POINTER_CLICK,cb)
         }
@@ -322,7 +338,9 @@
     }
 
     function initContent(scene,camera,renderer) {
-        game.blockService = new BlockService(scene,handleCollision)
+        game.blockService = new BlockService(scene)
+        game.blockService.on('collision',handleCollision)
+        game.blockService.on('fireball',()=> game.ballcount++ )
 
         initAudio()
 
@@ -357,16 +375,7 @@
         })
 
 
-
-        // initBlocks(scene)
-
-        // initPanel(scene)
-
-        initFloor(scene)
-
         initBall(scene)
-
-        // initTransformControls(scene)
 
         $("#overlay").style.visibility = 'hidden'
         if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
@@ -379,6 +388,7 @@
         if(pointer) pointer.tick(time)
         T2.update(time)
         game.blockService.update(time)
+        updateScore(time/1000)
         if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );
         // console.log('tick')
