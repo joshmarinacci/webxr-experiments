@@ -65,74 +65,115 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
-    const toRad = deg => deg * Math.PI/180
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats;
-    function remap(val, smin, smax, emin, emax) {
-        const t =  (val-smin)/(smax-smin)
-        return (emax-emin)*t + emin
-    }
 
 
     function generateTexture() {
         const canvas = document.getElementById('debug-canvas')
         const c = canvas.getContext('2d')
-        c.fillStyle = 'black'
+        c.fillStyle = 'white'
         c.fillRect(0,0,canvas.width, canvas.height)
 
-        const y1 = 0
-        const y2 = canvas.height/2
-        const y3 = canvas.height
+        //lower left for the sides
+        c.save()
+        c.translate(0,canvas.height/2)
         c.fillStyle = 'red'
-        c.fillRect(0, y1, canvas.width, y2-y1)
-        c.fillStyle = 'white'
-        c.fillRect(0, y2, canvas.width, y3-y2)
+        c.fillRect(canvas.width/8*1.5, 0, canvas.width/8, canvas.height/2)
+        c.restore()
 
-        const x1 = canvas.width*0.9
-        const x2 = canvas.width*1.0
-        c.fillStyle = 'yellow'
-        c.fillRect(x1,0,x2-x1,canvas.height)
+        //upper left for the bottom and top
+        c.save()
+        c.translate(0,0)
+        c.fillStyle = 'red'
+        c.fillRect(canvas.width/8*1.5, 0, canvas.width/8, canvas.height/2)
+        c.fillStyle = 'red'
+        c.fillRect(0,canvas.height/8*1.5, canvas.width/2, canvas.height/8)
+        c.restore()
 
-
-        // c.fillRect(0,0,canvas.width,16)
+        c.fillStyle = 'black'
+        // c.fillRect(0,canvas.height/2,canvas.width,1)
+        // c.fillRect(canvas.width/2,0,1,canvas.height)
     }
 
 
     function generateOrnament(data) {
+        /*
+        the cube has 12 faces. really it has 6 faces, each a square.
+        but those squares are each made of two triangles, giving us 12 total triangle
+        faces.
 
-        const geo = new THREE.Geometry()
-        const bulb = new THREE.SphereGeometry(0.5,32)
-        bulb.faceVertexUvs[0].forEach((f,i) => {
-            f.forEach(uv => {
-                uv.x = remap(uv.x, 0.0,1.0, 0.5,0.88)
+
+         */
+
+        const geo = new THREE.BoxGeometry(1,1,1)
+        /*
+        geo.faces.forEach((f,i) => {
+            console.log("face",i,f)
+        })
+        */
+
+        /*
+        face vertex uvs is an array of arrays. you can have multiple sets of UVs
+        but the default geometries only have one, so we always look up index 0
+
+        a face uv is an array of three xy pairs. they represent where each vertex in
+        the face (of which there are 3) will be pulled from the text.
+
+        by default all of these values in the cube will be either 0 or 1 because the full square
+        texture is mapped each square side of the cube.
+
+        scale down the uvs to use less of the texture. now we are using 0.6 or roughly half
+        of the texture.
+         */
+        /*
+        geo.faceVertexUvs[0].forEach((f,i)=>{
+            console.log("faceuv",i,f)
+            f.forEach(uv=>{
+                uv.x *= 0.6
+                uv.y *= 0.6
             })
         })
-        geo.merge(bulb)
-        const stem = new THREE.CylinderGeometry(0.1,0.1,0.5,8)
-        stem.faceVertexUvs[0].forEach((f,i)=>{
-            f.forEach(uv => {
-                uv.x = remap(uv.x, 0.0,1.0, 0.92,0.99)
-                uv.y = remap(uv.y, 0.0,1.0, 0.92,0.99)
-            })
+        */
+
+        /*
+        now lets modify just the top of the cube
+        faces 4 and 5 are the top
+        faces 6 and 7 are the bottom
+        the rest are the sides
+         */
+        geo.faceVertexUvs[0].forEach((f,i)=>{
+            if(i === 4 || i===5 || i===6 || i===7 ) {
+                f.forEach(uv=>{
+                    uv.x *= 0.5 //scale down
+                    uv.y *= 0.5 //scale down
+                    uv.y += 0.5 //move from lower left quadrant to upper left quadrant
+                })
+            } else {
+                //rest of the sides. scale it in
+                f.forEach(uv=>{
+                    uv.x *= 0.5 // scale down
+                    uv.y *= 0.5 // scale down
+                })
+            }
         })
-        stem.translate(0,0.3,0)
-        geo.merge(stem)
+
+
         const tex = new THREE.CanvasTexture(document.getElementById('debug-canvas'))
-        tex.wrapS = THREE.RepeatWrapping
-        tex.wrapT = THREE.RepeatWrapping
-        tex.repeat.set(1,6)
+        // tex.wrapS = THREE.RepeatWrapping
+        // tex.wrapT = THREE.RepeatWrapping
+        // tex.repeat.set(16,6)
         const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
             // wireframe:true,
             color:'white',
-            metalness:0.3,
-            roughness:0.3,
+            metalness:0.0,
+            roughness:1.0,
             // vertexColors: THREE.VertexColors,
             //required for flat shading
             map:tex,
             // flatShading:true,
         }))
-        mesh.rotation.x = toRad(0)
         return mesh
     }
 
@@ -174,6 +215,7 @@
         if(stats) stats.update(time)
         //rotate the cube on every tick
         if(cube) cube.rotation.y += 0.02
+        if(cube) cube.rotation.x += 0.01
         renderer.render( scene, camera );
     }
 

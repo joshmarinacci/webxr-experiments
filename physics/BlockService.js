@@ -48,21 +48,25 @@ const SELECTED_COLOR = 0xffff00 //yellow
 const POSITION_NAMES = ['x','y','z']
 const ROTATION_NAMES = ['rotx','roty','rotz']
 class Block {
-    constructor() {
+    constructor(service) {
+        this.service = service
         this.width = 1
         this.height = 2
         this.depth = 1
         this.position = new THREE.Vector3(0,1,0)
         this.rotation = new THREE.Vector3(0,0,0)
+
         this.obj = new THREE.Mesh(
             new THREE.BoxGeometry(this.width,this.height,this.depth),
             new THREE.MeshLambertMaterial({color:'green'})
         )
+
         this.obj.castShadow = true
         this.obj.userData.clickable = true
         this.obj.userData.block = this
         this.physicsType = BLOCK_TYPES.BLOCK
         this.rebuildGeometry()
+        this.rebuildMaterial()
     }
     get(name) {
         if(POSITION_NAMES.indexOf(name) >= 0) return this.position[name]
@@ -129,20 +133,22 @@ class Block {
     }
 
     selectSelf() {
-        this.obj.material.color.set(SELECTED_COLOR)
+        // this.obj.material.color.set(SELECTED_COLOR)
     }
     unselectSelf() {
-        this.obj.material.color.set(BLOCK_COLORS[this.physicsType])
+        // this.obj.material.color.set(BLOCK_COLORS[this.physicsType])
     }
 
     setPhysicsType(type) {
         if(type) this.physicsType = type
+        this.rebuildMaterial()
         this.unselectSelf()
         this.rebuildGeometry()
     }
 
     rebuildGeometry() {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
+        if(this.geometryModifier) this.geometryModifier(this.obj.geometry)
         if(this.body) {
             this.body.userData.block = null
             world.removeBody(this.body)
@@ -163,6 +169,12 @@ class Block {
         this.body.userData = {}
         this.body.userData.block = this
         world.addBody(this.body)
+    }
+
+    rebuildMaterial() {
+        if(this.service.materials[this.physicsType]) {
+            this.obj.material = this.service.materials[this.physicsType]
+        }
     }
 
     getPosition() {
@@ -190,7 +202,7 @@ class Block {
         this.obj.quaternion.copy(this.body.quaternion)
     }
     makeClone() {
-        const b = new Block()
+        const b = new Block(this.service)
         b.setWidth(this.getWidth())
         b.setHeight(this.getHeight())
         b.setDepth(this.getDepth())
@@ -229,6 +241,7 @@ export class BlockService extends EventMaker {
         this.hasGravity = true
         this.ignore_collisions = false
         this.textures = {}
+        this.materials = {}
 
 
         this.rebuildWallMaterial()
@@ -239,7 +252,25 @@ export class BlockService extends EventMaker {
         return world
     }
     makeBlock() {
-        const block = new Block()
+        const block = new Block(this)
+        block.geometryModifier = (geo) => {
+            geo.faceVertexUvs[0].forEach((f,i)=>{
+                if(i === 4 || i===5 || i===6 || i===7 ) {
+                    f.forEach(uv=>{
+                        uv.x *= 0.5 //scale down
+                        uv.y *= 0.5 //scale down
+                        uv.y += 0.5 //move from lower left quadrant to upper left quadrant
+                    })
+                } else {
+                    //rest of the sides. scale it in
+                    f.forEach(uv=>{
+                        uv.x *= 0.5 // scale down
+                        uv.y *= 0.5 // scale down
+                    })
+                }
+            })
+
+        }
         this.blocks.push(block)
         this.group.add(block.getObject3D())
         return block
@@ -441,9 +472,55 @@ export class BlockService extends EventMaker {
             tex.wrapT = THREE.RepeatWrapping
             tex.repeat.set(6,6)
             this.textures.ornament2 = tex
-            console.log("made the texture",this.textures.ornament2)
         }
 
+        {
+            const canvas = document.createElement('canvas')
+            canvas.width = 128
+            canvas.height = 128
+            const c = canvas.getContext('2d')
+
+            //white background
+            c.fillStyle = 'white'
+            c.fillRect(0,0,canvas.width, canvas.height)
+
+
+            //lower left for the sides
+            c.save()
+            c.translate(0,canvas.height/2)
+            c.fillStyle = 'red'
+            c.fillRect(canvas.width/8*1.5, 0, canvas.width/8, canvas.height/2)
+            c.restore()
+
+            //upper left for the bottom and top
+            c.save()
+            c.translate(0,0)
+            c.fillStyle = 'red'
+            c.fillRect(canvas.width/8*1.5, 0, canvas.width/8, canvas.height/2)
+            c.fillStyle = 'red'
+            c.fillRect(0,canvas.height/8*1.5, canvas.width/2, canvas.height/8)
+            c.restore()
+
+            c.fillStyle = 'black'
+            // c.fillRect(0,canvas.height/2,canvas.width,1)
+            // c.fillRect(canvas.width/2,0,1,canvas.height)
+
+            const tex = new THREE.CanvasTexture(canvas)
+            this.textures.present1 = tex
+
+            this.materials[BLOCK_TYPES.BLOCK] = new THREE.MeshStandardMaterial({
+                color: 'white',
+                metalness: 0.0,
+                roughness: 1.0,
+                // wireframe: true,
+                map:this.textures.present1,
+            })
+        }
+
+
+        this.materials[BLOCK_TYPES.CRYSTAL] = new THREE.MeshLambertMaterial({color:'aqua'})
+        this.materials[BLOCK_TYPES.FLOOR] = new THREE.MeshLambertMaterial({color:'gray'})
+        this.materials[BLOCK_TYPES.WALL] = new THREE.MeshLambertMaterial({color:'red'})
 
     }
     generateBallMesh(rad,type) {
