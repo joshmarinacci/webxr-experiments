@@ -3,8 +3,10 @@ export default class FireBallAction {
         this.clock = new THREE.Clock()
         this.enabled = false
         this.running = false
+        this.game = game
+        this.controller = controller
 
-        this.initLauncher(controller)
+        this.initLauncher()
         this.startPressSphere = () => {
             if(!this.enabled)return
             if(game.ballcount >= 3) {
@@ -42,23 +44,24 @@ export default class FireBallAction {
         this.enabled = val
     }
 
-    initLauncher(controller) {
+    resetBall() {
+        if(this.sphere) {
+            this.controller.remove(this.sphere)
+        }
+        this.sphere = this.game.blockService.generateBallMesh(this.game.blockService.ballRadius,this.game.blockService.ballType)
+        this.sphere.position.z = -1.0
+        this.controller.add(this.sphere)
+    }
+
+    initLauncher() {
         const geo = new THREE.BoxGeometry(0.1,0.1,1.0)
         const launcher = new THREE.Mesh(
             geo,
             new THREE.MeshLambertMaterial({color:'green'})
         )
         launcher.position.z = -0.5
-
-        const sphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.2),
-            new THREE.MeshLambertMaterial({color:'yellow'})
-        )
-        controller.add(sphere)
-        sphere.position.z = -1.0
-        this.sphere = sphere
-
-        controller.add(launcher)
+        this.resetBall()
+        this.controller.add(launcher)
 
     }
 }

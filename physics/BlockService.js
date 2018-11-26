@@ -3,6 +3,7 @@ import EventMaker from './EventMaker'
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
+const pickOne = (arr) => arr[Math.floor(Math.random()*arr.length)]
 
 const world = new CANNON.World();
 let lastTime
@@ -233,7 +234,8 @@ export class BlockService extends EventMaker {
         this.handleCollision = (e) => this.fire('collision',e)
         this.ballRadius = 0.25
         this.ballMass = 5.0
-        this.ballType = BALL_TYPES.ORNAMENT2
+        this.ballType = BALL_TYPES[pickOne(Object.keys(BALL_TYPES))]
+
         this.wallFriction = 0.0
         this.wallRestitution = 0.0
         this.roomType = ROOM_TYPES.FLOOR
@@ -657,6 +659,8 @@ export class BlockService extends EventMaker {
         if(!doc.data.ballRadius) this.ballRadius = 0.25
         this.ballMass = doc.data.ballMass
         if(!doc.data.ballMass) this.ballMass = 5
+
+        this.ballType = BALL_TYPES[pickOne(Object.keys(BALL_TYPES))]
 
         if(typeof doc.data.wallFriction !== 'undefined') {
             this.wallFriction = doc.data.wallFriction

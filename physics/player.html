@@ -230,12 +230,10 @@
         game.audioService.load("crash","./sounds/crash1.wav")
         game.audioService.load("thunk","./sounds/thunk.wav")
         game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
-
-        setTimeout(()=>{
-            game.bg_music = game.audioService.play("bg")
-            game.bg_music.loop = true
-        },2000)
-
+            .then(()=>{
+                game.bg_music = game.audioService.play("bg")
+                game.bg_music.loop = true
+            })
     }
 
     function initCount() {
@@ -259,6 +257,7 @@
         loadStructure().then(()=>{
             game.blockService.startPlaying()
             game.actions.fire_ball.setEnabled(true)
+            game.actions.fire_ball.resetBall()
         })
     }
 

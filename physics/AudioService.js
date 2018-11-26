@@ -8,7 +8,7 @@ export default class AudioService {
     }
 
     load(name, url) {
-        this.getAudioFile(url).then(buf => {
+        return this.getAudioFile(url).then(buf => {
             this.sounds[name] = buf
         })
     }
