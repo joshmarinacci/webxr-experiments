@@ -112,7 +112,7 @@ export class Pointer {
         const bounds = this.canvas.getBoundingClientRect()
         const ry = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
         const rx = 1 - ((e.clientY - bounds.top) / bounds.height) * 2
-        this.camera.rotation.y = -ry
+        this.camera.rotation.y = -ry*2
         this.camera.rotation.x = +rx
     }
 
