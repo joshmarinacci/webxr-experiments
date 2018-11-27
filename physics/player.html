@@ -90,7 +90,7 @@
     }
 
     const opts = parseOptions({
-        docid:"tumble_level3"
+        docid:null
     })
     CONSTS.docid = opts.docid
     console.log(CONSTS)
@@ -125,15 +125,21 @@
         levels: [
             "tumble_level1",
             "tumble_level2",
-            "tumble_level3",
             "tumble_level5",
             "tumble_level6",
             "tumble_level7",
             "tumble_level8",
+            "tumble_level10",
+            "tumble_level11",
+            "tumble_level12",
+            "tumble_level13",
+            "tumble_level14",
+            "tumble_level9",
+            "tumble_level15",
         ]
     }
 
-    game.levels.unshift(CONSTS.docid)
+    if(CONSTS.docid !== null) game.levels.unshift(CONSTS.docid)
 
     function destroyCrystal(target) {
         //play glass break sound
@@ -207,7 +213,7 @@
 
         //if crystal hits anything and the impact was strong enought
         if(e.body.jtype === BLOCK_TYPES.CRYSTAL || e.target.jtype === BLOCK_TYPES.CRYSTAL) {
-            if(Math.abs(e.contact.getImpactVelocityAlongNormal() >= 1.0)) {
+            if(Math.abs(e.contact.getImpactVelocityAlongNormal() >= 2.0)) {
                 return destroyCrystal(e.target)
             }
         }
@@ -216,6 +222,7 @@
 
 
     function loadStructure() {
+        console.log("fetching",game.currentLevel, game.levels[game.currentLevel])
         return fetch(`${CONSTS.BASE_URL}${game.levels[game.currentLevel]}?cachebust=${Math.random()}`)
             .then(res => res.json())
             .then(res => {

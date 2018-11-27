@@ -73,6 +73,20 @@ https://freesound.org/people/Reitanna/sounds/323725/
 </div>
 
 <script type="module">
+    /*
+ - Three big piles of crystals held up by one crystal holding up two blocks
+1: bounce off a two angled blocks to hit a crystal
+10: Three floating platforms with crystals on them
+11: a pyramid held up by one big crystal. destroy it to knock them all over
+12: Floating wall. Knock block off to hit crystals behind it.
+13: stonehenge around you. must make them fall over domino style
+14: normal gee + cube, requires a perfect bounce shot to hit four
+15: zero gee + cube. smash four floating crystals. have to hit one w/ a bounce because only three shots
+
+- a tall building made out of multiple blocks, and you must hit a crystal on the very top.
+- one super high above you hiding behind a floating wall
+
+     */
     import {POINTER_CLICK, POINTER_PRESS,POINTER_RELEASE,Pointer} from '../boilerplate/pointer.js'
     import {t2 as T2} from "./t2.js"
     import VRStats from "../boilerplate/vrstats.js"
@@ -113,6 +127,8 @@ https://freesound.org/people/Reitanna/sounds/323725/
     const game = {
         blockService:null,
         audioService:null,
+        texture_loader: new THREE.TextureLoader(),
+        click_sphere:null,
         sound: {
             musicBuffer:null,
             clickSound:null,
@@ -120,7 +136,6 @@ https://freesound.org/people/Reitanna/sounds/323725/
             thunkSound:null,
             bg_music:null,
         },
-        click_sphere:null,
         ui: {
             play_game_button:null,
             crystalCountText:null,
