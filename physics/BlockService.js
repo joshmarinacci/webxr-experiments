@@ -1,5 +1,5 @@
 import {LERP_TYPES, PROP_TYPES, t2 as T2} from "./t2.js"
-import EventMaker from './EventMaker'
+import EventMaker from './EventMaker.js'
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 const toRad = (deg) => deg * Math.PI/180
