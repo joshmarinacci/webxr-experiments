@@ -1,3 +1,5 @@
+const toRad = (deg) => deg * Math.PI/180
+
 export default class FireBallAction {
     constructor(scene, controller, game) {
         this.clock = new THREE.Clock()
@@ -54,10 +56,21 @@ export default class FireBallAction {
     }
 
     initLauncher() {
-        const geo = new THREE.BoxGeometry(0.1,0.1,1.0)
+        const geo = new THREE.CylinderGeometry(0.05,0.05,1.0,16)
+        geo.rotateX(toRad(90))
+        const tex = this.game.texture_loader.load('./textures/candycane.png')
+        tex.wrapS = THREE.RepeatWrapping
+        tex.wrapT = THREE.RepeatWrapping
+        tex.repeat.set(1,10)
+
         const launcher = new THREE.Mesh(
             geo,
-            new THREE.MeshLambertMaterial({color:'green'})
+            new THREE.MeshStandardMaterial({
+                color:'white',
+                metalness:0.3,
+                roughness:0.3,
+                map:tex
+            })
         )
         launcher.position.z = -0.5
         this.resetBall()
