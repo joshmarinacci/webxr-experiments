@@ -50,6 +50,7 @@ const POSITION_NAMES = ['x','y','z']
 const ROTATION_NAMES = ['rotx','roty','rotz']
 class Block {
     constructor(service) {
+        this.geometryModifier = null
         this.service = service
         this.width = 1
         this.height = 2
@@ -149,7 +150,7 @@ class Block {
 
     rebuildGeometry() {
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
-        if(this.geometryModifier) this.geometryModifier(this.obj.geometry)
+        if(this.geometryModifier !== null && this.physicsType === BLOCK_TYPES.BLOCK) this.geometryModifier(this.obj.geometry)
         if(this.body) {
             this.body.userData.block = null
             world.removeBody(this.body)
@@ -271,7 +272,6 @@ export class BlockService extends EventMaker {
                     })
                 }
             })
-
         }
         this.blocks.push(block)
         this.group.add(block.getObject3D())
@@ -519,10 +519,65 @@ export class BlockService extends EventMaker {
             })
         }
 
+        {
+            const canvas = document.createElement('canvas')
+            canvas.width = 128
+            canvas.height = 128
+            const c = canvas.getContext('2d')
 
-        this.materials[BLOCK_TYPES.CRYSTAL] = new THREE.MeshLambertMaterial({color:'aqua'})
+            //white background
+            c.fillStyle = 'white'
+            c.fillRect(0,0,canvas.width, canvas.height)
+            for(let x=0; x<canvas.width; x++) {
+                for(let y =0; y<canvas.height; y++) {
+                    let p = Math.random()*255
+                    p = Math.max(p,200)
+                    // if(p < 128) p = 128
+                    c.fillStyle = `rgb(${0.5},${p},${p})`
+                    c.fillRect(x,y,1,1)
+                }
+            }
+
+            const tex = new THREE.CanvasTexture(canvas)
+            this.materials[BLOCK_TYPES.WALL] = new THREE.MeshLambertMaterial({
+                color:'white',
+                map:tex
+            })
+        }
+
+        {
+            const canvas = document.createElement('canvas')
+            canvas.width = 128
+            canvas.height = 128
+            const c = canvas.getContext('2d')
+
+            //white background
+            c.fillStyle = '#55aaff'
+            c.fillRect(0,0,canvas.width, canvas.height)
+            c.fillStyle = 'white'
+            const w = 128
+            const h = 128
+            c.fillRect(0,0,3,h)
+            c.fillRect(w-4,0,3,h)
+            c.fillRect(0,0,w,3)
+            c.fillRect(0,h-3,w,3)
+            c.fillRect(w/2-1,0,3,h)
+            c.fillRect(0, h/2-1,w,3)
+
+            const tex = new THREE.CanvasTexture(canvas)
+            this.materials[BLOCK_TYPES.CRYSTAL] = new THREE.MeshStandardMaterial({
+                color: 'white',
+                metalness: 0.0,
+                roughness: 1.0,
+                // wireframe: true,
+                map:tex,
+            })
+        }
+
+
+        // this.materials[BLOCK_TYPES.CRYSTAL] = new THREE.MeshLambertMaterial({color:'aqua'})
         this.materials[BLOCK_TYPES.FLOOR] = new THREE.MeshLambertMaterial({color:'gray'})
-        this.materials[BLOCK_TYPES.WALL] = new THREE.MeshLambertMaterial({color:'red'})
+        // this.materials[BLOCK_TYPES.WALL] = new THREE.MeshLambertMaterial({color:'red'})
 
     }
     generateBallMesh(rad,type) {
