@@ -162,15 +162,15 @@
     let pendingParticles = []
     function initParticles() {
         const options = {
-            maxParticles: 100,
+            maxParticles: 10000,
             position: new THREE.Vector3(0,0,0),
             positionRandomness: 0.0,
             baseVelocity: new THREE.Vector3(0.0, 0.0, 0.0),
             velocity: new THREE.Vector3(0.0, 0.0, 0.0),
             velocityRandomness: 0.3,
             acceleration: new THREE.Vector3(0.0,0.0,0.0),
-            color: new THREE.Color(0.5,0.3,0.0),
-            endColor: new THREE.Color(0.5,0.0,0.0),
+            color: new THREE.Color(0.5,0.3,1.0),
+            endColor: new THREE.Color(0.5,0.0,1.0),
             colorRandomness: 0.5,
             lifetime: 3.0,
             fadeIn: 0.1,
@@ -183,9 +183,10 @@
                 pendingParticles.forEach(v => {
                     options.position.copy(v)
                     for (let i = 0; i < 100; i++) {
-                        options.velocity.x = remap(Math.random(),0,1,-3,3)
-                        options.velocity.y = remap(Math.random(),0,1,-3,3)
-                        options.velocity.z = remap(Math.random(),0,1,-3,3)
+                        const v = 3.0
+                        options.velocity.x = remap(Math.random(),0,1,-v,v)
+                        options.velocity.y = remap(Math.random(),0,1,-v,v)
+                        options.velocity.z = remap(Math.random(),0,1,-v,v)
                         system.spawnParticle(options);
                     }
                 })
