@@ -284,49 +284,46 @@
         tex.wrapT = THREE.RepeatWrapping
         tex.repeat.set(8,8)
 
-        const left_bg = new THREE.Group()
-        const cone = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(1,10,16,8),
-            new THREE.MeshLambertMaterial({
-                color:'white',
-                map:tex,
-            })
-        )
-        cone.castShadow = true
-        cone.position.set(-22,5,0)
-        left_bg.add(cone)
+        const background = new THREE.Group()
 
-        const cone2 = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(1,5,16,8),
-            new THREE.MeshLambertMaterial({
-                color:'green',
-                map:tex,
-            })
-        )
+        const candyCones = new THREE.Geometry()
+        candyCones.merge(new THREE.ConeGeometry(1,10,16,8).translate(-22,5,0))
+        candyCones.merge(new THREE.ConeGeometry(1,10,16,8).translate(22,5,0))
+        candyCones.merge(new THREE.ConeGeometry(1,10,16,8).translate(7,5,-30))
+        candyCones.merge(new THREE.ConeGeometry(1,10,16,8).translate(-13,5,-20))
+        background.add(new THREE.Mesh(candyCones,new THREE.MeshLambertMaterial({ color:'white', map:tex,})))
 
-        cone2.castShadow = true
-        cone2.position.set(-15,2,-5)
-        left_bg.add(cone2)
+        const greenCones = new THREE.Geometry()
+        greenCones.merge(new THREE.ConeGeometry(1,5,16,8).translate(-15,2,-5))
+        greenCones.merge(new THREE.ConeGeometry(1,5,16,8).translate(-8,2,-28))
+        greenCones.merge(new THREE.ConeGeometry(1,5,16,8).translate(-8.5,0,-25))
+        greenCones.merge(new THREE.ConeGeometry(1,5,16,8).translate(15,2,-5))
+        greenCones.merge(new THREE.ConeGeometry(1,5,16,8).translate(14,0,-3))
+        background.add(new THREE.Mesh(greenCones,new THREE.MeshLambertMaterial({color:'green', map:tex,})))
 
 
         const dome_geo = new THREE.Geometry()
-        const dome1 = new THREE.SphereGeometry(6)
-        dome1.translate(-20,-4,0)
-        dome_geo.merge(dome1)
-        const dome2 = new THREE.SphereGeometry(10)
-        dome2.translate(-25,-5,-10)
-        dome_geo.merge(dome2)
-        left_bg.add(new THREE.Mesh(dome_geo,new THREE.MeshLambertMaterial({color:'white'})))
+        //left
+        dome_geo.merge(new THREE.SphereGeometry(6).translate(-20,-4,0))
+        dome_geo.merge(new THREE.SphereGeometry(10).translate(-25,-5,-10))
+        //right
+        dome_geo.merge(new THREE.SphereGeometry(10).translate(30,-5,-10))
+        dome_geo.merge(new THREE.SphereGeometry(6).translate(27,-3,2))
 
-        const dome3 = new THREE.SphereGeometry(10)
-        dome3.translate(30,-5,-10)
-        dome_geo.merge(dome3)
-        const dome4 = new THREE.SphereGeometry(6)
-        dome4.translate(27,-3,2)
-        dome_geo.merge(dome4)
+        //front
+        dome_geo.merge(new THREE.SphereGeometry(15).translate(0,-6,-40))
+        dome_geo.merge(new THREE.SphereGeometry(7).translate(-15,-3,-30))
+        dome_geo.merge(new THREE.SphereGeometry(4).translate(7,-1,-25))
 
-        left_bg.position.set(0,0,0)
-        scene.add(left_bg)
+        //back
+        dome_geo.merge(new THREE.SphereGeometry(15).translate(0,-6,40))
+        dome_geo.merge(new THREE.SphereGeometry(7).translate(-15,-3,30))
+        dome_geo.merge(new THREE.SphereGeometry(4).translate(7,-1,25))
+
+        background.add(new THREE.Mesh(dome_geo,new THREE.MeshLambertMaterial({color:'white'})))
+
+        background.position.set(0,0,0)
+        scene.add(background)
     }
 
     function initAudio() {
