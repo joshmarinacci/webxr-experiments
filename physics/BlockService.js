@@ -44,7 +44,7 @@ export const BLOCK_COLORS = {
     BLOCK:0x00ff00, //full blue
 }
 const SELECTED_COLOR = 0xffff00 //yellow
-
+const FLOOR_COLOR = 0xffffff
 
 const POSITION_NAMES = ['x','y','z']
 const ROTATION_NAMES = ['rotx','roty','rotz']
@@ -363,9 +363,10 @@ export class BlockService extends EventMaker {
         this.getWorld().addBody(floorBody);
         floorBody.jtype = BLOCK_TYPES.FLOOR
         const floorObj =new THREE.Mesh(
-            new THREE.PlaneGeometry(20,20,32,32),
-            new THREE.MeshLambertMaterial({color:'brown'})
+            new THREE.PlaneGeometry(100,100,32,32),
+            new THREE.MeshLambertMaterial({color:FLOOR_COLOR})
         )
+        floorObj.receiveShadow = true
         floorObj.rotation.x = toRad(-90)
         this.group.add(floorObj)
         floorBody.userData = {obj:floorObj}
@@ -583,7 +584,7 @@ export class BlockService extends EventMaker {
     generateBallMesh(rad,type) {
         if(type === BALL_TYPES.PLAIN) {
             return new THREE.Mesh(
-                new THREE.SphereGeometry(this.ballRadius),
+                new THREE.SphereGeometry(this.ballRadius,6,5),
                 new THREE.MeshPhongMaterial({color: BLOCK_COLORS.BALL, flatShading: true})
             )
         }
