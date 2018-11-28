@@ -234,7 +234,7 @@
     function initBall(scene) {
         game.click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
-            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, transparent:false, opacity:0.0, visible:false})
+            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, visible:false})
         )
         game.click_sphere.visible = true
         game.click_sphere.userData.clickable = true
@@ -331,7 +331,7 @@
         game.audioService.load("click","./sounds/plink.wav")
         game.audioService.load("crash","./sounds/crash1.wav")
         game.audioService.load("thunk","./sounds/thunk.wav")
-        game.audioService.load("bg","./music/Visager_-_09_-_Bug_Band_Loop.mp3")
+        game.audioService.load("bg","./music/sugarplum.mp3")
             .then(()=>{
                 game.bg_music = game.audioService.play("bg")
                 game.bg_music.loop = true
