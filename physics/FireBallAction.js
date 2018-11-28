@@ -1,5 +1,5 @@
 import {t2 as T2} from "./t2.js"
-import {LERP_TYPES, PROP_TYPES} from './t2'
+import {LERP_TYPES, PROP_TYPES} from './t2.js'
 const toRad = (deg) => deg * Math.PI/180
 
 const BALL_TIMEOUT = 6*1000
