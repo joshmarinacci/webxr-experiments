@@ -88,12 +88,17 @@
 
 
         //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 1, 1, 1 ).normalize();
+        const light = new THREE.DirectionalLight( 0xffffff, 0.3 );
+        light.position.set( 0, 3, 0 ).normalize();
         scene.add( light );
 
+        const ambient = new THREE.AmbientLight(0xffffff, 0.3)
+        scene.add(ambient)
 
 
+        const pointLight = new THREE.PointLight(0xffffff, 3, 10)
+        pointLight.position.set(0,5,-4)
+        scene.add(pointLight)
 
 
         // enable stats visible inside VR
