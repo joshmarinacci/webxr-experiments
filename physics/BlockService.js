@@ -220,7 +220,7 @@ let last_block_positions = []
 let last_block_quaternions = []
 
 const DEBUG = {
-    INTRO_TRANSITION:false
+    INTRO_TRANSITION:true
 }
 
 
