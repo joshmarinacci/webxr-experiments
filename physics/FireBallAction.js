@@ -1,5 +1,8 @@
+import {t2 as T2} from "./t2.js"
+import {LERP_TYPES, PROP_TYPES} from './t2'
 const toRad = (deg) => deg * Math.PI/180
 
+const BALL_TIMEOUT = 6*1000
 export default class FireBallAction {
     constructor(scene, controller, game) {
         this.clock = new THREE.Clock()
@@ -32,8 +35,26 @@ export default class FireBallAction {
             const ball = game.blockService.fireBall(endPoint, dirPoint, strength)
             game.audioService.play('thunk')
             //remove the ball after 10 sec
-            setTimeout(() => game.blockService.removeBall(ball), 5 * 1000)
-            this.sphere.position.z = -1.0
+            setTimeout(() => game.blockService.removeBall(ball), BALL_TIMEOUT)
+            //move the sphere back
+            // this.sphere.position.z = -1.0
+            this.sphere.visible = false
+            T2.sequence()
+                .then(T2.wait(1.0))
+                .then(()=>{
+                    this.sphere.visible = true
+                    this.sphere.position.z = -1.0
+                })
+                .then(T2.prop({
+                    target:this.sphere,
+                    property:'scale',
+                    propertyType:PROP_TYPES.COMPOUND,
+                    lerpType:LERP_TYPES.ELASTIC,
+                    from:{x:0.01,y:0.01,z:0.01},
+                    to:{x:1.0,y:1.0,z:1.0},
+                    duration:1.0,
+                }))
+                .start()
         }
     }
     updatePressSphere(time) {

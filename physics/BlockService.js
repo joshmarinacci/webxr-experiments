@@ -318,7 +318,7 @@ export class BlockService extends EventMaker {
         })
         this.blocks.forEach(b => b.body.addEventListener('collide',this.handleCollision))
         if(DEBUG.INTRO_TRANSITION)   this.blocks.forEach((b,i) => {
-            b.obj.scale.set(0.0,0.0,0.0)
+            b.obj.scale.set(0.01,0.01,0.01)
             const len = 0.5
             T2.sequence()
                 .then(T2.wait(0.5+i*0.05))
@@ -327,7 +327,7 @@ export class BlockService extends EventMaker {
                     property:'scale',
                     propertyType:PROP_TYPES.COMPOUND,
                     lerpType:LERP_TYPES.ELASTIC,
-                    from:{x:0,y:0,z:0},
+                    from:{x:0.01,y:0.01,z:0.01},
                     to:{x:1.0,y:1.0,z:1.0},
                     duration:len,
                 }))
