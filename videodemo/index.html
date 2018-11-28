@@ -12,6 +12,7 @@
     <!-- needed for loading Truetype Fonts -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/TTFLoader.js"></script>
     <script src="../boilerplate/node_modules/three/examples/js/libs/opentype.min.js"></script>
+    <script src="../boilerplate/node_modules/three/examples/js/controls/FirstPersonControls.js"></script>
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
@@ -81,8 +82,13 @@
 
     let cube
     let cake
+    let controls
+    let stage
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
+        // controls = new THREE.FirstPersonControls(camera)
+        // controls.movementSpeed = 3;
+        // controls.lookSpeed = 0.1;
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
@@ -122,6 +128,9 @@
 
         })
 
+        stage = new THREE.Group()
+        scene.add(stage)
+
         const model_loader = new THREE.GLTFLoader()
         model_loader.load('./videodemo1.glb',(model)=>{
             console.log("got the model",model)
@@ -136,19 +145,60 @@
                     })
                 }
             })
-            scene.add(model.scene)
+            stage.add(model.scene)
         })
 
+
+        const targets = []
+
+        const target1 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        target1.position.set(-3,1,-3)
+        targets.push(target1)
+
+        const target2 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        target2.position.set(3,1,-3)
+        targets.push(target2)
+
+        const target3 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        target3.position.set(0,1,0)
+        targets.push(target3)
+
+        const target4 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1),
+            new THREE.MeshLambertMaterial({color:'red'})
+        )
+        target4.position.set(0,1,-5)
+        targets.push(target4)
+
+        targets.forEach((t)=>{
+            t.userData.clickable = true
+            on(t,'click',(e)=>{
+                stage.position.x = -e.target.position.x
+                stage.position.z = -e.target.position.z
+            })
+            stage.add(t)
+        })
     }
 
     //called on every frame. customize this
+    const clock = new THREE.Clock()
     function render(time) {
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
-        if(stats) stats.update(time)
+        // if(stats) stats.update(time)
+        // if(controls) controls.update(clock.getDelta())
         //rotate the cube on every tick
         // if(cube) cube.rotation.y += 0.002
-        if(cake) cake.rotation.y -= 0.002
+        // if(cake) cake.rotation.y -= 0.002
         renderer.render( scene, camera );
     }
 
