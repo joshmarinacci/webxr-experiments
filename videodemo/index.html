@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+
+http://freemusicarchive.org/music/Michael_Lynch/The_New_Birthday_Song_Contest/Happy_And_Wonderful_Birthday
+
+
+-->
 <head>
     <meta charset="UTF-8">
     <title>WebVR + ThreeJS Application</title>
@@ -149,6 +155,15 @@
         })
 
 
+        const audioListener = new THREE.AudioListener()
+        camera.add(audioListener)
+        const music = new THREE.Audio(audioListener)
+        const audioLoader = new THREE.AudioLoader()
+        audioLoader.load("./happybirthday.mp3", (data)=> {
+            music.setBuffer(data)
+        })
+
+
         const targets = []
 
         const target1 = new THREE.Mesh(
@@ -176,6 +191,7 @@
             new THREE.SphereGeometry(0.1),
             new THREE.MeshLambertMaterial({color:'red'})
         )
+        target4.name = 'cake-target'
         target4.position.set(0,1,-5)
         targets.push(target4)
 
@@ -184,6 +200,9 @@
             on(t,'click',(e)=>{
                 stage.position.x = -e.target.position.x
                 stage.position.z = -e.target.position.z
+                if(e.target.name === 'cake-target') {
+                    music.play()
+                }
             })
             stage.add(t)
         })
