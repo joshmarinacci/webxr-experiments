@@ -12,7 +12,7 @@
     <!-- needed for loading Truetype Fonts -->
     <script src="../boilerplate/node_modules/three/examples/js/loaders/TTFLoader.js"></script>
     <script src="../boilerplate/node_modules/three/examples/js/libs/opentype.min.js"></script>
-    <script src="../boilerplate/node_modules/three/examples/js/controls/FirstPersonControls.js"></script>
+    <!--<script src="../boilerplate/node_modules/three/examples/js/controls/FirstPersonControls.js"></script>-->
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
@@ -92,19 +92,21 @@
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
+        stage = new THREE.Group()
+        scene.add(stage)
 
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 0.3 );
         light.position.set( 0, 3, 0 ).normalize();
-        scene.add( light );
+        stage.add( light );
 
         const ambient = new THREE.AmbientLight(0xffffff, 0.3)
-        scene.add(ambient)
+        stage.add(ambient)
 
 
         const pointLight = new THREE.PointLight(0xffffff, 3, 10)
         pointLight.position.set(0,5,-4)
-        scene.add(pointLight)
+        stage.add(pointLight)
 
 
         // enable stats visible inside VR
@@ -128,8 +130,6 @@
 
         })
 
-        stage = new THREE.Group()
-        scene.add(stage)
 
         const model_loader = new THREE.GLTFLoader()
         model_loader.load('./videodemo1.glb',(model)=>{
@@ -187,6 +187,37 @@
             })
             stage.add(t)
         })
+
+
+
+
+        const ttfLoader = new THREE.TTFLoader()
+        ttfLoader.load('./Poppins-Medium.ttf',data => {
+            const font = new THREE.FontLoader().parse(data)
+            const geo = new THREE.TextBufferGeometry("Happy Birthday Lauren",{
+                font: font,
+                size: 0.4,
+                height: 0.05,
+                curveSegments: 30,
+                bevelEnabled: true,
+                bevelThickness: 0.1,
+                bevelSize: 0.02,
+                bevelSegments: 3
+            })
+            geo.center()
+
+            const obj = new THREE.Mesh(geo,
+                new THREE.MeshStandardMaterial({
+                    color:'red',
+                    metalness:0.0,
+                    roughness:0.4,
+                })
+            )
+            obj.position.set(0,3.0,-8)
+            stage.add(obj)
+
+        })
+
     }
 
     //called on every frame. customize this
@@ -194,11 +225,11 @@
     function render(time) {
         //update the pointer and stats, if configured
         if(pointer) pointer.tick(time)
-        // if(stats) stats.update(time)
+        if(stats) stats.update(time)
         // if(controls) controls.update(clock.getDelta())
         //rotate the cube on every tick
         // if(cube) cube.rotation.y += 0.002
-        // if(cake) cake.rotation.y -= 0.002
+        if(cake) cake.rotation.y -= 0.002
         renderer.render( scene, camera );
     }
 
