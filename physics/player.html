@@ -154,6 +154,7 @@
         blockService:null,
         audioService:null,
         click_sphere: null,
+        backdropSphere: null,
         texture_loader: new THREE.TextureLoader(),
         actions: {
             fire_ball:null
@@ -391,19 +392,38 @@
     }
 
     function initText() {
-        game.text = new SimpleText(3,2);
-        game.text.setText("Jingle Smash Beta\ndestroy blue crystal blocks\nclick to play")
-        game.text.position.set(0,3,-3)
+        game.text = new SimpleText(2,1,256)
+        game.text.backgroundColor = 'white'
+        game.text.fheight = 60
+        game.text.font = '50px sans-serif'
+        game.text.setText("Jingle Smash\ndestroy blue blocks\nclick to play")
+        game.text.position.set(0,2,-2.0)
         scene.add(game.text)
     }
 
     function startLevel() {
         console.log("starting the level")
-        game.text.visible = false
         loadStructure().then(()=>{
-            game.blockService.startPlaying()
-            game.actions.fire_ball.setEnabled(true)
-            game.actions.fire_ball.resetBall()
+            T2.sequence()
+                .then(()=>{
+                    game.blockService.startPlaying()
+                })
+                .then(T2.prop({
+                    target:game.backdropSphere.material,
+                    property:'opacity',
+                    from:1.0,
+                    to:0.0,
+                    duration:0.5,
+                }))
+                .then(()=>{
+                    game.backdropSphere.visible = false
+                    game.text.visible = false
+                })
+                .then(()=>{
+                    game.actions.fire_ball.setEnabled(true)
+                    game.actions.fire_ball.resetBall()
+                })
+                .start()
         })
     }
 
@@ -444,13 +464,27 @@
         game.ballcount = 0
         game.blockService.stopPlaying()
         game.actions.fire_ball.setEnabled(false)
-        game.text.visible = true
-        game.text.setText("out of balls\nrestarting")
-        const cb = () => {
-            startLevel()
-            off(game.click_sphere,POINTER_CLICK,cb)
-        }
-        on(game.click_sphere,POINTER_CLICK,cb)
+        T2.sequence()
+            .then(()=>{
+                game.text.visible = true
+                game.text.setText("Out of balls\nRestarting")
+                game.backdropSphere.visible = true
+            })
+            .then(T2.prop({
+                target:game.backdropSphere.material,
+                property:'opacity',
+                from:0.0,
+                to:1.0,
+                duration:0.5,
+            }))
+            .then(()=>{
+                const cb = () => {
+                    startLevel()
+                    off(game.click_sphere,POINTER_CLICK,cb)
+                }
+                on(game.click_sphere,POINTER_CLICK,cb)
+            })
+            .start()
     }
     function winGame() {
         game.ballcount = 0
@@ -469,13 +503,27 @@
         game.ballcount = 0
         game.blockService.stopPlaying()
         game.actions.fire_ball.setEnabled(false)
-        game.text.visible = true
-        game.text.setText("next level!")
-        const cb = () => {
-            startLevel()
-            off(game.click_sphere,POINTER_CLICK,cb)
-        }
-        on(game.click_sphere,POINTER_CLICK,cb)
+        T2.sequence()
+            .then(()=>{
+                game.text.visible = true
+                game.text.setText("Next Level")
+                game.backdropSphere.visible = true
+            })
+            .then(T2.prop({
+                target:game.backdropSphere.material,
+                property:'opacity',
+                from:0.0,
+                to:1.0,
+                duration:0.5,
+            }))
+            .then(()=>{
+                const cb = () => {
+                    startLevel()
+                    off(game.click_sphere,POINTER_CLICK,cb)
+                }
+                on(game.click_sphere,POINTER_CLICK,cb)
+            })
+            .start()
     }
     function startMainMenu() {
         const cb = () => {
@@ -501,6 +549,12 @@
         initCount()
 
         initText()
+
+        game.backdropSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(4),
+            new THREE.MeshLambertMaterial({color:'red', side: THREE.BackSide, transparent:true, opacity:1.0})
+        )
+        scene.add(game.backdropSphere)
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)

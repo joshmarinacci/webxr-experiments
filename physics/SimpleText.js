@@ -1,16 +1,18 @@
 export default class SimpleText extends THREE.Object3D {
-    constructor(w,h) {
+    constructor(w,h,density) {
         super()
+        this.density = density?density:128
         this.htmlCanvas = document.createElement('canvas')
-        this.htmlCanvas.width = 128*w
-        this.htmlCanvas.height = 128*h
+        this.htmlCanvas.width = this.density*w
+        this.htmlCanvas.height = this.density*h
         this.canvas_texture = new THREE.CanvasTexture(this.htmlCanvas)
         this.mesh = new THREE.Mesh(
             new THREE.PlaneGeometry(w,h),
             new THREE.MeshLambertMaterial({map:this.canvas_texture})
         )
         this.add(this.mesh)
-        this.font = '36px sans-serif'
+        this.fheight = this.density/3.5
+        this.font = `${this.fheight}px sans-serif`
         this.color = 'black';
         this.backgroundColor = 'gray'
     }
@@ -21,12 +23,12 @@ export default class SimpleText extends THREE.Object3D {
         ctx.font = this.font
         ctx.fillStyle = this.color
         const lines = str.split("\n")
-        const top = (36*lines.length)/2+this.htmlCanvas.height/2 - lines.length*36/2
+        const top = (this.fheight*lines.length)/2+this.htmlCanvas.height/2 - lines.length*this.fheight/2
         lines.forEach((line,i) => {
             const metrics = ctx.measureText(line)
             ctx.fillText(line,
                 this.htmlCanvas.width/2-metrics.width/2,
-                top+i*36
+                top+i*this.fheight
             )
             this.canvas_texture.needsUpdate = true
         })
