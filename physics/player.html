@@ -478,11 +478,7 @@
                 duration:0.5,
             }))
             .then(()=>{
-                const cb = () => {
-                    startLevel()
-                    off(game.click_sphere,POINTER_CLICK,cb)
-                }
-                on(game.click_sphere,POINTER_CLICK,cb)
+                pointer.waitSceneClick(()=>startLevel())
             })
             .start()
     }
@@ -517,22 +513,10 @@
                 duration:0.5,
             }))
             .then(()=>{
-                const cb = () => {
-                    startLevel()
-                    off(game.click_sphere,POINTER_CLICK,cb)
-                }
-                on(game.click_sphere,POINTER_CLICK,cb)
+                pointer.waitSceneClick(()=>startLevel())
             })
             .start()
     }
-    function startMainMenu() {
-        const cb = () => {
-            startLevel()
-            off(game.click_sphere,POINTER_CLICK,cb)
-        }
-        on(game.click_sphere,POINTER_CLICK,cb)
-    }
-
     function initContent(scene,camera,renderer) {
         game.blockService = new BlockService(scene)
         game.blockService.on('collision',handleCollision)
@@ -576,7 +560,7 @@
 
         initBall(scene)
 
-        loadStructure().then(startMainMenu)
+        loadStructure()
 
         let detected = false
         on($("#enter-button"),'click',(e)=> {
@@ -588,12 +572,12 @@
             if(detected) {
                 pointer = new Pointer(scene,renderer,camera, pointer_opts)
                 vrmanager.enterVR()
-                initFireball()
             } else {
                 pointer_opts.mouseSimulatesController = true
                 pointer = new Pointer(scene,renderer,camera, pointer_opts)
-                initFireball()
             }
+            initFireball()
+            pointer.waitSceneClick(()=>startLevel())
         })
 
         on(vrmanager,VR_DETECTED,()=>{
