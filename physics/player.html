@@ -276,13 +276,15 @@
     function initBall(scene) {
         game.click_sphere = new THREE.Mesh(
             new THREE.SphereGeometry(4),
-            new THREE.MeshLambertMaterial({color:'green', side:THREE.BackSide, visible:false})
+            new THREE.MeshLambertMaterial({color: 'green', side: THREE.BackSide, visible: false})
         )
         game.click_sphere.visible = true
         game.click_sphere.userData.clickable = true
-        game.click_sphere.position.set(0,0,0)
+        game.click_sphere.position.set(0, 0, 0)
         scene.add(game.click_sphere)
+    }
 
+    function initFireball() {
         game.actions.fire_ball = new FireBallAction(scene, pointer.controller1, game)
         on(game.click_sphere,POINTER_PRESS,game.actions.fire_ball.startPressSphere)
         on(game.click_sphere,POINTER_RELEASE,game.actions.fire_ball.endPressSphere)
@@ -505,26 +507,20 @@
         camera.add(stats)
         scene.add(camera)
 
-        //class which handles mouse and VR controller
-        pointer = new Pointer(scene,renderer,camera, {
-
+        const pointer_opts = {
             //Pointer searches everything in the scene by default
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
-
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:true,
-
+            cameraFollowMouse:false,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,
             enableLaser: true,
             laserLength:8,
-        })
-
+        }
 
         initBall(scene)
-
 
         loadStructure().then(startMainMenu)
 
@@ -532,10 +528,17 @@
         on($("#enter-button"),'click',(e)=> {
             e.preventDefault()
             e.stopPropagation()
+            //hide the overlay
+            $("#overlay").style.visibility = 'hidden'
+            //if vr,
             if(detected) {
+                pointer = new Pointer(scene,renderer,camera, pointer_opts)
                 vrmanager.enterVR()
+                initFireball()
             } else {
-                $("#overlay").style.visibility = 'hidden'
+                pointer_opts.mouseSimulatesController = true
+                pointer = new Pointer(scene,renderer,camera, pointer_opts)
+                initFireball()
             }
         })
 

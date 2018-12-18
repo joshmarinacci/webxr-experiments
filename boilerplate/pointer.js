@@ -28,16 +28,7 @@ export class Pointer {
 
 
         // setup the mouse
-        if(opts.cameraFollowMouse) {
-            this.canvas.addEventListener('mousemove', (e) => {
-                this.mouseMove(e)
-                this.cameraFollowMouse(e)
-            })
-        } else {
-            this.canvas.addEventListener('mousemove', (e) => {
-                this.mouseMove(e)
-            })
-        }
+        this.canvas.addEventListener('mousemove', this.mouseMove.bind(this))
         this.canvas.addEventListener('click', this.mouseClick.bind(this))
         this.canvas.addEventListener('mousedown',this.mouseDown.bind(this))
         this.canvas.addEventListener('mouseup',this.mouseUp.bind(this))
@@ -57,16 +48,7 @@ export class Pointer {
         this.controller2.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller2.addEventListener('selectend', this.controllerSelectEnd.bind(this));
 
-        if(opts.mouseSimulatesController) {
-            this.controller1 = new THREE.Group()
-            this.controller1.position.set(0,1,-2)
-            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, new THREE.Vector3(0,0,1))
-            this.spot = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(0.1),
-                new THREE.MeshLambertMaterial({color: 'red'})
-            )
-            scene.add(this.spot)
-        }
+        this.setMouseSimulatesController(opts.mouseSimulatesController)
 
         this.scene.add(this.controller1);
         this.scene.add(this.controller2);
@@ -137,6 +119,8 @@ export class Pointer {
             this.controller1.quaternion.multiply(flip)
         }
         this._processMove()
+
+        if(this.opts.cameraFollowMouse) this.cameraFollowMouse(e)
     }
 
     touchStart(e) {
@@ -298,5 +282,20 @@ export class Pointer {
     }
     off(type,cb) {
         this.listeners[type] = this.listeners[type].filter(c => c !== cb)
+    }
+    setMouseSimulatesController(val) {
+        this.opts.mouseSimulatesController = val
+        if(this.opts.mouseSimulatesController) {
+            this.controller1 = new THREE.Group()
+            this.controller1.position.set(0,1,-2)
+            this.controller1.quaternion.setFromUnitVectors(THREE.Object3D.DefaultUp, new THREE.Vector3(0,0,1))
+            this.spot = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(0.1),
+                new THREE.MeshLambertMaterial({color: 'red'})
+            )
+            this.scene.add(this.spot)
+        } else {
+        }
+
     }
 }
