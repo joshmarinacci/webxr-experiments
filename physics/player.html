@@ -249,6 +249,9 @@
 
         //when ball hits moving block,
         if(e.body.jtype === BLOCK_TYPES.BALL) {
+            if( e.target.jtype === BLOCK_TYPES.WALL) {
+                game.audioService.play('click')
+            }
             if (e.target.jtype === BLOCK_TYPES.BLOCK) {
                 //hit a block, just make the thunk sound
                 game.audioService.play('click')
