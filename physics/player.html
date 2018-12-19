@@ -146,7 +146,7 @@
 
     const DEBUG = {
         SCORE:false,
-        SKYBOX:false
+        SKYBOX:true
     }
 
     // global constants and variables for your app go here
@@ -238,6 +238,7 @@
             }
         }
         parts = new GPUParticleSystem(options)
+        parts.userData.skipRaycast = true
         scene.add(parts)
     }
     function playParticles(v) {
@@ -311,21 +312,28 @@
         light.shadow.camera.right = 10
         light.shadow.camera.top = 10
         light.position.set( 0, 1, 0.5 ).normalize();
+        light.userData.skipRaycast = true
         scene.add( light );
 
-        scene.add(new THREE.AmbientLight(0xffffff,0.5))
+        const ambient = new THREE.AmbientLight(0xffffff,0.5)
+        ambient.userData.skipRaycast = true
+        scene.add(ambient)
     }
 
     function initBackground() {
         //background image
-        if(DEBUG.SKYBOX) scene.add(new THREE.Mesh(
-            new THREE.SphereGeometry(50),
-            new THREE.MeshBasicMaterial({
-                color:'white',
-                map:game.texture_loader.load('./textures/sky2.jpg'),
-                side: THREE.BackSide
-            })
-        ))
+        if(DEBUG.SKYBOX) {
+            const sky = new THREE.Mesh(
+                new THREE.SphereGeometry(50),
+                new THREE.MeshBasicMaterial({
+                    color:'white',
+                    map:game.texture_loader.load('./textures/sky2.jpg'),
+                    side: THREE.BackSide
+                })
+            )
+            sky.userData.skipRaycast = true
+            scene.add(sky)
+        }
 
 
         const tex = game.texture_loader.load('./textures/candycane.png')
@@ -372,6 +380,8 @@
         background.add(new THREE.Mesh(dome_geo,new THREE.MeshLambertMaterial({color:'white'})))
 
         background.position.set(0,0,0)
+        background.userData.skipRaycast = true
+
         scene.add(background)
     }
 
@@ -392,6 +402,7 @@
         game.crystalCountText = new SimpleText(2,1);
         game.crystalCountText.setText("playing")
         game.crystalCountText.position.set(0,0,-1.5)
+        game.crystalCountText.userData.skipRaycast = true
         scene.add(game.crystalCountText)
     }
 
@@ -402,6 +413,7 @@
         game.text.font = '50px sans-serif'
         game.text.setText("Jingle Smash\ndestroy blue blocks\nclick to play")
         game.text.position.set(0,2,-2.0)
+        game.text.userData.skipRaycast = true
         scene.add(game.text)
     }
 
@@ -542,17 +554,24 @@
             new THREE.SphereGeometry(4),
             new THREE.MeshLambertMaterial({color:'red', side: THREE.BackSide, transparent:true, opacity:1.0})
         )
+        game.backdropSphere.userData.skipRaycast = true
         scene.add(game.backdropSphere)
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
         camera.add(stats)
+        camera.userData.skipRaycast = true
         scene.add(camera)
 
         const pointer_opts = {
             //Pointer searches everything in the scene by default
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
+            //eliminate from raycasting recursion to make it faster
+            recurseFilter: (o) => {
+                if(o.userData && o.userData.skipRaycast === true) return false
+                return true
+            },
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
             cameraFollowMouse:true,
             // set to true to move the controller node forward and tilt with the mouse.
@@ -580,6 +599,7 @@
                 pointer_opts.mouseSimulatesController = true
                 pointer = new Pointer(scene,renderer,camera, pointer_opts)
             }
+            pointer.controller1.userData.skipRaycast = true
             initFireball()
             pointer.waitSceneClick(()=>startLevel())
         })

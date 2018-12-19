@@ -1,3 +1,4 @@
+import {Raycaster} from "./Raycaster.js"
 export const POINTER_ENTER = "enter"
 export const POINTER_EXIT = "exit"
 export const POINTER_CLICK = "click"
@@ -20,11 +21,12 @@ export class Pointer {
         this.canvas = renderer.domElement
         this.camera = camera
 
-        this.raycaster = new THREE.Raycaster()
+        this.raycaster = new Raycaster()
         this.waitcb = null
         this.hoverTarget = null
 
-        this.intersectionFilter = this.opts.intersectionFilter || ((o) => true)
+        this.intersectionFilter = this.opts.intersectionFilter || (() => true)
+        this.raycaster.recurseFilter = this.opts.recurseFilter || (()=> true)
 
 
         // setup the mouse
