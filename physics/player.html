@@ -145,7 +145,8 @@
     const toRad = (deg) => deg * Math.PI/180
 
     const DEBUG = {
-        SCORE:false
+        SCORE:false,
+        SKYBOX:false
     }
 
     // global constants and variables for your app go here
@@ -317,7 +318,7 @@
 
     function initBackground() {
         //background image
-        scene.add(new THREE.Mesh(
+        if(DEBUG.SKYBOX) scene.add(new THREE.Mesh(
             new THREE.SphereGeometry(50),
             new THREE.MeshBasicMaterial({
                 color:'white',
@@ -553,7 +554,7 @@
             //override this to match just certain things
             intersectionFilter: ((o) => o.userData.clickable),
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
             mouseSimulatesController:false,

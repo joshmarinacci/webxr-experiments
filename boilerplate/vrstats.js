@@ -17,6 +17,9 @@ export default class VRStats extends THREE.Group {
         )
         mesh.position.z = -3
         mesh.position.y = 1.5
+        mesh.material.depthTest = false
+        mesh.material.depthWrite = false
+        mesh.renderOrder = 1000
         this.add(mesh)
         this.cmesh = mesh
 
