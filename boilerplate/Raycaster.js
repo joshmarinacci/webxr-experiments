@@ -125,7 +125,7 @@ Object.assign( Raycaster.prototype, {
 
         }
 
-        console.log("intersected objects",count)
+        // console.log("intersected objects",count)
 
         intersects.sort( ascSort );
 
