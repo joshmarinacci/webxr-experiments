@@ -149,6 +149,7 @@ class Block {
     }
 
     rebuildGeometry() {
+        if(this.frozen === true) return
         this.obj.geometry = new THREE.BoxGeometry(this.width,this.height,this.depth)
         if(this.geometryModifier !== null && this.physicsType === BLOCK_TYPES.BLOCK) this.geometryModifier(this.obj.geometry)
         if(this.body) {
@@ -698,6 +699,7 @@ export class BlockService extends EventMaker {
         const newBlocks = doc.data.blocks.map(b => {
             // console.log("adding block",b)
             const b2 = this.makeBlock()
+            b2.frozen = true
             const p = b.position
             b2.positionSet(p.x,p.y,p.z)
             b2.setWidth(b.size.width)
@@ -707,6 +709,7 @@ export class BlockService extends EventMaker {
             b2.set('roty',b.rotation.y)
             b2.set('rotz',b.rotation.z)
             b2.set('physicstype',b.physicstype)
+            b2.frozen = false
             b2.rebuildGeometry()
             return b2
         })
