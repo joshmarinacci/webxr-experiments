@@ -1,5 +1,5 @@
-import Group2D from './group2d'
-import Button2D from './button2d'
+import Group2D from './group2d.js'
+import Button2D from './button2d.js'
 const rowLayout = (panel)=>{
     let x = 0
     panel.comps.forEach((c)=>{

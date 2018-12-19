@@ -1,4 +1,4 @@
-import Button2D from './button2d'
+import Button2D from './button2d.js'
 
 export default class ToggleButton2D extends Button2D {
 
