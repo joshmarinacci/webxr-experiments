@@ -146,7 +146,12 @@
 
     const DEBUG = {
         SCORE:false,
-        SKYBOX:true
+        SKYBOX:true,
+        AUDIO:true,
+    }
+
+    if(typeof opts.AUDIO !== 'undefined') {
+        if(opts.AUDIO.toLowerCase() === 'false') DEBUG.AUDIO = false
     }
 
     // global constants and variables for your app go here
@@ -385,12 +390,13 @@
     }
 
     function initAudio() {
-        game.audioService = new AudioService()
+        game.audioService = new AudioService({enabled:DEBUG.AUDIO})
         game.audioService.load("click","./sounds/plink.wav")
         game.audioService.load("crash","./sounds/crash1.wav")
         game.audioService.load("thunk","./sounds/thunk.wav")
         game.audioService.load("bg","./music/sugarplum.mp3")
             .then(()=>{
+                if(!DEBUG.AUDIO) return
                 game.bg_music = game.audioService.play("bg")
                 game.bg_music.loop = true
             })

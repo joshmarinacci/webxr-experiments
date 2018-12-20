@@ -1,30 +1,36 @@
 window.AudioContext = window.AudioContext || window.webkitAudioContext
-let context = new window.AudioContext()
 
 
 export default class AudioService {
-    constructor() {
+    constructor(opts) {
         this.sounds = {}
+        this.enabled = true
+        if(opts && opts.enabled===false) this.enabled = false
+
+        if(this.enabled) this.context = new window.AudioContext()
     }
 
     load(name, url) {
-        return this.getAudioFile(url).then(buf => {
-            this.sounds[name] = buf
-        })
+        return this.getAudioFile(url).then(buf => this.sounds[name] = buf)
     }
     play(name) {
+        if(!this.enabled) return
         if(!this.sounds[name]) console.warn("could not find buffer for sound named ",name)
         return this.playSource(this.sounds[name])
     }
     getAudioFile(url) {
         return fetch(url,{responseType:'arraybuffer'})
             .then(resp => resp.arrayBuffer())
-            .then(arr => context.decodeAudioData(arr))
+            .then(arr => {
+                if(this.enabled) return this.context.decodeAudioData(arr)
+                return false
+            })
     }
     playSource(buffer) {
-        const source = context.createBufferSource();
+        if(!this.enabled) return
+        const source = this.context.createBufferSource();
         source.buffer = buffer;
-        source.connect(context.destination);
+        source.connect(this.context.destination);
         source.start(0)
         return source
     }
