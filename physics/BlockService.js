@@ -299,13 +299,11 @@ export class BlockService extends EventMaker {
             var dt = (time - lastTime)/1000
             world.step(fixedTimeStep, dt, maxSubSteps)
             this.blocks.forEach((c) => c.sync())
-            this.balls.forEach( ball => {
-                ball.position.copy(ball.userData.body.position)
-                ball.quaternion.copy(ball.userData.body.quaternion)
-            })
+            this.syncBalls()
         }
         lastTime = time
     }
+
 
     setRoomType(type) {
         this.roomType = type
@@ -371,6 +369,7 @@ export class BlockService extends EventMaker {
         floorObj.rotation.x = toRad(-90)
         this.group.add(floorObj)
         floorBody.userData = {obj:floorObj}
+        floorBody.userData.skipRaycast = true
         this.floors.push(floorBody)
     }
 
@@ -405,8 +404,10 @@ export class BlockService extends EventMaker {
     }
 
     removeFromSimulation(body) {
-        world.removeBody(body)
-        body.userData.block.getObject3D().visible = false
+        setTimeout(()=>{
+            world.removeBody(body)
+            body.userData.block.getObject3D().visible = false
+        },0)
     }
 
     stopPlaying() {
@@ -419,13 +420,11 @@ export class BlockService extends EventMaker {
             b.obj.visible = true
         })
         playing = false
-        this.balls.forEach(ball => {
-            this.group.remove(ball)
-            world.removeBody(ball.userData.body)
-        })
-        this.balls = []
+        this.removeBalls()
         this.stopRoom()
     }
+
+
 
     stopRoom() {
         this.floors.forEach(floor=>{
@@ -634,7 +633,6 @@ export class BlockService extends EventMaker {
         const ball = this.generateBallMesh(this.ballRadius,this.ballType)
         ball.castShadow = true
         ball.position.copy(pos)
-        this.group.add(ball)
         const sphereBody = new CANNON.Body({
             mass: this.ballMass,
             shape: new CANNON.Sphere(this.ballRadius),
@@ -643,18 +641,41 @@ export class BlockService extends EventMaker {
             material: ballMaterial,
         })
         sphereBody.jtype = BLOCK_TYPES.BALL
-        world.add(sphereBody)
         ball.userData.body = sphereBody
-        this.balls.push(ball)
-        this.fire('fireball',ball)
+        this.addBall(ball)
         return ball
     }
 
-    removeBall(ballMesh) {
-        const n = this.balls.indexOf(ballMesh)
+
+    addBall(ball) {
+        ball.userData.fireTime = Date.now()
+        world.add(ball.userData.body)
+        this.group.add(ball)
+        this.balls.push(ball)
+        this.fire('fireball',ball)
+    }
+
+    syncBalls() {
+        this.balls.forEach( ball => {
+            ball.position.copy(ball.userData.body.position)
+            ball.quaternion.copy(ball.userData.body.quaternion)
+        })
+    }
+
+    removeBalls() {
+        this.balls.forEach(ball => {
+            this.group.remove(ball)
+            world.removeBody(ball.userData.body)
+        })
+        this.balls = []
+    }
+
+
+    removeBall(ball) {
+        const n = this.balls.indexOf(ball)
         this.balls.splice(n,1)
-        this.group.remove(ballMesh)
-        world.removeBody(ballMesh.userData.body)
+        this.group.remove(ball)
+        world.removeBody(ball.userData.body)
     }
 
     generateJSON() {

@@ -189,8 +189,7 @@
         //play glass break sound
         game.audioService.play("crash")
         //remove the block from the scene and simulation
-        //must do in a timeout because we are currently in a collide callback
-        setTimeout(()=>game.blockService.removeFromSimulation(target),0)
+        game.blockService.removeFromSimulation(target)
         //add explosion effects
         const v = new THREE.Vector3()
         target.userData.block.obj.localToWorld(v)
@@ -457,7 +456,10 @@
         if(DEBUG.SCORE) game.crystalCountText.setText(`crystals ${count}`)
         // console.log("updating ball count",game.ballcount,'current level',game.currentLevel, 'crystals left',game.crystalcount)
 
-        const activeBalls = game.blockService.balls.length
+        const now = Date.now()
+        const activeBalls = game.blockService.balls
+            .filter(ball => (now - ball.userData.fireTime < 4000))
+            .length
         // console.log('active balls',activeBalls)
         if(game.ballcount >= 3 && game.crystalcount > 0 && activeBalls <= 0) {
             // console.log("used up our balls and still have crystals left")
@@ -621,7 +623,6 @@
         if(game.actions.fire_ball) game.actions.fire_ball.updatePressSphere(time)
         renderer.render( scene, camera );
         if(parts) parts.update(time)
-        // console.log('tick')
     }
 
     // you shouldn't need to modify much below here

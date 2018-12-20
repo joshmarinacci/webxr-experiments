@@ -2,7 +2,6 @@ import {t2 as T2} from "./t2.js"
 import {LERP_TYPES, PROP_TYPES} from './t2.js'
 const toRad = (deg) => deg * Math.PI/180
 
-const BALL_TIMEOUT = 6*1000
 export default class FireBallAction {
     constructor(scene, controller, game) {
         this.clock = new THREE.Clock()
@@ -34,8 +33,6 @@ export default class FireBallAction {
             dirPoint.normalize()
             const ball = game.blockService.fireBall(endPoint, dirPoint, strength)
             game.audioService.play('thunk')
-            //remove the ball after 10 sec
-            setTimeout(() => game.blockService.removeBall(ball), BALL_TIMEOUT)
             //move the sphere back
             // this.sphere.position.z = -1.0
             this.sphere.visible = false
