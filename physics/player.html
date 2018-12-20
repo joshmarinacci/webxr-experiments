@@ -103,7 +103,7 @@
 </div>
 
 <script type="module">
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_PRESS, POINTER_RELEASE, Pointer} from '../boilerplate/pointer.js'
+    import {POINTER_CLICK, POINTER_PRESS, POINTER_RELEASE, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
     import {BlockService,BLOCK_TYPES} from "./BlockService.js"
     import FireBallAction from "./FireBallAction.js"
@@ -151,7 +151,10 @@
     }
 
     if(typeof opts.AUDIO !== 'undefined') {
-        if(opts.AUDIO.toLowerCase() === 'false') DEBUG.AUDIO = false
+        if(opts.AUDIO.toLowerCase() === 'false') {
+            console.log('setting to false')
+            DEBUG.AUDIO = false
+        }
     }
 
     // global constants and variables for your app go here
@@ -587,6 +590,7 @@
             mouseSimulatesController:false,
             enableLaser: true,
             laserLength:8,
+            enableMoveEvents:false,
         }
 
         initBall(scene)

@@ -16,6 +16,7 @@ export class Pointer {
         this.opts = opts || {}
         this.opts.enableLaser = (opts.enableLaser !== undefined) ? opts.enableLaser : true
         this.opts.laserLength = (opts.laserLength !== undefined) ? opts.laserLength : 3
+        this.opts.enableMoveEvents = (opts.enableMoveEvents !== undefined) ? opts.enableMoveEvents : true
         this.scene = scene
         this.renderer = renderer
         this.canvas = renderer.domElement
@@ -178,6 +179,7 @@ export class Pointer {
     }
 
     _processMove() {
+        if(!this.opts.enableMoveEvents)return
         const intersects = this.raycaster.intersectObjects(this.scene.children, true)
                 .filter(it => this.intersectionFilter(it.object))
 
