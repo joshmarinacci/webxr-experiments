@@ -2,9 +2,262 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>WebVR + ThreeJS Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <style type="text/css">
+        html, body {
+            margin:0;
+            padding:0;
+            overflow: hidden;
+        }
+        button {
+            color: black;
+            background-color: white;
+            border: 1px solid black;
+            font-size: 100%;
+            padding: 0.25em;
+            margin: 0.25em;
+        }
+        button:disabled {
+            color: darkgray;
+            background-color: gray;
+        }
+        #overlay {
+            position: fixed;
+            font-size: 5vh;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255,255,255,0.5);
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-content: center;
+        }
+        #overlay #inner {
+            border: 1px solid black;
+            background-color: white;
+            width: 70vw;
+            height: 40vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #loading-indicator {
+            display: block;
+        }
+
+        #start-button {
+            display: none;
+        }
+    </style>
+
 </head>
 <body>
 
+
+<div id="overlay">
+    <div id="inner">
+        <h1>GLTF Test</h1>
+        <div id="loading-indicator">
+            <label>loading</label>
+            <progress max="100" value="0" id="progress"></progress>
+        </div>
+        <button id="enter-button" disabled>VR not supported, play anyway</button>
+    </div>
+</div>
+
+
+<script type="module">
+    import * as THREE from "./node_modules/three/build/three.module";
+    // for pointer (mouse, controller, touch) support
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from "./node_modules/webxr-boilerplate/pointer.js";
+    // calculate FPS and other stats
+    import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
+    // enter and exit VR
+    import VRManager, {VR_DETECTED} from "./node_modules/webxr-boilerplate/vrmanager.js";
+
+    //JQuery-like selector
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+
+    // global constants and variables for your app go here
+    let camera, scene, renderer, pointer, stats, vrmanager;
+
+    let cube
+
+    const WAIT_FOR_LOAD = false
+    //called on setup. Customize this
+    function initContent(scene,camera,renderer) {
+        //set the background color of the scene
+        scene.background = new THREE.Color( 0xcccccc );
+
+        //load a cat texture
+        const texture_loader = new THREE.TextureLoader()
+        //cat from http://creative-commons-cats.tumblr.com/page/3
+        const texture = texture_loader.load('./node_modules/webxr-boilerplate/cat.jpg')
+
+        //create a cube
+        cube = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'white', map:texture})
+        )
+        //camera is at z=0, so move the cube back so we can see it
+        cube.position.z = -5
+        //move cube up to camera height (~1.5m)
+        cube.position.y = 1.5
+        //make it clickable
+        cube.userData.clickable = true
+        scene.add(cube)
+
+        //a standard light
+        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+
+
+
+
+
+        // enable stats visible inside VR
+        stats = new VRStats(renderer)
+        camera.add(stats)
+        scene.add(camera)
+
+        //class which handles mouse and VR controller
+        pointer = new Pointer(scene,renderer,camera, {
+
+            //Pointer searches everything in the scene by default
+            //override this to match just certain things
+            intersectionFilter: ((o) => o.userData.clickable),
+
+            //make the camera pan when moving the mouse. good for simulating head turning on desktop
+            cameraFollowMouse:false,
+
+            // set to true to move the controller node forward and tilt with the mouse.
+            // good for testing VR controls on desktop
+            mouseSimulatesController:false,
+
+            //turn this off if you provide your own pointer model
+            enableLaser: true,
+        })
+
+
+        const STICK_HEIGHT = 1.0
+        const stick = new THREE.Mesh(
+            new THREE.CylinderBufferGeometry(0.1,0.1,STICK_HEIGHT),
+            new THREE.MeshLambertMaterial({color:'aqua'})
+        )
+        const toRad = (degrees) => degrees*Math.PI/180
+        stick.position.z = -STICK_HEIGHT/2;
+        stick.rotation.x = toRad(-90)
+        pointer.controller1.add(stick)
+
+
+        //change cube to red BG when clicking
+        on(cube,POINTER_CLICK,()=>{
+            console.log("clicking on the cube")
+            cube.material.color.set(0xff0000)
+        })
+        //change cube to green BG when hovering over it
+        on(cube,POINTER_ENTER,()=>{
+            // console.log("entering the cube")
+            cube.material.color.set(0x00ff00)
+        })
+        on(cube,POINTER_EXIT,()=>{
+            // console.log('exiting the cube')
+            cube.material.color.set(0xffffff)
+        })
+
+
+
+        on($("#enter-button"),'click',()=>{
+            $("#overlay").style.display = 'none'
+            //we can start playing sound now
+        })
+
+
+        // this will fire if VR is supported on the device
+        // and a VR headset is detected
+        // if it never fires assume VR is not supported at all.
+        on(vrmanager,VR_DETECTED,()=>{
+            console.log("VR detected")
+            $("#enter-button").removeAttribute('disabled',false)
+            $("#enter-button").innerText = "enter vr"
+            on($("#enter-button"),'click',()=> vrmanager.enterVR())
+        })
+
+    }
+
+    //called on every frame. customize this
+    function render(time) {
+        //update the pointer and stats, if configured
+        if(pointer) pointer.tick(time)
+        if(stats) stats.update(time)
+        //rotate the cube on every tick
+        if(cube) cube.rotation.y += 0.002
+        renderer.render( scene, camera );
+    }
+
+
+    // you shouldn't need to modify much below here
+
+    function initScene() {
+        //create DIV for the canvas
+        const container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.gammaOutput = true
+        renderer.vr.enabled = true;
+        container.appendChild( renderer.domElement );
+        vrmanager = new VRManager(renderer)
+        // document.body.appendChild( WEBVR.createButton( renderer ) );
+
+        initContent(scene,camera,renderer)
+
+        window.addEventListener( 'resize', ()=>{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }, false );
+
+        THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
+            console.log(`loading ${url}.  loaded ${loaded} of ${total}`)
+        }
+        THREE.DefaultLoadingManager.onLoad = () => {
+            console.log(`loading complete`)
+            $("#loading-indicator").style.display = 'none'
+            $("#enter-button").style.display = 'block'
+            $("#enter-button").removeAttribute('disabled')
+        }
+        THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+            console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
+            $("#progress").setAttribute('value',100*(loaded/total))
+        }
+        THREE.DefaultLoadingManager.onError = (url) => {
+            console.log(`error loading ${url}`)
+        }
+
+        if(!WAIT_FOR_LOAD) {
+            $("#loading-indicator").style.display = 'none'
+            $("#enter-button").style.display = 'block'
+            $("#enter-button").removeAttribute('disabled')
+        }
+
+
+    }
+
+
+
+    // initPage()
+    initScene()
+    renderer.setAnimationLoop(render)
+
+</script>
 </body>
 </html>
