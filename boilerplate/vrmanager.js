@@ -56,7 +56,7 @@ export default class VRManager {
                     if ( displays.length > 0 ) {
 
                         // showEnterVR( displays[ 0 ] );
-                        console.log("found vr")
+                        console.log("found vr",displays[0])
                         this.device = displays[0]
                         this.fire(VR_DETECTED,{})
 
@@ -90,7 +90,8 @@ export default class VRManager {
             return
         }
         console.log("entering VR")
-        this.renderer.vr.setDevice( this.device );
+        const prom = this.renderer.vr.setDevice( this.device );
+        console.log('promise is',prom)
 
         if(this.device.isPresenting) {
             this.device.exitPresent()
