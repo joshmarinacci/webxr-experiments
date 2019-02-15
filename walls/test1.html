@@ -5,6 +5,7 @@
     <title>WebVR + ThreeJS Application</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+
     <style type="text/css">
         html, body {
             margin:0;
@@ -71,6 +72,8 @@
 
 <script type="module">
     import * as THREE from "./node_modules/three/build/three.module";
+    import GLTFLoader from "./node_modules/three/examples/js/loaders/GLTFLoader.js";
+
     // for pointer (mouse, controller, touch) support
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from "./node_modules/webxr-boilerplate/pointer.js";
     // calculate FPS and other stats
@@ -93,6 +96,25 @@
         //set the background color of the scene
         scene.background = new THREE.Color( 0xcccccc );
 
+        const loader = new GLTFLoader()
+        loader.load("./wall1.gltf",(m)=> {
+            console.log("loaded",m)
+            for(let i=0; i<3; i++) {
+                const obj = m.scene.children[0].clone()
+                obj.position.set(i*4, 0, -8)
+                // scene.add(obj)
+            }
+            const o2 = m.scene.children[0].clone()
+            o2.position.set(0,0,-8)
+            o2.rotation.y = toRad(90)
+            scene.add(o2)
+
+            const o3 = m.scene.children[0].clone()
+            o3.position.set(0,0,-8)
+            o3.rotation.y = toRad(-90)
+            scene.add(o3)
+        })
+
         //load a cat texture
         const texture_loader = new THREE.TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
@@ -109,7 +131,7 @@
         cube.position.y = 1.5
         //make it clickable
         cube.userData.clickable = true
-        scene.add(cube)
+        // scene.add(cube)
 
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
@@ -133,7 +155,7 @@
             intersectionFilter: ((o) => o.userData.clickable),
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
