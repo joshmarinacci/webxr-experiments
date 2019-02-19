@@ -97,7 +97,7 @@
         scene.background = new THREE.Color( 0xcccccc );
 
         const loader = new GLTFLoader()
-        loader.load("./wall1.gltf",(m)=> {
+        loader.load("./wall1.glb",(m)=> {
             console.log("loaded",m)
             for(let i=0; i<3; i++) {
                 const obj = m.scene.children[0].clone()
@@ -106,12 +106,12 @@
             }
             const o2 = m.scene.children[0].clone()
             o2.position.set(0,0,-8)
-            o2.rotation.y = toRad(90)
+            o2.rotation.y = toRad(45)
             scene.add(o2)
 
             const o3 = m.scene.children[0].clone()
             o3.position.set(0,0,-8)
-            o3.rotation.y = toRad(-90)
+            o3.rotation.y = toRad(45-180)
             scene.add(o3)
         })
 

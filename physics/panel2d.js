@@ -40,29 +40,18 @@ export default class Panel2D extends THREE.Object3D {
                 inside = null
             }
             const comp = this.findAt(fpt)
-            // for(let i=0; i<this.comps.length; i++) {
-            //     const comp = this.comps[i]
-            //     if(comp.contains(fpt)) {
-                    if(inside !== comp){
-                        if(inside) inside.fire(POINTER_EXIT)
-                        inside = null
-                    }
-                    if(comp) comp.fire(POINTER_ENTER)
-                    inside = comp
-                // }
-            // }
+            if(inside !== comp){
+                if(inside) inside.fire(POINTER_EXIT)
+                inside = null
+            }
+            if(comp) comp.fire(POINTER_ENTER)
+            inside = comp
         })
         on(this.mesh,POINTER_CLICK,(e)=>{
             const uv = e.intersection.uv
             const fpt = new THREE.Vector2(uv.x*256, 512-uv.y*512)
             const comp = this.findAt(fpt)
             if(comp) comp.fire(POINTER_CLICK)
-            // for(let i=0; i<this.comps.length; i++) {
-            //     const comp = this.comps[i]
-            //     if(comp.contains(fpt)) {
-            //         comp.fire(POINTER_CLICK)
-            //     }
-            // }
         })
 
         this.header = new THREE.Mesh(
