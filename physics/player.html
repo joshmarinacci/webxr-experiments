@@ -570,7 +570,7 @@
 
         // enable stats visible inside VR
         stats = new VRStats(renderer)
-        camera.add(stats)
+//        camera.add(stats)
         camera.userData.skipRaycast = true
         scene.add(camera)
 
@@ -625,7 +625,7 @@
     }
 
     function render(time) {
-        if(stats) stats.update(time)
+        //if(stats) stats.update(time)
         if(pointer) pointer.tick(time)
         T2.update(time)
         game.blockService.update(time)
