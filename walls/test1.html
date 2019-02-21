@@ -71,8 +71,7 @@
 
 
 <script type="module">
-    import * as THREE from "./node_modules/three/build/three.module";
-    import GLTFLoader from "./node_modules/three/examples/js/loaders/GLTFLoader.js";
+    import {GLTFLoader} from "./GLTFLoader";
 
     // for pointer (mouse, controller, touch) support
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from "./node_modules/webxr-boilerplate/pointer.js";
@@ -80,6 +79,12 @@
     import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
     // enter and exit VR
     import VRManager, {VR_DETECTED} from "./node_modules/webxr-boilerplate/vrmanager.js";
+    import {PerspectiveCamera, Scene, WebGLRenderer, Color, DirectionalLight,
+        Mesh,
+        CylinderBufferGeometry,
+        MeshLambertMaterial,
+        DefaultLoadingManager,
+    } from './node_modules/three/build/three.module'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -94,7 +99,7 @@
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
-        scene.background = new THREE.Color( 0xcccccc );
+        scene.background = new Color( 0xcccccc );
 
         const loader = new GLTFLoader()
         loader.load("./wall1.glb",(m)=> {
@@ -107,34 +112,19 @@
             const o2 = m.scene.children[0].clone()
             o2.position.set(0,0,-8)
             o2.rotation.y = toRad(45)
+            o2.material = o2.material.clone()
+            o2.material.color.set(0xFF0000)
             scene.add(o2)
 
             const o3 = m.scene.children[0].clone()
             o3.position.set(0,0,-8)
             o3.rotation.y = toRad(45-180)
+            o3.material.color.set(0x00ff00)
             scene.add(o3)
         })
 
-        //load a cat texture
-        const texture_loader = new THREE.TextureLoader()
-        //cat from http://creative-commons-cats.tumblr.com/page/3
-        const texture = texture_loader.load('./node_modules/webxr-boilerplate/cat.jpg')
-
-        //create a cube
-        cube = new THREE.Mesh(
-            new THREE.BoxGeometry(1,1,1),
-            new THREE.MeshLambertMaterial({color:'white', map:texture})
-        )
-        //camera is at z=0, so move the cube back so we can see it
-        cube.position.z = -5
-        //move cube up to camera height (~1.5m)
-        cube.position.y = 1.5
-        //make it clickable
-        cube.userData.clickable = true
-        // scene.add(cube)
-
         //a standard light
-        const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+        const light = new DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
         scene.add( light );
 
@@ -167,31 +157,14 @@
 
 
         const STICK_HEIGHT = 1.0
-        const stick = new THREE.Mesh(
-            new THREE.CylinderBufferGeometry(0.1,0.1,STICK_HEIGHT),
-            new THREE.MeshLambertMaterial({color:'aqua'})
+        const stick = new Mesh(
+            new CylinderBufferGeometry(0.1,0.1,STICK_HEIGHT),
+            new MeshLambertMaterial({color:'aqua'})
         )
         const toRad = (degrees) => degrees*Math.PI/180
         stick.position.z = -STICK_HEIGHT/2;
         stick.rotation.x = toRad(-90)
         pointer.controller1.add(stick)
-
-
-        //change cube to red BG when clicking
-        on(cube,POINTER_CLICK,()=>{
-            console.log("clicking on the cube")
-            cube.material.color.set(0xff0000)
-        })
-        //change cube to green BG when hovering over it
-        on(cube,POINTER_ENTER,()=>{
-            // console.log("entering the cube")
-            cube.material.color.set(0x00ff00)
-        })
-        on(cube,POINTER_EXIT,()=>{
-            // console.log('exiting the cube')
-            cube.material.color.set(0xffffff)
-        })
-
 
 
         on($("#enter-button"),'click',()=>{
@@ -229,9 +202,9 @@
         //create DIV for the canvas
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        scene = new Scene();
+        camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
+        renderer = new WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.gammaOutput = true
@@ -248,20 +221,20 @@
             renderer.setSize( window.innerWidth, window.innerHeight );
         }, false );
 
-        THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
+        DefaultLoadingManager.onStart = (url, loaded, total) => {
             console.log(`loading ${url}.  loaded ${loaded} of ${total}`)
         }
-        THREE.DefaultLoadingManager.onLoad = () => {
+        DefaultLoadingManager.onLoad = () => {
             console.log(`loading complete`)
             $("#loading-indicator").style.display = 'none'
             $("#enter-button").style.display = 'block'
             $("#enter-button").removeAttribute('disabled')
         }
-        THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+        DefaultLoadingManager.onProgress = (url, loaded, total) => {
             console.log(`prog ${url}.  loaded ${loaded} of ${total}`)
             $("#progress").setAttribute('value',100*(loaded/total))
         }
-        THREE.DefaultLoadingManager.onError = (url) => {
+        DefaultLoadingManager.onError = (url) => {
             console.log(`error loading ${url}`)
         }
 
