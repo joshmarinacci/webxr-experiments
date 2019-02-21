@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script src="old/voxel-hello-world/node_modules/voxel/index.js" type="text/javascript"></script>
+<script src="old/voxel-hello-world/node_modules/voxel-engine/index.js" type="text/javascript"></script>
+<script type="module">
+    // var voxel = require('voxel')
+    // var createGame = require('voxel-engine')
+
+    function startIt() {
+        var defaults = {
+            generate: voxel.generator['Valley'],
+            chunkDistance: 2,
+            materials: ['#fff', '#000'],
+            materialFlatColor: true,
+            worldOrigin: [0, 0, 0],
+            controls: {discreteFire: true}
+        }
+
+
+        var game = createGame(defaults)
+        var container = document.body
+        window.game = game // for debugging
+        game.appendTo(container)
+        if (game.notCapable()) return game
+    }
+
+    startIt()
+
+
+</script>
+
+</body>
+</html>
+
