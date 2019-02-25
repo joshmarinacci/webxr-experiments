@@ -239,6 +239,12 @@
         )
         c2.position.set(10,0,0)
         stagePos.add(c2)
+        const c3 = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'green'}),
+        )
+        c3.position.set(-10,0,0)
+        stagePos.add(c3)
 
 
         //a standard light
