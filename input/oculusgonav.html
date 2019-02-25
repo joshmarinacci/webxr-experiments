@@ -90,13 +90,61 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const toRad = (deg) => Math.PI/180*deg
+    const YAXIS =new THREE.Vector3(0,1,0)
 
     // global constants and variables for your app go here
-    let camera, scene, renderer, pointer, stats, stage;
+    let camera, scene, renderer, pointer, stats, stagePos, stageRot;
 
     let cube
 
     let states = { touchpad: false}
+    let keystates = {
+        ArrowLeft:{current:false, previous:false},
+        ArrowRight:{current:false, previous:false},
+        ArrowUp:{current:false, previous:false},
+        ArrowDown:{current:false, previous:false}
+    }
+
+    const dir = new THREE.Vector3(0,0,1)
+
+    function updateKeys() {
+        if(keystates.ArrowLeft.current === false && keystates.ArrowLeft.previous === true) {
+            rotateLeft()
+        }
+        if(keystates.ArrowRight.current === false && keystates.ArrowRight.previous === true) {
+            rotateRight()
+        }
+        if(keystates.ArrowUp.current === false && keystates.ArrowUp.previous === true) {
+            moveForward()
+        }
+        if(keystates.ArrowDown.current === false && keystates.ArrowDown.previous === true) {
+            moveBackward()
+        }
+
+        Object.keys(keystates).forEach(key => {
+            keystates[key].previous = keystates[key].current
+        })
+    }
+
+    function rotateLeft() {
+        dir.applyAxisAngle(YAXIS,toRad(30))
+        stageRot.rotation.y -= toRad(30)
+    }
+
+    function rotateRight() {
+        dir.applyAxisAngle(YAXIS,-toRad(30))
+        stageRot.rotation.y += toRad(30)
+    }
+
+    function moveForward() {
+        stagePos.position.add(dir)
+    }
+
+    function moveBackward() {
+        stagePos.position.sub(dir)
+    }
+
     function scanGamepads() {
         // console.log("gamepads",navigator.getGamepads())
         const gamepads = navigator.getGamepads()
@@ -118,20 +166,16 @@
 
 
                     if (down && states.touchpad === false && touchpad.pressed === true) {
-                        console.log("forward")
-                        stage.position.z += 1.0
+                        moveForward()
                     }
                     if (up && states.touchpad === false && touchpad.pressed === true) {
-                        console.log('backward')
-                        stage.position.z -= 1.0
+                        moveBackward()
                     }
                     if (left && states.touchpad === false && touchpad.pressed === true) {
-                        console.log('left')
-                        stage.rotation.y -= 0.4
+                        rotateLeft()
                     }
                     if (right && states.touchpad === false && touchpad.pressed === true) {
-                        console.log('right')
-                        stage.rotation.y += 0.4
+                        rotateRight()
                     }
                 }
 
@@ -149,6 +193,7 @@
         }
     }
 
+
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
         //set the background color of the scene
@@ -160,8 +205,10 @@
         const texture = texture_loader.load('./cat.jpg')
 
 
-        stage = new THREE.Group()
-        scene.add(stage)
+        stageRot = new THREE.Group()
+        scene.add(stageRot)
+        stagePos = new THREE.Group()
+        stageRot.add(stagePos)
 
         //create a cube
         cube = new THREE.Mesh(
@@ -174,12 +221,30 @@
         cube.position.y = 1.5
         //make it clickable
         cube.userData.clickable = true
-        stage.add(cube)
+        stagePos.add(cube)
+
+
+
+        const floor = new THREE.Mesh(
+            new THREE.PlaneBufferGeometry(15,15),
+            new THREE.MeshLambertMaterial({color:'aqua'}),
+        )
+        floor.rotation.x = toRad(-90)
+        stagePos.add(floor)
+
+
+        const c2 = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshLambertMaterial({color:'red'}),
+        )
+        c2.position.set(10,0,0)
+        stagePos.add(c2)
+
 
         //a standard light
         const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 1, 1, 1 ).normalize();
-        stage.add( light );
+        stagePos.add( light );
 
         const ambient = new THREE.AmbientLight(0xffffff,0.3)
         scene.add(ambient)
@@ -236,6 +301,7 @@
         if(stats) stats.update(time)
         //rotate the cube on every tick
         scanGamepads()
+        updateKeys()
         if(cube) cube.rotation.y += 0.002
         renderer.render( scene, camera );
     }
@@ -247,6 +313,16 @@
         //create DIV for the canvas
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
+        on(document,'keydown',(e)=>{
+            if(keystates[e.key]) {
+                keystates[e.key].current = true
+            }
+        })
+        on(document,'keyup',(e)=>{
+            if(keystates[e.key]) {
+                keystates[e.key].current = false
+            }
+        })
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
         renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -277,7 +353,6 @@
             $("#click-to-play").addEventListener('click',()=>{
                 overlay.style.visibility = 'hidden'
                 if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
-                setupGamepads()
             })
         }
         THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
