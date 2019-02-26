@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebXR + ThreeJS Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        #container {
+            border: 3px solid red;
+            width: 500px;
+            height: 300px;
+        }
+        #fullscreen, #entervr {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1>my cool VR app</h1>
+<div id="container"></div>
+<div>
+    <div id="progress">>
+        <label>loading</label>
+        <progress id="progress-bar" value="0.5"></progress>
+    </div>
+    <button id="fullscreen">play full screen</button>
+    <button id="entervr">enter vr</button>
+</div>
+
+
+
+
+<script type="module">
+    import Game from "./breakout.js"
+    import {Pointer} from "./Pointer.js"
+    import WebXRBoilerPlate from "./WebXRBoilerPlate"
+    import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
+        Color, DirectionalLight, AmbientLight,
+        TextureLoader, CanvasTexture, PlaneGeometry,
+        Vector3,
+    } from "./node_modules/three/build/three.module.js"
+    import VRStats from "./vrstats";
+
+    //JQuery-like selector
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+
+    let game, htmlCanvas, gamemesh, canvas_texture
+
+
+    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff,0x000000]
+    let currentColor = 0
+    function nextColor() {
+        currentColor = (currentColor+1)%colors.length
+        return colors[currentColor]
+    }
+
+    const app = new WebXRBoilerPlate({
+        container: $("#container")
+    })
+    app.init().then((app) => {
+        app.scene.background = new Color( 0xcccccc );
+        const stats = new VRStats()
+        app.camera.add(stats)
+
+
+        htmlCanvas = document.createElement('canvas')
+        htmlCanvas.width = 512
+        htmlCanvas.height = 512
+
+        game = new Game(htmlCanvas)
+        // game.setupKeyboard()
+        game.onBreak(()=>{
+            console.log("break")
+        })
+        game.onBounce(()=>{
+            console.log("bounce")
+            app.scene.background.set(nextColor())
+        })
+
+        canvas_texture = new CanvasTexture(htmlCanvas)
+        gamemesh = new Mesh(
+            new PlaneGeometry(2,2),
+            new MeshLambertMaterial({map:canvas_texture})
+        )
+        gamemesh.position.set(0,1,-3)
+        app.scene.add(gamemesh)
+
+
+        //load a cat texture
+        const texture_loader = new TextureLoader()
+        //cat from http://creative-commons-cats.tumblr.com/page/3
+        const texture = texture_loader.load('./cat.jpg')
+
+        //a standard ambient light
+        app.scene.add(new AmbientLight(0xffffff,0.3))
+
+
+        const pointer = new Pointer(app.scene,app.renderer,app.camera,{
+            mouseSimulatesController:false,
+        })
+
+
+        app.onRender(()=> {
+            pointer.tick()
+            const dir = new Vector3(0, 0, -1)
+            dir.applyQuaternion(pointer.controller1.quaternion)
+            dir.projectOnPlane(new Vector3(0,1,0))
+            const fx = (dir.x+0.7)*400
+            // console.log("paddle x is",fx)
+            game.setPaddleX(fx)
+            // console.log(dir.x)//angleTo(new Vector3(0,0,-1)))
+            // console.log('dir',dir)
+
+            game.draw()
+            canvas_texture.needsUpdate = true
+        })
+
+
+        //update progress indicator
+        on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
+
+        //when all assets are loaded
+        on(app,'loaded',()=>{
+            // hide the loading progress bar
+            $("#progress").style.display = 'none'
+            //show the fullscreen button
+            $("#fullscreen").style.display = 'block'
+            on($("#fullscreen"),'click',()=> app.playFullscreen())
+        })
+        //when VR support is detected
+        on(app,'detected',()=>{
+            console.log('detected')
+            // show the enter VR button
+            $("#entervr").style.display = 'block'
+            on($("#entervr"),'click',()=> {
+                app.enterVR()
+            })
+        })
+    })
+
+</script>
+</body>
+</html>
