@@ -9,6 +9,7 @@ function makePoint(x, y) {
 }
 
 let frameCount = 0
+const speed = 15;
 
 export default class SimpleGame {
     constructor(canvas) {
@@ -46,23 +47,23 @@ export default class SimpleGame {
         })
     }
     handleInput() {
-        if(this.keystates.ArrowLeft.triggered) this.point.x -= 5
-        if(this.keystates.ArrowRight.triggered) this.point.x += 5
-        if(this.keystates.ArrowUp.triggered) this.point.y += 5
-        if(this.keystates.ArrowDown.triggered) this.point.y -= 5
+        if(this.keystates.ArrowLeft.triggered) this.point.x -= speed
+        if(this.keystates.ArrowRight.triggered) this.point.x += speed
+        if(this.keystates.ArrowUp.triggered) this.point.y += speed
+        if(this.keystates.ArrowDown.triggered) this.point.y -= speed
     }
 
     moveUp() {
-        this.point.y += 5
+        this.point.y += speed
     }
     moveDown() {
-        this.point.y -= 5
+        this.point.y -= speed
     }
     moveLeft() {
-        this.point.x -= 5
+        this.point.x -= speed
     }
     moveRight() {
-        this.point.x += 5
+        this.point.x += speed
     }
 
     render() {
