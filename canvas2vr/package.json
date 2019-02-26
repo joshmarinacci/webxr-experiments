@@ -1,0 +1,14 @@
+{
+  "name": "canvas2vr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "simplegame.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.101.1"
+  }
+}
