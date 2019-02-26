@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<canvas id="canvas" width="400" height="600"></canvas>
+
+<script type="module">
+    import SimpleGame from "./simplegame"
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const toRad = (deg) => Math.PI/180*deg
+
+
+    const game = new SimpleGame($("#canvas"))
+
+    function render() {
+        game.render()
+        requestAnimationFrame(render)
+    }
+    requestAnimationFrame(render)
+
+
+</script>
+
+</body>
+</html>
