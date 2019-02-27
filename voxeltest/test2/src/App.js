@@ -15,7 +15,6 @@ const valley =function(i,j,k) {
 class App extends Component {
   componentDidMount() {
     var defaults = {
-      // generate: voxel.generator['Valley'],
       generate: valley,
       chunkDistance: 2,
       materials: ['#fff000', '#000'],
