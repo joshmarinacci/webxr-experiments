@@ -73,7 +73,6 @@
         game = new Game(htmlCanvas)
         // game.setupKeyboard()
         game.onBounce(()=>{
-            console.log("bounce")
             app.scene.background.set(nextColor())
         })
 
@@ -87,7 +86,6 @@
 
 
         game.onBreak(()=>{
-            console.log("break")
             T2.sequence()
                 .then(T2.prop({
                     target:gamemesh,
@@ -99,8 +97,6 @@
                     duration:1.0,
                 }))
                 .start()
-
-            // t2.lerp(gamemesh,'scale',{from:1.0,to:1.2,duration:0.5})
         })
 
         //load a cat texture
