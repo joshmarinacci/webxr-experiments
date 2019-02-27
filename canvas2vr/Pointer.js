@@ -322,7 +322,7 @@ export class Pointer {
                 new SphereBufferGeometry(0.1),
                 new MeshLambertMaterial({color: 'red'})
             )
-            this.scene.add(this.spot)
+            // this.scene.add(this.spot)
         } else {
         }
 
