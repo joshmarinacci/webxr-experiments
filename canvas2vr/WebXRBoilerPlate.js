@@ -6,7 +6,7 @@ import {Mesh, BoxBufferGeometry,
     DefaultLoadingManager,
 } from "./node_modules/three/build/three.module.js"
 
-import VRManager, {VR_DETECTED} from "./vrmanager.js";
+import VRManager, {VR_DETECTED} from "./VRManager.js";
 
 export default class WebXRBoilerPlate {
     constructor(options) {
