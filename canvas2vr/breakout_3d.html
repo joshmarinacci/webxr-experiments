@@ -41,6 +41,7 @@
         Vector3,
     } from "./node_modules/three/build/three.module.js"
     import VRStats from "./vrstats";
+    import {LERP_TYPES, PROP_TYPES, t2 as T2} from './t2'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -71,9 +72,6 @@
 
         game = new Game(htmlCanvas)
         // game.setupKeyboard()
-        game.onBreak(()=>{
-            console.log("break")
-        })
         game.onBounce(()=>{
             console.log("bounce")
             app.scene.background.set(nextColor())
@@ -84,9 +82,26 @@
             new PlaneGeometry(2,2),
             new MeshLambertMaterial({map:canvas_texture})
         )
-        gamemesh.position.set(0,1,-3)
+        gamemesh.position.set(0,1.5,-3)
         app.scene.add(gamemesh)
 
+
+        game.onBreak(()=>{
+            console.log("break")
+            T2.sequence()
+                .then(T2.prop({
+                    target:gamemesh,
+                    property:'scale',
+                    propertyType:PROP_TYPES.COMPOUND,
+                    lerpType:LERP_TYPES.ELASTIC,
+                    from:{x:0.9,y:0.9,z:0.9},
+                    to:{x:1.0,y:1.0,z:1.0},
+                    duration:1.0,
+                }))
+                .start()
+
+            // t2.lerp(gamemesh,'scale',{from:1.0,to:1.2,duration:0.5})
+        })
 
         //load a cat texture
         const texture_loader = new TextureLoader()
@@ -99,25 +114,38 @@
 
         const pointer = new Pointer(app.scene,app.renderer,app.camera,{
             mouseSimulatesController:false,
+            enableLaser:false,
         })
 
 
-        app.onRender(()=> {
+        app.onRender((time,app)=> {
             pointer.tick()
+            T2.update(time)
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
             dir.projectOnPlane(new Vector3(0,1,0))
             const fx = (dir.x+0.7)*400
-            // console.log("paddle x is",fx)
             game.setPaddleX(fx)
-            // console.log(dir.x)//angleTo(new Vector3(0,0,-1)))
-            // console.log('dir',dir)
-
             game.draw()
             canvas_texture.needsUpdate = true
         })
 
+        function loadBackgroundMusic(url) {
+            const music = new Audio(url)
+            music.autoplay = false
+            music.loop = true
+            music.controls = false
+            music.preload = 'auto'
+            music.volume = 0.75
+            on(music,'canplay',()=>{
+                console.log("LOADED:",url)
+                // $("#how").innerHTML = "done!"
+            })
+            return music
+        }
 
+        //http://freemusicarchive.org/music/BoxCat_Games/Nameless_the_Hackers_RPG_Soundtrack/
+        const music = loadBackgroundMusic("./BoxCat_Games_-_10_-_Epic_Song")
         //update progress indicator
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 
@@ -127,7 +155,11 @@
             $("#progress").style.display = 'none'
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
-            on($("#fullscreen"),'click',()=> app.playFullscreen())
+            on($("#fullscreen"),'click',()=> {
+                pointer.setMouseSimulatesController(true)
+                music.play()
+                app.playFullscreen()
+            })
         })
         //when VR support is detected
         on(app,'detected',()=>{
@@ -135,9 +167,13 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
+                music.play()
                 app.enterVR()
             })
         })
+
+
+
     })
 
 </script>

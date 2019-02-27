@@ -61,7 +61,7 @@ export default class Game {
         }
 
 
-        function collisionDetection() {
+        this.collisionDetection = () => {
             for(var c=0; c<brickColumnCount; c++) {
                 for(var r=0; r<brickRowCount; r++) {
                     var b = bricks[c][r];
@@ -70,6 +70,8 @@ export default class Game {
                             dy = -dy;
 
                             b.status = 0;
+                            if(this._on_break_handler) this._on_break_handler()
+
                             score++;
                             if(score === brickRowCount*brickColumnCount) {
                                 // alert("YOU WIN, CONGRATS!");
@@ -130,7 +132,7 @@ export default class Game {
             drawPaddle();
             drawScore();
             drawLives();
-            collisionDetection();
+            this.collisionDetection();
 
             //bounce left and right side of canvas
             if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {

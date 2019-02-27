@@ -60,8 +60,8 @@ export default class WebXRBoilerPlate {
         }
 
         this.lastSize = { width: 0, height: 0}
-        this.render = () => {
-            if (this.onRenderCb) this.onRenderCb(this)
+        this.render = (time) => {
+            if (this.onRenderCb) this.onRenderCb(time,this)
             this.checkContainerSize()
             this.renderer.render(this.scene, this.camera);
         }
