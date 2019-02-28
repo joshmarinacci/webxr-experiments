@@ -1,8 +1,6 @@
-// const events = require('events')
 
 export class Chunker  {
     constructor(opts) {
-        // super()
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
         this.chunkPad = opts.chunkPad !== undefined ? opts.chunkPad : 0
