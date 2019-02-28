@@ -52,14 +52,22 @@
     <li>Cat image from <a href="http://creative-commons-cats.tumblr.com/page/3">Creative Commons Cats</a></li>
 </ul>
 
-
+<script type="text/javascript" src="./node_modules/ndarray/ndarray.js"></script>
+<script type="text/javascript" src="./node_modules/voxel/meshers/greedy.js"></script>
+<!--<script type="text/javascript" src="./node_modules/voxel-mesh/index.js"></script>-->
 <script type="module">
+    import {Chunker} from "./node_modules/voxel/chunker.js"
+    import voxel, {generate} from "./node_modules/voxel/index.js"
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
-        Color, DirectionalLight, AmbientLight,
-        TextureLoader, AudioListener, Audio, AudioLoader
+        Color, DirectionalLight, AmbientLight, Vector3,
+        TextureLoader, AudioListener, Audio, AudioLoader, Group
     } from "./node_modules/three/build/three.module.js"
+    import * as THREE from "./node_modules/three/build/three.module.js"
     import {Pointer, POINTER_PRESS, POINTER_RELEASE} from "./Pointer.js"
+    import {VMesh} from "./mesh.js"
+
+
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -77,7 +85,7 @@
             intersectionFilter: ((o) => o.userData.clickable),
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
+            cameraFollowMouse:true,
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
@@ -108,7 +116,41 @@
         app.scene.add(cube)
 
 
+        const valley =function(i,j,k) {
+            return j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
+        }
 
+        const self = {
+            // generate: (x, y, z) => y === 1 ? 1 : 0,
+            generate: valley,
+        }
+        const chunker = new Chunker({
+            generateVoxelChunk:function(low, high) {
+                console.log("Making",low,high)
+                let md = generate(low, high, self.generate, self)
+                console.log("made",md)
+                return md
+            }
+        });
+
+        const toRad = (deg) => Math.PI / 180 * deg
+
+        const scale = new Vector3(0.5,0.5,0.5)
+        const mesher = GreedyMesh
+
+        const group = new Group()
+        app.scene.add(group)
+        for(let i=-1; i<1; i++) {
+            for(let j=-1; j<1; j++) {
+                const chunk = chunker.generateChunk(i, 0, j)
+                const mesh = new VMesh(chunk, mesher, scale)
+                const surfaceMesh = mesh.createSurfaceMesh()
+                surfaceMesh.position.set(i*16,0,j*16)
+                group.add(surfaceMesh)
+            }
+        }
+        group.position.z = -30
+        group.position.y = -20
 
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );
