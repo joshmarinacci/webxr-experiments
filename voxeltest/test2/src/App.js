@@ -7,7 +7,7 @@ var player = require('voxel-player')
 //var THREE = require('three')
 // var fly = require('voxel-fly')
 // var walk = require('voxel-walk')
-// var highlight = require('voxel-highlight')
+var highlight = require('voxel-highlight')
 
 const valley =function(i,j,k) {
     return j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
@@ -16,17 +16,17 @@ const valley =function(i,j,k) {
 class App extends Component {
   componentDidMount() {
     var defaults = {
-      generate: valley,
-      // generate: (x, y, z) => y === 1 ? 1 : 0,
-      // texturePath:'./textures/',
+      // generate: valley,
+      generate: (x, y, z) => y === 1 ? 1 : 0,
+      texturePath:'./textures/',
       chunkDistance: 2,
-      // materials: ['#fff000', '#000'],
+      materials: ['brick', 'dirt'],
       materialFlatColor: true,
       worldOrigin: [0, 0, 0],
       controls: { discreteFire: true }
     }
     var game = createGame(defaults)
-    console.log("made the game",game)
+    // console.log("made the game",game)
     var container = document.body
     window.game = game // for debugging
     game.appendTo(container)
@@ -72,12 +72,12 @@ function defaultSetup(game, avatar) {
   // game.flyer = makeFly(target)
 
   // highlight blocks when you look at them, hold <Ctrl> for block placement
-  // var blockPosPlace, blockPosErase
-  // var hl = game.highlighter = highlight(game, { color: 0xff0000 })
-  // hl.on('highlight', function (voxelPos) { blockPosErase = voxelPos })
-  // hl.on('remove', function (voxelPos) { blockPosErase = null })
-  // hl.on('highlight-adjacent', function (voxelPos) { blockPosPlace = voxelPos })
-  // hl.on('remove-adjacent', function (voxelPos) { blockPosPlace = null })
+  var blockPosPlace, blockPosErase
+  var hl = game.highlighter = highlight(game, { color: 0xff0000 })
+  hl.on('highlight', function (voxelPos) { blockPosErase = voxelPos })
+  hl.on('remove', function (voxelPos) { blockPosErase = null })
+  hl.on('highlight-adjacent', function (voxelPos) { blockPosPlace = voxelPos })
+  hl.on('remove-adjacent', function (voxelPos) { blockPosPlace = null })
 
   // toggle between first and third person modes
   // window.addEventListener('keydown', function (ev) {
@@ -85,9 +85,8 @@ function defaultSetup(game, avatar) {
   // })
 
   // block interaction stuff, uses highlight data
-  // var currentMaterial = 1
+  var currentMaterial = 1
 
-  /*
   game.on('fire', function (target, state) {
     var position = blockPosPlace
     if (position) {
@@ -98,7 +97,7 @@ function defaultSetup(game, avatar) {
       if (position) game.setBlock(position, 0)
     }
   })
-
+/*
   game.on('tick', function() {
     walk.render(target.playerSkin)
     var vx = Math.abs(target.velocity.x)

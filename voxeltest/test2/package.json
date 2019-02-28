@@ -6,7 +6,6 @@
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
     "react-scripts": "2.1.5",
-    "voxel": "^0.5.0",
     "voxel-engine": "^0.20.2"
   },
   "scripts": {
