@@ -53,7 +53,6 @@
 </ul>
 
 <script src="node_modules/atlaspack/index.js"></script>
-<script src="./texture.js"></script>
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./greedy.js"
@@ -61,6 +60,7 @@
     import {Chunker} from "./chunker.js"
     //converts chunks to three mesh
     import {VoxelMesh} from "./mesh.js"
+    import {VoxelTexture} from "./voxelTexture.js"
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
@@ -69,6 +69,7 @@
     } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import {Pointer} from "./Pointer.js"
+
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -104,7 +105,7 @@
         const texture = texture_loader.load('./cat.jpg')
 
 
-        const materials = Texture({
+        const materials = new VoxelTexture({
             THREE:THREE,
             // game: this,
             texturePath: './textures/',
