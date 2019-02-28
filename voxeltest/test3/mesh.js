@@ -2,12 +2,11 @@ import * as THREE from "./node_modules/three/build/three.module.js"
 
 
 function Mesh(data, mesher, scaleFactor, three) {
-    console.log("mesh with data",data)
     this.data = data
-    var geometry = this.geometry = new THREE.Geometry()
+    const geometry = this.geometry = new THREE.Geometry()
     this.scale = scaleFactor || new THREE.Vector3(10, 10, 10)
 
-    var result = mesher( data.voxels, data.dims )
+    const result = mesher.mesh(data.voxels, data.dims)
     this.meshed = result
 
     geometry.vertices.length = 0
@@ -58,8 +57,8 @@ Mesh.prototype.createWireMesh = function(hexColor) {
         wireframe : true
     })
     const wireMesh = new THREE.Mesh(this.geometry, wireMaterial)
-    wireMesh.scale = this.scale
-    wireMesh.doubleSided = true
+    this.surfaceMesh.scale.copy(this.scale)
+    // wireMesh.doubleSided = true
     this.wireMesh = wireMesh
     return wireMesh
 }
@@ -152,4 +151,4 @@ Mesh.prototype.faceVertexUv = function(i) {
 ;
 
 
-export const VMesh = Mesh
+export const VoxelMesh = Mesh
