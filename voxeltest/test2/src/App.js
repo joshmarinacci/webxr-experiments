@@ -4,6 +4,7 @@ import './App.css';
 // var voxel = require('voxel')
 var createGame = require('voxel-engine')
 var player = require('voxel-player')
+//var THREE = require('three')
 // var fly = require('voxel-fly')
 // var walk = require('voxel-walk')
 // var highlight = require('voxel-highlight')
@@ -16,8 +17,10 @@ class App extends Component {
   componentDidMount() {
     var defaults = {
       generate: valley,
+      // generate: (x, y, z) => y === 1 ? 1 : 0,
+      // texturePath:'./textures/',
       chunkDistance: 2,
-      materials: ['#fff000', '#000'],
+      // materials: ['#fff000', '#000'],
       materialFlatColor: true,
       worldOrigin: [0, 0, 0],
       controls: { discreteFire: true }
@@ -38,11 +41,24 @@ class App extends Component {
     avatar.yaw.position.set(2, 14, 4)
     defaultSetup(game, avatar)
 
+    // const pos = avatar.position.clone()
+    console.log("poosition is")
+    for(let i=0; i<50; i++) {
+      // console.log(game.getBlock([0, i-5, 10]))
+      game.setBlock([0,i,10],1)
+    }
+
+    window.addEventListener('keydown',()=>{
+      console.log("press")
+      console.log(game.raycastVoxels())
+    })
+    game.on('tick',()=>{
+      // console.log("tick")
+    })
   }
   render() {
     return (
       <div>
-
       </div>
     );
   }
