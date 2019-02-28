@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "atlaspack": "^1.0.0",
     "three": "^0.102.0"
   }
 }

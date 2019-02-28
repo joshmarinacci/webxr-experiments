@@ -52,6 +52,8 @@
     <li>Cat image from <a href="http://creative-commons-cats.tumblr.com/page/3">Creative Commons Cats</a></li>
 </ul>
 
+<script src="node_modules/atlaspack/index.js"></script>
+<script src="./texture.js"></script>
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./greedy.js"
@@ -65,9 +67,8 @@
         Color, DirectionalLight, AmbientLight, Vector3,
         TextureLoader, Group
     } from "./node_modules/three/build/three.module.js"
+    import * as THREE from "./node_modules/three/build/three.module.js"
     import {Pointer} from "./Pointer.js"
-
-
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -102,6 +103,19 @@
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
+
+        const materials = Texture({
+            THREE:THREE,
+            // game: this,
+            texturePath: './textures/',
+            materialType: THREE.MeshLambertMaterial,
+            materialParams: {},
+            // materialFlatColor: opts.materialFlatColor === true
+        })
+        const materialNames = [['grass', 'dirt', 'grass_dirt'], 'brick', 'dirt']
+        materials.load(materialNames)
+
+
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
 
         function generateChunkFromFunction(l, h, f) {
@@ -134,8 +148,9 @@
             for(let j=-1; j<1; j++) {
                 const chunk = chunker.generateChunk(i, 0, j)
                 const mesh = new VoxelMesh(chunk, mesher, scale)
-                const surfaceMesh = mesh.createSurfaceMesh()
+                const surfaceMesh = mesh.createSurfaceMesh(materials.material)
                 surfaceMesh.position.set(i*16,0,j*16)
+                materials.paint(mesh)
                 group.add(surfaceMesh)
             }
         }
@@ -157,6 +172,7 @@
         // this is the render loop
         app.onRender((time, app)=> {
             pointer.tick(time)
+            materials.tick(time)
             group.rotation.y -= 0.005
         })
 
