@@ -13,18 +13,20 @@ function Mesh(data, mesher, scaleFactor, three) {
     geometry.vertices.length = 0
     geometry.faces.length = 0
 
-    for (var i = 0; i < result.vertices.length; ++i) {
-        var q = result.vertices[i]
+    for (let i = 0; i < result.vertices.length; ++i) {
+        let q = result.vertices[i]
         geometry.vertices.push(new THREE.Vector3(q[0], q[1], q[2]))
     }
 
-    for (var i = 0; i < result.faces.length; ++i) {
+    for (let i = 0; i < result.faces.length; ++i) {
         geometry.faceVertexUvs[0].push(this.faceVertexUv(i))
+        geometry.faceVertexUvs[0].push(this.faceVertexUv(i))
+        // console.log("pushing",this.faceVertexUv(i))
 
-        var q = result.faces[i]
+        let q = result.faces[i]
         // console.log("face",q)
         if (q.length === 5) {
-            var f = new THREE.Face3(q[0], q[1], q[2])//, q[3])
+            const f = new THREE.Face3(q[0], q[1], q[2])
             f.color = new THREE.Color(q[4])
             geometry.faces.push(f)
 
@@ -33,14 +35,14 @@ function Mesh(data, mesher, scaleFactor, three) {
             geometry.faces.push(f2)
 
         } else if (q.length === 4) {
-            var f = new THREE.Face3(q[0], q[1], q[2])
+            const f = new THREE.Face3(q[0], q[1], q[2])
             f.color = new THREE.Color(q[3])
             geometry.faces.push(f)
         }
     }
 
     geometry.computeFaceNormals()
-
+    geometry.uvsNeedUpdate = true
     geometry.verticesNeedUpdate = true
     geometry.elementsNeedUpdate = true
     geometry.normalsNeedUpdate = true
@@ -64,10 +66,9 @@ Mesh.prototype.createWireMesh = function(hexColor) {
 
 Mesh.prototype.createSurfaceMesh = function(material) {
     material = material || new THREE.MeshNormalMaterial()
-    var surfaceMesh  = new THREE.Mesh( this.geometry, material )
+    const surfaceMesh  = new THREE.Mesh( this.geometry, material )
     surfaceMesh.scale.copy(this.scale)
-    // surfaceMesh.scale = this.scale
-    surfaceMesh.doubleSided = false
+    // surfaceMesh.doubleSided = false
     this.surfaceMesh = surfaceMesh
     return surfaceMesh
 }
