@@ -65,7 +65,7 @@
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
         Color, DirectionalLight, AmbientLight, Vector3,
-        TextureLoader, Group
+        TextureLoader, Group, DoubleSide, FrontSide
     } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import {Pointer} from "./Pointer.js"
@@ -109,15 +109,16 @@
             THREE:THREE,
             // game: this,
             texturePath: './textures/',
-            materialType: THREE.MeshLambertMaterial,
-            materialParams: {},
+            materialType: MeshLambertMaterial,
+            materialParams: { side: DoubleSide},
             // materialFlatColor: opts.materialFlatColor === true
         })
-        const materialNames = [['grass', 'dirt', 'grass_dirt'], 'brick', 'dirt']
+        const materialNames = ['uvgrid', 'brick', 'dirt']
         materials.load(materialNames)
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
+        const flat = (i,j,k) => j === 0?1:0
 
         function generateChunkFromFunction(l, h, f) {
             var d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
@@ -157,7 +158,8 @@
         }
 
         group.position.z = -30
-        group.position.y = -15
+        group.position.y = -10
+        // group.rotation.x = toRad(90)
 
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );

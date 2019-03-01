@@ -1,7 +1,7 @@
 import * as THREE from "./node_modules/three/build/three.module.js"
 
 
-function Mesh(data, mesher, scaleFactor, three) {
+function Mesh(data, mesher, scaleFactor) {
     this.data = data
     const geometry = this.geometry = new THREE.Geometry()
     this.scale = scaleFactor || new THREE.Vector3(10, 10, 10)
@@ -18,25 +18,19 @@ function Mesh(data, mesher, scaleFactor, three) {
     }
 
     for (let i = 0; i < result.faces.length; ++i) {
-        geometry.faceVertexUvs[0].push(this.faceVertexUv(i))
-        geometry.faceVertexUvs[0].push(this.faceVertexUv(i))
-        // console.log("pushing",this.faceVertexUv(i))
+        const uv = this.faceVertexUv(i)
 
         let q = result.faces[i]
-        // console.log("face",q)
         if (q.length === 5) {
+            geometry.faceVertexUvs[0].push([uv[1],uv[0],uv[2]])
             const f = new THREE.Face3(q[0], q[1], q[2])
             f.color = new THREE.Color(q[4])
             geometry.faces.push(f)
 
+            geometry.faceVertexUvs[0].push([uv[2],uv[0],uv[1]])
             const f2 = new THREE.Face3(q[0],q[2],q[3])
             f2.color = new THREE.Color(q[4])
             geometry.faces.push(f2)
-
-        } else if (q.length === 4) {
-            const f = new THREE.Face3(q[0], q[1], q[2])
-            f.color = new THREE.Color(q[3])
-            geometry.faces.push(f)
         }
     }
 
@@ -58,7 +52,6 @@ Mesh.prototype.createWireMesh = function(hexColor) {
     })
     const wireMesh = new THREE.Mesh(this.geometry, wireMaterial)
     this.surfaceMesh.scale.copy(this.scale)
-    // wireMesh.doubleSided = true
     this.wireMesh = wireMesh
     return wireMesh
 }
@@ -67,7 +60,6 @@ Mesh.prototype.createSurfaceMesh = function(material) {
     material = material || new THREE.MeshNormalMaterial()
     const surfaceMesh  = new THREE.Mesh( this.geometry, material )
     surfaceMesh.scale.copy(this.scale)
-    // surfaceMesh.doubleSided = false
     this.surfaceMesh = surfaceMesh
     return surfaceMesh
 }

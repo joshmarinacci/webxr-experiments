@@ -69,12 +69,13 @@ export class VoxelTexture {
         } else {
             var opaque = new this.options.materialType(this.options.materialParams);
             opaque.map = this.texture;
-            var transparent = new this.options.materialType(this.options.materialTransparentParams);
-            transparent.map = this.texture;
-            this.material = new MeshFaceMaterial([
-                opaque,
-                transparent
-            ]);
+            // var transparent = new this.options.materialType(this.options.materialTransparentParams);
+            // transparent.map = this.texture;
+            this.material = opaque
+            // this.material = new MeshFaceMaterial([
+            //     opaque,
+            //     transparent
+            // ]);
         }
 
         // a place for meshes to wait while textures are loading
