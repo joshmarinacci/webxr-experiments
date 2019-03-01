@@ -86,113 +86,17 @@
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
+    import ThreeDOFController from "./3dof.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     const toRad = (deg) => Math.PI/180*deg
-    const YAXIS =new THREE.Vector3(0,1,0)
 
     // global constants and variables for your app go here
     let camera, scene, renderer, pointer, stats, stagePos, stageRot;
 
-    let cube
-
-    let states = { touchpad: false}
-    let keystates = {
-        ArrowLeft:{current:false, previous:false},
-        ArrowRight:{current:false, previous:false},
-        ArrowUp:{current:false, previous:false},
-        ArrowDown:{current:false, previous:false}
-    }
-
-    const dir = new THREE.Vector3(0,0,1)
-
-    function updateKeys() {
-        if(keystates.ArrowLeft.current === false && keystates.ArrowLeft.previous === true) {
-            rotateLeft()
-        }
-        if(keystates.ArrowRight.current === false && keystates.ArrowRight.previous === true) {
-            rotateRight()
-        }
-        if(keystates.ArrowUp.current === false && keystates.ArrowUp.previous === true) {
-            moveForward()
-        }
-        if(keystates.ArrowDown.current === false && keystates.ArrowDown.previous === true) {
-            moveBackward()
-        }
-
-        Object.keys(keystates).forEach(key => {
-            keystates[key].previous = keystates[key].current
-        })
-    }
-
-    function rotateLeft() {
-        dir.applyAxisAngle(YAXIS,toRad(30))
-        stageRot.rotation.y -= toRad(30)
-    }
-
-    function rotateRight() {
-        dir.applyAxisAngle(YAXIS,-toRad(30))
-        stageRot.rotation.y += toRad(30)
-    }
-
-    function moveForward() {
-        stagePos.position.add(dir)
-    }
-
-    function moveBackward() {
-        stagePos.position.sub(dir)
-    }
-
-    function scanGamepads() {
-        // console.log("gamepads",navigator.getGamepads())
-        const gamepads = navigator.getGamepads()
-        for(let i=0; i<gamepads.length; i++) {
-            const gamepad = gamepads[i]
-            if ( gamepad && ( gamepad.id === 'Daydream Controller' ||
-                gamepad.id === 'Gear VR Controller' || gamepad.id === 'Oculus Go Controller' ||
-                gamepad.id === 'OpenVR Gamepad' || gamepad.id.startsWith( 'Oculus Touch' ) ||
-                gamepad.id.startsWith( 'Spatial Controller' ) ) ) {
-                //we should have at least two buttons
-                if(gamepad.buttons.length < 2) return
-
-                const touchpad = gamepad.buttons[0]
-                if(touchpad.pressed && gamepad.axes && gamepad.axes.length === 2) {
-                    const left = gamepad.axes[0] < -0.5
-                    const right = gamepad.axes[0] > 0.5
-                    const down = gamepad.axes[1] < -0.5
-                    const up = (gamepad.axes[1] > 0.5)
-
-
-                    if (down && states.touchpad === false && touchpad.pressed === true) {
-                        moveForward()
-                    }
-                    if (up && states.touchpad === false && touchpad.pressed === true) {
-                        moveBackward()
-                    }
-                    if (left && states.touchpad === false && touchpad.pressed === true) {
-                        rotateLeft()
-                    }
-                    if (right && states.touchpad === false && touchpad.pressed === true) {
-                        rotateRight()
-                    }
-                }
-
-                const trigger = gamepad.buttons[1]
-                if(trigger.pressed) console.log("trigger")
-                if(states.touchpad === false && touchpad.pressed === true) {
-                    console.log("pressed")
-                }
-                if(states.touchpad === true && touchpad.pressed === false) {
-                    console.log("released")
-                }
-                states.touchpad = touchpad.pressed
-            }
-
-        }
-    }
-
+    let cube, controller
 
     //called on setup. Customize this
     function initContent(scene,camera,renderer) {
@@ -223,8 +127,6 @@
         cube.userData.clickable = true
         stagePos.add(cube)
 
-
-
         const floor = new THREE.Mesh(
             new THREE.PlaneBufferGeometry(15,15),
             new THREE.MeshLambertMaterial({color:'aqua'}),
@@ -254,9 +156,6 @@
 
         const ambient = new THREE.AmbientLight(0xffffff,0.3)
         scene.add(ambient)
-
-
-
 
 
         // enable stats visible inside VR
@@ -297,7 +196,7 @@
         })
 
 
-
+        controller = new ThreeDOFController(stagePos, stageRot)
     }
 
     //called on every frame. customize this
@@ -306,8 +205,7 @@
         if(pointer) pointer.tick(time)
         if(stats) stats.update(time)
         //rotate the cube on every tick
-        scanGamepads()
-        updateKeys()
+        controller.update(time)
         if(cube) cube.rotation.y += 0.002
         renderer.render( scene, camera );
     }
@@ -319,16 +217,6 @@
         //create DIV for the canvas
         const container = document.createElement( 'div' );
         document.body.appendChild( container );
-        on(document,'keydown',(e)=>{
-            if(keystates[e.key]) {
-                keystates[e.key].current = true
-            }
-        })
-        on(document,'keyup',(e)=>{
-            if(keystates[e.key]) {
-                keystates[e.key].current = false
-            }
-        })
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 50 );
         renderer = new THREE.WebGLRenderer( { antialias: true } );
