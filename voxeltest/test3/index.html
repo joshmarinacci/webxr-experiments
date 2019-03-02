@@ -81,6 +81,7 @@
         TextureLoader, Group, DoubleSide, FrontSide
     } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
+    import ThreeDOFController from "./threedof"
     import {Pointer} from "./Pointer.js"
 
 
@@ -153,11 +154,18 @@
         });
 
 
-        const scale = new Vector3(0.5,0.5,0.5)
+        const scale = new Vector3(1.0,1.0,1.0)
         const mesher = new GreedyMesh()
 
+
+        const stageRot = new THREE.Group()
+        app.scene.add(stageRot)
+        const stagePos = new THREE.Group()
+        stageRot.add(stagePos)
+
         const group = new Group()
-        app.scene.add(group)
+        // app.scene.add(group)
+        stagePos.add(group)
         //generate four chunks
         for(let i=-1; i<1; i++) {
             for(let j=-1; j<1; j++) {
@@ -183,13 +191,15 @@
         app.scene.add(new AmbientLight(0xffffff,0.3))
 
 
+        const controller = new ThreeDOFController(stagePos, stageRot)
 
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
             pointer.tick(time)
             materials.tick(time)
-            group.rotation.y -= 0.005
+            controller.update(time)
+            // group.rotation.y -= 0.005
         })
 
         //update progress indicator while loading
@@ -213,6 +223,9 @@
                 app.enterVR()
             })
         })
+
+
+
     })
 
 
