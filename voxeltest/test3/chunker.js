@@ -1,9 +1,7 @@
-
-export class Chunker  {
+export class Chunker {
     constructor(opts) {
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
-        this.chunkPad = opts.chunkPad !== undefined ? opts.chunkPad : 0
         this.cubeSize = opts.cubeSize || 25
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
@@ -11,24 +9,22 @@ export class Chunker  {
 
         if (this.chunkSize & this.chunkSize - 1 !== 0)
             throw new Error('chunkSize must be a power of 2')
-        let bits = 0
-        for (let size = this.chunkSize; size > 0; size >>= 1) bits++
-        this.chunkBits = bits - 1
-        this.chunkMask = (1 << this.chunkBits) - 1
-        this.chunkPadHalf = this.chunkPad >> 1
+        var bits = 0;
+        for (var size = this.chunkSize; size > 0; size >>= 1) bits++;
+        this.chunkBits = bits - 1;
     }
 
 
     nearbyChunks(position, distance) {
-        const current = this.chunkAtPosition(position)
-        const x = current[0]
-        const y = current[1]
-        const z = current[2]
-        const dist = distance || this.distance
-        const nearby = []
-        for (let cx = (x - dist); cx !== (x + dist); ++cx) {
-            for (let cy = (y - dist); cy !== (y + dist); ++cy) {
-                for (let cz = (z - dist); cz !== (z + dist); ++cz) {
+        var current = this.chunkAtPosition(position)
+        var x = current[0]
+        var y = current[1]
+        var z = current[2]
+        var dist = distance || this.distance
+        var nearby = []
+        for (var cx = (x - dist); cx !== (x + dist); ++cx) {
+            for (var cy = (y - dist); cy !== (y + dist); ++cy) {
+                for (var cz = (z - dist); cz !== (z + dist); ++cz) {
                     nearby.push([cx, cy, cz])
                 }
             }
@@ -37,7 +33,7 @@ export class Chunker  {
     }
 
     requestMissingChunks(position) {
-        const self = this
+        var self = this
         this.nearbyChunks(position).map(function (chunk) {
             if (!self.chunks[chunk.join('|')]) {
                 self.emit('missingChunk', chunk)
@@ -46,66 +42,88 @@ export class Chunker  {
     }
 
     getBounds(x, y, z) {
-        const bits = this.chunkBits
-        const low = [x << bits, y << bits, z << bits]
-        const high = [(x + 1) << bits, (y + 1) << bits, (z + 1) << bits]
+        var bits = this.chunkBits
+        var low = [x << bits, y << bits, z << bits]
+        var high = [(x + 1) << bits, (y + 1) << bits, (z + 1) << bits]
         return [low, high]
     }
 
     generateChunk(x, y, z) {
-        const bounds = this.getBounds(x, y, z)
-        const chunk = this.generateVoxelChunk(bounds[0], bounds[1], x, y, z)
-        const position = [x, y, z]
+        var self = this
+        var bounds = this.getBounds(x, y, z)
+        var chunk = this.generateVoxelChunk(bounds[0], bounds[1], x, y, z)
+        var position = [x, y, z]
         chunk.position = position
         this.chunks[position.join('|')] = chunk
         return chunk
     }
 
     chunkAtCoordinates(x, y, z) {
-        const bits = this.chunkBits
-        const cx = x >> bits
-        const cy = y >> bits
-        const cz = z >> bits
-        const chunkPos = [cx, cy, cz]
-        return chunkPos
+        var bits = this.chunkBits;
+        var cx = x >> bits;
+        var cy = y >> bits;
+        var cz = z >> bits;
+        var chunkPos = [cx, cy, cz];
+        return chunkPos;
     }
 
     chunkAtPosition(position) {
-        const cubeSize = this.cubeSize
-        const x = Math.floor(position[0] / cubeSize)
-        const y = Math.floor(position[1] / cubeSize)
-        const z = Math.floor(position[2] / cubeSize)
-        const chunkPos = this.chunkAtCoordinates(x, y, z)
+        var cubeSize = this.cubeSize;
+        var x = Math.floor(position[0] / cubeSize)
+        var y = Math.floor(position[1] / cubeSize)
+        var z = Math.floor(position[2] / cubeSize)
+        var chunkPos = this.chunkAtCoordinates(x, y, z)
         return chunkPos
     };
 
     voxelIndexFromCoordinates(x, y, z) {
-        throw new Error('Chunker.prototype.voxelIndexFromCoordinates removed, use voxelAtCoordinates')
+        var bits = this.chunkBits
+        var mask = (1 << bits) - 1
+        var vidx = (x & mask) + ((y & mask) << bits) + ((z & mask) << bits * 2)
+        return vidx
+    }
+
+    voxelIndexFromPosition(pos) {
+        var v = this.voxelVector(pos)
+        return this.voxelIndex(v)
     }
 
     voxelAtCoordinates(x, y, z, val) {
-        const ckey = this.chunkAtCoordinates(x, y, z).join('|')
-        const chunk = this.chunks[ckey]
+        var ckey = this.chunkAtCoordinates(x, y, z).join('|')
+        var chunk = this.chunks[ckey]
         if (!chunk) return false
-        const mask = this.chunkMask
-        const h = this.chunkPadHalf
-        const mx = x & mask
-        const my = y & mask
-        const mz = z & mask
-        const v = chunk.get(mx + h, my + h, mz + h)
+        var vidx = this.voxelIndexFromCoordinates(x, y, z)
+        var v = chunk.voxels[vidx]
         if (typeof val !== 'undefined') {
-            chunk.set(mx + h, my + h, mz + h, val)
+            chunk.voxels[vidx] = val
         }
         return v
     }
 
     voxelAtPosition(pos, val) {
-        const cubeSize = this.cubeSize
-        const x = Math.floor(pos[0] / cubeSize)
-        const y = Math.floor(pos[1] / cubeSize)
-        const z = Math.floor(pos[2] / cubeSize)
-        const v = this.voxelAtCoordinates(x, y, z, val)
-        return v
+        var cubeSize = this.cubeSize;
+        var x = Math.floor(pos[0] / cubeSize)
+        var y = Math.floor(pos[1] / cubeSize)
+        var z = Math.floor(pos[2] / cubeSize)
+        // console.log("x=",x,y,z)
+        var v = this.voxelAtCoordinates(x, y, z, val)
+        return v;
     }
 
+// deprecated
+    voxelIndex(voxelVector) {
+        var vidx = this.voxelIndexFromCoordinates(voxelVector[0], voxelVector[1], voxelVector[2])
+        return vidx
+    }
+
+// deprecated
+    voxelVector(pos) {
+        var cubeSize = this.cubeSize
+        var mask = (1 << this.chunkBits) - 1
+        var vx = (Math.floor(pos[0] / cubeSize)) & mask
+        var vy = (Math.floor(pos[1] / cubeSize)) & mask
+        var vz = (Math.floor(pos[2] / cubeSize)) & mask
+        return [vx, vy, vz]
+    }
 }
+

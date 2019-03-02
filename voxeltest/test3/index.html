@@ -83,6 +83,7 @@
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof"
     import {Pointer} from "./Pointer.js"
+    import {traceRay} from "./raycast.js"
 
 
     //JQuery-like selector
@@ -102,11 +103,11 @@
             intersectionFilter: ((o) => o.userData.clickable),
 
             //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:true,
+            cameraFollowMouse:false,
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
-            mouseSimulatesController:false,
+            mouseSimulatesController:true,
 
             //turn this off if you provide your own pointer model
             enableLaser: true,
@@ -135,21 +136,27 @@
         const flat = (i,j,k) => j === 0?1:0
 
         function generateChunkFromFunction(l, h, f) {
-            var d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
-                , v = new Int32Array(d[0]*d[1]*d[2])
-                , n = 0;
-            for(var k=l[2]; k<h[2]; ++k)
-                for(var j=l[1]; j<h[1]; ++j)
-                    for(var i=l[0]; i<h[0]; ++i, ++n) {
+            let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
+            let v = new Int32Array(d[0]*d[1]*d[2])
+            let n = 0;
+            for(let k=l[2]; k<h[2]; ++k)
+                for(let j=l[1]; j<h[1]; ++j)
+                    for(let i=l[0]; i<h[0]; ++i, ++n) {
                         v[n] = f(i,j,k);
                     }
-            return {voxels:v, dims:d};
+            return {
+                low:l,
+                high:h,
+                voxels:v,
+                dims:d,
+            };
         }
 
 
         const chunker = new Chunker({
+            cubeSize:1,
             generateVoxelChunk:function(low, high) {
-                return generateChunkFromFunction(low, high, valley)
+                return generateChunkFromFunction(low, high,flat)
             }
         });
 
@@ -172,14 +179,14 @@
                 const chunk = chunker.generateChunk(i, 0, j)
                 const mesh = new VoxelMesh(chunk, mesher, scale)
                 const surfaceMesh = mesh.createSurfaceMesh(materials.material)
-                surfaceMesh.position.set(i*16,0,j*16)
+                surfaceMesh.position.set(i*32,0,j*32)
                 materials.paint(mesh)
                 group.add(surfaceMesh)
             }
         }
 
-        group.position.z = -30
-        group.position.y = -10
+        group.position.z = 0
+        group.position.y = 0
         // group.rotation.x = toRad(90)
 
         //a standard directional light from above
@@ -193,14 +200,42 @@
 
         const controller = new ThreeDOFController(stagePos, stageRot)
 
+        const fakeGame = {
+            getBlock:function(pos) {
+                pos = parseVectorArguments(arguments)
+                // console.log("pos is",pos)
+                return chunker.voxelAtPosition(pos)
+            },
+        }
+
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
             pointer.tick(time)
             materials.tick(time)
             controller.update(time)
+            // console.log(pointer.controller1.position)
+            const dir = new Vector3(0, 0, -1)
+            dir.applyQuaternion(pointer.controller1.quaternion)
+            // console.log(dir)
+
+            const epilson = 1e-8
+            const pos = pointer.controller1.position
+            const hitNormal = [0, 0, 0]
+            const distance = 10
+            const hitPosition = [0, 0, 0]
+            const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
+            console.log(hitBlock)
+            // console.log('hit the block',hitBlock, hitPosition, hitNormal)
             // group.rotation.y -= 0.005
         })
+
+
+        const parseVectorArguments = function(args) {
+            if (!args) return false
+            if (args[0] instanceof Array) return args[0]
+            return [args[0], args[1], args[2]]
+        }
 
         //update progress indicator while loading
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))

@@ -16,6 +16,7 @@ import {
     PerspectiveCamera,
     WebGLRenderer,
     DefaultLoadingManager,
+    Group,
 } from "./node_modules/three/build/three.module.js"
 
 export const POINTER_ENTER = "enter"
