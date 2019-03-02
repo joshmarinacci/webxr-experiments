@@ -95,29 +95,29 @@ export default class ThreeDOFController {
                     const up = (gamepad.axes[1] > 0.5)
 
 
-                    if (down && states.touchpad === false && touchpad.pressed === true) {
-                        moveForward()
+                    if (down && this.states.touchpad === false && touchpad.pressed === true) {
+                        this.moveForward()
                     }
-                    if (up && states.touchpad === false && touchpad.pressed === true) {
-                        moveBackward()
+                    if (up && this.states.touchpad === false && touchpad.pressed === true) {
+                        this.moveBackward()
                     }
-                    if (left && states.touchpad === false && touchpad.pressed === true) {
-                        rotateLeft()
+                    if (left && this.states.touchpad === false && touchpad.pressed === true) {
+                        this.rotateLeft()
                     }
-                    if (right && states.touchpad === false && touchpad.pressed === true) {
-                        rotateRight()
+                    if (right && this.states.touchpad === false && touchpad.pressed === true) {
+                        this.rotateRight()
                     }
                 }
 
                 const trigger = gamepad.buttons[1]
                 if(trigger.pressed) console.log("trigger")
-                if(states.touchpad === false && touchpad.pressed === true) {
+                if(this.states.touchpad === false && touchpad.pressed === true) {
                     console.log("pressed")
                 }
-                if(states.touchpad === true && touchpad.pressed === false) {
+                if(this.states.touchpad === true && touchpad.pressed === false) {
                     console.log("released")
                 }
-                states.touchpad = touchpad.pressed
+                this.states.touchpad = touchpad.pressed
             }
 
         }
