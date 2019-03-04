@@ -108,7 +108,7 @@
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
-            mouseSimulatesController:true,
+            mouseSimulatesController:false,
 
             //turn this off if you provide your own pointer model
             enableLaser: true,
@@ -158,7 +158,7 @@
             cubeSize:1,
             chunkSize:32,
             generateVoxelChunk:function(low, high) {
-                return generateChunkFromFunction(low, high,flat)
+                return generateChunkFromFunction(low, high, valley)
             }
         });
 
@@ -171,12 +171,13 @@
         app.scene.add(stageRot)
         const stagePos = new THREE.Group()
         stageRot.add(stagePos)
+        stagePos.position.z = -5
 
         const group = new Group()
         // app.scene.add(group)
         stagePos.add(group)
         //generate four chunks
-        for(let i=0; i<1; i++) {
+        for(let i=-1; i<1; i++) {
             for(let j=-1; j<0; j++) {
                 const chunk = chunker.generateChunk(i, 0, j)
                 const mesh = new VoxelMesh(chunk, mesher, scale)
@@ -191,20 +192,21 @@
             }
         }
 
+        const YAXIS = new Vector3(0,1,0)
 
 
 
-        const highlight_geo = new THREE.CubeGeometry(1,1,1)
+        const highlight_geo = new THREE.CubeGeometry(1.1,1.1,1.1, 4,4)
         highlight_geo.translate(0.5,0.5,0.5)
         const highlight_cube = new Mesh(highlight_geo,
             new THREE.MeshLambertMaterial({color:'green',
-                depthTest:false,
+                depthTest:true,
                 wireframe:true,
                 wireframeLinewidth: 3,
                 transparent: true,
                 opacity: 0.5,
             }))
-        highlight_cube.renderOrder = 10
+        // highlight_cube.renderOrder = 10
         highlight_cube.position.set(-2,0,-5)
         stagePos.add(highlight_cube)
 
@@ -235,8 +237,8 @@
                 // console.log('setting',pos,value)
                 const x = Math.floor(pos[0])
                 const y = Math.floor(pos[1])
-                const z = Math.floor(pos[2]) + 1
-                chunker.voxelAtCoordinates(x,y,z, 8)
+                const z = Math.floor(pos[2])
+                chunker.voxelAtCoordinates(x,y,z, value)
                 console.log("setting at",x,y,z, value)
 
 
@@ -266,14 +268,17 @@
             }
         }
 
+        const RAYCAST_DISTANCE = 30
+
         function updateHighlight() {
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
+            dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
             // const pos = pointer.controller1.position
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
             const hitNormal = [0, 0, 0]
-            const distance = 10
+            const distance = RAYCAST_DISTANCE
             const hitPosition = [0, 0, 0]
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             if(hitBlock <= 0) return
@@ -294,16 +299,17 @@
             console.log("clicked somewhere")
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
+            dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
             // const pos = pointer.controller1.position
             const hitNormal = [0, 0, 0]
-            const distance = 10
+            const distance = RAYCAST_DISTANCE
             const hitPosition = [0, 0, 0]
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             // console.log(hitBlock)
             // console.log('hit the block',hitBlock, hitPosition, hitNormal)
-            fakeGame.setBlock(hitPosition, 1)
+            fakeGame.setBlock(hitPosition, 0)
         })
 
 
