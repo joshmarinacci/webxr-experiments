@@ -134,7 +134,7 @@
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
-        const flat = (i,j,k) => (j === 0)?1:0
+        const flat = (i,j,k) => (k === -10)?1:0
 
         function generateChunkFromFunction(l, h, f) {
             let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
@@ -191,9 +191,23 @@
             }
         }
 
-        group.position.z = 0
-        group.position.y = 0
-        // group.rotation.x = toRad(90)
+
+
+
+        const highlight_geo = new THREE.CubeGeometry(1,1,1)
+        highlight_geo.translate(0.5,0.5,0.5)
+        const highlight_cube = new Mesh(highlight_geo,
+            new THREE.MeshLambertMaterial({color:'green',
+                depthTest:false,
+                wireframe:true,
+                wireframeLinewidth: 3,
+                transparent: true,
+                opacity: 0.5,
+            }))
+        highlight_cube.renderOrder = 10
+        highlight_cube.position.set(-2,0,-5)
+        stagePos.add(highlight_cube)
+
 
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );
@@ -252,26 +266,27 @@
             }
         }
 
-        // things to do on every render tick
-        // this is the render loop
-        app.onRender((time, app)=> {
-            pointer.tick(time)
-            materials.tick(time)
-            controller.update(time)
-            // console.log(pointer.controller1.position)
+        function updateHighlight() {
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
-            // console.log(dir)
-
             const epilson = 1e-8
             const pos = pointer.controller1.position
             const hitNormal = [0, 0, 0]
             const distance = 10
             const hitPosition = [0, 0, 0]
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
-            // console.log(hitBlock)
+            if(hitBlock <= 0) return
             // console.log('hit the block',hitBlock, hitPosition, hitNormal)
-            // group.rotation.y -= 0.005
+            highlight_cube.position.set(Math.floor(hitPosition[0]),Math.floor(hitPosition[1]),Math.floor(hitPosition[2]))
+        }
+
+        // things to do on every render tick
+        // this is the render loop
+        app.onRender((time, app)=> {
+            pointer.tick(time)
+            materials.tick(time)
+            controller.update(time)
+            updateHighlight()
         })
 
         pointer.on(POINTER_CLICK,()=>{
