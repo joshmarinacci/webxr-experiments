@@ -134,7 +134,7 @@
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
-        const flat = (i,j,k) => (k === -6)?1:0
+        const flat = (i,j,k) => (j === 0)?1:0
 
         function generateChunkFromFunction(l, h, f) {
             let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
@@ -180,11 +180,11 @@
             for(let j=-1; j<0; j++) {
                 const chunk = chunker.generateChunk(i, 0, j)
                 const mesh = new VoxelMesh(chunk, mesher, scale)
-                const surfaceMesh = mesh.createSurfaceMesh(materials.material)
+                const surfaceMesh = mesh.createSurfaceMesh()//materials.material)
                 const chunkIndex = chunk.position.join('|')
                 chunker.meshes[chunkIndex] = mesh
                 surfaceMesh.position.set(i*32,0,j*32)
-                materials.paint(mesh)
+                // materials.paint(mesh)
                 group.add(surfaceMesh)
 
                 console.log("made a chunk")
@@ -218,12 +218,12 @@
                 return chunker.voxelAtPosition(pos)
             },
             setBlock: function(pos, value) {
-                console.log('setting',pos,value)
-                const x = Math.round(pos[0])
-                const y = Math.round(pos[1])
-                const z = Math.round(pos[2]) + 1
+                // console.log('setting',pos,value)
+                const x = Math.floor(pos[0])
+                const y = Math.floor(pos[1])
+                const z = Math.floor(pos[2]) + 1
                 chunker.voxelAtCoordinates(x,y,z, 8)
-                console.log("setting at",x,y,z)
+                console.log("setting at",x,y,z, value)
 
 
                 const chunkPos = chunker.chunkAtCoordinates(x,y,z)
@@ -286,7 +286,7 @@
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             // console.log(hitBlock)
             // console.log('hit the block',hitBlock, hitPosition, hitNormal)
-            fakeGame.setBlock(hitPosition, 0)
+            fakeGame.setBlock(hitPosition, 1)
         })
 
 
