@@ -57,7 +57,8 @@ Mesh.prototype.createWireMesh = function(hexColor) {
 }
 
 Mesh.prototype.createSurfaceMesh = function(material) {
-    material = material || new THREE.MeshNormalMaterial()
+    // material = material || new THREE.MeshNormalMaterial()
+    material = material || new THREE.MeshLambertMaterial({color:'white'})
     const surfaceMesh  = new THREE.Mesh( this.geometry, material )
     surfaceMesh.scale.copy(this.scale)
     this.surfaceMesh = surfaceMesh
