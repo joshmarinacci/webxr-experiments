@@ -19,7 +19,9 @@ export default class ThreeDOFController {
             ArrowLeft:{current:false, previous:false},
             ArrowRight:{current:false, previous:false},
             ArrowUp:{current:false, previous:false},
-            ArrowDown:{current:false, previous:false}
+            ArrowDown:{current:false, previous:false},
+            a: { current: false, previous: false},
+            d: { current: false, previous: false},
         }
         this.dir = new Vector3(0,0,1)
 
@@ -52,6 +54,12 @@ export default class ThreeDOFController {
         if(this.keystates.ArrowDown.current === false && this.keystates.ArrowDown.previous === true) {
             this.moveBackward()
         }
+        if(this.keystates.a.current === false && this.keystates.a.previous === true) {
+            this.moveLeft()
+        }
+        if(this.keystates.d.current === false && this.keystates.d.previous === true) {
+            this.moveRight()
+        }
 
         Object.keys(this.keystates).forEach(key => {
             this.keystates[key].previous = this.keystates[key].current
@@ -68,6 +76,14 @@ export default class ThreeDOFController {
         this.stageRot.rotation.y += toRad(30)
     }
 
+    moveLeft() {
+        const d2 = this.dir.clone().applyAxisAngle(YAXIS,toRad(90))
+        this.stagePos.position.add(d2)
+    }
+    moveRight() {
+        const d2 = this.dir.clone().applyAxisAngle(YAXIS,toRad(-90))
+        this.stagePos.position.add(d2)
+    }
     moveForward() {
         this.stagePos.position.add(this.dir)
     }

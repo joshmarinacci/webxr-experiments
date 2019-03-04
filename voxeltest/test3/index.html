@@ -270,7 +270,8 @@
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
             const epilson = 1e-8
-            const pos = pointer.controller1.position
+            // const pos = pointer.controller1.position
+            const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
             const hitNormal = [0, 0, 0]
             const distance = 10
             const hitPosition = [0, 0, 0]
@@ -294,7 +295,8 @@
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
             const epilson = 1e-8
-            const pos = pointer.controller1.position
+            const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
+            // const pos = pointer.controller1.position
             const hitNormal = [0, 0, 0]
             const distance = 10
             const hitPosition = [0, 0, 0]
