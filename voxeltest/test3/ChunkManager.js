@@ -4,6 +4,19 @@ function chunkPosToVector(pos) {
     return new Vector3(pos[0],pos[1],pos[2])
 }
 
+class Chunk {
+    constructor(data, pos, bounds) {
+        this.data = data
+        this.dims = data.dims
+        this.voxels = data.voxels
+        this.bounds = bounds
+        this.realPosition = pos
+        this.chunkPosition = [pos.x, pos.y, pos.z]
+        this.id = this.chunkPosition.join('|')
+    }
+
+}
+
 export class ChunkManager {
     constructor(opts) {
         this.listeners = {}
@@ -72,11 +85,10 @@ export class ChunkManager {
     //make a chunk at the position in chunk coords
     generateChunk(pos) {
         const bounds = this.getBounds(pos.x, pos.y, pos.z)
-        const chunk = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
-        const position = [pos.x, pos.y, pos.z]
-        chunk.position = position
-        this.chunks[position.join('|')] = chunk
-        return chunk
+        const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
+        const chunkObj = new Chunk(chunkData, pos, bounds)
+        this.chunks[chunkObj.id] = chunkObj
+        return chunkObj
     }
 
     chunkAtCoordinates(x, y, z) {
@@ -121,5 +133,37 @@ export class ChunkManager {
     debug_getChunksLoadedCount() {
         return Object.keys(this.chunks).length
     }
+
+    /**
+     * remove chunks that are too far away
+     * _pos_ is the center of the chunks to look at
+     * _group_ is the ThreeJS group that the chunks are stored in
+     */
+    removeFarChunks(pos, group) {
+        const nearbyChunks = this.nearbyChunks(pos, 2).map(chunkPos => chunkPos.join('|'))
+        Object.keys(this.chunks).map((chunkIndex) => {
+            //skip the nearby chunks
+            if (nearbyChunks.indexOf(chunkIndex) > -1) return
+
+            const chunk = this.chunks[chunkIndex]
+            if (!chunk) return
+            const mesh = this.meshes[chunkIndex]
+            if (mesh) {
+                if (mesh.surfaceMesh) {
+                    group.remove(mesh.surfaceMesh)
+                    mesh.surfaceMesh.geometry.dispose()
+                }
+                delete mesh.data
+                delete mesh.geometry
+                delete mesh.meshed
+                delete mesh.surfaceMesh
+            }
+            delete this.chunks[chunkIndex]
+        })
+    }
+
+    // getIndexForChunk(chunk) {
+    //     return chunk.position.join('|')
+    // }
 }
 

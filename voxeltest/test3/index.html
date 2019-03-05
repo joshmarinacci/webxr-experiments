@@ -167,7 +167,7 @@
             chunkDistance:2,
             cubeSize:1,
             chunkSize:CHUNK_SIZE,
-            generateVoxelChunk: (low, high, cx,cy,cz) => generateChunkFromFunction(low, high, flat)
+            generateVoxelChunk: (low, high, cx,cy,cz) => generateChunkFromFunction(low, high, flat),
         });
 
 
@@ -183,22 +183,18 @@
 
         const group = new Group()
         stagePos.add(group)
-        //generate four chunks
 
         function chunkPosToVector(pos) {
             return new Vector3(pos[0],pos[1],pos[2])
         }
-        function getIndexForChunk(chunk) {
-            return chunk.position.join('|')
-        }
 
-        chunkManager.on('missingChunk',(chunkPos)=>{
-            chunkPos = chunkPosToVector(chunkPos)
-            const chunk = chunkManager.generateChunk(chunkPos)
+        chunkManager.on('missingChunk',(chunkId)=>{
+            const pos = chunkPosToVector(chunkId)
+            const chunk = chunkManager.generateChunk(pos)
             const mesh = new VoxelMesh(chunk, mesher, scale)
             const surfaceMesh = mesh.createSurfaceMesh()
-            chunkManager.meshes[getIndexForChunk(chunk)] = mesh
-            surfaceMesh.position.copy(chunkPos.multiplyScalar(CHUNK_SIZE))
+            chunkManager.meshes[chunk.id] = mesh
+            surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
             materials.paint(surfaceMesh)
             group.add(surfaceMesh)
         })
@@ -207,35 +203,11 @@
         const YAXIS = new Vector3(0,1,0)
 
         let lastPos = new Vector3(0,0,0)
-        function removeFarChunks(pos) {
-            const nearbyChunks = chunkManager.nearbyChunks(pos, 2).map(chunkPos => chunkPos.join('|'))
-            Object.keys(chunkManager.chunks).map((chunkIndex) => {
-                //skip the nearby chunks
-                if (nearbyChunks.indexOf(chunkIndex) > -1) return
-
-                const chunk = chunkManager.chunks[chunkIndex]
-                if (!chunk) return
-                const mesh = chunkManager.meshes[chunkIndex]
-                if (mesh) {
-                    if (mesh.surfaceMesh) {
-                        group.remove(mesh.surfaceMesh)
-                        mesh.surfaceMesh.geometry.dispose()
-                    }
-                    delete mesh.data
-                    delete mesh.geometry
-                    delete mesh.meshed
-                    delete mesh.surfaceMesh
-                    delete mesh.wireMesh
-                }
-                delete chunkManager.chunks[chunkIndex]
-            })
-        }
-
         function updateChunks() {
             if(!lastPos.equals(stagePos.position)) {
                 const pos = stagePos.position.clone().multiplyScalar(-1)
                 chunkManager.requestMissingChunks(pos)
-                removeFarChunks(pos)
+                chunkManager.removeFarChunks(pos, group)
             }
             lastPos.copy(stagePos.position)
         }
@@ -273,8 +245,7 @@
 
         const fakeGame = {
             getBlock:function(x,y,z) {
-                let pos = parseVectorArguments(arguments)
-                return chunkManager.voxelAtPosition(pos)
+                return chunkManager.voxelAtPosition(new Vector3(x,y,z))
             },
             setBlock: function(pos, value) {
                 pos.floor()
