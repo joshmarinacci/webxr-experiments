@@ -315,6 +315,7 @@ export class Pointer {
     setMouseSimulatesController(val) {
         this.opts.mouseSimulatesController = val
         if(this.opts.mouseSimulatesController) {
+            this.original_controller1 = this.controller1
             this.controller1 = new Group()
             this.controller1.position.set(0,1,-2)
             this.controller1.quaternion.setFromUnitVectors(Object3D.DefaultUp, new Vector3(0,0,1))
@@ -324,6 +325,7 @@ export class Pointer {
             )
             this.scene.add(this.spot)
         } else {
+            if(this.original_controller1)  this.controller1 = this.original_controller1
         }
 
     }

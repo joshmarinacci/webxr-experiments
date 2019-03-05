@@ -187,7 +187,6 @@
         stagePos.add(group)
         //generate four chunks
         chunker.on('missingChunk',(chunkPos)=>{
-            console.log("need to load chunk",chunkPos)
             const chunk = chunker.generateChunk(chunkPos[0], chunkPos[1], chunkPos[2])
             const mesh = new VoxelMesh(chunk, mesher, scale)
             const surfaceMesh = mesh.createSurfaceMesh()//materials.material)
@@ -210,13 +209,13 @@
             Object.keys(chunker.chunks).map(function(chunkIndex) {
                 //skip the nearby chunks
                 if (nearbyChunks.indexOf(chunkIndex) > -1) return
-                console.log("removing")
+                // console.log("removing")
                 var chunk = chunker.chunks[chunkIndex]
                 var mesh  = chunker.meshes[chunkIndex]
                 // var pendingIndex = self.pendingChunks.indexOf(chunkIndex)
                 // if (pendingIndex !== -1) self.pendingChunks.splice(pendingIndex, 1)
                 if (!chunk) return
-                var chunkPosition = chunk.position
+                // var chunkPosition = chunk.position
                 if (mesh) {
                     if (mesh.surfaceMesh) {
                         group.remove(mesh.surfaceMesh)
@@ -240,7 +239,6 @@
 
         function updateChunks() {
             if(!lastPos.equals(stagePos.position)) {
-                console.log('moved', stagePos.position)
                 chunker.requestMissingChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
                 removeFarChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
             }
@@ -360,7 +358,6 @@
         })
 
         pointer.on(POINTER_CLICK,()=>{
-            console.log("clicked somewhere")
             const dir = new Vector3(0, 0, -1)
             dir.applyQuaternion(pointer.controller1.quaternion)
             dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
@@ -396,6 +393,7 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
+                pointer.setMouseSimulatesController(false)
                 app.enterVR()
             })
         })

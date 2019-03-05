@@ -6,7 +6,7 @@ import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
 
 const toRad = (deg) => Math.PI/180*deg
 const YAXIS = new Vector3(0,1,0)
-
+const SPEED = 0.1
 
 export default class ThreeDOFController {
 
@@ -48,18 +48,12 @@ export default class ThreeDOFController {
         if(this.keystates.ArrowRight.current === false && this.keystates.ArrowRight.previous === true) {
             this.rotateRight()
         }
-        if(this.keystates.ArrowUp.current === false && this.keystates.ArrowUp.previous === true) {
-            this.moveForward()
-        }
-        if(this.keystates.ArrowDown.current === false && this.keystates.ArrowDown.previous === true) {
-            this.moveBackward()
-        }
-        if(this.keystates.a.current === false && this.keystates.a.previous === true) {
-            this.moveLeft()
-        }
-        if(this.keystates.d.current === false && this.keystates.d.previous === true) {
-            this.moveRight()
-        }
+
+        if(this.keystates.ArrowUp.current === true)  this.glideForward()
+        if(this.keystates.ArrowDown.current === true)  this.glideBackward()
+        if(this.keystates.a.current === true)  this.glideLeft()
+        if(this.keystates.d.current === true)  this.glideRight()
+
 
         Object.keys(this.keystates).forEach(key => {
             this.keystates[key].previous = this.keystates[key].current
@@ -88,6 +82,22 @@ export default class ThreeDOFController {
         this.stagePos.position.add(this.dir)
     }
 
+    getSpeedDirection() {
+        return this.dir.clone().normalize().multiplyScalar(SPEED)
+    }
+    glideBackward() {
+        this.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+    }
+    glideForward() {
+        this.stagePos.position.add(this.getSpeedDirection())
+    }
+    glideLeft() {
+        this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(90)))
+    }
+    glideRight() {
+        this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(-90)))
+    }
+
     moveBackward() {
         this.stagePos.position.sub(this.dir)
     }
@@ -111,18 +121,14 @@ export default class ThreeDOFController {
 
                 const touchpad = gamepad.buttons[0]
                 if(touchpad.pressed && gamepad.axes && gamepad.axes.length === 2) {
-                    const left = gamepad.axes[0] < -0.5
-                    const right = gamepad.axes[0] > 0.5
-                    const down = gamepad.axes[1] < -0.5
-                    const up = (gamepad.axes[1] > 0.5)
+                    const left  = (gamepad.axes[0] < -0.5)
+                    const right = (gamepad.axes[0] >  0.5)
+                    const down  = (gamepad.axes[1] < -0.5)
+                    const up    = (gamepad.axes[1] >  0.5)
 
 
-                    if (down && this.states.touchpad === false && touchpad.pressed === true) {
-                        this.moveForward()
-                    }
-                    if (up && this.states.touchpad === false && touchpad.pressed === true) {
-                        this.moveBackward()
-                    }
+                    if (down && touchpad.pressed === true) this.glideForward()
+                    if (up   && touchpad.pressed === true) this.glideBackward()
                     if (left && this.states.touchpad === false && touchpad.pressed === true) {
                         this.rotateLeft()
                     }
@@ -134,10 +140,10 @@ export default class ThreeDOFController {
                 const trigger = gamepad.buttons[1]
                 if(trigger.pressed) console.log("trigger")
                 if(this.states.touchpad === false && touchpad.pressed === true) {
-                    console.log("pressed")
+                    // console.log("pressed")
                 }
                 if(this.states.touchpad === true && touchpad.pressed === false) {
-                    console.log("released")
+                    // console.log("released")
                 }
                 this.states.touchpad = touchpad.pressed
             }
