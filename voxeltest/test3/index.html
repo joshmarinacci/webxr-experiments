@@ -280,9 +280,10 @@
             },
             setBlock: function(pos, value) {
                 // console.log('setting',pos,value)
-                const x = Math.floor(pos[0])
-                const y = Math.floor(pos[1])
-                const z = Math.floor(pos[2])
+                pos.floor()
+                const x = pos.x
+                const y = pos.y
+                const z = pos.z
                 chunker.voxelAtCoordinates(x,y,z, value)
                 console.log("setting at",x,y,z, value)
 
@@ -311,12 +312,13 @@
             dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
-            const hitNormal = [0, 0, 0]
+            const hitNormal = new Vector3(0,0,0)
             const distance = RAYCAST_DISTANCE
-            const hitPosition = [0, 0, 0]
+            const hitPosition = new Vector3(0,0,0)
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             if(hitBlock <= 0) return
-            highlight_cube.position.set(Math.floor(hitPosition[0]),Math.floor(hitPosition[1]),Math.floor(hitPosition[2]))
+            hitPosition.floor()
+            highlight_cube.position.copy(hitPosition)
         }
 
         // things to do on every render tick
@@ -335,9 +337,9 @@
             dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
-            const hitNormal = [0, 0, 0]
+            const hitNormal = new Vector3(0,0,0)
             const distance = RAYCAST_DISTANCE
-            const hitPosition = [0, 0, 0]
+            const hitPosition = new Vector3(0,0,0)
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             fakeGame.setBlock(hitPosition, 0)
         })
