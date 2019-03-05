@@ -68,17 +68,17 @@
 <script src="node_modules/atlaspack/index.js"></script>
 <script type="module">
     // converter function from chunks to meshs
-    import GreedyMesh from "./greedy.js"
+    import GreedyMesh from "./GreedyMesher.js"
     // managers chunks
-    import {Chunker} from "./chunker.js"
+    import {ChunkManager} from "./ChunkManager.js"
     //converts chunks to three mesh
-    import {VoxelMesh} from "./mesh.js"
+    import {VoxelMesh} from "./VoxelMesh.js"
     import {VoxelTexture} from "./voxelTexture.js"
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
         Color, DirectionalLight, AmbientLight, Vector3,
-        TextureLoader, Group, DoubleSide, FrontSide
+        TextureLoader, Group, DoubleSide, FrontSide,
     } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof.js"
@@ -163,13 +163,11 @@
         }
 
         const CHUNK_SIZE = 16
-        const chunker = new Chunker({
+        const chunkManager = new ChunkManager({
             chunkDistance:2,
             cubeSize:1,
             chunkSize:CHUNK_SIZE,
-            generateVoxelChunk:function(low, high) {
-                return generateChunkFromFunction(low, high, flat)
-            }
+            generateVoxelChunk: (low, high, cx,cy,cz) => generateChunkFromFunction(low, high, flat)
         });
 
 
@@ -177,9 +175,9 @@
         const mesher = new GreedyMesh()
 
 
-        const stageRot = new THREE.Group()
+        const stageRot = new Group()
         app.scene.add(stageRot)
-        const stagePos = new THREE.Group()
+        const stagePos = new Group()
         stageRot.add(stagePos)
         stagePos.position.z = 0
 
@@ -194,31 +192,30 @@
             return chunk.position.join('|')
         }
 
-        chunker.on('missingChunk',(chunkPos)=>{
+        chunkManager.on('missingChunk',(chunkPos)=>{
             chunkPos = chunkPosToVector(chunkPos)
-            const chunk = chunker.generateChunk(chunkPos)
+            const chunk = chunkManager.generateChunk(chunkPos)
             const mesh = new VoxelMesh(chunk, mesher, scale)
             const surfaceMesh = mesh.createSurfaceMesh()
-            chunker.meshes[getIndexForChunk(chunk)] = mesh
+            chunkManager.meshes[getIndexForChunk(chunk)] = mesh
             surfaceMesh.position.copy(chunkPos.multiplyScalar(CHUNK_SIZE))
             materials.paint(surfaceMesh)
             group.add(surfaceMesh)
         })
-        chunker.requestMissingChunks(new Vector3(0,0,0))
+        chunkManager.requestMissingChunks(new Vector3(0,0,0))
 
         const YAXIS = new Vector3(0,1,0)
 
         let lastPos = new Vector3(0,0,0)
         function removeFarChunks(pos) {
-            const playerPosition = [pos.x,pos.y,pos.z]
-            const nearbyChunks = chunker.nearbyChunks(playerPosition, 2).map(chunkPos => chunkPos.join('|'))
-            Object.keys(chunker.chunks).map((chunkIndex) => {
+            const nearbyChunks = chunkManager.nearbyChunks(pos, 2).map(chunkPos => chunkPos.join('|'))
+            Object.keys(chunkManager.chunks).map((chunkIndex) => {
                 //skip the nearby chunks
                 if (nearbyChunks.indexOf(chunkIndex) > -1) return
 
-                const chunk = chunker.chunks[chunkIndex]
+                const chunk = chunkManager.chunks[chunkIndex]
                 if (!chunk) return
-                const mesh = chunker.meshes[chunkIndex]
+                const mesh = chunkManager.meshes[chunkIndex]
                 if (mesh) {
                     if (mesh.surfaceMesh) {
                         group.remove(mesh.surfaceMesh)
@@ -230,14 +227,14 @@
                     delete mesh.surfaceMesh
                     delete mesh.wireMesh
                 }
-                delete chunker.chunks[chunkIndex]
+                delete chunkManager.chunks[chunkIndex]
             })
         }
 
         function updateChunks() {
             if(!lastPos.equals(stagePos.position)) {
                 const pos = stagePos.position.clone().multiplyScalar(-1)
-                chunker.requestMissingChunks(pos)
+                chunkManager.requestMissingChunks(pos)
                 removeFarChunks(pos)
             }
             lastPos.copy(stagePos.position)
@@ -253,7 +250,6 @@
                 transparent: true,
                 opacity: 0.5,
             }))
-        // highlight_cube.renderOrder = 10
         highlight_cube.position.set(-2,0,-5)
         stagePos.add(highlight_cube)
 
@@ -271,33 +267,30 @@
         const parseVectorArguments = function(args) {
             if (!args) return false
             if (args[0] instanceof Array) return args[0]
-            return [args[0], args[1], args[2]]
+            return new Vector3(args[0], args[1], args[2])
         }
 
 
         const fakeGame = {
-            getBlock:function(pos) {
-                pos = parseVectorArguments(arguments)
-                return chunker.voxelAtPosition(pos)
+            getBlock:function(x,y,z) {
+                let pos = parseVectorArguments(arguments)
+                return chunkManager.voxelAtPosition(pos)
             },
             setBlock: function(pos, value) {
-                // console.log('setting',pos,value)
                 pos.floor()
-                const x = pos.x
-                const y = pos.y
-                const z = pos.z
-                chunker.voxelAtCoordinates(x,y,z, value)
+                //set the actual value
+                chunkManager.voxelAtCoordinates(pos.x,pos.y,pos.z, value)
 
-                const chunkPos = chunker.chunkAtCoordinates(x,y,z)
+                const chunkPos = chunkManager.chunkAtCoordinates(pos.x,pos.y,pos.z)
                 const chunkIndex = chunkPos.join("|")
-                const chunk = chunker.chunks[chunkPos.join('|')]
+                const chunk = chunkManager.chunks[chunkPos.join('|')]
                 if(!chunk) return
 
                 //rebuild the mesh and surface mesh
-                const surfaceMesh = chunker.meshes[chunkIndex].surfaceMesh
+                const surfaceMesh = chunkManager.meshes[chunkIndex].surfaceMesh
                 if(surfaceMesh) group.remove(surfaceMesh)
                 const vmesh = new VoxelMesh(chunk, mesher, scale)
-                chunker.meshes[chunkIndex] = vmesh
+                chunkManager.meshes[chunkIndex] = vmesh
                 const smesh = vmesh.createSurfaceMesh()
                 materials.paint(smesh)
                 group.add(smesh)
