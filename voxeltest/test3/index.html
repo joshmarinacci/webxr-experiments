@@ -137,7 +137,7 @@
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
-            if(i%16 === 0 && k%16 === 0 && j < 3 && j > 0) return 1
+            if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 1
             if(j === -3) {
                 return 1
             }
