@@ -76,10 +76,9 @@
     import {VoxelTexture} from "./voxelTexture.js"
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
-    import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
+    import {Mesh, MeshLambertMaterial,
         Color, DirectionalLight, AmbientLight, Vector3,
-        TextureLoader, Group, DoubleSide, FrontSide,
-    } from "./node_modules/three/build/three.module.js"
+        TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof.js"
     import {Pointer} from "./Pointer.js"
@@ -191,12 +190,11 @@
         chunkManager.on('missingChunk',(chunkId)=>{
             const pos = chunkPosToVector(chunkId)
             const chunk = chunkManager.generateChunk(pos)
-            const mesh = new VoxelMesh(chunk, mesher, scale)
-            const surfaceMesh = mesh.createSurfaceMesh()
-            chunkManager.meshes[chunk.id] = mesh
-            surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
-            materials.paint(surfaceMesh)
-            group.add(surfaceMesh)
+            chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
+            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
+            chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
+            materials.paint(chunk.surfaceMesh)
+            group.add(chunk.surfaceMesh)
         })
         chunkManager.requestMissingChunks(new Vector3(0,0,0))
 
@@ -253,19 +251,17 @@
                 chunkManager.voxelAtCoordinates(pos.x,pos.y,pos.z, value)
 
                 const chunkPos = chunkManager.chunkAtCoordinates(pos.x,pos.y,pos.z)
-                const chunkIndex = chunkPos.join("|")
-                const chunk = chunkManager.chunks[chunkPos.join('|')]
+                const chunkId = chunkPos.join("|")
+                const chunk = chunkManager.chunks[chunkId]
                 if(!chunk) return
 
                 //rebuild the mesh and surface mesh
-                const surfaceMesh = chunkManager.meshes[chunkIndex].surfaceMesh
-                if(surfaceMesh) group.remove(surfaceMesh)
-                const vmesh = new VoxelMesh(chunk, mesher, scale)
-                chunkManager.meshes[chunkIndex] = vmesh
-                const smesh = vmesh.createSurfaceMesh()
-                materials.paint(smesh)
-                group.add(smesh)
-                smesh.position.copy(chunkPosToVector(chunkPos).multiplyScalar(CHUNK_SIZE))
+                if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
+                chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
+                chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
+                materials.paint(chunk.surfaceMesh)
+                group.add(chunk.surfaceMesh)
+                chunk.surfaceMesh.position.copy(chunkPosToVector(chunkPos).multiplyScalar(CHUNK_SIZE))
             }
         }
 

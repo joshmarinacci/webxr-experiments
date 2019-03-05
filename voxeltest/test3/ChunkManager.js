@@ -5,11 +5,12 @@ function chunkPosToVector(pos) {
 }
 
 class Chunk {
-    constructor(data, pos, bounds) {
+    constructor(data, pos) {
         this.data = data
         this.dims = data.dims
         this.voxels = data.voxels
-        this.bounds = bounds
+        this.vmesh = null
+        this.surfaceMesh = null
         this.realPosition = pos
         this.chunkPosition = [pos.x, pos.y, pos.z]
         this.id = this.chunkPosition.join('|')
@@ -25,7 +26,6 @@ export class ChunkManager {
         this.cubeSize = opts.cubeSize || 25
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
-        this.meshes = {}
 
         if (this.chunkSize & this.chunkSize - 1 !== 0)
             throw new Error('chunkSize must be a power of 2')
@@ -86,7 +86,7 @@ export class ChunkManager {
     generateChunk(pos) {
         const bounds = this.getBounds(pos.x, pos.y, pos.z)
         const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
-        const chunkObj = new Chunk(chunkData, pos, bounds)
+        const chunkObj = new Chunk(chunkData, pos)
         this.chunks[chunkObj.id] = chunkObj
         return chunkObj
     }
@@ -147,23 +147,18 @@ export class ChunkManager {
 
             const chunk = this.chunks[chunkIndex]
             if (!chunk) return
-            const mesh = this.meshes[chunkIndex]
-            if (mesh) {
-                if (mesh.surfaceMesh) {
-                    group.remove(mesh.surfaceMesh)
-                    mesh.surfaceMesh.geometry.dispose()
+            if (chunk.vmesh) {
+                if (chunk.surfaceMesh) {
+                    group.remove(chunk.surfaceMesh)
+                    chunk.surfaceMesh.geometry.dispose()
                 }
-                delete mesh.data
-                delete mesh.geometry
-                delete mesh.meshed
-                delete mesh.surfaceMesh
+                delete chunk.vmesh.data
+                delete chunk.vmesh.geometry
+                delete chunk.vmesh.meshed
+                delete chunk.vmesh.surfaceMesh
             }
             delete this.chunks[chunkIndex]
         })
     }
-
-    // getIndexForChunk(chunk) {
-    //     return chunk.position.join('|')
-    // }
 }
 
