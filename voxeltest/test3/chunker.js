@@ -42,8 +42,9 @@ export class Chunker {
         return nearby
     }
 
-    requestMissingChunks(position) {
+    requestMissingChunks(p) {
         var self = this
+        const position = [p.x,p.y,p.z]
         this.nearbyChunks(position).map(function (chunk) {
             if (!self.chunks[chunk.join('|')]) {
                 self.emit('missingChunk', chunk)
@@ -58,11 +59,10 @@ export class Chunker {
         return [low, high]
     }
 
-    generateChunk(x, y, z) {
-        var self = this
-        var bounds = this.getBounds(x, y, z)
-        var chunk = this.generateVoxelChunk(bounds[0], bounds[1], x, y, z)
-        var position = [x, y, z]
+    generateChunk(pos) {
+        const bounds = this.getBounds(pos.x, pos.y, pos.z)
+        const chunk = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
+        const position = [pos.x, pos.y, pos.z]
         chunk.position = position
         this.chunks[position.join('|')] = chunk
         return chunk

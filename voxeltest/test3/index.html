@@ -110,7 +110,7 @@
 
             // set to true to move the controller node forward and tilt with the mouse.
             // good for testing VR controls on desktop
-            mouseSimulatesController:false,
+            mouseSimulatesController:true,
 
             //turn this off if you provide your own pointer model
             enableLaser: true,
@@ -129,7 +129,6 @@
             texturePath: './textures/',
             materialType: MeshLambertMaterial,
             materialParams: { side: DoubleSide},
-            // materialFlatColor: opts.materialFlatColor === true
         })
         const materialNames = ['uvgrid', 'brick', 'dirt']
         materials.load(materialNames)
@@ -181,50 +180,48 @@
         app.scene.add(stageRot)
         const stagePos = new THREE.Group()
         stageRot.add(stagePos)
-        stagePos.position.z = -5
+        stagePos.position.z = 0
 
         const group = new Group()
         stagePos.add(group)
         //generate four chunks
+
+        function chunkPosToVector(pos) {
+            return new Vector3(pos[0],pos[1],pos[2])
+        }
+        function getIndexForChunk(chunk) {
+            return chunk.position.join('|')
+        }
+
         chunker.on('missingChunk',(chunkPos)=>{
-            const chunk = chunker.generateChunk(chunkPos[0], chunkPos[1], chunkPos[2])
+            chunkPos = chunkPosToVector(chunkPos)
+            const chunk = chunker.generateChunk(chunkPos)
             const mesh = new VoxelMesh(chunk, mesher, scale)
-            const surfaceMesh = mesh.createSurfaceMesh()//materials.material)
-            const chunkIndex = chunk.position.join('|')
-            chunker.meshes[chunkIndex] = mesh
-            surfaceMesh.position.set(chunkPos[0]*CHUNK_SIZE,chunkPos[1]*CHUNK_SIZE,chunkPos[2]*CHUNK_SIZE)
-            // materials.paint(mesh)
+            const surfaceMesh = mesh.createSurfaceMesh()
+            chunker.meshes[getIndexForChunk(chunk)] = mesh
+            surfaceMesh.position.copy(chunkPos.multiplyScalar(CHUNK_SIZE))
             group.add(surfaceMesh)
         })
-        chunker.requestMissingChunks([0,0,0])
+        chunker.requestMissingChunks(new Vector3(0,0,0))
 
         const YAXIS = new Vector3(0,1,0)
 
         let lastPos = new Vector3(0,0,0)
-        function removeFarChunks(playerPosition) {
-            playerPosition = playerPosition || this.playerPosition()
-            var nearbyChunks = chunker.nearbyChunks(playerPosition, 2).map(function(chunkPos) {
-                return chunkPos.join('|')
-            })
-            Object.keys(chunker.chunks).map(function(chunkIndex) {
+        function removeFarChunks(pos) {
+            const playerPosition = [pos.x,pos.y,pos.z]
+            const nearbyChunks = chunker.nearbyChunks(playerPosition, 2).map(chunkPos => chunkPos.join('|'))
+            Object.keys(chunker.chunks).map((chunkIndex) => {
                 //skip the nearby chunks
                 if (nearbyChunks.indexOf(chunkIndex) > -1) return
-                // console.log("removing")
-                var chunk = chunker.chunks[chunkIndex]
-                var mesh  = chunker.meshes[chunkIndex]
-                // var pendingIndex = self.pendingChunks.indexOf(chunkIndex)
-                // if (pendingIndex !== -1) self.pendingChunks.splice(pendingIndex, 1)
+
+                const chunk = chunker.chunks[chunkIndex]
                 if (!chunk) return
-                // var chunkPosition = chunk.position
+                const mesh = chunker.meshes[chunkIndex]
                 if (mesh) {
                     if (mesh.surfaceMesh) {
                         group.remove(mesh.surfaceMesh)
                         mesh.surfaceMesh.geometry.dispose()
                     }
-                    // if (mesh.wireMesh) {
-                    //     mesh.wireMesh.geometry.dispose()
-                    //     self.scene.remove(mesh.wireMesh)
-                    // }
                     delete mesh.data
                     delete mesh.geometry
                     delete mesh.meshed
@@ -232,15 +229,14 @@
                     delete mesh.wireMesh
                 }
                 delete chunker.chunks[chunkIndex]
-                // self.emit('removeChunk', chunkPosition)
             })
-            // chunker.requestMissingChunks(playerPosition)
         }
 
         function updateChunks() {
             if(!lastPos.equals(stagePos.position)) {
-                chunker.requestMissingChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
-                removeFarChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
+                const pos = stagePos.position.clone().multiplyScalar(-1)
+                chunker.requestMissingChunks(pos)
+                removeFarChunks(pos)
             }
             lastPos.copy(stagePos.position)
         }
@@ -277,18 +273,6 @@
         }
 
 
-        /*
-        chunk loading implementation
-
-        should make sure chunks within chunkDistance from the chunk you are currently in are currently loaded
-        when user position changes, update current chunk
-        when current chunk changes,
-            make sure everything within chunk distance is loaded
-            make sure everything outside of chunk distance + 1 is unloaded
-        emit events when moving from one voxel to another
-        emit events when loading one chunk, when missing, when removing, when entering
-        */
-
         const fakeGame = {
             getBlock:function(pos) {
                 pos = parseVectorArguments(arguments)
@@ -304,28 +288,18 @@
 
 
                 const chunkPos = chunker.chunkAtCoordinates(x,y,z)
-                // console.log("chunk index is",chunkPos)
                 const chunkIndex = chunkPos.join("|")
                 const chunk = chunker.chunks[chunkPos.join('|')]
-                // console.log("real chunk is",chunk)
                 if(!chunk) return
 
                 //rebuild the mesh and surface mesh
-
-                // console.log("embedded chunk is",chunker.chunks[chunkIndex])
-                // console.log("current surface mesh is", chunker.meshes[chunkIndex].surfaceMesh)
                 const surfaceMesh = chunker.meshes[chunkIndex].surfaceMesh
-                // console.log("removing",surfaceMesh,'at',surfaceMesh.position)
                 if(surfaceMesh) group.remove(surfaceMesh)
-                const mesh = new VoxelMesh(chunk, mesher, scale)
-                chunker.meshes[chunkIndex] = mesh
-                const newSurfaceMesh = mesh.createSurfaceMesh()//materials.material)
-                // materials.paint(mesh)
-                group.add(newSurfaceMesh)
-                // console.log("index is",chunkIndex, chunkPos)
-                newSurfaceMesh.position.set(chunkPos[0]*CHUNK_SIZE,chunkPos[1]*CHUNK_SIZE,chunkPos[2]*CHUNK_SIZE)
-                // console.log("new position is", newSurfaceMesh.position)
-                // console.log("new data is", mesh.data)
+                const vmesh = new VoxelMesh(chunk, mesher, scale)
+                chunker.meshes[chunkIndex] = vmesh
+                const smesh = vmesh.createSurfaceMesh()
+                group.add(smesh)
+                smesh.position.copy(chunkPosToVector(chunkPos).multiplyScalar(CHUNK_SIZE))
             }
         }
 
@@ -336,14 +310,12 @@
             dir.applyQuaternion(pointer.controller1.quaternion)
             dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
-            // const pos = pointer.controller1.position
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
             const hitNormal = [0, 0, 0]
             const distance = RAYCAST_DISTANCE
             const hitPosition = [0, 0, 0]
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
             if(hitBlock <= 0) return
-            // console.log('hit the block',hitBlock, hitPosition, hitNormal)
             highlight_cube.position.set(Math.floor(hitPosition[0]),Math.floor(hitPosition[1]),Math.floor(hitPosition[2]))
         }
 
@@ -363,13 +335,10 @@
             dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
             const epilson = 1e-8
             const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
-            // const pos = pointer.controller1.position
             const hitNormal = [0, 0, 0]
             const distance = RAYCAST_DISTANCE
             const hitPosition = [0, 0, 0]
             const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
-            // console.log(hitBlock)
-            // console.log('hit the block',hitBlock, hitPosition, hitNormal)
             fakeGame.setBlock(hitPosition, 0)
         })
 
