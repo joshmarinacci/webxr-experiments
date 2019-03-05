@@ -129,14 +129,15 @@
             texturePath: './textures/',
             materialType: MeshLambertMaterial,
             materialParams: { side: DoubleSide},
+            materialFlatColor:true
         })
-        const materialNames = ['uvgrid', 'brick', 'dirt']
-        materials.load(materialNames)
+        // const materialNames = ['uvgrid', 'brick', 'dirt']
+        materials.load(['#aa44dd','#22aa22','#0000ff'])
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
-            if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 1
+            if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
             if(j === -3) {
                 return 1
             }
@@ -200,6 +201,7 @@
             const surfaceMesh = mesh.createSurfaceMesh()
             chunker.meshes[getIndexForChunk(chunk)] = mesh
             surfaceMesh.position.copy(chunkPos.multiplyScalar(CHUNK_SIZE))
+            materials.paint(surfaceMesh)
             group.add(surfaceMesh)
         })
         chunker.requestMissingChunks(new Vector3(0,0,0))
@@ -285,8 +287,6 @@
                 const y = pos.y
                 const z = pos.z
                 chunker.voxelAtCoordinates(x,y,z, value)
-                console.log("setting at",x,y,z, value)
-
 
                 const chunkPos = chunker.chunkAtCoordinates(x,y,z)
                 const chunkIndex = chunkPos.join("|")
@@ -299,6 +299,7 @@
                 const vmesh = new VoxelMesh(chunk, mesher, scale)
                 chunker.meshes[chunkIndex] = vmesh
                 const smesh = vmesh.createSurfaceMesh()
+                materials.paint(smesh)
                 group.add(smesh)
                 smesh.position.copy(chunkPosToVector(chunkPos).multiplyScalar(CHUNK_SIZE))
             }

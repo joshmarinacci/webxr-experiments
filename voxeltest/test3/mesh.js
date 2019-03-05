@@ -24,6 +24,8 @@ function Mesh(data, mesher, scaleFactor) {
         if (q.length === 5) {
             geometry.faceVertexUvs[0].push([uv[1],uv[0],uv[2]])
             const f = new THREE.Face3(q[0], q[1], q[2])
+            //I think the point of this is to start block types as colors. there's probably a better way to do this
+            //with buffer attributes
             f.color = new THREE.Color(q[4])
             geometry.faces.push(f)
 
@@ -58,7 +60,7 @@ Mesh.prototype.createWireMesh = function(hexColor) {
 
 Mesh.prototype.createSurfaceMesh = function(material) {
     // material = material || new THREE.MeshNormalMaterial()
-    material = material || new THREE.MeshLambertMaterial({color:'white'})
+    material = material || new THREE.MeshLambertMaterial({color:'white', vertexColors: THREE.FaceColors})
     const surfaceMesh  = new THREE.Mesh( this.geometry, material )
     surfaceMesh.scale.copy(this.scale)
     this.surfaceMesh = surfaceMesh

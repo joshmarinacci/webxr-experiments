@@ -2,11 +2,13 @@
 
 import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
     MeshFaceMaterial,
+    MeshBasicMaterial,
     Color, DirectionalLight, AmbientLight, Vector3,
     TextureLoader, Group,
     DoubleSide,
     NearestFilter, LinearMipMapLinearFilter,
     Texture,
+    FaceColors,
 } from "./node_modules/three/build/three.module.js"
 
 const createAtlas = window.atlaspack
@@ -64,7 +66,7 @@ export class VoxelTexture {
         if (useFlatColors) {
             // If were using simple colors
             this.material = new MeshBasicMaterial({
-                vertexColors: VertexColors
+                vertexColors: FaceColors
             });
         } else {
             var opaque = new this.options.materialType(this.options.materialParams);
@@ -222,7 +224,6 @@ export class VoxelTexture {
     };
 
     paint(mesh, materials) {
-
         // if were loading put into queue
         if (this.loading > 0) {
             this._meshQueue.push({self: this, args: arguments});
@@ -232,6 +233,8 @@ export class VoxelTexture {
         var isVoxelMesh = (materials) ? false : true;
         if (!isVoxelMesh) materials = this._expandName(materials);
 
+        mesh.material.vertexColors = FaceColors
+        mesh.material.flatShading = true
         mesh.geometry.faces.forEach((face, i) => {
             if (mesh.geometry.faceVertexUvs[0].length < 1) return;
 
@@ -251,7 +254,7 @@ export class VoxelTexture {
 
             // if just a simple color
             if (name.slice(0, 1) === '#') {
-                this.ao(face, name);
+                face.color = new Color(name)
                 return;
             }
 
@@ -279,6 +282,7 @@ export class VoxelTexture {
             }
         });
 
+        mesh.geometry.elementsNeedUpdate = true
         mesh.geometry.uvsNeedUpdate = true;
     };
 

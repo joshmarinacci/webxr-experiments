@@ -26,9 +26,9 @@ export class Chunker {
 
     // position in chunk coords?
     nearbyChunks(position, distance) {
-        var current = this.chunkAtPosition(position)
-        var x = current[0]
-        var y = current[1]
+        const current = this.chunkAtPosition(position)
+        const x = current[0]
+        const y = current[1]
         var z = current[2]
         var dist = distance || this.distance
         var nearby = []
@@ -43,7 +43,7 @@ export class Chunker {
     }
 
     requestMissingChunks(p) {
-        var self = this
+        const self = this
         const position = [p.x,p.y,p.z]
         this.nearbyChunks(position).map(function (chunk) {
             if (!self.chunks[chunk.join('|')]) {
@@ -53,9 +53,9 @@ export class Chunker {
     }
 
     getBounds(x, y, z) {
-        var bits = this.chunkBits
-        var low = [x << bits, y << bits, z << bits]
-        var high = [(x + 1) << bits, (y + 1) << bits, (z + 1) << bits]
+        const bits = this.chunkBits
+        const low = [x << bits, y << bits, z << bits]
+        const high = [(x + 1) << bits, (y + 1) << bits, (z + 1) << bits]
         return [low, high]
     }
 
@@ -69,42 +69,34 @@ export class Chunker {
     }
 
     chunkAtCoordinates(x, y, z) {
-        var bits = this.chunkBits;
-        var cx = x >> bits;
-        var cy = y >> bits;
-        var cz = z >> bits;
-        var chunkPos = [cx, cy, cz];
-        return chunkPos;
+        const bits = this.chunkBits
+        const cx = x >> bits
+        const cy = y >> bits
+        const cz = z >> bits
+        return [cx, cy, cz];
     }
 
-     //position in chunk coords or voxel coords?
-     chunkAtPosition(position) {
-        var cubeSize = this.cubeSize;
-        var x = Math.floor(position[0] / cubeSize)
-        var y = Math.floor(position[1] / cubeSize)
-        var z = Math.floor(position[2] / cubeSize)
-        var chunkPos = this.chunkAtCoordinates(x, y, z)
-        return chunkPos
-    };
+    //position in chunk coords or voxel coords?
+    chunkAtPosition(position) {
+        const cubeSize = this.cubeSize
+        const x = Math.floor(position[0] / cubeSize)
+        const y = Math.floor(position[1] / cubeSize)
+        const z = Math.floor(position[2] / cubeSize)
+        return this.chunkAtCoordinates(x, y, z)
+    }
 
     voxelIndexFromCoordinates(x, y, z) {
-        var bits = this.chunkBits
-        var mask = (1 << bits) - 1
-        var vidx = (x & mask) + ((y & mask) << bits) + ((z & mask) << bits * 2)
-        return vidx
-    }
-
-    voxelIndexFromPosition(pos) {
-        var v = this.voxelVector(pos)
-        return this.voxelIndex(v)
+        const bits = this.chunkBits
+        const mask = (1 << bits) - 1
+        return (x & mask) + ((y & mask) << bits) + ((z & mask) << bits * 2)
     }
 
     voxelAtCoordinates(x, y, z, val) {
-        var ckey = this.chunkAtCoordinates(x, y, z).join('|')
-        var chunk = this.chunks[ckey]
+        const ckey = this.chunkAtCoordinates(x, y, z).join('|')
+        const chunk = this.chunks[ckey]
         if (!chunk) return false
-        var vidx = this.voxelIndexFromCoordinates(x, y, z)
-        var v = chunk.voxels[vidx]
+        const vidx = this.voxelIndexFromCoordinates(x, y, z)
+        const v = chunk.voxels[vidx]
         if (typeof val !== 'undefined') {
             chunk.voxels[vidx] = val
         }
@@ -112,29 +104,11 @@ export class Chunker {
     }
 
     voxelAtPosition(pos, val) {
-        var cubeSize = this.cubeSize;
-        var x = Math.floor(pos[0] / cubeSize)
-        var y = Math.floor(pos[1] / cubeSize)
-        var z = Math.floor(pos[2] / cubeSize)
-        // console.log("x=",x,y,z)
-        var v = this.voxelAtCoordinates(x, y, z, val)
-        return v;
-    }
-
-// deprecated
-    voxelIndex(voxelVector) {
-        var vidx = this.voxelIndexFromCoordinates(voxelVector[0], voxelVector[1], voxelVector[2])
-        return vidx
-    }
-
-// deprecated
-    voxelVector(pos) {
-        var cubeSize = this.cubeSize
-        var mask = (1 << this.chunkBits) - 1
-        var vx = (Math.floor(pos[0] / cubeSize)) & mask
-        var vy = (Math.floor(pos[1] / cubeSize)) & mask
-        var vz = (Math.floor(pos[2] / cubeSize)) & mask
-        return [vx, vy, vz]
+        const cubeSize = this.cubeSize
+        const x = Math.floor(pos[0] / cubeSize)
+        const y = Math.floor(pos[1] / cubeSize)
+        const z = Math.floor(pos[2] / cubeSize)
+        return this.voxelAtCoordinates(x, y, z, val);
     }
 
     debug_getChunksLoadedCount() {
