@@ -95,6 +95,8 @@
     const app = new WebXRBoilerPlate({
         container: $("#container")
     })
+
+
     app.init().then((app) => {
         app.scene.background = new Color( 0xcccccc );
 
@@ -134,7 +136,14 @@
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
-        const flat = (i,j,k) => (k === -10)?1:0
+        const flat = (i,j,k) => {
+            if(i%16 === 0 && k%16 === 0 && j < 3 && j > 0) return 1
+            if(j === -3) {
+                return 1
+            }
+
+            return 0
+        }
 
         function generateChunkFromFunction(l, h, f) {
             let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
@@ -153,12 +162,13 @@
             };
         }
 
-
+        const CHUNK_SIZE = 16
         const chunker = new Chunker({
+            chunkDistance:2,
             cubeSize:1,
-            chunkSize:32,
+            chunkSize:CHUNK_SIZE,
             generateVoxelChunk:function(low, high) {
-                return generateChunkFromFunction(low, high, valley)
+                return generateChunkFromFunction(low, high, flat)
             }
         });
 
@@ -174,27 +184,68 @@
         stagePos.position.z = -5
 
         const group = new Group()
-        // app.scene.add(group)
         stagePos.add(group)
         //generate four chunks
-        for(let i=-1; i<1; i++) {
-            for(let j=-1; j<0; j++) {
-                const chunk = chunker.generateChunk(i, 0, j)
-                const mesh = new VoxelMesh(chunk, mesher, scale)
-                const surfaceMesh = mesh.createSurfaceMesh()//materials.material)
-                const chunkIndex = chunk.position.join('|')
-                chunker.meshes[chunkIndex] = mesh
-                surfaceMesh.position.set(i*32,0,j*32)
-                // materials.paint(mesh)
-                group.add(surfaceMesh)
-
-                console.log("made a chunk")
-            }
-        }
+        chunker.on('missingChunk',(chunkPos)=>{
+            console.log("need to load chunk",chunkPos)
+            const chunk = chunker.generateChunk(chunkPos[0], chunkPos[1], chunkPos[2])
+            const mesh = new VoxelMesh(chunk, mesher, scale)
+            const surfaceMesh = mesh.createSurfaceMesh()//materials.material)
+            const chunkIndex = chunk.position.join('|')
+            chunker.meshes[chunkIndex] = mesh
+            surfaceMesh.position.set(chunkPos[0]*CHUNK_SIZE,chunkPos[1]*CHUNK_SIZE,chunkPos[2]*CHUNK_SIZE)
+            // materials.paint(mesh)
+            group.add(surfaceMesh)
+        })
+        chunker.requestMissingChunks([0,0,0])
 
         const YAXIS = new Vector3(0,1,0)
 
+        let lastPos = new Vector3(0,0,0)
+        function removeFarChunks(playerPosition) {
+            playerPosition = playerPosition || this.playerPosition()
+            var nearbyChunks = chunker.nearbyChunks(playerPosition, 2).map(function(chunkPos) {
+                return chunkPos.join('|')
+            })
+            Object.keys(chunker.chunks).map(function(chunkIndex) {
+                //skip the nearby chunks
+                if (nearbyChunks.indexOf(chunkIndex) > -1) return
+                console.log("removing")
+                var chunk = chunker.chunks[chunkIndex]
+                var mesh  = chunker.meshes[chunkIndex]
+                // var pendingIndex = self.pendingChunks.indexOf(chunkIndex)
+                // if (pendingIndex !== -1) self.pendingChunks.splice(pendingIndex, 1)
+                if (!chunk) return
+                var chunkPosition = chunk.position
+                if (mesh) {
+                    if (mesh.surfaceMesh) {
+                        group.remove(mesh.surfaceMesh)
+                        mesh.surfaceMesh.geometry.dispose()
+                    }
+                    // if (mesh.wireMesh) {
+                    //     mesh.wireMesh.geometry.dispose()
+                    //     self.scene.remove(mesh.wireMesh)
+                    // }
+                    delete mesh.data
+                    delete mesh.geometry
+                    delete mesh.meshed
+                    delete mesh.surfaceMesh
+                    delete mesh.wireMesh
+                }
+                delete chunker.chunks[chunkIndex]
+                // self.emit('removeChunk', chunkPosition)
+            })
+            // chunker.requestMissingChunks(playerPosition)
+        }
 
+        function updateChunks() {
+            if(!lastPos.equals(stagePos.position)) {
+                console.log('moved', stagePos.position)
+                chunker.requestMissingChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
+                removeFarChunks([-stagePos.position.x,-stagePos.position.y,-stagePos.position.z])
+            }
+            lastPos.copy(stagePos.position)
+        }
 
         const highlight_geo = new THREE.CubeGeometry(1.1,1.1,1.1, 4,4)
         highlight_geo.translate(0.5,0.5,0.5)
@@ -227,10 +278,22 @@
             return [args[0], args[1], args[2]]
         }
 
+
+        /*
+        chunk loading implementation
+
+        should make sure chunks within chunkDistance from the chunk you are currently in are currently loaded
+        when user position changes, update current chunk
+        when current chunk changes,
+            make sure everything within chunk distance is loaded
+            make sure everything outside of chunk distance + 1 is unloaded
+        emit events when moving from one voxel to another
+        emit events when loading one chunk, when missing, when removing, when entering
+        */
+
         const fakeGame = {
             getBlock:function(pos) {
                 pos = parseVectorArguments(arguments)
-                // console.log("pos is",pos)
                 return chunker.voxelAtPosition(pos)
             },
             setBlock: function(pos, value) {
@@ -262,7 +325,7 @@
                 // materials.paint(mesh)
                 group.add(newSurfaceMesh)
                 // console.log("index is",chunkIndex, chunkPos)
-                newSurfaceMesh.position.set(chunkPos[0]*32,chunkPos[1]*0,chunkPos[2]*32)
+                newSurfaceMesh.position.set(chunkPos[0]*CHUNK_SIZE,chunkPos[1]*CHUNK_SIZE,chunkPos[2]*CHUNK_SIZE)
                 // console.log("new position is", newSurfaceMesh.position)
                 // console.log("new data is", mesh.data)
             }
@@ -292,6 +355,7 @@
             pointer.tick(time)
             materials.tick(time)
             controller.update(time)
+            updateChunks()
             updateHighlight()
         })
 

@@ -1,5 +1,6 @@
 export class Chunker {
     constructor(opts) {
+        this.listeners = {}
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
         this.cubeSize = opts.cubeSize || 25
@@ -13,8 +14,17 @@ export class Chunker {
         for (var size = this.chunkSize; size > 0; size >>= 1) bits++;
         this.chunkBits = bits - 1;
     }
+    on(type, cb) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].push(cb)
+    }
+    emit(type,evt) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].forEach(cb => cb(evt))
+    }
 
 
+    // position in chunk coords?
     nearbyChunks(position, distance) {
         var current = this.chunkAtPosition(position)
         var x = current[0]
@@ -67,7 +77,8 @@ export class Chunker {
         return chunkPos;
     }
 
-    chunkAtPosition(position) {
+     //position in chunk coords or voxel coords?
+     chunkAtPosition(position) {
         var cubeSize = this.cubeSize;
         var x = Math.floor(position[0] / cubeSize)
         var y = Math.floor(position[1] / cubeSize)
@@ -124,6 +135,10 @@ export class Chunker {
         var vy = (Math.floor(pos[1] / cubeSize)) & mask
         var vz = (Math.floor(pos[2] / cubeSize)) & mask
         return [vx, vy, vz]
+    }
+
+    debug_getChunksLoadedCount() {
+        return Object.keys(this.chunks).length
     }
 }
 
