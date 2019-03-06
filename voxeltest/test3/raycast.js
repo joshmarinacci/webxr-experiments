@@ -1,5 +1,5 @@
 function traceRay_impl(
-    voxels,
+    voxelProvider,
     px, py, pz,
     dx, dy, dz,
     max_d,
@@ -25,18 +25,18 @@ function traceRay_impl(
         fx = ox - ix
         fy = oy - iy
         fz = oz - iz
-        b = voxels.getBlock(ix, iy, iz)
+        b = voxelProvider.getBlock(ix, iy, iz)
         if(b) {
             if(hit_pos) {
                 //Clamp to face on hit
-                hit_pos[0] = fx < EPSILON ? +ix : (fx > 1.0-EPSILON ? ix+1.0-EPSILON : ox)
-                hit_pos[1] = fy < EPSILON ? +iy : (fy > 1.0-EPSILON ? iy+1.0-EPSILON : oy)
-                hit_pos[2] = fz < EPSILON ? +iz : (fz > 1.0-EPSILON ? iz+1.0-EPSILON : oz)
+                hit_pos.x = fx < EPSILON ? +ix : (fx > 1.0-EPSILON ? ix+1.0-EPSILON : ox)
+                hit_pos.y = fy < EPSILON ? +iy : (fy > 1.0-EPSILON ? iy+1.0-EPSILON : oy)
+                hit_pos.z = fz < EPSILON ? +iz : (fz > 1.0-EPSILON ? iz+1.0-EPSILON : oz)
             }
             if(hit_norm) {
-                hit_norm[0] = nx
-                hit_norm[1] = ny
-                hit_norm[2] = nz
+                hit_norm.x = nx
+                hit_norm.y = ny
+                hit_norm.z = nz
             }
             return b
         }
@@ -47,67 +47,67 @@ function traceRay_impl(
             ey = ny < 0 ? fy <= min_step : fy >= 1.0 - min_step
             ez = nz < 0 ? fz <= min_step : fz >= 1.0 - min_step
             if(ex && ey && ez) {
-                b = voxels.getBlock(ix+nx, iy+ny, iz) ||
-                    voxels.getBlock(ix, iy+ny, iz+nz) ||
-                    voxels.getBlock(ix+nx, iy, iz+nz)
+                b = voxelProvider.getBlock(ix+nx, iy+ny, iz) ||
+                    voxelProvider.getBlock(ix, iy+ny, iz+nz) ||
+                    voxelProvider.getBlock(ix+nx, iy, iz+nz)
                 if(b) {
                     if(hit_pos) {
-                        hit_pos[0] = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
-                        hit_pos[1] = ny < 0 ? iy-EPSILON : iy + 1.0-EPSILON
-                        hit_pos[2] = nz < 0 ? iz-EPSILON : iz + 1.0-EPSILON
+                        hit_pos.x = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
+                        hit_pos.y = ny < 0 ? iy-EPSILON : iy + 1.0-EPSILON
+                        hit_pos.z = nz < 0 ? iz-EPSILON : iz + 1.0-EPSILON
                     }
                     if(hit_norm) {
-                        hit_norm[0] = nx
-                        hit_norm[1] = ny
-                        hit_norm[2] = nz
+                        hit_norm.x = nx
+                        hit_norm.y = ny
+                        hit_norm.z = nz
                     }
                     return b
                 }
             }
             if(ex && (ey || ez)) {
-                b = voxels.getBlock(ix+nx, iy, iz)
+                b = voxelProvider.getBlock(ix+nx, iy, iz)
                 if(b) {
                     if(hit_pos) {
-                        hit_pos[0] = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
-                        hit_pos[1] = fy < EPSILON ? +iy : oy
-                        hit_pos[2] = fz < EPSILON ? +iz : oz
+                        hit_pos.x = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
+                        hit_pos.y = fy < EPSILON ? +iy : oy
+                        hit_pos.z = fz < EPSILON ? +iz : oz
                     }
                     if(hit_norm) {
-                        hit_norm[0] = nx
-                        hit_norm[1] = ny
-                        hit_norm[2] = nz
+                        hit_norm.x = nx
+                        hit_norm.y = ny
+                        hit_norm.z = nz
                     }
                     return b
                 }
             }
             if(ey && (ex || ez)) {
-                b = voxels.getBlock(ix, iy+ny, iz)
+                b = voxelProvider.getBlock(ix, iy+ny, iz)
                 if(b) {
                     if(hit_pos) {
-                        hit_pos[0] = fx < EPSILON ? +ix : ox
-                        hit_pos[1] = ny < 0 ? iy-EPSILON : iy + 1.0-EPSILON
-                        hit_pos[2] = fz < EPSILON ? +iz : oz
+                        hit_pos.x = fx < EPSILON ? +ix : ox
+                        hit_pos.y = ny < 0 ? iy-EPSILON : iy + 1.0-EPSILON
+                        hit_pos.z = fz < EPSILON ? +iz : oz
                     }
                     if(hit_norm) {
-                        hit_norm[0] = nx
-                        hit_norm[1] = ny
-                        hit_norm[2] = nz
+                        hit_norm.x = nx
+                        hit_norm.y = ny
+                        hit_norm.z = nz
                     }
                     return b
                 }
             }
             if(ez && (ex || ey)) {
-                b = voxels.getBlock(ix, iy, iz+nz)
+                b = voxelProvider.getBlock(ix, iy, iz+nz)
                 if(b) {
                     if(hit_pos) {
-                        hit_pos[0] = fx < EPSILON ? +ix : ox
-                        hit_pos[1] = fy < EPSILON ? +iy : oy
-                        hit_pos[2] = nz < 0 ? iz-EPSILON : iz + 1.0-EPSILON
+                        hit_pos.x = fx < EPSILON ? +ix : ox
+                        hit_pos.y = fy < EPSILON ? +iy : oy
+                        hit_pos.z = nz < 0 ? iz-EPSILON : iz + 1.0-EPSILON
                     }
                     if(hit_norm) {
-                        hit_norm[0] = nx
-                        hit_norm[1] = ny
-                        hit_norm[2] = nz
+                        hit_norm.x = nx
+                        hit_norm.y = ny
+                        hit_norm.z = nz
                     }
                     return b
                 }
@@ -175,17 +175,17 @@ function traceRay_impl(
         t += step
     }
     if(hit_pos) {
-        hit_pos[0] = ox;
-        hit_pos[1] = oy;
-        hit_pos[2] = oz;
+        hit_pos.x = ox;
+        hit_pos.y = oy;
+        hit_pos.z = oz;
     }
     if(hit_norm) {
-        hit_norm[0] = hit_norm[1] = hit_norm[2] = 0;
+        hit_norm.x = hit_norm.y = hit_norm.z = 0;
     }
     return 0
 }
 
-function startTraceRay(voxels, origin, direction, max_d, hit_pos, hit_norm, EPSILON) {
+function startTraceRay(voxelProvider, origin, direction, max_d, hit_pos, hit_norm, EPSILON) {
     // console.log("tracing",origin,direction)
     var px = +origin.x
         , py = +origin.y
@@ -199,10 +199,10 @@ function startTraceRay(voxels, origin, direction, max_d, hit_pos, hit_norm, EPSI
     }
     if(ds < EPSILON) {
         if(hit_pos) {
-            hit_pos[0] = hit_pos[1] = hit_pos[2]
+            hit_pos.x = hit_pos.y = hit_pos.z
         }
         if(hit_norm) {
-            hit_norm[0] = hit_norm[1] = hit_norm[2]
+            hit_norm.x = hit_norm.y = hit_norm.z
         }
         return 0;
     }
@@ -214,7 +214,7 @@ function startTraceRay(voxels, origin, direction, max_d, hit_pos, hit_norm, EPSI
     } else {
         max_d = +max_d
     }
-    return traceRay_impl(voxels, px, py, pz, dx, dy, dz, max_d, hit_pos, hit_norm, EPSILON)
+    return traceRay_impl(voxelProvider, px, py, pz, dx, dy, dz, max_d, hit_pos, hit_norm, EPSILON)
 }
 
 export const traceRay = startTraceRay

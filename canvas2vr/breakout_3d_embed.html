@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebXR + ThreeJS Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        html, body {
+            padding:0;
+            margin:0;
+            border-width: 0;
+        }
+        #container {
+            border: 0px solid red;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #fullscreen, #entervr {
+            display: none;
+        }
+        #overlay {
+            position: absolute;
+            top:0;
+            left:0;
+            right:0;
+            bottom: 0;
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        #entervr, #fullscreen {
+            font: 50pt sans-serif;
+            font-size: 50pt;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+<div id="overlay">
+    <div>
+    <div id="progress">
+        <label>loading</label>
+        <progress id="progress-bar" value="0.5"></progress>
+    </div>
+    <button id="fullscreen">play full screen</button>
+    <button id="entervr">enter vr</button>
+    </div>
+</div>
+
+
+
+
+<script type="module">
+    import Game from "./breakout.js"
+    import {Pointer} from "./Pointer.js"
+    import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
+    import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
+        Color, DirectionalLight, AmbientLight,
+        TextureLoader, CanvasTexture, PlaneGeometry,
+        Vector3,
+    } from "./node_modules/three/build/three.module.js"
+    import VRStats from "./vrstats.js";
+    import {LERP_TYPES, PROP_TYPES, t2 as T2} from './t2.js'
+
+    //JQuery-like selector
+    const $ = (sel) => document.querySelector(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+
+    let game, htmlCanvas, gamemesh, canvas_texture
+
+
+    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff,0x000000]
+    let currentColor = 0
+    function nextColor() {
+        currentColor = (currentColor+1)%colors.length
+        return colors[currentColor]
+    }
+
+    const app = new WebXRBoilerPlate({
+        container: $("#container")
+    })
+    app.init().then((app) => {
+        app.scene.background = new Color( 0xcccccc );
+        const stats = new VRStats()
+        app.camera.add(stats)
+
+
+        htmlCanvas = document.createElement('canvas')
+        htmlCanvas.width = 512
+        htmlCanvas.height = 512
+
+        game = new Game(htmlCanvas)
+        // game.setupKeyboard()
+        game.onBounce(()=>{
+            app.scene.background.set(nextColor())
+        })
+
+        canvas_texture = new CanvasTexture(htmlCanvas)
+        gamemesh = new Mesh(
+            new PlaneGeometry(2,2),
+            new MeshLambertMaterial({map:canvas_texture})
+        )
+        gamemesh.position.set(0,1.5,-3)
+        app.scene.add(gamemesh)
+
+
+        game.onBreak(()=>{
+            T2.sequence()
+                .then(T2.prop({
+                    target:gamemesh,
+                    property:'scale',
+                    propertyType:PROP_TYPES.COMPOUND,
+                    lerpType:LERP_TYPES.ELASTIC,
+                    from:{x:0.9,y:0.9,z:0.9},
+                    to:{x:1.0,y:1.0,z:1.0},
+                    duration:1.0,
+                }))
+                .start()
+        })
+
+        //load a cat texture
+        const texture_loader = new TextureLoader()
+        //cat from http://creative-commons-cats.tumblr.com/page/3
+        const texture = texture_loader.load('./cat.jpg')
+
+        //a standard ambient light
+        app.scene.add(new AmbientLight(0xffffff,0.3))
+
+
+        const pointer = new Pointer(app.scene,app.renderer,app.camera,{
+            mouseSimulatesController:false,
+            enableLaser:false,
+        })
+
+
+        app.onRender((time,app)=> {
+            pointer.tick()
+            T2.update(time)
+            const dir = new Vector3(0, 0, -1)
+            dir.applyQuaternion(pointer.controller1.quaternion)
+            dir.projectOnPlane(new Vector3(0,1,0))
+            const fx = (dir.x+0.7)*400
+            game.setPaddleX(fx)
+            game.draw()
+            canvas_texture.needsUpdate = true
+        })
+
+        function loadBackgroundMusic(url) {
+            const music = new Audio(url)
+            music.autoplay = false
+            music.loop = true
+            music.controls = false
+            music.preload = 'auto'
+            music.volume = 0.75
+            on(music,'canplay',()=>{
+                console.log("LOADED:",url)
+                // $("#how").innerHTML = "done!"
+            })
+            return music
+        }
+
+        //http://freemusicarchive.org/music/BoxCat_Games/Nameless_the_Hackers_RPG_Soundtrack/
+        const music = loadBackgroundMusic("./BoxCat_Games_-_10_-_Epic_Song")
+        //update progress indicator
+        on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
+
+        //when all assets are loaded
+        on(app,'loaded',()=>{
+            // hide the loading progress bar
+            $("#progress").style.display = 'none'
+            //show the fullscreen button
+            $("#fullscreen").style.display = 'block'
+            on($("#fullscreen"),'click',()=> {
+                pointer.setMouseSimulatesController(true)
+                music.play()
+                app.playFullscreen()
+            })
+        })
+        //when VR support is detected
+        on(app,'detected',()=>{
+            console.log('detected')
+            // show the enter VR button
+            $("#entervr").style.display = 'block'
+            on($("#entervr"),'click',()=> {
+                music.play()
+                app.enterVR()
+            })
+        })
+
+
+
+    })
+
+</script>
+</body>
+</html>
