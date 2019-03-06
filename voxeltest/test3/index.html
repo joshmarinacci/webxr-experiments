@@ -232,14 +232,14 @@
         const RAYCAST_DISTANCE = 30
 
 
-        const threeDofController = new ThreeDOFController(stagePos, stageRot)
+        const threeDofController = new ThreeDOFController(app)
 
-        const desktopController = new DesktopController(app.camera, app.renderer.domElement, stagePos,stageRot, RAYCAST_DISTANCE, chunkManager)
+        const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
         on(desktopController,'highlight',(pos) => highlight_cube.position.copy(pos))
         on(desktopController,'setblock',(pos) => setBlock(pos,2))
         on(desktopController,'removeblock',(pos) => setBlock(pos,0))
 
-        const fullscreenController = new FullScreenControls(app.renderer.domElement,stageRot, stagePos, chunkManager)
+        const fullscreenController = new FullScreenControls(app, chunkManager)
         on(fullscreenController,'highlight',(pos) => highlight_cube.position.copy(pos))
         on(fullscreenController,'setblock',(pos) => setBlock(pos,2))
         on(fullscreenController,'removeblock',(pos) => setBlock(pos,0))

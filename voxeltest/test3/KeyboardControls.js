@@ -1,6 +1,6 @@
-import {Ray, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Vector3,} from "./node_modules/three/build/three.module.js"
 const toRad = (deg) => Math.PI / 180 * deg
-const YAXIS = new Vector3(0,1,0)
+const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
 export class KeyboardControls {
@@ -65,13 +65,13 @@ export class KeyboardControls {
     }
     getSpeedDirection() {
         const dir = new Vector3(0,0,1)
-        dir.applyAxisAngle(YAXIS, -this.app.stageRot.rotation.y)
+        dir.applyAxisAngle(Y_AXIS, -this.app.stageRot.rotation.y)
         return dir.normalize().multiplyScalar(SPEED)
     }
     glideLeft() {
-        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(90)))
+        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(90)))
     }
     glideRight() {
-        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(-90)))
+        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(-90)))
     }
 }

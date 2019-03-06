@@ -8,12 +8,10 @@ const HAS_POINTER_LOCK = 'pointerLockElement' in document ||
 const toRad = (deg) => Math.PI / 180 * deg
 
 export class FullScreenControls {
-    constructor(canvas, stageRot, stagePos, chunkManager) {
+    constructor(app, chunkManager) {
+        this.app = app
         this.enabled = false
-        this.canvas = canvas
         this.listeners = {}
-        this.stagePos = stagePos
-        this.stageRot = stageRot
         this.chunkManager = chunkManager
 
         this.changeCallback = () => {
@@ -26,13 +24,13 @@ export class FullScreenControls {
         }
         this.moveCallback = (e) => {
             if(!this.enabled) return
-            this.stageRot.rotation.y += e.movementX/300
-            this.stageRot.rotation.y += e.movementX/300
+            this.app.stageRot.rotation.y += e.movementX/300
+            this.app.stageRot.rotation.y += e.movementX/300
 
             if(e.movementY) {
-                this.stageRot.rotation.x += e.movementY/500
-                this.stageRot.rotation.x = Math.max(this.stageRot.rotation.x,toRad(-45))
-                this.stageRot.rotation.x = Math.min(this.stageRot.rotation.x,toRad(45))
+                this.app.stageRot.rotation.x += e.movementY/500
+                this.app.stageRot.rotation.x = Math.max(this.app.stageRot.rotation.x,toRad(-45))
+                this.app.stageRot.rotation.x = Math.min(this.app.stageRot.rotation.x,toRad(45))
             }
 
 
@@ -67,10 +65,10 @@ export class FullScreenControls {
     traceRay() {
         const target = new Vector3(0,1.6,-1)
         // target.add(this.camera.position)
-        this.stagePos.worldToLocal(target)
+        this.app.stagePos.worldToLocal(target)
 
         const pos = new Vector3(0,1.6,0)//this.camera.position.clone()
-        this.stagePos.worldToLocal(pos)
+        this.app.stagePos.worldToLocal(pos)
         const ray = new Ray(pos)
         ray.lookAt(target)
         // console.log("looking at",target)
@@ -97,7 +95,7 @@ export class FullScreenControls {
             document.addEventListener('mousemove',this.moveCallback,false)
             document.addEventListener('pointerlockerror', this.errorCallback, false);
             document.addEventListener('mousedown',this.mousedownCallback,false)
-            this.canvas.requestPointerLock()
+            this.app.renderer.domElement.requestPointerLock()
         }
     }
     disable() {

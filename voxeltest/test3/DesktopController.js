@@ -1,37 +1,30 @@
-import {Mesh, MeshLambertMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3, Vector2,
-    Ray,
-    TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
-
+import {Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
 
+const LEFT_MOUSE_BUTTON = 1
+const RIGHT_MOUSE_BUTTON = 2
 
 export class DesktopController {
 
-    constructor(camera, canvas, stagePos, stageRot, distance, chunkManager) {
-        this.camera = camera
-        this.canvas = canvas
+    constructor(app, distance, chunkManager) {
+        this.app = app
         this.listeners = {}
         this.chunkManager = chunkManager
         this.distance = distance
-        this.stagePos = stagePos
-        this.stageRot = stageRot
         this.enabled = false
-        canvas.addEventListener('contextmenu',e => {
+        this.app.renderer.domElement.addEventListener('contextmenu',e => {
             e.preventDefault()
             e.stopPropagation()
         })
-        canvas.addEventListener('mousemove',e => {
+        this.app.renderer.domElement.addEventListener('mousemove',e => {
             if(!this.enabled) return
             const res = this.traceRay(e)
             res.hitPosition.floor()
             this.fire('highlight',res.hitPosition)
         })
-        canvas.addEventListener('mousedown',e => {
+        this.app.renderer.domElement.addEventListener('mousedown',e => {
             if(!this.enabled) return
 
-            const LEFT_MOUSE_BUTTON = 1
-            const RIGHT_MOUSE_BUTTON = 2
             if(e.buttons === LEFT_MOUSE_BUTTON) {
                 const res = this.traceRay(e)
                 res.hitPosition.add(res.hitNormal)
@@ -42,7 +35,7 @@ export class DesktopController {
                 this.fire('removeblock',res.hitPosition)
             }
         })
-        canvas.addEventListener('mouseup',e => {
+        this.app.renderer.domElement.addEventListener('mouseup',e => {
         })
     }
     addEventListener(type,cb) {
@@ -55,15 +48,15 @@ export class DesktopController {
     }
     traceRay(e) {
         const mouse = new Vector2()
-        const bounds = this.canvas.getBoundingClientRect()
+        const bounds = this.app.renderer.domElement.getBoundingClientRect()
         mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         const target = new Vector3(mouse.x,mouse.y,-1)
-        target.add(this.camera.position)
-        this.stagePos.worldToLocal(target)
+        target.add(this.app.camera.position)
+        this.app.stagePos.worldToLocal(target)
 
-        const pos = this.camera.position.clone()
-        this.stagePos.worldToLocal(pos)
+        const pos = this.app.camera.position.clone()
+        this.app.stagePos.worldToLocal(pos)
         const ray = new Ray(pos)
         ray.lookAt(target)
 

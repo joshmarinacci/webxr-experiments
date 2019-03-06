@@ -11,9 +11,10 @@ const SPEED = 0.1
 export default class ThreeDOFController {
 
 
-    constructor(stagePos, stageRot) {
-        this.stagePos = stagePos
-        this.stageRot = stageRot
+    constructor(app) {
+        this.app = app
+        this.stagePos = app.stagePos
+        this.stageRot = app.stageRot
         this.states = { touchpad: false}
         this.dir = new Vector3(0,0,1)
         this.enabled = false
