@@ -1,5 +1,5 @@
 import {Ray, Vector3,} from "./node_modules/three/build/three.module.js"
-import {traceRay} from './raycast'
+import {traceRay} from './raycast.js'
 
 const HAS_POINTER_LOCK = 'pointerLockElement' in document ||
     'mozPointerLockElement' in document ||
