@@ -8,7 +8,7 @@ import {POINTER_CLICK} from './Pointer.js'
 
 
 const toRad = (deg) => Math.PI/180*deg
-const YAXIS = new Vector3(0,1,0)
+const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
 export default class ThreeDOFController {
@@ -22,7 +22,6 @@ export default class ThreeDOFController {
         this.stagePos = app.stagePos
         this.stageRot = app.stageRot
         this.states = { touchpad: false}
-        this.dir = new Vector3(0,0,1)
         this.enabled = false
         this.pointer = new Pointer(app,{
             //don't intersect with anything. only use for orientation and trigger state
@@ -41,7 +40,7 @@ export default class ThreeDOFController {
     traceRay() {
         const direction = new Vector3(0, 0, -1)
         direction.applyQuaternion(this.pointer.controller1.quaternion)
-        direction.applyAxisAngle(YAXIS,-this.app.stageRot.rotation.y)
+        direction.applyAxisAngle(Y_AXIS,-this.app.stageRot.rotation.y)
 
         const pos = this.app.stagePos.worldToLocal(this.pointer.controller1.position.clone())
 
@@ -66,15 +65,15 @@ export default class ThreeDOFController {
     }
 
     rotateLeft() {
-        this.dir.applyAxisAngle(YAXIS,toRad(30))
-        this.stageRot.rotation.y -= toRad(30)
+        this.app.stageRot.rotation.y -= toRad(30)
     }
     rotateRight() {
-        this.dir.applyAxisAngle(YAXIS,-toRad(30))
-        this.stageRot.rotation.y += toRad(30)
+        this.app.stageRot.rotation.y += toRad(30)
     }
     getSpeedDirection() {
-        return this.dir.clone().normalize().multiplyScalar(SPEED)
+        const dir = new Vector3(0,0,1)
+        dir.applyAxisAngle(Y_AXIS, -this.app.stageRot.rotation.y)
+        return dir.normalize().multiplyScalar(SPEED)
     }
     glideBackward() {
         this.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
@@ -97,7 +96,7 @@ export default class ThreeDOFController {
 
         const dir = new Vector3(0, 0, -1)
         dir.applyQuaternion(this.pointer.controller1.quaternion)
-        dir.applyAxisAngle(YAXIS,-this.app.stageRot.rotation.y)
+        dir.applyAxisAngle(Y_AXIS,-this.app.stageRot.rotation.y)
         const epilson = 1e-8
         const pos = this.app.stagePos.worldToLocal(this.pointer.controller1.position.clone())
         const hitNormal = new Vector3(0,0,0)
