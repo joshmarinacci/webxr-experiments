@@ -236,7 +236,10 @@
         on(desktopController,'setblock',(pos) => setBlock(pos,2))
         on(desktopController,'removeblock',(pos) => setBlock(pos,0))
 
-        const fullscreenController = new FullScreenControls(app.renderer.domElement,stageRot)
+        const fullscreenController = new FullScreenControls(app.renderer.domElement,stageRot, stagePos, chunkManager)
+        on(fullscreenController,'highlight',(pos) => highlight_cube.position.copy(pos))
+        on(fullscreenController,'setblock',(pos) => setBlock(pos,2))
+        on(fullscreenController,'removeblock',(pos) => setBlock(pos,0))
         on(fullscreenController,'exit',()=>{
             app.exitFullscreen()
             fullscreenController.disable()
@@ -276,6 +279,7 @@
         app.onRender((time, app)=> {
             materials.tick(time)
             desktopController.update(time)
+            fullscreenController.update(time)
             updateChunks()
         })
 
