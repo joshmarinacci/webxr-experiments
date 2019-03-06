@@ -86,7 +86,7 @@
     import {traceRay} from "./raycast.js"
     import {POINTER_CLICK} from './Pointer.js'
     import { DesktopController} from './DesktopController.js'
-
+    import { FullScreenControls} from './FullscreenControls.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -236,6 +236,13 @@
         on(desktopController,'setblock',(pos) => setBlock(pos,2))
         on(desktopController,'removeblock',(pos) => setBlock(pos,0))
 
+        const fullscreenController = new FullScreenControls(app.renderer.domElement,stageRot)
+        on(fullscreenController,'exit',()=>{
+            app.exitFullscreen()
+            fullscreenController.disable()
+            desktopController.enable()
+        })
+
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
@@ -275,6 +282,8 @@
         //update progress indicator while loading
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 
+        desktopController.enable()
+
         //when all assets are loaded
         on(app,'loaded',()=>{
             // hide the loading progress bar
@@ -282,7 +291,11 @@
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
             on($("#fullscreen"),'click',()=> {
+                desktopController.disable()
                 app.playFullscreen()
+                setTimeout(()=>{
+                    fullscreenController.enable()
+                },100)
             })
         })
         //when VR support is detected

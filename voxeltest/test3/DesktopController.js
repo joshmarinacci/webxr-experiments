@@ -19,19 +19,20 @@ export class DesktopController {
         this.distance = distance
         this.stagePos = stagePos
         this.stageRot = stageRot
+        this.enabled = false
         canvas.addEventListener('contextmenu',e => {
             e.preventDefault()
             e.stopPropagation()
         })
         canvas.addEventListener('mousemove',e => {
+            if(!this.enabled) return
             const res = this.traceRay(e)
             res.hitPosition.floor()
             this.fire('highlight',res.hitPosition)
             // highlight_cube.position.copy(res.hitPosition)
         })
         canvas.addEventListener('mousedown',e => {
-            e.preventDefault()
-            e.stopPropagation()
+            if(!this.enabled) return
 
             console.log(e.buttons)
             const LEFT_MOUSE_BUTTON = 1
@@ -51,8 +52,6 @@ export class DesktopController {
         canvas.addEventListener('mouseup',e => {
             // console.log("down")
         })
-
-        this.dir = new Vector3(0,0,1)
 
         this.keystates = {
             ArrowLeft:{current:false, previous:false},
@@ -109,9 +108,18 @@ export class DesktopController {
             hitNormal: hitNormal
         }
     }
+    enable() {
+        this.enabled = true
+    }
+    disable() {
+        this.enabled = false
+    }
     update(time) {
+        if(!this.enabled) return
         if(this.keystates.ArrowUp.current === true)  this.glideForward()
         if(this.keystates.ArrowDown.current === true)  this.glideBackward()
+        if(this.keystates.ArrowLeft.current === true)  this.rotateLeft()
+        if(this.keystates.ArrowRight.current === true)  this.rotateRight()
         if(this.keystates.a.current === true)  this.glideLeft()
         if(this.keystates.d.current === true)  this.glideRight()
         if(this.keystates.w.current === true)  this.glideForward()
@@ -124,7 +132,9 @@ export class DesktopController {
         this.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
     }
     getSpeedDirection() {
-        return this.dir.clone().normalize().multiplyScalar(SPEED)
+        const dir = new Vector3(0,0,1)
+        dir.applyAxisAngle(YAXIS, -this.stageRot.rotation.y)
+        return dir.normalize().multiplyScalar(SPEED)
     }
     glideLeft() {
         this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(90)))
@@ -132,4 +142,12 @@ export class DesktopController {
     glideRight() {
         this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(-90)))
     }
+    rotateLeft() {
+        this.stageRot.rotation.y -= toRad(3)
+    }
+
+    rotateRight() {
+        this.stageRot.rotation.y += toRad(3)
+    }
+
 }
