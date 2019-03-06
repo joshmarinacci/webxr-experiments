@@ -77,13 +77,15 @@
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial,
-        Color, DirectionalLight, AmbientLight, Vector3,
+        Color, DirectionalLight, AmbientLight, Vector3, Vector2,
+        Ray,
         TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof.js"
     import {Pointer} from "./Pointer.js"
     import {traceRay} from "./raycast.js"
     import {POINTER_CLICK} from './Pointer.js'
+    import { DesktopController} from './DesktopController.js'
 
 
     //JQuery-like selector
@@ -99,6 +101,7 @@
     app.init().then((app) => {
         app.scene.background = new Color( 0xcccccc );
 
+        /*
         const pointer = new Pointer(app,{
             //Pointer searches everything in the scene by default
             //override this to match just certain things
@@ -114,6 +117,7 @@
             //turn this off if you provide your own pointer model
             enableLaser: true,
         })
+        */
 
 
         //load a cat texture
@@ -179,6 +183,7 @@
         const stagePos = new Group()
         stageRot.add(stagePos)
         stagePos.position.z = 0
+        stagePos.position.x = 3
 
         const group = new Group()
         stagePos.add(group)
@@ -221,9 +226,15 @@
 
         //a standard ambient light
         app.scene.add(new AmbientLight(0xffffff,0.3))
+        const RAYCAST_DISTANCE = 30
 
 
-        const controller = new ThreeDOFController(stagePos, stageRot)
+        const threeDofController = new ThreeDOFController(stagePos, stageRot)
+
+        const desktopController = new DesktopController(app.camera, app.renderer.domElement, stagePos,stageRot, RAYCAST_DISTANCE, chunkManager)
+        on(desktopController,'highlight',(pos) => highlight_cube.position.copy(pos))
+        on(desktopController,'setblock',(pos) => setBlock(pos,2))
+        on(desktopController,'removeblock',(pos) => setBlock(pos,0))
 
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
@@ -252,47 +263,14 @@
             if(chunk) rebuildMesh(chunk)
         }
 
-        const RAYCAST_DISTANCE = 30
-
-        function updateHighlight() {
-            const dir = new Vector3(0, 0, -1)
-            dir.applyQuaternion(pointer.controller1.quaternion)
-            dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
-            const epilson = 1e-8
-            const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
-            const hitNormal = new Vector3(0,0,0)
-            const distance = RAYCAST_DISTANCE
-            const hitPosition = new Vector3(0,0,0)
-            const hitBlock = traceRay(chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
-            if(hitBlock <= 0) return
-            hitPosition.floor()
-            highlight_cube.position.copy(hitPosition)
-        }
 
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
-            pointer.tick(time)
             materials.tick(time)
-            controller.update(time)
+            desktopController.update(time)
             updateChunks()
-            updateHighlight()
         })
-
-        pointer.on(POINTER_CLICK,()=>{
-            const dir = new Vector3(0, 0, -1)
-            dir.applyQuaternion(pointer.controller1.quaternion)
-            dir.applyAxisAngle(YAXIS,-stageRot.rotation.y)
-            const epilson = 1e-8
-            const pos = stagePos.worldToLocal(pointer.controller1.position.clone())
-            const hitNormal = new Vector3(0,0,0)
-            const distance = RAYCAST_DISTANCE
-            const hitPosition = new Vector3(0,0,0)
-            const hitBlock = traceRay(chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
-            setBlock(hitPosition, 0)
-        })
-
-
 
         //update progress indicator while loading
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
@@ -312,7 +290,7 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
-                pointer.setMouseSimulatesController(false)
+                // pointer.setMouseSimulatesController(false)
                 app.enterVR()
             })
         })
