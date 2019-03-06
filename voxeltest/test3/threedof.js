@@ -19,8 +19,6 @@ export default class ThreeDOFController {
         this.app = app
         this.distance = distance
         this.chunkManager = chunkManager
-        this.stagePos = app.stagePos
-        this.stageRot = app.stageRot
         this.states = { touchpad: false}
         this.enabled = false
         this.pointer = new Pointer(app,{
@@ -71,15 +69,18 @@ export default class ThreeDOFController {
         this.app.stageRot.rotation.y += toRad(30)
     }
     getSpeedDirection() {
-        const dir = new Vector3(0,0,1)
-        dir.applyAxisAngle(Y_AXIS, -this.app.stageRot.rotation.y)
-        return dir.normalize().multiplyScalar(SPEED)
+        const direction = new Vector3(0, 0, 1)
+        //apply the controller rotation to it
+        direction.applyQuaternion(this.pointer.controller1.quaternion)
+        //apply the stage rotation to it
+        direction.applyAxisAngle(Y_AXIS,-this.app.stageRot.rotation.y)
+        return direction.normalize().multiplyScalar(SPEED)
     }
     glideBackward() {
-        this.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+        this.app.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
     }
     glideForward() {
-        this.stagePos.position.add(this.getSpeedDirection())
+        this.app.stagePos.position.add(this.getSpeedDirection())
     }
 
     update(time) {
@@ -93,19 +94,10 @@ export default class ThreeDOFController {
 
     updateCursor(time) {
         this.pointer.tick(time)
-
-        const dir = new Vector3(0, 0, -1)
-        dir.applyQuaternion(this.pointer.controller1.quaternion)
-        dir.applyAxisAngle(Y_AXIS,-this.app.stageRot.rotation.y)
-        const epilson = 1e-8
-        const pos = this.app.stagePos.worldToLocal(this.pointer.controller1.position.clone())
-        const hitNormal = new Vector3(0,0,0)
-        const distance = this.distance
-        const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
-        if(hitBlock <= 0) return
-        hitPosition.floor()
-        this.fire('highlight',hitPosition)
+        const res = this.traceRay()
+        res.hitPosition.add(res.hitNormal)
+        res.hitPosition.floor()
+        this.fire('highlight',res.hitPosition)
     }
 
     scanGamepads() {
