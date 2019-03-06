@@ -89,3 +89,30 @@ Open questions
 
 
 Currently VoxelJS
+
+
+===========
+
+
+
+design for navigation and interaction
+
+In regular minecraft in full screen on desktop mode you are always interacting with whatever is in the center of the camera.  Press the right mouse button tto create a block. press the left mouse button to smash a block. always you are interacting with the block in the center of the camera. there is a cross hairs to show you where you are pointing. for full screen mode on desktop I think this makes sense.
+
+movement is done with the WASD keys. W and S move forward and backward in the direction of the camera. A and D move left and right, side stepping, again relative to the camera. to turn left or right you simply move the camera using the mouse. the camera is always controlled by the mouse.
+
+the equivlant in VR could then be:  your head turns the camera and pressing the up and down keys move you in the direction of the camera, not in the direction of the pointer.  the same with left and right.    alternatively, they could be relative to the pointer, so you could point and move to the left while looking to the right. the only way to know is to test it out.
+
+in VR interaction with blocks should definitely be by pointing at a block with the laser and using the trigger.  click to destroy. but what to use for placing new blocks, since we don't have a right click eqiuvalent. possiblities:
+
+* hold and press trigger to break blocks
+* can I capture the back button for a menu?
+* repurpose the left and right buttons?
+
+
+for moving forward we should press and hold the W or trigger buttons, instead of clicking to jump ahead. Will this be more disorienting than jumping one meter ahead per click?
+
+
+
+
+ 
