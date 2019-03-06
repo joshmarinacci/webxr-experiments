@@ -15,73 +15,18 @@ export default class ThreeDOFController {
         this.stagePos = stagePos
         this.stageRot = stageRot
         this.states = { touchpad: false}
-        this.keystates = {
-            ArrowLeft:{current:false, previous:false},
-            ArrowRight:{current:false, previous:false},
-            ArrowUp:{current:false, previous:false},
-            ArrowDown:{current:false, previous:false},
-            a: { current: false, previous: false},
-            d: { current: false, previous: false},
-        }
         this.dir = new Vector3(0,0,1)
-
-
-        document.addEventListener('keydown',(e)=>{
-            if(this.keystates[e.key]) {
-                this.keystates[e.key].current = true
-            }
-        })
-        document.addEventListener('keyup',(e)=>{
-            if(this.keystates[e.key]) {
-                this.keystates[e.key].current = false
-            }
-        })
-
-    }
-
-
-
-    updateKeys() {
-        if(this.keystates.ArrowLeft.current === false && this.keystates.ArrowLeft.previous === true) {
-            this.rotateLeft()
-        }
-        if(this.keystates.ArrowRight.current === false && this.keystates.ArrowRight.previous === true) {
-            this.rotateRight()
-        }
-
-        if(this.keystates.ArrowUp.current === true)  this.glideForward()
-        if(this.keystates.ArrowDown.current === true)  this.glideBackward()
-        if(this.keystates.a.current === true)  this.glideLeft()
-        if(this.keystates.d.current === true)  this.glideRight()
-
-
-        Object.keys(this.keystates).forEach(key => {
-            this.keystates[key].previous = this.keystates[key].current
-        })
+        this.enabled = false
     }
 
     rotateLeft() {
         this.dir.applyAxisAngle(YAXIS,toRad(30))
         this.stageRot.rotation.y -= toRad(30)
     }
-
     rotateRight() {
         this.dir.applyAxisAngle(YAXIS,-toRad(30))
         this.stageRot.rotation.y += toRad(30)
     }
-
-    moveLeft() {
-        const d2 = this.dir.clone().applyAxisAngle(YAXIS,toRad(90))
-        this.stagePos.position.add(d2)
-    }
-    moveRight() {
-        const d2 = this.dir.clone().applyAxisAngle(YAXIS,toRad(-90))
-        this.stagePos.position.add(d2)
-    }
-    moveForward() {
-        this.stagePos.position.add(this.dir)
-    }
-
     getSpeedDirection() {
         return this.dir.clone().normalize().multiplyScalar(SPEED)
     }
@@ -91,23 +36,16 @@ export default class ThreeDOFController {
     glideForward() {
         this.stagePos.position.add(this.getSpeedDirection())
     }
-    glideLeft() {
-        this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(90)))
-    }
-    glideRight() {
-        this.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(YAXIS,toRad(-90)))
-    }
-
-    moveBackward() {
-        this.stagePos.position.sub(this.dir)
-    }
 
     update() {
         this.scanGamepads()
-        this.updateKeys()
+    }
+    enable() {
+        this.enabled = true
     }
 
     scanGamepads() {
+        if(!this.enabled) return
         // console.log("gamepads",navigator.getGamepads())
         const gamepads = navigator.getGamepads()
         for(let i=0; i<gamepads.length; i++) {

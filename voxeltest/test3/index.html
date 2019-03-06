@@ -87,6 +87,7 @@
     import {POINTER_CLICK} from './Pointer.js'
     import { DesktopController} from './DesktopController.js'
     import { FullScreenControls} from './FullscreenControls.js'
+    import { KeyboardControls } from './KeyboardControls.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -180,10 +181,12 @@
 
         const stageRot = new Group()
         app.scene.add(stageRot)
+        app.stageRot = stageRot
         const stagePos = new Group()
         stageRot.add(stagePos)
         stagePos.position.z = 0
         stagePos.position.x = 3
+        app.stagePos = stagePos
 
         const group = new Group()
         stagePos.add(group)
@@ -246,6 +249,10 @@
             desktopController.enable()
         })
 
+        const keyboardController = new KeyboardControls(app)
+        keyboardController.enable()
+
+
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
@@ -280,6 +287,8 @@
             materials.tick(time)
             desktopController.update(time)
             fullscreenController.update(time)
+            keyboardController.update(time)
+            threeDofController.update(time)
             updateChunks()
         })
 
@@ -308,6 +317,7 @@
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
                 // pointer.setMouseSimulatesController(false)
+                threeDofController.enable()
                 app.enterVR()
             })
         })
