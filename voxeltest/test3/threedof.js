@@ -28,6 +28,7 @@ export default class ThreeDOFController {
             mouseSimulatesController:false,
         })
         this.pointer.on(POINTER_CLICK, () => {
+            if(!this.enabled) return
             console.log("clicked")
             const res = this.traceRay()
             res.hitPosition.add(res.hitNormal)
