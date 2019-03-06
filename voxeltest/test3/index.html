@@ -183,20 +183,10 @@
         const group = new Group()
         stagePos.add(group)
 
-        function chunkPosToVector(pos) {
+        function chunkIndexToVector(pos) {
             return new Vector3(pos[0],pos[1],pos[2])
         }
 
-        chunkManager.on('missingChunk',(chunkId)=>{
-            const pos = chunkPosToVector(chunkId)
-            const chunk = chunkManager.generateChunk(pos)
-            chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
-            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
-            chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
-            materials.paint(chunk.surfaceMesh)
-            group.add(chunk.surfaceMesh)
-        })
-        chunkManager.requestMissingChunks(new Vector3(0,0,0))
 
         const YAXIS = new Vector3(0,1,0)
 
@@ -234,35 +224,32 @@
 
 
         const controller = new ThreeDOFController(stagePos, stageRot)
-        const parseVectorArguments = function(args) {
-            if (!args) return false
-            if (args[0] instanceof Array) return args[0]
-            return new Vector3(args[0], args[1], args[2])
+
+        function rebuildMesh(chunk) {
+            const pos = chunkIndexToVector(chunk.chunkPosition)
+            if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
+            chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
+            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
+            materials.paint(chunk.surfaceMesh)
+            group.add(chunk.surfaceMesh)
+            chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
         }
 
+        chunkManager.on('missingChunk',(chunkId)=>{
+            const chunk = chunkManager.generateChunk(chunkIndexToVector(chunkId))
+            rebuildMesh(chunk)
+        })
+        chunkManager.requestMissingChunks(new Vector3(0,0,0))
 
-        const fakeGame = {
-            getBlock:function(x,y,z) {
-                return chunkManager.voxelAtPosition(new Vector3(x,y,z))
-            },
-            setBlock: function(pos, value) {
-                pos.floor()
-                //set the actual value
-                chunkManager.voxelAtCoordinates(pos.x,pos.y,pos.z, value)
+        function setBlock(pos, value) {
+            pos.floor()
+            //set the actual value
+            chunkManager.setVoxelAtCoordinates(pos, value)
 
-                const chunkPos = chunkManager.chunkAtCoordinates(pos.x,pos.y,pos.z)
-                const chunkId = chunkPos.join("|")
-                const chunk = chunkManager.chunks[chunkId]
-                if(!chunk) return
-
-                //rebuild the mesh and surface mesh
-                if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
-                chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
-                chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
-                materials.paint(chunk.surfaceMesh)
-                group.add(chunk.surfaceMesh)
-                chunk.surfaceMesh.position.copy(chunkPosToVector(chunkPos).multiplyScalar(CHUNK_SIZE))
-            }
+            // update the chunk
+            const chunkIndex = chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
+            const chunk = chunkManager.chunks[chunkIndex.join("|")]
+            if(chunk) rebuildMesh(chunk)
         }
 
         const RAYCAST_DISTANCE = 30
@@ -276,7 +263,7 @@
             const hitNormal = new Vector3(0,0,0)
             const distance = RAYCAST_DISTANCE
             const hitPosition = new Vector3(0,0,0)
-            const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
+            const hitBlock = traceRay(chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
             if(hitBlock <= 0) return
             hitPosition.floor()
             highlight_cube.position.copy(hitPosition)
@@ -301,8 +288,8 @@
             const hitNormal = new Vector3(0,0,0)
             const distance = RAYCAST_DISTANCE
             const hitPosition = new Vector3(0,0,0)
-            const hitBlock = traceRay(fakeGame,pos,dir,distance,hitPosition,hitNormal,epilson)
-            fakeGame.setBlock(hitPosition, 0)
+            const hitBlock = traceRay(chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
+            setBlock(hitPosition, 0)
         })
 
 

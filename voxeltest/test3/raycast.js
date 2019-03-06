@@ -1,5 +1,5 @@
 function traceRay_impl(
-    voxels,
+    voxelProvider,
     px, py, pz,
     dx, dy, dz,
     max_d,
@@ -25,7 +25,7 @@ function traceRay_impl(
         fx = ox - ix
         fy = oy - iy
         fz = oz - iz
-        b = voxels.getBlock(ix, iy, iz)
+        b = voxelProvider.getBlock(ix, iy, iz)
         if(b) {
             if(hit_pos) {
                 //Clamp to face on hit
@@ -47,9 +47,9 @@ function traceRay_impl(
             ey = ny < 0 ? fy <= min_step : fy >= 1.0 - min_step
             ez = nz < 0 ? fz <= min_step : fz >= 1.0 - min_step
             if(ex && ey && ez) {
-                b = voxels.getBlock(ix+nx, iy+ny, iz) ||
-                    voxels.getBlock(ix, iy+ny, iz+nz) ||
-                    voxels.getBlock(ix+nx, iy, iz+nz)
+                b = voxelProvider.getBlock(ix+nx, iy+ny, iz) ||
+                    voxelProvider.getBlock(ix, iy+ny, iz+nz) ||
+                    voxelProvider.getBlock(ix+nx, iy, iz+nz)
                 if(b) {
                     if(hit_pos) {
                         hit_pos.x = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
@@ -65,7 +65,7 @@ function traceRay_impl(
                 }
             }
             if(ex && (ey || ez)) {
-                b = voxels.getBlock(ix+nx, iy, iz)
+                b = voxelProvider.getBlock(ix+nx, iy, iz)
                 if(b) {
                     if(hit_pos) {
                         hit_pos.x = nx < 0 ? ix-EPSILON : ix + 1.0-EPSILON
@@ -81,7 +81,7 @@ function traceRay_impl(
                 }
             }
             if(ey && (ex || ez)) {
-                b = voxels.getBlock(ix, iy+ny, iz)
+                b = voxelProvider.getBlock(ix, iy+ny, iz)
                 if(b) {
                     if(hit_pos) {
                         hit_pos.x = fx < EPSILON ? +ix : ox
@@ -97,7 +97,7 @@ function traceRay_impl(
                 }
             }
             if(ez && (ex || ey)) {
-                b = voxels.getBlock(ix, iy, iz+nz)
+                b = voxelProvider.getBlock(ix, iy, iz+nz)
                 if(b) {
                     if(hit_pos) {
                         hit_pos.x = fx < EPSILON ? +ix : ox
@@ -185,7 +185,7 @@ function traceRay_impl(
     return 0
 }
 
-function startTraceRay(voxels, origin, direction, max_d, hit_pos, hit_norm, EPSILON) {
+function startTraceRay(voxelProvider, origin, direction, max_d, hit_pos, hit_norm, EPSILON) {
     // console.log("tracing",origin,direction)
     var px = +origin.x
         , py = +origin.y
@@ -214,7 +214,7 @@ function startTraceRay(voxels, origin, direction, max_d, hit_pos, hit_norm, EPSI
     } else {
         max_d = +max_d
     }
-    return traceRay_impl(voxels, px, py, pz, dx, dy, dz, max_d, hit_pos, hit_norm, EPSILON)
+    return traceRay_impl(voxelProvider, px, py, pz, dx, dy, dz, max_d, hit_pos, hit_norm, EPSILON)
 }
 
 export const traceRay = startTraceRay

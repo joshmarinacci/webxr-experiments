@@ -5,7 +5,7 @@ function chunkPosToVector(pos) {
 }
 
 class Chunk {
-    constructor(data, pos) {
+    constructor(data, pos, chunkBits) {
         this.data = data
         this.dims = data.dims
         this.voxels = data.voxels
@@ -14,8 +14,25 @@ class Chunk {
         this.realPosition = pos
         this.chunkPosition = [pos.x, pos.y, pos.z]
         this.id = this.chunkPosition.join('|')
+        this.chunkBits = chunkBits
     }
 
+    voxelIndexFromCoordinates(x, y, z) {
+        const bits = this.chunkBits
+        const mask = (1 << bits) - 1
+        return (x & mask) + ((y & mask) << bits) + ((z & mask) << bits * 2)
+    }
+
+    voxelAtCoordinates(pt) {
+        const vidx = this.voxelIndexFromCoordinates(pt.x, pt.y, pt.z)
+        return this.voxels[vidx]
+    }
+    setVoxelAtCoordinates(pt, val) {
+        const vidx = this.voxelIndexFromCoordinates(pt.x, pt.y, pt.z)
+        const v = this.voxels[vidx]
+        this.voxels[vidx] = val
+        return v
+    }
 }
 
 export class ChunkManager {
@@ -48,7 +65,7 @@ export class ChunkManager {
     }
 
 
-    // position in chunk coords?
+    // position in chunk indexes?
     nearbyChunks(position, distance) {
         const current = this.chunkAtPosition(position)
         const x = current[0]
@@ -68,9 +85,9 @@ export class ChunkManager {
 
     //get missing chunks. position is in world coords
     requestMissingChunks(pos) {
-        this.nearbyChunks(pos).map((chunk) => {
-            if (!this.chunks[chunk.join('|')]) {
-                this.emit('missingChunk', chunk)
+        this.nearbyChunks(pos).map((chunkIndex) => {
+            if (!this.chunks[chunkIndex.join('|')]) {
+                this.emit('missingChunk', chunkIndex)
             }
         })
     }
@@ -86,12 +103,12 @@ export class ChunkManager {
     generateChunk(pos) {
         const bounds = this.getBounds(pos.x, pos.y, pos.z)
         const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
-        const chunkObj = new Chunk(chunkData, pos)
+        const chunkObj = new Chunk(chunkData, pos, this.chunkBits)
         this.chunks[chunkObj.id] = chunkObj
         return chunkObj
     }
 
-    chunkAtCoordinates(x, y, z) {
+    chunkIndexAtCoordinates(x, y, z) {
         const bits = this.chunkBits
         const cx = x >> bits
         const cy = y >> bits
@@ -102,7 +119,7 @@ export class ChunkManager {
     //position in world coords
     chunkAtPosition(position) {
         const pt = position.divideScalar(this.cubeSize).floor()
-        return this.chunkAtCoordinates(pt.x, pt.y, pt.z)
+        return this.chunkIndexAtCoordinates(pt.x, pt.y, pt.z)
     }
 
     voxelIndexFromCoordinates(x, y, z) {
@@ -111,22 +128,24 @@ export class ChunkManager {
         return (x & mask) + ((y & mask) << bits) + ((z & mask) << bits * 2)
     }
 
-    voxelAtCoordinates(x, y, z, val) {
-        const ckey = this.chunkAtCoordinates(x, y, z).join('|')
+    //get voxel at point in world space
+    voxelAtCoordinates(pt) {
+        const ckey = this.chunkIndexAtCoordinates(pt.x, pt.y, pt.z).join('|')
         const chunk = this.chunks[ckey]
         if (!chunk) return false
-        const vidx = this.voxelIndexFromCoordinates(x, y, z)
-        const v = chunk.voxels[vidx]
-        if (typeof val !== 'undefined') {
-            chunk.voxels[vidx] = val
-        }
-        return v
+        return chunk.voxelAtCoordinates(pt)
+    }
+
+    setVoxelAtCoordinates(pt, val) {
+        const ckey = this.chunkIndexAtCoordinates(pt.x, pt.y, pt.z).join('|')
+        const chunk = this.chunks[ckey]
+        if (!chunk) return false
+        return chunk.setVoxelAtCoordinates(pt,val)
     }
 
     //get voxel at position in world coordinates
     voxelAtPosition(pos, val) {
-        const pt = pos.divideScalar(this.cubeSize).floor()
-        return this.voxelAtCoordinates(pt.x, pt.y, pt.z, val);
+        return this.voxelAtCoordinates(pos.divideScalar(this.cubeSize).floor(),val)
     }
 
     //report the number of chunks currently loaded into memory
@@ -159,6 +178,10 @@ export class ChunkManager {
             }
             delete this.chunks[chunkIndex]
         })
+    }
+
+    getBlock(x,y,z) {
+        return this.voxelAtPosition(new Vector3(x,y,z))
     }
 }
 
