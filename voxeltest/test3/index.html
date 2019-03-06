@@ -82,9 +82,6 @@
         TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof.js"
-    import {Pointer} from "./Pointer.js"
-    import {traceRay} from "./raycast.js"
-    import {POINTER_CLICK} from './Pointer.js'
     import { DesktopController} from './DesktopController.js'
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
@@ -232,7 +229,9 @@
         const RAYCAST_DISTANCE = 30
 
 
-        const threeDofController = new ThreeDOFController(app)
+        const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
+        on(threeDofController,'highlight',(pos) => highlight_cube.position.copy(pos))
+        on(threeDofController,'setblock',(pos) => setBlock(pos,2))
 
         const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
         on(desktopController,'highlight',(pos) => highlight_cube.position.copy(pos))
@@ -316,7 +315,7 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
-                // pointer.setMouseSimulatesController(false)
+                desktopController.disable()
                 threeDofController.enable()
                 app.enterVR()
             })

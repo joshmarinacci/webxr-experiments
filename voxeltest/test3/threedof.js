@@ -2,6 +2,9 @@ import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
     Color, DirectionalLight, AmbientLight, Vector3,
     TextureLoader, Group, DoubleSide, FrontSide,
 } from "./node_modules/three/build/three.module.js"
+import {Pointer} from "./Pointer.js"
+import {traceRay} from "./raycast.js"
+import {POINTER_CLICK} from './Pointer.js'
 
 
 const toRad = (deg) => Math.PI/180*deg
@@ -11,13 +14,55 @@ const SPEED = 0.1
 export default class ThreeDOFController {
 
 
-    constructor(app) {
+    constructor(app, distance, chunkManager) {
+        this.listeners = {}
         this.app = app
+        this.distance = distance
+        this.chunkManager = chunkManager
         this.stagePos = app.stagePos
         this.stageRot = app.stageRot
         this.states = { touchpad: false}
         this.dir = new Vector3(0,0,1)
         this.enabled = false
+        this.pointer = new Pointer(app,{
+            //don't intersect with anything. only use for orientation and trigger state
+            intersectionFilter: o => false,
+            enableLaser: true,
+            mouseSimulatesController:false,
+        })
+        this.pointer.on(POINTER_CLICK, () => {
+            console.log("clicked")
+            const res = this.traceRay()
+            res.hitPosition.add(res.hitNormal)
+            this.fire('setblock',res.hitPosition)
+        })
+    }
+
+    traceRay() {
+        const direction = new Vector3(0, 0, -1)
+        direction.applyQuaternion(this.pointer.controller1.quaternion)
+        direction.applyAxisAngle(YAXIS,-this.app.stageRot.rotation.y)
+
+        const pos = this.app.stagePos.worldToLocal(this.pointer.controller1.position.clone())
+
+        const epilson = 1e-8
+        const hitNormal = new Vector3(0,0,0)
+        const hitPosition = new Vector3(0,0,0)
+        const hitBlock = traceRay(this.chunkManager,pos,direction,this.distance,hitPosition,hitNormal,epilson)
+        return {
+            hitBlock:hitBlock,
+            hitPosition:hitPosition,
+            hitNormal: hitNormal
+        }
+    }
+
+    addEventListener(type,cb) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].push(cb)
+    }
+    fire(type,payload) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].forEach(cb => cb(payload))
     }
 
     rotateLeft() {
@@ -38,11 +83,30 @@ export default class ThreeDOFController {
         this.stagePos.position.add(this.getSpeedDirection())
     }
 
-    update() {
-        this.scanGamepads()
+    update(time) {
+        if(!this.enabled) return
+        this.scanGamepads(time)
+        this.updateCursor(time)
     }
     enable() {
         this.enabled = true
+    }
+
+    updateCursor(time) {
+        this.pointer.tick(time)
+
+        const dir = new Vector3(0, 0, -1)
+        dir.applyQuaternion(this.pointer.controller1.quaternion)
+        dir.applyAxisAngle(YAXIS,-this.app.stageRot.rotation.y)
+        const epilson = 1e-8
+        const pos = this.app.stagePos.worldToLocal(this.pointer.controller1.position.clone())
+        const hitNormal = new Vector3(0,0,0)
+        const distance = this.distance
+        const hitPosition = new Vector3(0,0,0)
+        const hitBlock = traceRay(this.chunkManager,pos,dir,distance,hitPosition,hitNormal,epilson)
+        if(hitBlock <= 0) return
+        hitPosition.floor()
+        this.fire('highlight',hitPosition)
     }
 
     scanGamepads() {
@@ -63,7 +127,7 @@ export default class ThreeDOFController {
                     const left  = (gamepad.axes[0] < -0.5)
                     const right = (gamepad.axes[0] >  0.5)
                     const down  = (gamepad.axes[1] < -0.5)
-                    const up    = (gamepad.axes[1] >  0.5)
+                    const up    = (gamepad.axes[1] >  0.2)
 
 
                     if (down && touchpad.pressed === true) this.glideForward()
