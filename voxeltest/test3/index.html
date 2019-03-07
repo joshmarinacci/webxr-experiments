@@ -90,9 +90,8 @@
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
     const toRad = (deg) => Math.PI / 180 * deg
 
-    const app = new WebXRBoilerPlate({
-        container: $("#container")
-    })
+
+    const RAYCAST_DISTANCE = 30
 
     const COLORS = [
         { id:1, color:0xff0000, rgb:'rgb(255,0,0)'},
@@ -102,6 +101,11 @@
         { id:5, color:0x00ffff, rgb:'rgb(0,255,255)'},
         { id:6, color:0xff00ff, rgb:'rgb(255,0,255)'},
     ]
+
+
+    const app = new WebXRBoilerPlate({
+        container: $("#container")
+    })
 
 
     class BlockPicker extends Object3D {
@@ -122,7 +126,7 @@
             this.add(this.mesh)
 
 
-            this.selectedColorIndex = 0
+            this.selectedColorIndex = 1
             this.redraw()
 
             on(this.mesh,POINTER_CLICK,(e)=>{
@@ -278,7 +282,6 @@
 
         //a standard ambient light
         app.scene.add(new AmbientLight(0xffffff,0.3))
-        const RAYCAST_DISTANCE = 30
 
 
         const dialog = new BlockPicker()
@@ -287,26 +290,7 @@
         app.scene.add(dialog)
 
         let destroyBlockActive = true
-        const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
-        on(threeDofController,'highlight',(res) => {
-            if(dialog.visible) return
-            if(destroyBlockActive) {
-                highlight_cube.position.copy(res.hitPosition)
-            } else {
-                res.hitPosition.add(res.hitNormal)
-                highlight_cube.position.copy(res.hitPosition)
-            }
-        })
-        on(threeDofController,'trigger',(res) => {
-            if(dialog.visible) return
-            if(destroyBlockActive) {
-                setBlock(res.hitPosition,0)
-            } else {
-                res.hitPosition.add(res.hitNormal)
-                setBlock(res.hitPosition,COLORS[dialog.selectedColorIndex].id)
-            }
-        })
-        on(threeDofController,'toggle-pointer',(pos) => {
+        function togglePointer() {
             destroyBlockActive = !destroyBlockActive
             if(destroyBlockActive) {
                 highlight_cube.material.color.set(0xff0000)
@@ -315,38 +299,57 @@
                 highlight_cube.material.color.set(0x00ff00)
                 threeDofController.pointer.controller1.line.material.color.set(0x008800)
             }
+        }
+
+        function toggleDialog() {
+            dialog.visible = !dialog.visible
+        }
+
+        function createBlock(pos) {
+            if(dialog.visible) return
+            setBlock(pos,COLORS[dialog.selectedColorIndex].id)
+        }
+
+        function removeBlock(pos) {
+            if(dialog.visible) return
+            setBlock(pos,0)
+        }
+
+        function moveHighlight(pos) {
+            if(dialog.visible) return
+            highlight_cube.position.copy(pos)
+        }
+
+
+        const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
+        on(threeDofController,'highlight',(res) => {
+            if(destroyBlockActive) {
+                moveHighlight(res.hitPosition)
+            } else {
+                res.hitPosition.add(res.hitNormal)
+                moveHighlight(res.hitPosition)
+            }
         })
-        on(threeDofController,'show-dialog',(pos) => dialog.visible = !dialog.visible)
+        on(threeDofController,'trigger',(res) => {
+            if(destroyBlockActive) {
+                removeBlock(res.hitPosition)
+            } else {
+                res.hitPosition.add(res.hitNormal)
+                createBlock(res.hitPosition)
+            }
+        })
+        on(threeDofController,'toggle-pointer',togglePointer)
+        on(threeDofController,'show-dialog',toggleDialog)
 
         const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
-        on(desktopController,'highlight',(pos) => {
-            if(dialog.visible) return
-            highlight_cube.position.copy(pos)
-        })
-        on(desktopController,'setblock',(pos) => {
-            if(dialog.visible) return
-            const color = COLORS[dialog.selectedColorIndex].id
-            setBlock(pos,color)
-        })
-        on(desktopController,'removeblock',(pos) => {
-            if(dialog.visible) return
-            setBlock(pos,0)
-        })
+        on(desktopController,'highlight',moveHighlight)
+        on(desktopController,'setblock',createBlock)
+        on(desktopController,'removeblock',removeBlock)
 
         const fullscreenController = new FullScreenControls(app, chunkManager)
-        on(fullscreenController,'highlight',(pos) => {
-            if(dialog.visible) return
-            highlight_cube.position.copy(pos)
-        })
-        on(fullscreenController,'setblock',(pos) => {
-            if(dialog.visible) return
-            const color = COLORS[dialog.selectedColorIndex].id
-            setBlock(pos,color)
-        })
-        on(fullscreenController,'removeblock',(pos) => {
-            if(dialog.visible) return
-            setBlock(pos,0)
-        })
+        on(fullscreenController,'highlight', moveHighlight)
+        on(fullscreenController,'setblock',createBlock)
+        on(fullscreenController,'removeblock',removeBlock)
         on(fullscreenController,'exit',()=>{
             app.exitFullscreen()
             fullscreenController.disable()
@@ -354,7 +357,7 @@
         })
 
         const keyboardController = new KeyboardControls(app)
-        on(keyboardController, 'show-dialog',()=> dialog.visible = !dialog.visible)
+        on(keyboardController, 'show-dialog',toggleDialog)
         keyboardController.enable()
 
 
