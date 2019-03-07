@@ -34,19 +34,10 @@
 </head>
 <body>
 
-<h1>WebXR ThreeJS + VR Boilerplate App</h1>
-<p><i>created by <a href="https://twitter.com/joshmarinacci">Josh Marinacci</a>, Mozilla Mixed Reality</i></p>
-<p>
-    This WebXR boilerplate is easy to use. Just view the source or get
-    your own copy at <a href="https://github.com/joshmarinacci/webxr-boilerplate/">github</a>
-    It creates a simple ThreeJS scene with a stats viewer, a pointer abstraction, and hooks to detect VR support.
-    Best of all it uses only ES6 Modules.
-</p>
-
+<h1>VoxelJS for VR Test</h1>
 <p>
     Press <b>play full screen</b> in desktop mode. Press <b>play in vr</b> to play in VR mode (if available).
-    You can click on the cube to change its color and play a sound effect.
-    When you enter VR or full screen the background music will play.
+    Or just play in regular windowed mode. Whatever you like.
 </p>
 
 <div>
@@ -59,10 +50,17 @@
 </div>
 <div id="container"></div>
 
+
 <ul>
-    <li>Example music from <a href="http://freemusicarchive.org/music/BoxCat_Games/Nameless_the_Hackers_RPG_Soundtrack/BoxCat_Games_-_Nameless-_the_Hackers_RPG_Soundtrack_-_10_Epic_Song">BoxCat Games</a></li>
-    <li>Example sound effects from <a href="https://freesound.org/people/suonidigenova/sounds/55055/">Souni Di Genova</a></li>
-    <li>Cat image from <a href="http://creative-commons-cats.tumblr.com/page/3">Creative Commons Cats</a></li>
+    <li>full screen: mouse to move camera, arrows and WASD to move</li>
+    <li>window mode: mouse to click on things, arrows to turn, WASD to move</li>
+    <li>VR mode: <ul>
+        <li>trigger to click</li>
+        <li>hold 'up' butotn to move in direction of pointer</li>
+        <li>swipe left and right to rotate camera</li>
+        <li>click left to toggle create vs destroy</li>
+        <li>click right to open block settings</li>
+    </ul>
 </ul>
 
 <script src="node_modules/atlaspack/index.js"></script>
@@ -99,30 +97,10 @@
     app.init().then((app) => {
         app.scene.background = new Color( 0xcccccc );
 
-        /*
-        const pointer = new Pointer(app,{
-            //Pointer searches everything in the scene by default
-            //override this to match just certain things
-            intersectionFilter: ((o) => o.userData.clickable),
-
-            //make the camera pan when moving the mouse. good for simulating head turning on desktop
-            cameraFollowMouse:false,
-
-            // set to true to move the controller node forward and tilt with the mouse.
-            // good for testing VR controls on desktop
-            mouseSimulatesController:true,
-
-            //turn this off if you provide your own pointer model
-            enableLaser: true,
-        })
-        */
-
-
         //load a cat texture
         const texture_loader = new TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
-
 
         const materials = new VoxelTexture({
             THREE:THREE,
@@ -175,34 +153,29 @@
         const scale = new Vector3(1.0,1.0,1.0)
         const mesher = new GreedyMesh()
 
-
-        const stageRot = new Group()
-        app.scene.add(stageRot)
-        app.stageRot = stageRot
-        const stagePos = new Group()
-        stageRot.add(stagePos)
-        stagePos.position.z = 0
-        stagePos.position.x = 3
-        app.stagePos = stagePos
+        app.stageRot = new Group()
+        app.scene.add(app.stageRot)
+        app.stagePos = new Group()
+        app.stageRot.add(app.stagePos)
+        app.stagePos.position.z = 0
+        app.stagePos.position.x = 3
 
         const group = new Group()
-        stagePos.add(group)
+        app.stagePos.add(group)
 
         function chunkIndexToVector(pos) {
             return new Vector3(pos[0],pos[1],pos[2])
         }
 
 
-        const YAXIS = new Vector3(0,1,0)
-
         let lastPos = new Vector3(0,0,0)
         function updateChunks() {
-            if(!lastPos.equals(stagePos.position)) {
-                const pos = stagePos.position.clone().multiplyScalar(-1)
+            if(!lastPos.equals(app.stagePos.position)) {
+                const pos = app.stagePos.position.clone().multiplyScalar(-1)
                 chunkManager.requestMissingChunks(pos)
                 chunkManager.removeFarChunks(pos, group)
             }
-            lastPos.copy(stagePos.position)
+            lastPos.copy(app.stagePos.position)
         }
 
         const highlight_geo = new THREE.CubeGeometry(1.1,1.1,1.1, 4,4)
@@ -216,7 +189,7 @@
                 opacity: 0.5,
             }))
         highlight_cube.position.set(-2,0,-5)
-        stagePos.add(highlight_cube)
+        app.stagePos.add(highlight_cube)
 
 
         //a standard directional light from above
@@ -229,9 +202,33 @@
         const RAYCAST_DISTANCE = 30
 
 
+        let destroyBlockActive = true
         const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
-        on(threeDofController,'highlight',(pos) => highlight_cube.position.copy(pos))
-        on(threeDofController,'setblock',(pos) => setBlock(pos,2))
+        on(threeDofController,'highlight',(res) => {
+            if(destroyBlockActive) {
+                highlight_cube.position.copy(res.hitPosition)
+            } else {
+                res.hitPosition.add(res.hitNormal)
+                highlight_cube.position.copy(res.hitPosition)
+            }
+        })
+        on(threeDofController,'trigger',(res) => {
+            if(destroyBlockActive) {
+                setBlock(res.hitPosition,0)
+            } else {
+                res.hitPosition.add(res.hitNormal)
+                setBlock(res.hitPosition, 2)
+            }
+        })
+        on(threeDofController,'left-click',(pos) => {
+            destroyBlockActive = !destroyBlockActive
+            if(destroyBlockActive) {
+                highlight_cube.material.color.set(0xff0000)
+            } else {
+                highlight_cube.material.color.set(0x00ff00)
+            }
+        })
+        on(threeDofController,'right-click',(pos) => console.log("dialog"))
 
         const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
         on(desktopController,'highlight',(pos) => highlight_cube.position.copy(pos))

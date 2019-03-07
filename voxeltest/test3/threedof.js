@@ -11,6 +11,13 @@ const toRad = (deg) => Math.PI/180*deg
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
+const DIRS = {
+    NONE:'NONE',
+    UP:'UP',
+    DOWN:'DOWN',
+    LEFT:'LEFT',
+    RIGHT:'RIGHT'
+}
 export default class ThreeDOFController {
 
 
@@ -29,11 +36,12 @@ export default class ThreeDOFController {
         })
         this.pointer.on(POINTER_CLICK, () => {
             if(!this.enabled) return
-            console.log("clicked")
+            // console.log("clicked")
             const res = this.traceRay()
-            res.hitPosition.add(res.hitNormal)
-            this.fire('setblock',res.hitPosition)
+            this.fire('trigger',res)
         })
+
+        this.activeDir = DIRS.NONE
     }
 
     traceRay() {
@@ -96,12 +104,11 @@ export default class ThreeDOFController {
     updateCursor(time) {
         this.pointer.tick(time)
         const res = this.traceRay()
-        res.hitPosition.add(res.hitNormal)
         res.hitPosition.floor()
-        this.fire('highlight',res.hitPosition)
+        this.fire('highlight',res)
     }
 
-    scanGamepads() {
+    scanGamepads(time) {
         if(!this.enabled) return
         // console.log("gamepads",navigator.getGamepads())
         const gamepads = navigator.getGamepads()
@@ -113,37 +120,86 @@ export default class ThreeDOFController {
                 gamepad.id.startsWith( 'Spatial Controller' ) ) ) {
                 //we should have at least two buttons
                 if(gamepad.buttons.length < 2) return
-
-                const touchpad = gamepad.buttons[0]
-                if(touchpad.pressed && gamepad.axes && gamepad.axes.length === 2) {
-                    const left  = (gamepad.axes[0] < -0.5)
-                    const right = (gamepad.axes[0] >  0.5)
-                    const down  = (gamepad.axes[1] < -0.5)
-                    const up    = (gamepad.axes[1] >  0.2)
-
-
-                    if (down && touchpad.pressed === true) this.glideForward()
-                    if (up   && touchpad.pressed === true) this.glideBackward()
-                    if (left && this.states.touchpad === false && touchpad.pressed === true) {
-                        this.rotateLeft()
-                    }
-                    if (right && this.states.touchpad === false && touchpad.pressed === true) {
-                        this.rotateRight()
-                    }
-                }
-
-                const trigger = gamepad.buttons[1]
-                if(trigger.pressed) console.log("trigger")
-                if(this.states.touchpad === false && touchpad.pressed === true) {
-                    // console.log("pressed")
-                }
-                if(this.states.touchpad === true && touchpad.pressed === false) {
-                    // console.log("released")
-                }
-                this.states.touchpad = touchpad.pressed
+                this.updateGamepad(gamepad, time)
             }
 
         }
     }
 
+    updateGamepad(gamepad, time) {
+        const touchpad = gamepad.buttons[0]
+
+        //on click start
+        if(touchpad.pressed === true && this.states.touchpad === false) {
+            if(gamepad.axes && gamepad.axes.length === 2) {
+                this.activeDir = DIRS.NONE
+                if(gamepad.axes[1] < -0.2) this.activeDir = DIRS.UP
+                if(gamepad.axes[1] > +0.4) this.activeDir = DIRS.DOWN
+
+                if(this.activeDir === DIRS.NONE) {
+                    if(gamepad.axes[0] < -0.5) this.activeDir = DIRS.LEFT
+                    if(gamepad.axes[0] > +0.5) this.activeDir = DIRS.RIGHT
+                }
+            }
+        }
+
+        //on click end
+        //left and right clicks
+        if(touchpad.pressed === false && this.states.touchpad === true) {
+            if(this.activeDir === DIRS.LEFT) {
+                // console.log("left click")
+                this.fire('left-click',this)
+            }
+            if(this.activeDir === DIRS.RIGHT) {
+                // console.log("right click")
+                this.fire('right-click',this)
+            }
+        }
+
+        //movement
+        if(touchpad.pressed) {
+            if(this.activeDir === DIRS.UP) {
+                // console.log("moving", this.activeDir)
+                this.glideForward()
+            }
+            if(this.activeDir === DIRS.DOWN) {
+                // console.log("moving", this.activeDir)
+                this.glideBackward()
+            }
+        }
+
+        //swipe detection
+        if(!touchpad.pressed && gamepad.axes[0] < -0.5) {
+            if(!this.startRight) {
+                this.startLeft = true
+                this.timeStart = time
+            }
+            const diff = time - this.timeStart
+            if(this.startRight && diff < 250) {
+                // console.log('swiped left')
+                this.rotateLeft()
+            }
+            this.startRight = false
+        }
+        //swipe detection
+        if(!touchpad.pressed && gamepad.axes[0] > +0.5) {
+            if(!this.startLeft) {
+                this.startRight = true
+                this.timeStart = time
+            }
+            const diff = time - this.timeStart
+            if(this.startLeft && diff < 250) {
+                // console.log('swiped right')
+                this.rotateRight()
+            }
+            this.startLeft = false
+        }
+        if(!touchpad.pressed && gamepad.axes[0] === 0 && gamepad.axes[1] === 0) {
+            this.startLeft = false
+            this.startRight = false
+        }
+
+        this.states.touchpad = touchpad.pressed
+
+    }
 }
