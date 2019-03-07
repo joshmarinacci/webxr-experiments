@@ -76,13 +76,14 @@
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial,
         Color, DirectionalLight, AmbientLight, Vector3, Vector2,
-        Ray,
+        Object3D,
         TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import ThreeDOFController from "./threedof.js"
     import { DesktopController} from './DesktopController.js'
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
+    import {POINTER_CLICK} from './Pointer'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -93,6 +94,79 @@
         container: $("#container")
     })
 
+    const COLORS = [
+        { id:1, color:0xff0000, rgb:'rgb(255,0,0)'},
+        { id:2, color:0x00ff00, rgb:'rgb(0,255,0)'},
+        { id:3, color:0x0000ff, rgb:'rgb(0,0,255)'},
+        { id:4, color:0xffff00, rgb:'rgb(255,255,0)'},
+        { id:5, color:0x00ffff, rgb:'rgb(0,255,255)'},
+        { id:6, color:0xff00ff, rgb:'rgb(255,0,255)'},
+    ]
+
+
+    class BlockPicker extends Object3D {
+        constructor() {
+            super()
+            this.type = 'panel2d'
+            this.canvas = document.createElement('canvas')
+            this.canvas.width = 256
+            this.canvas.height = 256
+            this.canvasTexture = new THREE.CanvasTexture(this.canvas)
+            // this.redrawHandler = (e) => this.redraw()
+            // this.redraw()
+            this.mesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(1,1),
+                new THREE.MeshBasicMaterial({color:'white',map:this.canvasTexture})
+            )
+            this.mesh.userData.clickable = true
+            this.add(this.mesh)
+
+
+            this.selectedColorIndex = 0
+            this.redraw()
+
+            on(this.mesh,POINTER_CLICK,(e)=>{
+                const uv = e.intersection.uv
+                const fpt = new Vector2(uv.x*256, 256-uv.y*256).divideScalar(64).floor()
+                const index = fpt.y*4 + fpt.x
+                if(fpt.y >= 3) {
+                    this.visible = false
+                    return
+                }
+
+                this.selectedColorIndex = index
+                this.redraw()
+            })
+
+        }
+        redraw() {
+            const ctx = this.canvas.getContext('2d')
+            ctx.fillStyle = 'white'
+            ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+            COLORS.forEach((c,i)=>{
+                ctx.fillStyle = c.rgb
+                const x = (i%4)*64
+                const y = Math.floor((i/4))*64
+                ctx.fillRect(x,y,64,64)
+
+                if(this.selectedColorIndex === i) {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'black'
+                    ctx.strokeRect(x+2,y+2,64-4,64-4)
+                    ctx.strokeStyle = 'white'
+                    ctx.strokeRect(x+4,y+4,64-8,64-8)
+                }
+            })
+
+
+            ctx.fillStyle = 'black'
+            ctx.fillRect(0,256-64,64*4,64)
+            ctx.fillStyle = 'white'
+            ctx.font = '32px sans-serif';
+            ctx.fillText('close',32,256-64+32)
+            this.canvasTexture.needsUpdate = true
+        }
+    }
 
     app.init().then((app) => {
         app.scene.background = new Color( 0xcccccc );
@@ -110,8 +184,13 @@
             materialParams: { side: DoubleSide},
             materialFlatColor:true
         })
-        // const materialNames = ['uvgrid', 'brick', 'dirt']
-        materials.load(['#aa44dd','#22aa22','#0000ff'])
+
+        function toHexColor(num) {
+            let str = num.toString(16)
+            while(str.length < 6) str = '0' + str
+            return '#' + str
+        }
+        materials.load(COLORS.map(c => toHexColor(c.color)))
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
@@ -202,9 +281,15 @@
         const RAYCAST_DISTANCE = 30
 
 
+        const dialog = new BlockPicker()
+        dialog.position.set(0,1.5,-1)
+        dialog.visible = false
+        app.scene.add(dialog)
+
         let destroyBlockActive = true
         const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
         on(threeDofController,'highlight',(res) => {
+            if(dialog.visible) return
             if(destroyBlockActive) {
                 highlight_cube.position.copy(res.hitPosition)
             } else {
@@ -213,14 +298,15 @@
             }
         })
         on(threeDofController,'trigger',(res) => {
+            if(dialog.visible) return
             if(destroyBlockActive) {
                 setBlock(res.hitPosition,0)
             } else {
                 res.hitPosition.add(res.hitNormal)
-                setBlock(res.hitPosition, 2)
+                setBlock(res.hitPosition,COLORS[dialog.selectedColorIndex].id)
             }
         })
-        on(threeDofController,'left-click',(pos) => {
+        on(threeDofController,'toggle-pointer',(pos) => {
             destroyBlockActive = !destroyBlockActive
             if(destroyBlockActive) {
                 highlight_cube.material.color.set(0xff0000)
@@ -230,17 +316,37 @@
                 threeDofController.pointer.controller1.line.material.color.set(0x008800)
             }
         })
-        on(threeDofController,'right-click',(pos) => console.log("dialog"))
+        on(threeDofController,'show-dialog',(pos) => dialog.visible = !dialog.visible)
 
         const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
-        on(desktopController,'highlight',(pos) => highlight_cube.position.copy(pos))
-        on(desktopController,'setblock',(pos) => setBlock(pos,2))
-        on(desktopController,'removeblock',(pos) => setBlock(pos,0))
+        on(desktopController,'highlight',(pos) => {
+            if(dialog.visible) return
+            highlight_cube.position.copy(pos)
+        })
+        on(desktopController,'setblock',(pos) => {
+            if(dialog.visible) return
+            const color = COLORS[dialog.selectedColorIndex].id
+            setBlock(pos,color)
+        })
+        on(desktopController,'removeblock',(pos) => {
+            if(dialog.visible) return
+            setBlock(pos,0)
+        })
 
         const fullscreenController = new FullScreenControls(app, chunkManager)
-        on(fullscreenController,'highlight',(pos) => highlight_cube.position.copy(pos))
-        on(fullscreenController,'setblock',(pos) => setBlock(pos,2))
-        on(fullscreenController,'removeblock',(pos) => setBlock(pos,0))
+        on(fullscreenController,'highlight',(pos) => {
+            if(dialog.visible) return
+            highlight_cube.position.copy(pos)
+        })
+        on(fullscreenController,'setblock',(pos) => {
+            if(dialog.visible) return
+            const color = COLORS[dialog.selectedColorIndex].id
+            setBlock(pos,color)
+        })
+        on(fullscreenController,'removeblock',(pos) => {
+            if(dialog.visible) return
+            setBlock(pos,0)
+        })
         on(fullscreenController,'exit',()=>{
             app.exitFullscreen()
             fullscreenController.disable()
@@ -248,6 +354,7 @@
         })
 
         const keyboardController = new KeyboardControls(app)
+        on(keyboardController, 'show-dialog',()=> dialog.visible = !dialog.visible)
         keyboardController.enable()
 
 

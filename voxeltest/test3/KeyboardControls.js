@@ -5,6 +5,7 @@ const SPEED = 0.1
 
 export class KeyboardControls {
     constructor(app) {
+        this.listeners = {}
         this.enabled = false
         this.app = app
 
@@ -17,19 +18,30 @@ export class KeyboardControls {
             d: { current: false, previous: false},
             s: { current: false, previous: false},
             w: { current: false, previous: false},
+            Enter: { current: false, previous: false},
         }
 
 
         this.keydown_handler = (e)=>{
+            // console.log('down',e.key)
             if(this.keystates[e.key]) {
                 this.keystates[e.key].current = true
             }
         }
         this.keyup_handler = (e)=>{
+            // console.log('up',e.key)
             if(this.keystates[e.key]) {
                 this.keystates[e.key].current = false
             }
         }
+    }
+    addEventListener(type,cb) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].push(cb)
+    }
+    fire(type,payload) {
+        if(!this.listeners[type]) this.listeners[type] = []
+        this.listeners[type].forEach(cb => cb(payload))
     }
     enable() {
         this.enabled = true
@@ -47,6 +59,14 @@ export class KeyboardControls {
         if(this.keystates.d.current === true)  this.glideRight()
         if(this.keystates.w.current === true)  this.glideForward()
         if(this.keystates.s.current === true)  this.glideBackward()
+
+        if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
+            this.fire('show-dialog',this)
+        }
+
+        Object.keys(this.keystates).forEach(key => {
+            this.keystates[key].previous = this.keystates[key].current
+        })
     }
 
     rotateLeft() {

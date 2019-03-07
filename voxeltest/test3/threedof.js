@@ -148,11 +148,11 @@ export default class ThreeDOFController {
         if(touchpad.pressed === false && this.states.touchpad === true) {
             if(this.activeDir === DIRS.LEFT) {
                 // console.log("left click")
-                this.fire('left-click',this)
+                this.fire('toggle-pointer',this)
             }
             if(this.activeDir === DIRS.RIGHT) {
                 // console.log("right click")
-                this.fire('right-click',this)
+                this.fire('show-dialog',this)
             }
         }
 
