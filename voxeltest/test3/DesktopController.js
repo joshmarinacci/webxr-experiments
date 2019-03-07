@@ -1,6 +1,6 @@
 import {Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
-import {Pointer} from './Pointer'
+import {Pointer} from './Pointer.js'
 
 const LEFT_MOUSE_BUTTON = 1
 const RIGHT_MOUSE_BUTTON = 2
