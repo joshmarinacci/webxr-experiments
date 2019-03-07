@@ -224,8 +224,10 @@
             destroyBlockActive = !destroyBlockActive
             if(destroyBlockActive) {
                 highlight_cube.material.color.set(0xff0000)
+                threeDofController.pointer.controller1.line.material.color.set(0x880000)
             } else {
                 highlight_cube.material.color.set(0x00ff00)
+                threeDofController.pointer.controller1.line.material.color.set(0x008800)
             }
         })
         on(threeDofController,'right-click',(pos) => console.log("dialog"))

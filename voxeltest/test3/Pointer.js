@@ -89,7 +89,8 @@ export class Pointer {
                 blending: NormalBlending
             })
 
-            this.controller1.add(new Line(geometry, material));
+            this.controller1.line = new Line(geometry, material)
+            this.controller1.add(this.controller1.line);
             this.controller2.add(new Line(geometry, material));
         }
 
