@@ -53,37 +53,58 @@
 
     const defs = {
         sun: {
-            radius:5,
+            radius:4,
             color:'yellow',
             orbit: {
                 radius:0,
+                speed:10,
+            }
+        },
+        mercury: {
+            radius: 0.5,
+            color:'gray',
+            orbit: {
+                radius: 10,
+                speed:20,
+            }
+        },
+        venus: {
+            radius: 0.8,
+            color:'pink',
+            orbit: {
+                radius: 12,
+                speed:4,
             }
         },
         earth: {
             radius: 1,
             color:'blue',
             orbit: {
-                radius: 10,
+                radius: 15,
+                speed:10,
             }
         },
         mars: {
             radius: 0.8,
             color:'red',
             orbit: {
-                radius: 15
+                radius: 20,
+                speed:8,
             }
         }
     }
 
     function makeSpheres(app, defs) {
-        Object.keys(defs).forEach(key => {
+        return Object.keys(defs).map(key => {
             const def = defs[key]
             const sphere = new Mesh(
-                new SphereBufferGeometry(def.radius),
+                new SphereBufferGeometry(def.radius,20,10),
                 new MeshLambertMaterial({color:def.color})
             )
             sphere.position.set(def.orbit.radius,1.5,-30)
+            sphere.userData.def = def
             app.scene.add(sphere)
+            return sphere
         })
     }
 
@@ -120,11 +141,11 @@
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
-        makeSpheres(app,defs)
+        const spheres = makeSpheres(app,defs)
 
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );
-        light.position.set( 0, 10, 5 ).normalize();
+        light.position.set( 10, 10, 5 ).normalize();
         app.scene.add( light );
 
         //a standard ambient light
@@ -136,6 +157,15 @@
         app.onRender((time, app)=> {
             pointer.tick(time)
             stats.update(time)
+            spheres.forEach(sphere => {
+                const def = sphere.userData.def
+                const theta = time/100*def.orbit.speed/100
+                sphere.position.set(
+                    Math.cos(theta)*def.orbit.radius,
+                    0,
+                    -30+Math.sin(theta)*def.orbit.radius
+                    )
+            })
         })
 
         //update progress indicator while loading
