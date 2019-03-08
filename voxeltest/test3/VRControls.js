@@ -18,7 +18,7 @@ const DIRS = {
     LEFT:'LEFT',
     RIGHT:'RIGHT'
 }
-export default class ThreeDOFController {
+export default class VRControls {
 
 
     constructor(app, distance, chunkManager) {
@@ -177,7 +177,7 @@ export default class ThreeDOFController {
             const diff = time - this.timeStart
             if(this.startRight && diff < 250) {
                 // console.log('swiped left')
-                this.rotateLeft()
+                this.rotateRight()
             }
             this.startRight = false
         }
@@ -190,7 +190,7 @@ export default class ThreeDOFController {
             const diff = time - this.timeStart
             if(this.startLeft && diff < 250) {
                 // console.log('swiped right')
-                this.rotateRight()
+                this.rotateLeft()
             }
             this.startLeft = false
         }

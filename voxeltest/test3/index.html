@@ -79,7 +79,7 @@
         Object3D,
         TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
-    import ThreeDOFController from "./threedof.js"
+    import VRControls from "./VRControls.js"
     import { DesktopController} from './DesktopController.js'
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
@@ -321,7 +321,7 @@
         }
 
 
-        const threeDofController = new ThreeDOFController(app, RAYCAST_DISTANCE, chunkManager)
+        const threeDofController = new VRControls(app, RAYCAST_DISTANCE, chunkManager)
         on(threeDofController,'highlight',(res) => {
             if(destroyBlockActive) {
                 moveHighlight(res.hitPosition)
