@@ -73,6 +73,17 @@ export default class WebXRBoilerPlate {
         this.container.requestFullscreen()
     }
 
+    exitFullscreen() {
+        this.resizeOnNextRepaint = true
+        if(document.fullscreenElement) {
+            document.exitFullscreen().then(() => {
+                console.log('exited fullscreen')
+            }).catch(e => {
+                console.log("error with fullscreen exit. already exited?")
+            })
+        }
+    }
+
     checkContainerSize() {
         if(this.lastSize.width !== this.container.clientWidth || this.lastSize.height !== this.container.clientHeight) {
             this.lastSize.width = this.container.clientWidth

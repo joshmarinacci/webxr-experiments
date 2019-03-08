@@ -31,6 +31,7 @@ const toRad = (degrees) => degrees*Math.PI/180
 
 export class Pointer {
     constructor(app, opts) {
+        this.enabled = false
         this.scene = app.scene
         this.renderer = app.renderer
         this.camera = app.camera
@@ -89,10 +90,20 @@ export class Pointer {
                 blending: NormalBlending
             })
 
-            this.controller1.add(new Line(geometry, material));
+            this.controller1.line = new Line(geometry, material)
+            this.controller1.add(this.controller1.line);
             this.controller2.add(new Line(geometry, material));
         }
 
+
+    }
+
+    enable() {
+        this.enabled = true
+    }
+
+    disable() {
+        this.enabled = false
     }
 
     //override this to do something w/ the controllers on every tick
@@ -120,6 +131,7 @@ export class Pointer {
     }
 
     mouseMove(e) {
+        if(!this.enabled) return
         const mouse = new Vector2()
         const bounds = this.canvas.getBoundingClientRect()
         mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1

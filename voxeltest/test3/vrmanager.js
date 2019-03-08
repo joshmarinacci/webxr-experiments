@@ -95,7 +95,11 @@ export default class VRManager {
         if(this.device.isPresenting) {
             this.device.exitPresent()
         } else {
-            this.device.requestPresent([{source: this.renderer.domElement}]);
+            this.device.requestPresent([{source: this.renderer.domElement}]).then(()=>{
+                console.log("really presented")
+            }).catch(e => {
+                console.log("error",e)
+            })
         }
     }
 
