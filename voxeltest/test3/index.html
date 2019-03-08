@@ -65,6 +65,14 @@
 
 <script src="node_modules/atlaspack/index.js"></script>
 <script type="module">
+    /*
+    size of a chunk is 4096 integers if chunk_size is 16, which is 16k.  After walking around I could have a thousand
+    chunks in the cache, which could be something like 16MB of ram. ie: not much. A better question is how to save it.
+
+
+
+
+     */
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
     // managers chunks
@@ -91,6 +99,8 @@
     const toRad = (deg) => Math.PI / 180 * deg
 
 
+    const CHUNK_SIZE = 16
+    const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
 
     const COLORS = [
@@ -224,12 +234,17 @@
             };
         }
 
-        const CHUNK_SIZE = 16
+
         const chunkManager = new ChunkManager({
             chunkDistance:2,
             cubeSize:1,
             chunkSize:CHUNK_SIZE,
-            generateVoxelChunk: (low, high, cx,cy,cz) => generateChunkFromFunction(low, high, flat),
+            generateVoxelChunk: (low, high, cx,cy,cz) => {
+                console.log("cache size", Object.keys(CHUNK_CACHE).length)
+                const id = [cx,cy,cz].join('|')
+                if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
+                return generateChunkFromFunction(low, high, flat)
+            },
         });
 
 
@@ -374,6 +389,10 @@
         chunkManager.on('missingChunk',(chunkId)=>{
             const chunk = chunkManager.generateChunk(chunkIndexToVector(chunkId))
             rebuildMesh(chunk)
+        })
+        chunkManager.on('removingChunk',(chunk) => {
+            CHUNK_CACHE[chunk.id] = chunk.data
+            console.log(chunk.data)
         })
         chunkManager.requestMissingChunks(new Vector3(0,0,0))
 

@@ -159,13 +159,14 @@ export class ChunkManager {
      * _group_ is the ThreeJS group that the chunks are stored in
      */
     removeFarChunks(pos, group) {
-        const nearbyChunks = this.nearbyChunks(pos, 2).map(chunkPos => chunkPos.join('|'))
+        const nearbyChunks = this.nearbyChunks(pos,this.distance+1).map(chunkPos => chunkPos.join('|'))
         Object.keys(this.chunks).map((chunkIndex) => {
             //skip the nearby chunks
             if (nearbyChunks.indexOf(chunkIndex) > -1) return
 
             const chunk = this.chunks[chunkIndex]
             if (!chunk) return
+            this.emit('removingChunk',chunk)
             if (chunk.vmesh) {
                 if (chunk.surfaceMesh) {
                     group.remove(chunk.surfaceMesh)
