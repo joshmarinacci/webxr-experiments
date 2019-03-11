@@ -29,6 +29,19 @@ function POST_JSON(url,data) {
     })
 }
 
+function loadImageFromURL(url) {
+    return new Promise((res,rej)=>{
+        const img = new Image()
+        img.addEventListener('load',()=>{
+            console.log("loaded")
+            res(img)
+        })
+        img.src = url
+
+    })
+}
+
+
 
 const BASE_URL =  "https://vr.josh.earth/360/doc/"
 
@@ -123,14 +136,3 @@ export class PersistenceManager {
 }
 
 
-function loadImageFromURL(url) {
-    return new Promise((res,rej)=>{
-        const img = new Image()
-        img.addEventListener('load',()=>{
-            console.log("loaded")
-            res(img)
-        })
-        img.src = url
-
-    })
-}
