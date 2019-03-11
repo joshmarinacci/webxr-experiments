@@ -1,9 +1,5 @@
 import {Vector3,} from "./node_modules/three/build/three.module.js"
 
-function chunkPosToVector(pos) {
-    return new Vector3(pos[0],pos[1],pos[2])
-}
-
 class Chunk {
     constructor(data, pos, chunkBits) {
         this.data = data
@@ -32,6 +28,15 @@ class Chunk {
         const v = this.voxels[vidx]
         this.voxels[vidx] = val
         return v
+    }
+
+    dispose() {
+        if (this.vmesh) {
+            delete this.vmesh.data
+            delete this.vmesh.geometry
+            delete this.vmesh.meshed
+            delete this.vmesh.surfaceMesh
+        }
     }
 }
 
@@ -68,12 +73,7 @@ export class ChunkManager {
         Object.keys(this.chunks).forEach(key => {
             const chunk = this.chunks[key]
             this.emit('removingChunk',chunk)
-            if (chunk.vmesh) {
-                delete chunk.vmesh.data
-                delete chunk.vmesh.geometry
-                delete chunk.vmesh.meshed
-                delete chunk.vmesh.surfaceMesh
-            }
+            chunk.dispose()
         })
         this.chunks = {}
     }
@@ -194,12 +194,7 @@ export class ChunkManager {
             const chunk = this.chunks[chunkIndex]
             if (!chunk) return
             this.emit('removingChunk',chunk)
-            if (chunk.vmesh) {
-                delete chunk.vmesh.data
-                delete chunk.vmesh.geometry
-                delete chunk.vmesh.meshed
-                delete chunk.vmesh.surfaceMesh
-            }
+            chunk.dispose()
             delete this.chunks[chunkIndex]
         })
     }

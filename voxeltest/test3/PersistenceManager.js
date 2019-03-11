@@ -2,15 +2,14 @@
 function GET_JSON(url) {
     return fetch(url+`?cachebust=${Math.random()}`)
         .then(res => res.json())
-        .then(res => {
-            console.log("loaded ",res)
-            return res
+        // .then(res => {
+        //     return res
             // const blocks = game.blockService.loadFromJSON(res)
             // blocks.forEach(b => {
             //     on(b.getObject3D(), 'click', blockClicked)
             // })
             // dataChanger.fire('changed',{})
-        })
+        // })
 }
 function POST_JSON(url,data) {
     console.log("posting to",url)
@@ -33,7 +32,6 @@ function loadImageFromURL(url) {
     return new Promise((res,rej)=>{
         const img = new Image()
         img.addEventListener('load',()=>{
-            console.log("loaded")
             res(img)
         })
         img.src = url
@@ -62,16 +60,12 @@ export class PersistenceManager {
         ctx.fillRect(0,0,canvas.width,canvas.height)
         const data = ctx.getImageData(0,0,canvas.width,canvas.height)
         console.log("saving",Object.keys(chunkManager.chunks).length,'chunks')
-        console.log("image data",data)
-
         const output = {
             chunks:[],
             image:null,
         }
         Object.keys(chunkManager.chunks).forEach((id,i)=> {
-            // if(i>10) return
             const chunk = chunkManager.chunks[id]
-            // console.log('saving',chunk.data)
             const info = {
                 id: id,
                 low: chunk.data.low,
@@ -82,15 +76,13 @@ export class PersistenceManager {
             //turn a 4096 array into an 8x512 section of the image
             for(let k=0; k<chunk.data.voxels.length; k++) {
                 const val = chunk.data.voxels[k]
-                // console.log(val)
                 const vx = k%512
                 const vy = Math.floor(k/512) + i*8
                 const n = (vy*512 + vx)*4
                 data.data[n+0] = 0
                 data.data[n+1] = 0
-                data.data[n+2] = val*64
+                data.data[n+2] = val
                 data.data[n+3] = 255
-                //set pixel at vx , (vy + i*8)
             }
             info.imageCoords = {
                 x:0,
@@ -101,7 +93,6 @@ export class PersistenceManager {
             output.chunks.push(info)
         })
         ctx.putImageData(data,0,0)
-        // console.log(canvas)
         // document.body.appendChild(canvas)
         output.image = canvas.toDataURL('png')
 
@@ -112,7 +103,7 @@ export class PersistenceManager {
     load(chunkManager) {
         const url = BASE_URL+'foozoo88'
         return GET_JSON(url).then(data => {
-            console.log("parsing",data)
+            // console.log("parsing",data)
             chunkManager.clear()
             return loadImageFromURL(data.image).then(img => {
                 const canvas = document.createElement('canvas')
@@ -124,9 +115,7 @@ export class PersistenceManager {
                 data.chunks.forEach(chunk => {
                     const imageData = ctx.getImageData(chunk.imageCoords.x,chunk.imageCoords.y, chunk.imageCoords.width, chunk.imageCoords.height)
                     const voxels = []
-                    for(let i=0; i<4096; i++) {
-                        voxels[i] = imageData.data[i*4+2]/64
-                    }
+                    for(let i=0; i<4096; i++) voxels[i] = imageData.data[i*4+2]
                     chunkManager.makeChunkFromData(chunk,voxels)
                 })
             })

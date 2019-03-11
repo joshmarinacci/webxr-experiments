@@ -390,9 +390,12 @@
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
         }
 
+        function rebuildAllMeshes() {
+            Object.keys(chunkManager.chunks).forEach(key => rebuildMesh(chunkManager.chunks[key]))
+        }
+
         chunkManager.on('missingChunk',(chunkId)=>{
-            const chunk = chunkManager.generateChunk(chunkIndexToVector(chunkId))
-            rebuildMesh(chunk)
+            rebuildMesh(chunkManager.generateChunk(chunkIndexToVector(chunkId)))
         })
         chunkManager.on('removingChunk',(chunk) => {
             group.remove(chunk.surfaceMesh)
@@ -457,20 +460,13 @@
 
         on($("#save"),'click',() => new PersistenceManager()
             .save(chunkManager,CHUNK_CACHE)
-            .then((resp)=>{
-                return new PersistenceManager().load(chunkManager)
-            }).then(data => {
-                Object.keys(chunkManager.chunks).forEach(key => {
-                    rebuildMesh(chunkManager.chunks[key])
-                })
-            })
+            .then(resp => new PersistenceManager().load(chunkManager))
+            .then(() => rebuildAllMeshes())
         )
         on($("#reload"),'click',()=>{
-            return new PersistenceManager().load(chunkManager).then(data => {
-                Object.keys(chunkManager.chunks).forEach(key => {
-                    rebuildMesh(chunkManager.chunks[key])
-                })
-            })
+            return new PersistenceManager()
+                .load(chunkManager)
+                .then(() => rebuildAllMeshes())
         })
 
 
