@@ -1,3 +1,37 @@
+
+function GET_JSON(url) {
+    return fetch(url+`?cachebust=${Math.random()}`)
+        .then(res => res.json())
+        .then(res => {
+            console.log("loaded ",res)
+            return res
+            // const blocks = game.blockService.loadFromJSON(res)
+            // blocks.forEach(b => {
+            //     on(b.getObject3D(), 'click', blockClicked)
+            // })
+            // dataChanger.fire('changed',{})
+        })
+}
+function POST_JSON(url,data) {
+    console.log("posting to",url)
+    return fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        console.log("real response is",resp)
+        return resp
+    })
+}
+
+
+const BASE_URL =  "https://vr.josh.earth/360/doc/"
+
 export class PersistenceManager {
     constructor() {
 
@@ -58,29 +92,30 @@ export class PersistenceManager {
         // document.body.appendChild(canvas)
         output.image = canvas.toDataURL('png')
 
-        // console.log("final is",output)
-        return new Promise((res,rej) => {
-            res(output)
-        })
+        const url = BASE_URL+'foozoo88'
+        return POST_JSON(url,output)
     }
 
-    load(chunkManager, data) {
-        console.log("parsing",data)
-        chunkManager.clear()
-        return loadImageFromURL(data.image).then(img => {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img,0,0)
-            // document.body.appendChild(canvas)
-            data.chunks.forEach(chunk => {
-                const imageData = ctx.getImageData(chunk.imageCoords.x,chunk.imageCoords.y, chunk.imageCoords.width, chunk.imageCoords.height)
-                const voxels = []
-                for(let i=0; i<4096; i++) {
-                    voxels[i] = imageData.data[i*4+2]/64
-                }
-                chunkManager.makeChunkFromData(chunk,voxels)
+    load(chunkManager) {
+        const url = BASE_URL+'foozoo88'
+        return GET_JSON(url).then(data => {
+            console.log("parsing",data)
+            chunkManager.clear()
+            return loadImageFromURL(data.image).then(img => {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+                ctx.drawImage(img,0,0)
+                // document.body.appendChild(canvas)
+                data.chunks.forEach(chunk => {
+                    const imageData = ctx.getImageData(chunk.imageCoords.x,chunk.imageCoords.y, chunk.imageCoords.width, chunk.imageCoords.height)
+                    const voxels = []
+                    for(let i=0; i<4096; i++) {
+                        voxels[i] = imageData.data[i*4+2]/64
+                    }
+                    chunkManager.makeChunkFromData(chunk,voxels)
+                })
             })
         })
 

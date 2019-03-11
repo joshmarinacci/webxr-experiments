@@ -457,14 +457,26 @@
 
         on($("#save"),'click',() => new PersistenceManager()
             .save(chunkManager,CHUNK_CACHE)
-            .then((data)=>new PersistenceManager().load(chunkManager,data))
-            .then(()=>{
-                Object.keys(chunkManager.chunks).forEach(key => {
-                    const chunk = chunkManager.chunks[key]
-                    rebuildMesh(chunk)
-                })
+            .then((resp)=>{
+                console.log('saved',resp)
+                return new PersistenceManager().load(chunkManager)
+            }).then(data => {
+                console.log("fully loaded")
+                        Object.keys(chunkManager.chunks).forEach(key => {
+                            const chunk = chunkManager.chunks[key]
+                            rebuildMesh(chunk)
+                        })
             })
         )
+        on($("#reload"),'click',()=>{
+            return new PersistenceManager().load(chunkManager).then(data => {
+                    console.log("fully loaded")
+                    Object.keys(chunkManager.chunks).forEach(key => {
+                        const chunk = chunkManager.chunks[key]
+                        rebuildMesh(chunk)
+                    })
+                })
+        })
 
 
     })
