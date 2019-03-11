@@ -64,6 +64,20 @@ export class ChunkManager {
         this.listeners[type].forEach(cb => cb(evt))
     }
 
+    clear() {
+        Object.keys(this.chunks).forEach(key => {
+            const chunk = this.chunks[key]
+            this.emit('removingChunk',chunk)
+            if (chunk.vmesh) {
+                delete chunk.vmesh.data
+                delete chunk.vmesh.geometry
+                delete chunk.vmesh.meshed
+                delete chunk.vmesh.surfaceMesh
+            }
+        })
+        this.chunks = {}
+    }
+
 
     // position in chunk indexes?
     nearbyChunks(position, distance) {
@@ -106,6 +120,19 @@ export class ChunkManager {
         const chunkObj = new Chunk(chunkData, pos, this.chunkBits)
         this.chunks[chunkObj.id] = chunkObj
         return chunkObj
+    }
+
+    makeChunkFromData(info,voxels) {
+        const pos = new Vector3(info.position[0],info.position[1],info.position[2])
+        const chunkData = {
+            low:info.low,
+            high:info.high,
+            voxels:voxels,
+            dims:info.dims,
+        }
+        const chunk = new Chunk(chunkData, pos, this.chunkBits)
+        this.chunks[chunk.id] = chunk
+        return chunk
     }
 
     chunkIndexAtCoordinates(x, y, z) {
@@ -158,7 +185,7 @@ export class ChunkManager {
      * _pos_ is the center of the chunks to look at
      * _group_ is the ThreeJS group that the chunks are stored in
      */
-    removeFarChunks(pos, group) {
+    removeFarChunks(pos) {
         const nearbyChunks = this.nearbyChunks(pos,this.distance+1).map(chunkPos => chunkPos.join('|'))
         Object.keys(this.chunks).map((chunkIndex) => {
             //skip the nearby chunks
@@ -168,10 +195,6 @@ export class ChunkManager {
             if (!chunk) return
             this.emit('removingChunk',chunk)
             if (chunk.vmesh) {
-                if (chunk.surfaceMesh) {
-                    group.remove(chunk.surfaceMesh)
-                    chunk.surfaceMesh.geometry.dispose()
-                }
                 delete chunk.vmesh.data
                 delete chunk.vmesh.geometry
                 delete chunk.vmesh.meshed

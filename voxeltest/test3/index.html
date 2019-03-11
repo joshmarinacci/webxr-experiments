@@ -82,6 +82,7 @@
     //converts chunks to three mesh
     import {VoxelMesh} from "./VoxelMesh.js"
     import {VoxelTexture} from "./voxelTexture.js"
+    import {PersistenceManager} from './PersistenceManager.js'
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial,
@@ -120,68 +121,6 @@
     })
 
 
-    class PersistenceManager {
-        constructor() {
-
-        }
-
-        save(chunkManager, cache) {
-            const chunkCount = Object.keys(chunkManager.chunks).length
-            const width = 512
-            const height = 1024
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            const ctx = canvas.getContext('2d')
-            ctx.fillStyle = 'rgba(255,255,255,1.0)'
-            ctx.fillRect(0,0,canvas.width,canvas.height)
-            const data = ctx.getImageData(0,0,canvas.width,canvas.height)
-            console.log("saving",Object.keys(chunkManager.chunks).length,'chunks')
-            console.log("image data",data)
-
-            const output = {
-                chunks:[],
-                image:null,
-            }
-            Object.keys(chunkManager.chunks).forEach((id,i)=> {
-                // if(i>10) return
-                const chunk = chunkManager.chunks[id]
-                // console.log('saving',chunk.data)
-                const info = {
-                    id: id,
-                    low: chunk.data.low,
-                    high: chunk.data.high,
-                    dims: chunk.data.dims,
-                }
-                //turn a 4096 array into an 8x512 section of the image
-                for(let k=0; k<chunk.data.voxels.length; k++) {
-                    const val = chunk.data.voxels[k]
-                    // console.log(val)
-                    const vx = k%512
-                    const vy = Math.floor(k/512) + i*8
-                    const n = (vy*512 + vx)*4
-                    data.data[n+0] = 0
-                    data.data[n+1] = 0
-                    data.data[n+2] = val*64
-                    data.data[n+3] = 255
-                    //set pixel at vx , (vy + i*8)
-                }
-                info.imageCoords = {
-                    x:0,
-                    y:i*8,
-                    width:512,
-                    height:8,
-                }
-                output.chunks.push(info)
-            })
-            ctx.putImageData(data,0,0)
-            console.log(canvas)
-            document.body.appendChild(canvas)
-            output.image = canvas.toDataURL('png')
-
-            console.log("final is",output)
-        }
-    }
 
     class BlockPicker extends Object3D {
         constructor() {
@@ -456,8 +395,9 @@
             rebuildMesh(chunk)
         })
         chunkManager.on('removingChunk',(chunk) => {
+            group.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh.geometry.dispose()
             CHUNK_CACHE[chunk.id] = chunk.data
-            // console.log(chunk.data)
         })
         chunkManager.requestMissingChunks(new Vector3(0,0,0))
 
@@ -515,7 +455,16 @@
         })
 
 
-        on($("#save"),'click',() => new PersistenceManager().save(chunkManager,CHUNK_CACHE))
+        on($("#save"),'click',() => new PersistenceManager()
+            .save(chunkManager,CHUNK_CACHE)
+            .then((data)=>new PersistenceManager().load(chunkManager,data))
+            .then(()=>{
+                Object.keys(chunkManager.chunks).forEach(key => {
+                    const chunk = chunkManager.chunks[key]
+                    rebuildMesh(chunk)
+                })
+            })
+        )
 
 
     })
