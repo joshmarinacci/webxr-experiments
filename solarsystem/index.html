@@ -66,12 +66,13 @@
 
 
 <ul id="menu">
+    <li id="show-overview">Overview</li>
     <li id="show-sun">Sun</li>
     <li id="show-earth">Earth</li>
     <li id="show-mars">Mars</li>
     <li id="show-venus">Venus</li>
     <li id="show-mercury">Mercury</li>
-    <li id="show-overview">Overview</li>
+    <li id="show-jupiter">Jupiter</li>
 </ul>
 
 <div id="container"></div>
@@ -113,8 +114,9 @@
     const defs = {
         sun: {
             name:'Sun',
-            radius:4,
+            radius:8,
             color:'yellow',
+            textureName:'./textures/sunmap.jpg',
             orbit: {
                 radius:0,
                 speed:10,
@@ -124,6 +126,7 @@
             name:'Mercury',
             radius: 0.5,
             color:'gray',
+            textureName:'./textures/mercurymap.jpg',
             orbit: {
                 radius: 10,
                 speed:20,
@@ -133,6 +136,7 @@
             name:'Venus',
             radius: 0.8,
             color:'pink',
+            textureName:'./textures/venusmap.jpg',
             orbit: {
                 radius: 12,
                 speed:4,
@@ -142,6 +146,7 @@
             name:'Earth',
             radius: 1,
             color:'blue',
+            textureName:'./textures/earthmap1k.jpg',
             orbit: {
                 radius: 15,
                 speed:10,
@@ -151,11 +156,22 @@
             name:'Mars',
             radius: 0.8,
             color:'red',
+            textureName:'./textures/marsmap1k.jpg',
             orbit: {
                 radius: 20,
                 speed:8,
             }
-        }
+        },
+        jupiter: {
+            name:'Jupiter',
+            radius: 3,
+            color:'red',
+            textureName:'./textures/jupitermap.jpg',
+            orbit: {
+                radius: 30,
+                speed:8,
+            }
+        },
     }
 
 
@@ -169,13 +185,13 @@
         }
     }
 
-    function makeSpheres(app, defs) {
+    function makeSpheres(app, texture_loader, defs) {
         return Object.keys(defs).map(key => {
             const def = defs[key]
             let color = def.color
             let texture = null
-            if(def.texture) {
-                texture = def.texture
+            if(def.textureName) {
+                texture = texture_loader.load(def.textureName)
                 color = '#ffffff'
             }
             const sphere = new Mesh(
@@ -186,9 +202,8 @@
             sphere.userData.def = def
             def.sphere = sphere
             app.virtualCamera.add(sphere)
-            on($(`#show-${key}`),'click',()=>{
-                zoomSphere(app,key)
-            })
+            const button = $(`#show-${key}`)
+            if(button) on(button,'click',() => zoomSphere(app,key))
             return sphere
         })
     }
@@ -204,7 +219,7 @@
         app.scene.add(app.camera)
 
         app.virtualCamera = new Group()
-        app.virtualCamera.position.set(0,0,-30)
+        app.virtualCamera.position.set(0,0,-50)
         app.scene.add(app.virtualCamera)
 
 
@@ -228,13 +243,17 @@
         //load a cat texture
         const texture_loader = new TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
-        defs.sun.texture  = texture_loader.load('./textures/sunmap.jpg')
-        defs.mercury.texture = texture_loader.load('./textures/mercurymap.jpg')
-        defs.venus.texture  = texture_loader.load('./textures/venusmap.jpg')
-        defs.earth.texture = texture_loader.load('./textures/earthmap1k.jpg')
-        defs.mars.texture  = texture_loader.load('./textures/marsmap1k.jpg')
+        // defs.sun.texture  = texture_loader.load('./textures/sunmap.jpg')
+        // defs.mercury.texture = texture_loader.load('./textures/mercurymap.jpg')
+        // defs.venus.texture  = texture_loader.load('./textures/venusmap.jpg')
+        // defs.earth.texture = texture_loader.load('./textures/earthmap1k.jpg')
+        // defs.mars.texture  = texture_loader.load('./textures/marsmap1k.jpg')
+        // defs.jupiter.texture  = texture_loader.load('./textures/jupitermap.jpg')
+        // defs.saturn.texture  = texture_loader.load('./textures/saturnmap.jpg')
+        // defs.uranus.texture  = texture_loader.load('./textures/uranusmap.jpg')
+        // defs.neptune.texture  = texture_loader.load('./textures/neptune.jpg')
 
-        const spheres = makeSpheres(app,defs)
+        const spheres = makeSpheres(app,texture_loader,defs)
 
         on($("#show-overview"),'click',() => zoomSphere(app,null))
 
@@ -276,7 +295,7 @@
                 pos.y = 1.5
                 pos.z = -def.sphere.position.z - def.radius*3
             } else {
-                app.virtualCamera.position.set(0,0,-30)
+                app.virtualCamera.position.set(0,0,-40)
             }
         })
 
