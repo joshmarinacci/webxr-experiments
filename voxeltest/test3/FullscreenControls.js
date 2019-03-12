@@ -5,6 +5,12 @@ const HAS_POINTER_LOCK = 'pointerLockElement' in document ||
     'mozPointerLockElement' in document ||
     'webkitPointerLockElement' in document;
 
+
+function requestPointerLock(el) {
+    if(el.requestPointerLock) return el.requestPointerLock()
+    console.log("request pointer lock not found")
+}
+
 const toRad = (deg) => Math.PI / 180 * deg
 
 export class FullScreenControls {
@@ -33,7 +39,6 @@ export class FullScreenControls {
                 this.app.stageRot.rotation.x = Math.min(this.app.stageRot.rotation.x,toRad(45))
             }
 
-
             const res = this.traceRay()
             res.hitPosition.floor()
             this.fire('highlight',res.hitPosition)
@@ -53,15 +58,14 @@ export class FullScreenControls {
             }
         }
         this.errorCallback = (e) => {
-            console.log("error getting pointer lock")
+            console.log("error getting pointer lock",e)
         }
-
-
-
     }
+
     update(time) {
         if(!this.enabled) return
     }
+
     traceRay() {
         const target = new Vector3(0,1.6,-1)
         // target.add(this.camera.position)
@@ -95,7 +99,7 @@ export class FullScreenControls {
             document.addEventListener('mousemove',this.moveCallback,false)
             document.addEventListener('pointerlockerror', this.errorCallback, false);
             document.addEventListener('mousedown',this.mousedownCallback,false)
-            this.app.renderer.domElement.requestPointerLock()
+            requestPointerLock(this.app.renderer.domElement)
         }
     }
     disable() {

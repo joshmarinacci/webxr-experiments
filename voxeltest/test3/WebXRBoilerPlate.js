@@ -70,7 +70,9 @@ export default class WebXRBoilerPlate {
 
     playFullscreen() {
         this.resizeOnNextRepaint = true
-        this.container.requestFullscreen()
+        const el = this.renderer.domElement
+        if(el.requestFullscreen) return el.requestFullscreen()
+        if(el.webkitRequestFullscreen) return el.webkitRequestFullscreen()
     }
 
     exitFullscreen() {
@@ -85,9 +87,10 @@ export default class WebXRBoilerPlate {
     }
 
     checkContainerSize() {
-        if(this.lastSize.width !== this.container.clientWidth || this.lastSize.height !== this.container.clientHeight) {
-            this.lastSize.width = this.container.clientWidth
-            this.lastSize.height = this.container.clientHeight
+        const el = this.renderer.domElement
+        if(this.lastSize.width !== el.clientWidth || this.lastSize.height !== el.clientHeight) {
+            this.lastSize.width = el.clientWidth
+            this.lastSize.height = el.clientHeight
             this.camera.aspect = this.lastSize.width / this.lastSize.height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.lastSize.width, this.lastSize.height);
