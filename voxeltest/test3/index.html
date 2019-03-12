@@ -85,6 +85,7 @@
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
     import {BlockPicker, COLORS} from './BlockPicker.js'
+    import {PigComp} from './PigComp.js'
     import {generateChunkInfoFromFunction, toHexColor} from './utils'
 
     //JQuery-like selector
@@ -122,6 +123,12 @@
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
             if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
+            if(j === -2) {
+                if(i == -8) return 2
+                if(i == +8) return 2
+                if(k == -18) return 2
+                if(k == -8) return 2
+            }
             if(j === -3) {
                 return 1
             }
@@ -154,6 +161,9 @@
 
         const group = new Group()
         app.stagePos.add(group)
+
+        const mobs = new Group()
+        app.stagePos.add(mobs)
 
         function chunkIndexToVector(pos) {
             return new Vector3(pos[0],pos[1],pos[2])
@@ -306,6 +316,11 @@
         }
 
 
+        const comps = []
+        comps.push(new PigComp(chunkManager))
+        comps.forEach(comp => mobs.add(comp.mesh))
+
+
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
@@ -315,6 +330,7 @@
             keyboardControls.update(time)
             vrControls.update(time)
             updateChunks()
+            comps.forEach(comp => comp.update(time))
         })
 
         //update progress indicator while loading

@@ -129,5 +129,48 @@ jumping one meter ahead per click?
 
 
 
+=====================
 
- 
+
+autonomous entities (MOBs?)
+
+
+an entity is an object with a threejs mesh (or possibly more). it is autonomous in the sense it has
+it's own tick() and can calculate where it is and wants to be. It is in charge of it's own animation.
+
+first example: Pig
+
+* composed of a pink cube. 
+* on each tick it applies gravity to ensure falling
+* on each tick it moves forward on it's heading
+* on each tick it checks if it has run into something. if so, pick a new random heading
+* speed in the heading direction is constant
+
+
+To start place it in a walled gate. Let the player take some gate walls down to let the pig run around.
+Put a trench around the pig that it will fall into so it can't get too far.
+
+``` javascript
+
+class ECSComp {
+    addEventListener()
+    fire()
+    update()
+}
+
+class Pig extends ECSComp {
+    constructor() {
+    }
+    fire collide    
+}
+
+const comps = []
+
+app.onUpdate(time) {
+    comps.forEach(c => c.upudate(time))
+}
+
+const pig = new Pig()
+pig.tick()  
+
+```
