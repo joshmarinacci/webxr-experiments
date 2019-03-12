@@ -1,10 +1,7 @@
-import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3,
-    TextureLoader, Group, DoubleSide, FrontSide,
-} from "./node_modules/three/build/three.module.js"
-import {Pointer} from "./Pointer.js"
+import {Vector3,} from "./node_modules/three/build/three.module.js"
+import {Pointer, POINTER_CLICK} from "./Pointer.js"
 import {traceRay} from "./raycast.js"
-import {POINTER_CLICK} from './Pointer.js'
+import {ECSComp} from './ECSComp'
 
 
 const toRad = (deg) => Math.PI/180*deg
@@ -18,16 +15,16 @@ const DIRS = {
     LEFT:'LEFT',
     RIGHT:'RIGHT'
 }
-export default class VRControls {
+const TRIGGER = 'trigger'
 
+export default class VRControls extends ECSComp {
 
     constructor(app, distance, chunkManager) {
-        this.listeners = {}
+        super()
         this.app = app
         this.distance = distance
         this.chunkManager = chunkManager
         this.states = { touchpad: false}
-        this.enabled = false
         this.pointer = new Pointer(app,{
             //don't intersect with anything. only use for orientation and trigger state
             intersectionFilter: o => false,
@@ -35,10 +32,9 @@ export default class VRControls {
             mouseSimulatesController:false,
         })
         this.pointer.on(POINTER_CLICK, () => {
-            if(!this.enabled) return
-            // console.log("clicked")
+            if(!this.isEnabled()) return
             const res = this.traceRay()
-            this.fire('trigger',res)
+            this._fire(TRIGGER,res)
         })
 
         this.activeDir = DIRS.NONE
@@ -60,15 +56,6 @@ export default class VRControls {
             hitPosition:hitPosition,
             hitNormal: hitNormal
         }
-    }
-
-    addEventListener(type,cb) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].push(cb)
-    }
-    fire(type,payload) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb(payload))
     }
 
     rotateLeft() {
@@ -93,24 +80,18 @@ export default class VRControls {
     }
 
     update(time) {
-        if(!this.enabled) return
         this.scanGamepads(time)
         this.updateCursor(time)
-    }
-    enable() {
-        this.enabled = true
     }
 
     updateCursor(time) {
         this.pointer.tick(time)
         const res = this.traceRay()
         res.hitPosition.floor()
-        this.fire('highlight',res)
+        this._fire('highlight',res)
     }
 
     scanGamepads(time) {
-        if(!this.enabled) return
-        // console.log("gamepads",navigator.getGamepads())
         const gamepads = navigator.getGamepads()
         for(let i=0; i<gamepads.length; i++) {
             const gamepad = gamepads[i]
@@ -148,11 +129,11 @@ export default class VRControls {
         if(touchpad.pressed === false && this.states.touchpad === true) {
             if(this.activeDir === DIRS.LEFT) {
                 // console.log("left click")
-                this.fire('toggle-pointer',this)
+                this._fire('toggle-pointer',this)
             }
             if(this.activeDir === DIRS.RIGHT) {
                 // console.log("right click")
-                this.fire('show-dialog',this)
+                this._fire('show-dialog',this)
             }
         }
 

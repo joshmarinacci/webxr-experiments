@@ -102,6 +102,8 @@
         container: $("#container")
     })
     app.init().then((app) => {
+        const comps = []
+
         app.scene.background = new Color( 0xcccccc );
 
         //load a cat texture
@@ -122,10 +124,10 @@
         const flat = (i,j,k) => {
             if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
             if(j === -2) {
-                if(i == -8) return 2
-                if(i == +8) return 2
-                if(k == -18) return 2
-                if(k == -8) return 2
+                if(i === -8) return 2
+                if(i === +8) return 2
+                if(k === -18) return 2
+                if(k === -8) return 2
             }
             if(j === -3) {
                 return 1
@@ -139,7 +141,6 @@
             cubeSize:1,
             chunkSize:CHUNK_SIZE,
             generateVoxelChunk: (low, high, cx,cy,cz) => {
-                console.log("cache size", Object.keys(CHUNK_CACHE).length)
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
                 return generateChunkInfoFromFunction(low, high, flat)
@@ -239,6 +240,7 @@
 
 
         const vrControls = new VRControls(app, RAYCAST_DISTANCE, chunkManager)
+        comps.push(vrControls)
         on(vrControls,'highlight',(res) => {
             if(destroyBlockActive) {
                 moveHighlight(res.hitPosition)
@@ -262,6 +264,7 @@
         on(desktopControls,'highlight',moveHighlight)
         on(desktopControls,'setblock',createBlock)
         on(desktopControls,'removeblock',removeBlock)
+        comps.push(desktopControls)
 
         const fullscreenControls = new FullScreenControls(app, chunkManager)
         on(fullscreenControls,'highlight', moveHighlight)
@@ -272,10 +275,12 @@
             fullscreenControls.disable()
             desktopControls.enable()
         })
+        comps.push(fullscreenControls)
 
         const keyboardControls = new KeyboardControls(app)
         on(keyboardControls, 'show-dialog',toggleDialog)
         keyboardControls.enable()
+        comps.push(keyboardControls)
 
 
         function rebuildMesh(chunk) {
@@ -314,21 +319,19 @@
         }
 
 
-        const comps = []
-        comps.push(new PigComp(chunkManager))
-        comps.forEach(comp => mobs.add(comp.mesh))
+        const pig = new PigComp(chunkManager)
+        mobs.add(pig.mesh)
+        comps.push(pig)
 
 
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
             materials.tick(time)
-            desktopControls.update(time)
-            fullscreenControls.update(time)
-            keyboardControls.update(time)
-            vrControls.update(time)
             updateChunks()
-            comps.forEach(comp => comp.update(time))
+            comps.forEach(comp => {
+                if(comp.isEnabled()) comp.update(time)
+            })
         })
 
         //update progress indicator while loading
@@ -346,7 +349,7 @@
                 desktopControls.disable()
                 app.playFullscreen()
                 setTimeout(()=>{
-                    fullscreenControls.enable()
+                fullscreenControls.enable()
                 },100)
             })
         })

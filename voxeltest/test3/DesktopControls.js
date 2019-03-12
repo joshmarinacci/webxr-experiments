@@ -1,42 +1,44 @@
 import {Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
 import {Pointer} from './Pointer.js'
+import {ECSComp} from './ECSComp'
+import {EPSILON} from './utils'
 
 const LEFT_MOUSE_BUTTON = 1
 const RIGHT_MOUSE_BUTTON = 2
 
-export class DesktopControls {
+export class DesktopControls extends ECSComp {
 
     constructor(app, distance, chunkManager) {
+        super()
         this.app = app
-        this.listeners = {}
         this.chunkManager = chunkManager
         this.distance = distance
-        this.enabled = false
-        this.app.renderer.domElement.addEventListener('contextmenu',e => {
+        this.canvas = this.app.renderer.domElement
+        this.canvas.addEventListener('contextmenu',e => {
             e.preventDefault()
             e.stopPropagation()
         })
-        this.app.renderer.domElement.addEventListener('mousemove',e => {
-            if(!this.enabled) return
+        this.canvas.addEventListener('mousemove',e => {
+            if(!this.isEnabled()) return
             const res = this.traceRay(e)
             res.hitPosition.floor()
-            this.fire('highlight',res.hitPosition)
+            this._fire('highlight',res.hitPosition)
         })
-        this.app.renderer.domElement.addEventListener('mousedown',e => {
-            if(!this.enabled) return
+        this.canvas.addEventListener('mousedown',e => {
+            if(!this.isEnabled()) return
 
             if(e.buttons === LEFT_MOUSE_BUTTON) {
                 const res = this.traceRay(e)
                 res.hitPosition.add(res.hitNormal)
-                this.fire('setblock',res.hitPosition)
+                this._fire('setblock',res.hitPosition)
             }
             if(e.buttons === RIGHT_MOUSE_BUTTON) {
                 const res = this.traceRay(e)
-                this.fire('removeblock',res.hitPosition)
+                this._fire('removeblock',res.hitPosition)
             }
         })
-        this.app.renderer.domElement.addEventListener('mouseup',e => {
+        this.canvas.addEventListener('mouseup',e => {
         })
 
         this.pointer = new Pointer(app,{
@@ -47,17 +49,9 @@ export class DesktopControls {
         })
         this.pointer.disable()
     }
-    addEventListener(type,cb) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].push(cb)
-    }
-    fire(type,payload) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb(payload))
-    }
     traceRay(e) {
         const mouse = new Vector2()
-        const bounds = this.app.renderer.domElement.getBoundingClientRect()
+        const bounds = this.canvas.getBoundingClientRect()
         mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
         const target = new Vector3(mouse.x,mouse.y,-1)
@@ -69,10 +63,9 @@ export class DesktopControls {
         const ray = new Ray(pos)
         ray.lookAt(target)
 
-        const epilson = 1e-8
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,epilson)
+        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
         return {
             hitBlock:hitBlock,
             hitPosition:hitPosition,
@@ -80,15 +73,14 @@ export class DesktopControls {
         }
     }
     enable() {
-        this.enabled = true
+        super.enable()
         this.pointer.enable()
     }
     disable() {
-        this.enabled = false
+        super.disable()
         this.pointer.disable()
     }
     update(time) {
-        if(!this.enabled) return
         this.pointer.tick(time)
     }
 }

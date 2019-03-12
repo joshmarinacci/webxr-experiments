@@ -21,3 +21,9 @@ export function generateChunkInfoFromFunction(l, h, f) {
         dims:d,
     };
 }
+
+
+export const toRad = (deg) => Math.PI / 180 * deg
+
+
+export const EPSILON = 1e-8

@@ -87,13 +87,20 @@ export default class WebXRBoilerPlate {
     }
 
     checkContainerSize() {
-        const el = this.renderer.domElement
-        if(this.lastSize.width !== el.clientWidth || this.lastSize.height !== el.clientHeight) {
+        let el = this.renderer.domElement
+        if(this.resizeOnNextRepaint || this.lastSize.width !== el.clientWidth || this.lastSize.height !== el.clientHeight) {
+            if(document.fullscreenElement) {
+                //inside fullscreen
+            }  else {
+                //outside fullscreen
+                el = this.container
+            }
             this.lastSize.width = el.clientWidth
             this.lastSize.height = el.clientHeight
             this.camera.aspect = this.lastSize.width / this.lastSize.height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.lastSize.width, this.lastSize.height);
         }
+        this.resizeOnNextRepaint = false
     }
 }

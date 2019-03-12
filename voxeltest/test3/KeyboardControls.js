@@ -1,12 +1,12 @@
 import {Vector3,} from "./node_modules/three/build/three.module.js"
+import {ECSComp} from './ECSComp'
 const toRad = (deg) => Math.PI / 180 * deg
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
-export class KeyboardControls {
+export class KeyboardControls extends ECSComp {
     constructor(app) {
-        this.listeners = {}
-        this.enabled = false
+        super()
         this.app = app
 
         this.keystates = {
@@ -22,35 +22,23 @@ export class KeyboardControls {
         }
 
 
-        this.keydown_handler = (e)=>{
-            // console.log('down',e.key)
+        this._keydown_handler = (e)=>{
+            if(!this.isEnabled()) return
             if(this.keystates[e.key]) {
                 this.keystates[e.key].current = true
             }
         }
-        this.keyup_handler = (e)=>{
-            // console.log('up',e.key)
+        this._keyup_handler = (e)=>{
+            if(!this.isEnabled()) return
             if(this.keystates[e.key]) {
                 this.keystates[e.key].current = false
             }
         }
-    }
-    addEventListener(type,cb) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].push(cb)
-    }
-    fire(type,payload) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb(payload))
-    }
-    enable() {
-        this.enabled = true
-        document.addEventListener('keydown',this.keydown_handler)
-        document.addEventListener('keyup',this.keyup_handler)
+        document.addEventListener('keydown',this._keydown_handler)
+        document.addEventListener('keyup',this._keyup_handler)
     }
 
     update(time) {
-        if(!this.enabled) return
         if(this.keystates.ArrowUp.current === true)  this.glideForward()
         if(this.keystates.ArrowDown.current === true)  this.glideBackward()
         if(this.keystates.ArrowLeft.current === true)  this.rotateLeft()

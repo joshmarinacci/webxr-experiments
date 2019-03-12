@@ -1,5 +1,8 @@
 import {Ray, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from './raycast.js'
+import {ECSComp} from './ECSComp.js'
+import {toRad} from "./utils.js"
+import {EPSILON} from './utils'
 
 const HAS_POINTER_LOCK = 'pointerLockElement' in document ||
     'mozPointerLockElement' in document ||
@@ -11,13 +14,11 @@ function requestPointerLock(el) {
     console.log("request pointer lock not found")
 }
 
-const toRad = (deg) => Math.PI / 180 * deg
 
-export class FullScreenControls {
+export class FullScreenControls extends ECSComp {
     constructor(app, chunkManager) {
+        super()
         this.app = app
-        this.enabled = false
-        this.listeners = {}
         this.chunkManager = chunkManager
 
         this.changeCallback = () => {
@@ -29,7 +30,7 @@ export class FullScreenControls {
             }
         }
         this.moveCallback = (e) => {
-            if(!this.enabled) return
+            if(!this.isEnabled()) return
             this.app.stageRot.rotation.y += e.movementX/300
             this.app.stageRot.rotation.y += e.movementX/300
 
@@ -41,20 +42,20 @@ export class FullScreenControls {
 
             const res = this.traceRay()
             res.hitPosition.floor()
-            this.fire('highlight',res.hitPosition)
+            this._fire('highlight',res.hitPosition)
         }
         this.mousedownCallback = (e) => {
-            if(!this.enabled) return
+            if(!this.isEnabled()) return
             const LEFT_MOUSE_BUTTON = 1
             const RIGHT_MOUSE_BUTTON = 2
             if(e.buttons === LEFT_MOUSE_BUTTON) {
                 const res = this.traceRay()
                 res.hitPosition.add(res.hitNormal)
-                this.fire('setblock',res.hitPosition)
+                this._fire('setblock',res.hitPosition)
             }
             if(e.buttons === RIGHT_MOUSE_BUTTON) {
                 const res = this.traceRay()
-                this.fire('removeblock',res.hitPosition)
+                this._fire('removeblock',res.hitPosition)
             }
         }
         this.errorCallback = (e) => {
@@ -62,27 +63,17 @@ export class FullScreenControls {
         }
     }
 
-    update(time) {
-        if(!this.enabled) return
-    }
-
     traceRay() {
         const target = new Vector3(0,1.6,-1)
-        // target.add(this.camera.position)
         this.app.stagePos.worldToLocal(target)
-
-        const pos = new Vector3(0,1.6,0)//this.camera.position.clone()
+        const pos = new Vector3(0,1.6,0)
         this.app.stagePos.worldToLocal(pos)
         const ray = new Ray(pos)
         ray.lookAt(target)
-        // console.log("looking at",target)
 
-        const epilson = 1e-8
         const hitNormal = new Vector3(0,0,0)
-        // const distance = RAYCAST_DISTANCE
         const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,epilson)
-        // console.log("hit",hitBlock)
+        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
         return {
             hitBlock:hitBlock,
             hitPosition:hitPosition,
@@ -91,8 +82,7 @@ export class FullScreenControls {
     }
 
     enable() {
-        this.enabled = true
-        // console.log("enabling", 'supported = ',HAS_POINTER_LOCK)
+        super.enable()
         if(HAS_POINTER_LOCK) {
             // console.log("we have pointer lock")
             document.addEventListener('pointerlockchange',this.changeCallback,false)
@@ -103,22 +93,12 @@ export class FullScreenControls {
         }
     }
     disable() {
-        if(this.enabled) {
-            // console.log('disabling pointer lock')
-            document.removeEventListener('pointerlockchange', this.changeCallback, false)
-            document.removeEventListener('mousemove', this.moveCallback, false)
-            document.removeEventListener('pointerlockerror', this.errorCallback, false);
-            this.enabled = false
-            this.fire('exit', this)
-        }
-    }
-    addEventListener(type,cb) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].push(cb)
-    }
-    fire(type,payload) {
-        if(!this.listeners[type]) this.listeners[type] = []
-        this.listeners[type].forEach(cb => cb(payload))
+        if(!this.isEnabled()) return //don't recurse if already disabled
+        super.disable()
+        document.removeEventListener('pointerlockchange', this.changeCallback, false)
+        document.removeEventListener('mousemove', this.moveCallback, false)
+        document.removeEventListener('pointerlockerror', this.errorCallback, false);
+        this._fire('exit', this)
     }
 }
 
