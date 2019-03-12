@@ -172,9 +172,15 @@
     function makeSpheres(app, defs) {
         return Object.keys(defs).map(key => {
             const def = defs[key]
+            let color = def.color
+            let texture = null
+            if(def.texture) {
+                texture = def.texture
+                color = '#ffffff'
+            }
             const sphere = new Mesh(
-                new SphereBufferGeometry(def.radius,20,10),
-                new MeshLambertMaterial({color:def.color})
+                new SphereBufferGeometry(def.radius,32,32),
+                new MeshLambertMaterial({color:color,map:texture})
             )
             sphere.position.set(def.orbit.radius,0,0)
             sphere.userData.def = def
@@ -222,7 +228,11 @@
         //load a cat texture
         const texture_loader = new TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
-        const texture = texture_loader.load('./cat.jpg')
+        defs.sun.texture  = texture_loader.load('./textures/sunmap.jpg')
+        defs.mercury.texture = texture_loader.load('./textures/mercurymap.jpg')
+        defs.venus.texture  = texture_loader.load('./textures/venusmap.jpg')
+        defs.earth.texture = texture_loader.load('./textures/earthmap1k.jpg')
+        defs.mars.texture  = texture_loader.load('./textures/marsmap1k.jpg')
 
         const spheres = makeSpheres(app,defs)
 
@@ -256,6 +266,7 @@
                         0,
                         Math.sin(theta)*def.orbit.radius
                     )
+                    sphere.rotation.y = time/3000
                 })
             }
             if(cameraTarget) {
