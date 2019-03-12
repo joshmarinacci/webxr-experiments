@@ -1,14 +1,14 @@
 // var isTransparent = require('opaque').transparent;
 
-import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
-    MeshFaceMaterial,
-    MeshBasicMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3,
-    TextureLoader, Group,
+import {
+    Color,
     DoubleSide,
-    NearestFilter, LinearMipMapLinearFilter,
-    Texture,
     FaceColors,
+    LinearMipMapLinearFilter,
+    MeshBasicMaterial,
+    MeshLambertMaterial,
+    NearestFilter,
+    Texture,
 } from "./node_modules/three/build/three.module.js"
 
 const createAtlas = window.atlaspack
@@ -103,7 +103,7 @@ export class VoxelTexture {
             });
         });
         if (Object.keys(load).length > 0) {
-            each(Object.keys(load), this.pack.bind(this),  () => {
+            each(Object.keys(load), this.pack.bind(this), () => {
                 this._afterLoading();
                 done(materialSlice);
             });
@@ -114,6 +114,7 @@ export class VoxelTexture {
 
     pack(name, done) {
         const self = this
+
         function pack(img) {
             var node = self.atlas.pack(img);
             if (node === false) {
@@ -159,7 +160,6 @@ export class VoxelTexture {
     };
 
 
-
     _expandName(name) {
         if (name === null) return Array(6);
         if (name.top) return [name.back, name.front, name.top, name.bottom, name.left, name.right];
@@ -187,7 +187,7 @@ export class VoxelTexture {
             this.material.needsUpdate = true;
             //window.open(this.canvas.toDataURL());
             if (this._meshQueue.length > 0) {
-                this._meshQueue.forEach( (queue, i) => {
+                this._meshQueue.forEach((queue, i) => {
                     this.paint.apply(queue.self, queue.args);
                     delete this._meshQueue[i];
                 });
@@ -355,6 +355,7 @@ export class VoxelTexture {
         // tic.tick(dt);
     };
 }
+
 function uvrot(coords, deg) {
     if (deg === 0) return coords;
     var c = [];
@@ -376,7 +377,7 @@ function ext(name) {
 }
 
 function defaults(obj) {
-    [].slice.call(arguments, 1).forEach(function(from) {
+    [].slice.call(arguments, 1).forEach(function (from) {
         if (from) for (var k in from) if (obj[k] == null) obj[k] = from[k];
     });
     return obj;
@@ -384,8 +385,8 @@ function defaults(obj) {
 
 function each(arr, it, done) {
     var count = 0;
-    arr.forEach(function(a) {
-        it(a, function() {
+    arr.forEach(function (a) {
+        it(a, function () {
             count++;
             if (count >= arr.length) done();
         });
