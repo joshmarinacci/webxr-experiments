@@ -1,8 +1,8 @@
 import {Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
 import {Pointer} from './Pointer.js'
-import {ECSComp} from './ECSComp'
-import {EPSILON} from './utils'
+import {ECSComp} from './ECSComp.js'
+import {EPSILON} from './utils.js'
 
 const LEFT_MOUSE_BUTTON = 1
 const RIGHT_MOUSE_BUTTON = 2

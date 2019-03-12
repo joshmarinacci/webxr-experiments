@@ -1,5 +1,5 @@
 import {Vector3,} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp'
+import {ECSComp} from './ECSComp.js'
 const toRad = (deg) => Math.PI / 180 * deg
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1

@@ -1,6 +1,6 @@
 import {Vector3, Mesh, MeshLambertMaterial, BoxBufferGeometry} from "./node_modules/three/build/three.module.js"
 import {ECSComp} from "./ECSComp.js"
-import {traceRay} from './raycast'
+import {traceRay} from './raycast.js'
 
 export class PigComp extends ECSComp {
     constructor(chunkManager) {

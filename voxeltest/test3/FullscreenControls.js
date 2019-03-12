@@ -1,8 +1,7 @@
 import {Ray, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from './raycast.js'
 import {ECSComp} from './ECSComp.js'
-import {toRad} from "./utils.js"
-import {EPSILON} from './utils'
+import {toRad, EPSILON} from "./utils.js"
 
 const HAS_POINTER_LOCK = 'pointerLockElement' in document ||
     'mozPointerLockElement' in document ||
