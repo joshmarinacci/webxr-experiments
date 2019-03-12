@@ -8,20 +8,76 @@
         body {
             max-width: 40em;
             margin: auto;
+            font-family: sans-serif;
         }
         #container {
-            border: 3px solid red;
+            border: 0px solid red;
             width: 500px;
             height: 300px;
         }
         #fullscreen, #entervr {
             display: none;
         }
+
+        #menu li {
+            list-style: none;
+            border: 1px solid black;
+            background-color: #61dafb;
+            margin: 0.5em;
+            padding: 0.5em;
+        }
+        #menu li:hover {
+            background-color: #0e5895;
+        }
+
+
+        body {
+            display: grid;
+            grid-template-columns: [sidebar]1fr [main]1fr 1fr;
+            grid-template-rows: 4em [main]1fr 4em;
+        }
+
+        #title {
+            grid-column: main;
+            grid-row: 0;
+        }
+        #menu {
+            grid-column: sidebar;
+            grid-row: main;
+        }
+        #container {
+            grid-column: main;
+            grid-row: main;
+        }
+        #overlay {
+            grid-column: main;
+            grid-row: main;
+            /*background-color: rgba(255,255,255,0.8);*/
+            display: flex;
+            flex-direction: row;
+            align-items: end;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-<div>
+<h3 id="title">Solar System Tour</h3>
+
+
+<ul id="menu">
+    <li id="show-sun">Sun</li>
+    <li id="show-earth">Earth</li>
+    <li id="show-mars">Mars</li>
+    <li id="show-venus">Venus</li>
+    <li id="show-mercury">Mercury</li>
+    <li id="show-overview">Overview</li>
+</ul>
+
+<div id="container"></div>
+
+
+<div id="overlay">
     <div id="progress">
         <label>loading</label>
         <progress id="progress-bar" value="0.5"></progress>
@@ -29,7 +85,6 @@
     <button id="fullscreen">play full screen</button>
     <button id="entervr">play in vr</button>
 </div>
-<div id="container"></div>
 
 
 <script type="module">
@@ -38,9 +93,11 @@
         Color, DirectionalLight, AmbientLight,
         TextureLoader, AudioListener, Audio, AudioLoader,
         SphereBufferGeometry,
+        Vector3, Group,
     } from "./node_modules/three/build/three.module.js"
     import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
-    import {Pointer, POINTER_PRESS, POINTER_RELEASE} from "./node_modules/webxr-boilerplate/Pointer.js"
+    import {Pointer} from "./node_modules/webxr-boilerplate/Pointer.js"
+    import InfoText from './InfoText.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -50,9 +107,12 @@
         container: $("#container")
     })
 
+    let animateOrbits = true
+    let cameraTarget = null
 
     const defs = {
         sun: {
+            name:'Sun',
             radius:4,
             color:'yellow',
             orbit: {
@@ -61,6 +121,7 @@
             }
         },
         mercury: {
+            name:'Mercury',
             radius: 0.5,
             color:'gray',
             orbit: {
@@ -69,6 +130,7 @@
             }
         },
         venus: {
+            name:'Venus',
             radius: 0.8,
             color:'pink',
             orbit: {
@@ -77,6 +139,7 @@
             }
         },
         earth: {
+            name:'Earth',
             radius: 1,
             color:'blue',
             orbit: {
@@ -85,12 +148,24 @@
             }
         },
         mars: {
+            name:'Mars',
             radius: 0.8,
             color:'red',
             orbit: {
                 radius: 20,
                 speed:8,
             }
+        }
+    }
+
+
+    function zoomSphere(app,key,sphere) {
+        cameraTarget = key
+        if(cameraTarget) {
+            app.infoText.visible = true
+            app.infoText.setPlanet(defs[key])
+        } else {
+            app.infoText.visible = false
         }
     }
 
@@ -101,15 +176,19 @@
                 new SphereBufferGeometry(def.radius,20,10),
                 new MeshLambertMaterial({color:def.color})
             )
-            sphere.position.set(def.orbit.radius,1.5,-30)
+            sphere.position.set(def.orbit.radius,0,0)
             sphere.userData.def = def
-            app.scene.add(sphere)
+            def.sphere = sphere
+            app.virtualCamera.add(sphere)
+            on($(`#show-${key}`),'click',()=>{
+                zoomSphere(app,key)
+            })
             return sphere
         })
     }
 
     app.init().then((app) => {
-        app.scene.background = new Color( 0xcccccc );
+        app.scene.background = new Color( 0x000000 );
 
         //create stats viewer
         const stats = new VRStats(app)
@@ -117,6 +196,10 @@
         app.camera.add(stats)
         // add camera to scene so we can see it
         app.scene.add(app.camera)
+
+        app.virtualCamera = new Group()
+        app.virtualCamera.position.set(0,0,-30)
+        app.scene.add(app.virtualCamera)
 
 
         const pointer = new Pointer(app,{
@@ -143,6 +226,8 @@
 
         const spheres = makeSpheres(app,defs)
 
+        on($("#show-overview"),'click',() => zoomSphere(app,null))
+
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );
         light.position.set( 10, 10, 5 ).normalize();
@@ -151,21 +236,37 @@
         //a standard ambient light
         app.scene.add(new AmbientLight(0xffffff,0.3))
 
+        app.infoText = new InfoText(2,2,512)
+        app.scene.add(app.infoText)
+        app.infoText.visible = false
+        app.infoText.position.set(-2,1.5,-3)
+
 
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
             pointer.tick(time)
             stats.update(time)
-            spheres.forEach(sphere => {
-                const def = sphere.userData.def
-                const theta = time/100*def.orbit.speed/100
-                sphere.position.set(
-                    Math.cos(theta)*def.orbit.radius,
-                    0,
-                    -30+Math.sin(theta)*def.orbit.radius
+            if(animateOrbits) {
+                spheres.forEach(sphere => {
+                    const def = sphere.userData.def
+                    const theta = time/300*def.orbit.speed/100
+                    sphere.position.set(
+                        Math.cos(theta)*def.orbit.radius,
+                        0,
+                        Math.sin(theta)*def.orbit.radius
                     )
-            })
+                })
+            }
+            if(cameraTarget) {
+                const pos = app.virtualCamera.position
+                const def = defs[cameraTarget]
+                pos.x = -def.sphere.position.x
+                pos.y = 1.5
+                pos.z = -def.sphere.position.z - def.radius*3
+            } else {
+                app.virtualCamera.position.set(0,0,-30)
+            }
         })
 
         //update progress indicator while loading
@@ -178,7 +279,6 @@
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
             on($("#fullscreen"),'click',()=> {
-                music.play()
                 app.playFullscreen()
             })
         })
@@ -187,7 +287,6 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
-                music.play()
                 app.enterVR()
             })
         })
