@@ -67,14 +67,6 @@
 
 <script src="node_modules/atlaspack/index.js"></script>
 <script type="module">
-    /*
-    size of a chunk is 4096 integers if chunk_size is 16, which is 16k.  After walking around I could have a thousand
-    chunks in the cache, which could be something like 16MB of ram. ie: not much. A better question is how to save it.
-
-
-
-
-     */
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
     // managers chunks
@@ -86,16 +78,14 @@
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial,
-        Color, DirectionalLight, AmbientLight, Vector3, Vector2,
-        Object3D,
-        TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
+        Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
-    import { DesktopController} from './DesktopController.js'
+    import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
-    import {POINTER_CLICK} from './Pointer.js'
     import {BlockPicker, COLORS} from './BlockPicker.js'
+    import {generateChunkInfoFromFunction, toHexColor} from './utils'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -107,15 +97,9 @@
     const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
 
-
-
     const app = new WebXRBoilerPlate({
         container: $("#container")
     })
-
-
-
-
     app.init().then((app) => {
         app.scene.background = new Color( 0xcccccc );
 
@@ -132,12 +116,6 @@
             materialParams: { side: DoubleSide},
             materialFlatColor:true
         })
-
-        function toHexColor(num) {
-            let str = num.toString(16)
-            while(str.length < 6) str = '0' + str
-            return '#' + str
-        }
         materials.load(COLORS.map(c => toHexColor(c.color)))
 
 
@@ -151,24 +129,6 @@
             return 0
         }
 
-        function generateChunkFromFunction(l, h, f) {
-            let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
-            let v = new Int32Array(d[0]*d[1]*d[2])
-            let n = 0;
-            for(let k=l[2]; k<h[2]; ++k)
-                for(let j=l[1]; j<h[1]; ++j)
-                    for(let i=l[0]; i<h[0]; ++i, ++n) {
-                        v[n] = f(i,j,k);
-                    }
-            return {
-                low:l,
-                high:h,
-                voxels:v,
-                dims:d,
-            };
-        }
-
-
         const chunkManager = new ChunkManager({
             chunkDistance:2,
             cubeSize:1,
@@ -177,7 +137,7 @@
                 console.log("cache size", Object.keys(CHUNK_CACHE).length)
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
-                return generateChunkFromFunction(low, high, flat)
+                return generateChunkInfoFromFunction(low, high, flat)
             },
         });
 
@@ -243,10 +203,10 @@
             destroyBlockActive = !destroyBlockActive
             if(destroyBlockActive) {
                 highlight_cube.material.color.set(0xff0000)
-                threeDofController.pointer.controller1.line.material.color.set(0x880000)
+                vrControls.pointer.controller1.line.material.color.set(0x880000)
             } else {
                 highlight_cube.material.color.set(0x00ff00)
-                threeDofController.pointer.controller1.line.material.color.set(0x008800)
+                vrControls.pointer.controller1.line.material.color.set(0x008800)
             }
         }
 
@@ -270,8 +230,8 @@
         }
 
 
-        const threeDofController = new VRControls(app, RAYCAST_DISTANCE, chunkManager)
-        on(threeDofController,'highlight',(res) => {
+        const vrControls = new VRControls(app, RAYCAST_DISTANCE, chunkManager)
+        on(vrControls,'highlight',(res) => {
             if(destroyBlockActive) {
                 moveHighlight(res.hitPosition)
             } else {
@@ -279,7 +239,7 @@
                 moveHighlight(res.hitPosition)
             }
         })
-        on(threeDofController,'trigger',(res) => {
+        on(vrControls,'trigger',(res) => {
             if(destroyBlockActive) {
                 removeBlock(res.hitPosition)
             } else {
@@ -287,27 +247,27 @@
                 createBlock(res.hitPosition)
             }
         })
-        on(threeDofController,'toggle-pointer',togglePointer)
-        on(threeDofController,'show-dialog',toggleDialog)
+        on(vrControls,'toggle-pointer',togglePointer)
+        on(vrControls,'show-dialog',toggleDialog)
 
-        const desktopController = new DesktopController(app, RAYCAST_DISTANCE, chunkManager)
-        on(desktopController,'highlight',moveHighlight)
-        on(desktopController,'setblock',createBlock)
-        on(desktopController,'removeblock',removeBlock)
+        const desktopControls = new DesktopControls(app, RAYCAST_DISTANCE, chunkManager)
+        on(desktopControls,'highlight',moveHighlight)
+        on(desktopControls,'setblock',createBlock)
+        on(desktopControls,'removeblock',removeBlock)
 
-        const fullscreenController = new FullScreenControls(app, chunkManager)
-        on(fullscreenController,'highlight', moveHighlight)
-        on(fullscreenController,'setblock',createBlock)
-        on(fullscreenController,'removeblock',removeBlock)
-        on(fullscreenController,'exit',()=>{
+        const fullscreenControls = new FullScreenControls(app, chunkManager)
+        on(fullscreenControls,'highlight', moveHighlight)
+        on(fullscreenControls,'setblock',createBlock)
+        on(fullscreenControls,'removeblock',removeBlock)
+        on(fullscreenControls,'exit',()=>{
             app.exitFullscreen()
-            fullscreenController.disable()
-            desktopController.enable()
+            fullscreenControls.disable()
+            desktopControls.enable()
         })
 
-        const keyboardController = new KeyboardControls(app)
-        on(keyboardController, 'show-dialog',toggleDialog)
-        keyboardController.enable()
+        const keyboardControls = new KeyboardControls(app)
+        on(keyboardControls, 'show-dialog',toggleDialog)
+        keyboardControls.enable()
 
 
         function rebuildMesh(chunk) {
@@ -350,17 +310,17 @@
         // this is the render loop
         app.onRender((time, app)=> {
             materials.tick(time)
-            desktopController.update(time)
-            fullscreenController.update(time)
-            keyboardController.update(time)
-            threeDofController.update(time)
+            desktopControls.update(time)
+            fullscreenControls.update(time)
+            keyboardControls.update(time)
+            vrControls.update(time)
             updateChunks()
         })
 
         //update progress indicator while loading
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 
-        desktopController.enable()
+        desktopControls.enable()
 
         //when all assets are loaded
         on(app,'loaded',()=>{
@@ -369,10 +329,10 @@
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
             on($("#fullscreen"),'click',()=> {
-                desktopController.disable()
+                desktopControls.disable()
                 app.playFullscreen()
                 setTimeout(()=>{
-                    fullscreenController.enable()
+                    fullscreenControls.enable()
                 },100)
             })
         })
@@ -381,8 +341,8 @@
             // show the enter VR button
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
-                desktopController.disable()
-                threeDofController.enable()
+                desktopControls.disable()
+                vrControls.enable()
                 app.enterVR()
             })
         })
@@ -398,7 +358,6 @@
                 .load(chunkManager)
                 .then(() => rebuildAllMeshes())
         })
-
 
     })
 

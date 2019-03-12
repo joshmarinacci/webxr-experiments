@@ -5,7 +5,7 @@ import {Pointer} from './Pointer.js'
 const LEFT_MOUSE_BUTTON = 1
 const RIGHT_MOUSE_BUTTON = 2
 
-export class DesktopController {
+export class DesktopControls {
 
     constructor(app, distance, chunkManager) {
         this.app = app
