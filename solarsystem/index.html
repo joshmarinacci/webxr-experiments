@@ -13,7 +13,7 @@
         #container {
             border: 0px solid red;
             width: 500px;
-            height: 300px;
+            height: 500px;
         }
         #fullscreen, #entervr {
             display: none;
@@ -73,6 +73,9 @@
     <li id="show-venus">Venus</li>
     <li id="show-mercury">Mercury</li>
     <li id="show-jupiter">Jupiter</li>
+    <li id="show-saturn">Saturn</li>
+    <li id="show-uranus">Uranus</li>
+    <li id="show-neptune">Neptune</li>
 </ul>
 
 <div id="container"></div>
@@ -169,7 +172,37 @@
             textureName:'./textures/jupitermap.jpg',
             orbit: {
                 radius: 30,
-                speed:8,
+                speed:6,
+            }
+        },
+        saturn: {
+            name:'Saturn',
+            radius: 2.5,
+            color:'yellow',
+            textureName:'./textures/saturnmap.jpg',
+            orbit: {
+                radius: 40,
+                speed:2,
+            }
+        },
+        uranus: {
+            name:'Uranus',
+            radius: 2.0,
+            color:'blue',
+            textureName:'./textures/uranusmap.jpg',
+            orbit: {
+                radius: 50,
+                speed:1,
+            }
+        },
+        neptune: {
+            name:'Neptune',
+            radius: 2.0,
+            color:'violet',
+            textureName:'./textures/neptunemap.jpg',
+            orbit: {
+                radius: 60,
+                speed:0.5,
             }
         },
     }
@@ -219,7 +252,6 @@
         app.scene.add(app.camera)
 
         app.virtualCamera = new Group()
-        app.virtualCamera.position.set(0,0,-50)
         app.scene.add(app.virtualCamera)
 
 
@@ -242,17 +274,6 @@
 
         //load a cat texture
         const texture_loader = new TextureLoader()
-        //cat from http://creative-commons-cats.tumblr.com/page/3
-        // defs.sun.texture  = texture_loader.load('./textures/sunmap.jpg')
-        // defs.mercury.texture = texture_loader.load('./textures/mercurymap.jpg')
-        // defs.venus.texture  = texture_loader.load('./textures/venusmap.jpg')
-        // defs.earth.texture = texture_loader.load('./textures/earthmap1k.jpg')
-        // defs.mars.texture  = texture_loader.load('./textures/marsmap1k.jpg')
-        // defs.jupiter.texture  = texture_loader.load('./textures/jupitermap.jpg')
-        // defs.saturn.texture  = texture_loader.load('./textures/saturnmap.jpg')
-        // defs.uranus.texture  = texture_loader.load('./textures/uranusmap.jpg')
-        // defs.neptune.texture  = texture_loader.load('./textures/neptune.jpg')
-
         const spheres = makeSpheres(app,texture_loader,defs)
 
         on($("#show-overview"),'click',() => zoomSphere(app,null))
@@ -294,8 +315,10 @@
                 pos.x = -def.sphere.position.x
                 pos.y = 1.5
                 pos.z = -def.sphere.position.z - def.radius*3
+                app.virtualCamera.scale.set(1.0,1.0,1.0)
             } else {
-                app.virtualCamera.position.set(0,0,-40)
+                app.virtualCamera.scale.set(0.5,0.5,0.5)
+                app.virtualCamera.position.set(0,0,-30)
             }
         })
 
