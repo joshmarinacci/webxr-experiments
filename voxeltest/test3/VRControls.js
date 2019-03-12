@@ -1,20 +1,13 @@
 import {Vector3,} from "./node_modules/three/build/three.module.js"
 import {Pointer, POINTER_CLICK} from "./Pointer.js"
 import {traceRay} from "./raycast.js"
-import {ECSComp} from './ECSComp'
+import {ECSComp} from './ECSComp.js'
+import {DIRS, toRad} from "./utils.js"
 
 
-const toRad = (deg) => Math.PI/180*deg
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
-const DIRS = {
-    NONE:'NONE',
-    UP:'UP',
-    DOWN:'DOWN',
-    LEFT:'LEFT',
-    RIGHT:'RIGHT'
-}
 const TRIGGER = 'trigger'
 
 export default class VRControls extends ECSComp {

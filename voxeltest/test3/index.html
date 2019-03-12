@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WebXR + ThreeJS Application</title>
+    <title>Mine Kitten</title>
     <script>
         (function(f, a, t, h, o, m){
             a[h]=a[h]||function(){
@@ -17,6 +17,7 @@
         fathom('trackPageview');
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <style type="text/css">
         body {
             max-width: 40em;
@@ -29,6 +30,51 @@
         }
         #fullscreen, #entervr {
             display: none;
+        }
+
+        #container {
+            position: relative;
+        }
+        #touch-overlay {
+            border: 0px solid black;
+            position: absolute;
+            bottom: 0;
+            left:0;
+            right:0;
+        }
+        #touch-overlay #left {
+            position: absolute;
+            bottom: 1.5em;
+            left: 0;
+        }
+        #touch-overlay #right {
+            position: absolute;
+            bottom: 1.5em;
+            left: 5em;
+        }
+        #touch-overlay #up {
+            position: absolute;
+            bottom: 3em;
+            left: 2.5em;
+        }
+        #touch-overlay #down {
+            position: absolute;
+            bottom: 0em;
+            left: 2.5em;
+        }
+        #touch-overlay #exit-fullscreen {
+            position: absolute;
+            bottom: 0em;
+            right: 0em;
+        }
+
+        body.fullscreen #container {
+            border-width:0;
+            position: absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
         }
     </style>
 </head>
@@ -50,7 +96,15 @@
     <button id="save">save</button>
     <button id="reload">reload</button>
 </div>
-<div id="container"></div>
+<div id="container">
+    <div id="touch-overlay">
+        <button id="left">left</button>
+        <button id="right">right</button>
+        <button id="up">up</button>
+        <button id="down">down</button>
+        <button id="exit-fullscreen">escape</button>
+    </div>
+</div>
 
 
 <ul>
@@ -86,12 +140,12 @@
     import { KeyboardControls } from './KeyboardControls.js'
     import {BlockPicker, COLORS} from './BlockPicker.js'
     import {PigComp} from './PigComp.js'
-    import {generateChunkInfoFromFunction, toHexColor} from './utils'
+    import {generateChunkInfoFromFunction, toHexColor, toRad} from './utils.js'
+    import {TouchControls} from './TouchControls.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
-    const toRad = (deg) => Math.PI / 180 * deg
 
 
     const CHUNK_SIZE = 16
@@ -282,6 +336,9 @@
         keyboardControls.enable()
         comps.push(keyboardControls)
 
+        const touchControls = new TouchControls(app, RAYCAST_DISTANCE, chunkManager)
+        comps.push(touchControls)
+
 
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
@@ -338,6 +395,7 @@
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 
         desktopControls.enable()
+        touchControls.enable()
 
         //when all assets are loaded
         on(app,'loaded',()=>{
@@ -346,11 +404,20 @@
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
             on($("#fullscreen"),'click',()=> {
-                desktopControls.disable()
-                app.playFullscreen()
-                setTimeout(()=>{
-                fullscreenControls.enable()
-                },100)
+                if(app.renderer.domElement.requestFullscreen) {
+                    desktopControls.disable()
+                    app.playFullscreen()
+                    setTimeout(()=>{
+                       fullscreenControls.enable()
+                    },100)
+                } else {
+                    $("body").classList.add('fullscreen')
+                    app.resizeOnNextRepaint = true
+                }
+            })
+            on($('#exit-fullscreen'),'click',()=>{
+                $("body").classList.remove('fullscreen')
+                app.resizeOnNextRepaint = true
             })
         })
         //when VR support is detected

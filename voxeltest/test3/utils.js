@@ -27,3 +27,16 @@ export const toRad = (deg) => Math.PI / 180 * deg
 
 
 export const EPSILON = 1e-8
+
+
+export const $ = (sel) => document.querySelector(sel)
+
+export const DIRS = {
+    NONE:'NONE',
+    UP:'UP',
+    DOWN:'DOWN',
+    LEFT:'LEFT',
+    RIGHT:'RIGHT'
+}
+
+export const on = (elem, type, cb) => elem.addEventListener(type,cb)
