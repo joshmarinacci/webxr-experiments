@@ -1,5 +1,5 @@
 import {Mesh, MeshLambertMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3, Vector2, TextureLoader, Group, DoubleSide,
+    Color, DirectionalLight, AmbientLight, Vector3, Vector2, Quaternion, TextureLoader, Group, DoubleSide,
     Ray,
 } from "./node_modules/three/build/three.module.js"
 
@@ -26,6 +26,10 @@ export class TouchControls extends ECSComp {
         let startAngleY = 0
         let startAngleX = 0
         let startTime = 0
+        let timeoutID
+        let intervalID
+        let mode = 'node'
+        let currentPoint=  new Vector2()
         this.touchStart = (e) => {
             e.preventDefault()
             startAngleY = this.app.stageRot.rotation.y
@@ -34,11 +38,27 @@ export class TouchControls extends ECSComp {
             if(e.changedTouches.length <= 0) return
             const tch = e.changedTouches[0]
             point.set(tch.clientX, tch.clientY)
+            currentPoint.copy(point)
             startTime = Date.now()
-            const res = this.traceRay(e)
+            const res = this.traceRay(point)
             res.hitPosition.add(res.hitNormal)
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
+            timeoutID = setTimeout(this.startRemoval,1000)
+        }
+        this.startRemoval = () => {
+            mode = 'remove'
+            const res = this.traceRay(currentPoint)
+            res.hitPosition.floor()
+            this._fire('highlight',res.hitPosition)
+            this._fire('removeblock',res.hitPosition)
+            intervalID = setInterval(this.removeAgain,500)
+        }
+        this.removeAgain = () => {
+            const res = this.traceRay(currentPoint)
+            res.hitPosition.floor()
+            this._fire('highlight',res.hitPosition)
+            this._fire('removeblock',res.hitPosition)
         }
         this.touchMove = (e) => {
             e.preventDefault()
@@ -50,15 +70,23 @@ export class TouchControls extends ECSComp {
             this.app.stageRot.rotation.y = +diffx/150 + startAngleY
             this.app.stageRot.rotation.x = +diffy/200 + startAngleX
 
-
-            const res = this.traceRay(e)
-            res.hitPosition.add(res.hitNormal)
+            currentPoint.copy(pt2)
+            const res = this.traceRay(pt2)
+            if(mode === 'add') {
+                res.hitPosition.add(res.hitNormal)
+            }
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
 
+            if(this.mode === 'remove') {
+                this._fire('removeblock',res.hitPosition)
+            }
         }
         this.touchEnd = (e) => {
             e.preventDefault()
+            clearTimeout(timeoutID)
+            clearInterval(intervalID)
+            mode = 'node'
             if(e.changedTouches.length <= 0) return
             const tch = e.changedTouches[0]
             const pt2 = new Vector2(tch.clientX, tch.clientY)
@@ -66,7 +94,7 @@ export class TouchControls extends ECSComp {
             const endTime = Date.now()
             if(point.distanceTo(pt2) < 10) {
 
-                const res = this.traceRay(e)
+                const res = this.traceRay(pt2)
                 if(endTime - startTime > 500) {
                     this._fire('removeblock',res.hitPosition)
                 } else {
@@ -101,22 +129,26 @@ export class TouchControls extends ECSComp {
     }
 
 
-    traceRay(e) {
+    traceRay(pt) {
         const ray = new Ray()
 
-        e = e.changedTouches[0]
+        // e = e.changedTouches[0]
         const mouse = new Vector2()
         const bounds = this.canvas.getBoundingClientRect()
-        mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
-        mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+        mouse.x = ((pt.x - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((pt.y - bounds.top) / bounds.height) * 2 + 1
 
         ray.origin.copy(this.app.camera.position)
         ray.direction.set(mouse.x, mouse.y, 0.5).unproject(this.app.camera).sub(ray.origin).normalize()
 
         this.app.stagePos.worldToLocal(ray.origin)
         ray.origin.add(new Vector3(0,0,-0.5))
-        ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
-        ray.direction.applyAxisAngle(new Vector3(1,0,0), -this.app.stageRot.rotation.x)
+        const quat = new Quaternion()
+        quat.copy(this.app.stageRot.quaternion)
+        quat.inverse()
+        ray.direction.applyQuaternion(quat)
+        // ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
+        // ray.direction.applyAxisAngle(new Vector3(1,0,0), -this.app.stageRot.rotation.x)
 
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
