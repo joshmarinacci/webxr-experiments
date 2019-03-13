@@ -1,4 +1,4 @@
-import {Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Ray, Raycaster, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
 import {Pointer} from './Pointer.js'
 import {ECSComp} from './ECSComp.js'
@@ -50,18 +50,19 @@ export class DesktopControls extends ECSComp {
         this.pointer.disable()
     }
     traceRay(e) {
+        const ray = new Ray()
+
         const mouse = new Vector2()
         const bounds = this.canvas.getBoundingClientRect()
         mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
         mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
-        const target = new Vector3(mouse.x,mouse.y,-1)
-        target.add(this.app.camera.position)
-        this.app.stagePos.worldToLocal(target)
 
-        const pos = this.app.camera.position.clone()
-        this.app.stagePos.worldToLocal(pos)
-        const ray = new Ray(pos)
-        ray.lookAt(target)
+        ray.origin.copy(this.app.camera.position)
+        ray.direction.set(mouse.x, mouse.y, 0.5).unproject(this.app.camera).sub(ray.origin).normalize()
+
+        this.app.stagePos.worldToLocal(ray.origin)
+        ray.origin.add(new Vector3(0,0,-0.5))
+        ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
 
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)

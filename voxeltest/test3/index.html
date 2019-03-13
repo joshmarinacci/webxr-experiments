@@ -41,26 +41,31 @@
             bottom: 0;
             left:0;
             right:0;
+            display: none;
+            visibility: hidden;
+        }
+        #touch-overlay button {
+            position: absolute;
+            width: 15vmin;
+            height: 15vmin;
+            padding:0;
+            border: 1px solid black;
         }
         #touch-overlay #left {
-            position: absolute;
-            bottom: 1.5em;
-            left: 0;
+            bottom: 7.5vmin;
+            left: 0vmin;
         }
         #touch-overlay #right {
-            position: absolute;
-            bottom: 1.5em;
-            left: 5em;
+            bottom: 7.5vmin;
+            left: 30vmin;
         }
         #touch-overlay #up {
-            position: absolute;
-            bottom: 3em;
-            left: 2.5em;
+            bottom: 15vmin;
+            left: 15vmin;
         }
         #touch-overlay #down {
-            position: absolute;
             bottom: 0em;
-            left: 2.5em;
+            left: 15vmin;
         }
         #touch-overlay #exit-fullscreen {
             position: absolute;
@@ -210,7 +215,7 @@
         app.stagePos = new Group()
         app.stageRot.add(app.stagePos)
         app.stagePos.position.z = 0
-        app.stagePos.position.x = 3
+        app.stagePos.position.x = 0
 
         const group = new Group()
         app.stagePos.add(group)
@@ -407,6 +412,7 @@
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
             on($("#fullscreen"),'click',()=> {
+                $("#touch-overlay").style.visibility = 'visible'
                 if(app.renderer.domElement.requestFullscreen) {
                     desktopControls.disable()
                     app.playFullscreen()

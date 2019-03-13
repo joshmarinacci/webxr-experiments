@@ -13,10 +13,11 @@ const SPEED = 0.1
 
 
 export class TouchControls extends ECSComp {
-    constructor(app, RAYCAST_DISTANCE, chunkManager) {
+    constructor(app, distance, chunkManager) {
         super()
         this.app = app
         this.canvas = this.app.renderer.domElement
+        this.distance = distance
         this.chunkManager = chunkManager
 
         this.dir_button = 'none'
@@ -35,6 +36,7 @@ export class TouchControls extends ECSComp {
             point.set(tch.clientX, tch.clientY)
             startTime = Date.now()
             const res = this.traceRay(e)
+            res.hitPosition.add(res.hitNormal)
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
         }
@@ -47,6 +49,13 @@ export class TouchControls extends ECSComp {
             const diffy = pt2.y - point.y
             this.app.stageRot.rotation.y = +diffx/150 + startAngleY
             this.app.stageRot.rotation.x = +diffy/200 + startAngleX
+
+
+            const res = this.traceRay(e)
+            res.hitPosition.add(res.hitNormal)
+            res.hitPosition.floor()
+            this._fire('highlight',res.hitPosition)
+
         }
         this.touchEnd = (e) => {
             e.preventDefault()
@@ -58,7 +67,7 @@ export class TouchControls extends ECSComp {
             if(point.distanceTo(pt2) < 10) {
 
                 const res = this.traceRay(e)
-                if(endTime - startTime > 1000) {
+                if(endTime - startTime > 500) {
                     this._fire('removeblock',res.hitPosition)
                 } else {
                     res.hitPosition.add(res.hitNormal)
@@ -93,19 +102,21 @@ export class TouchControls extends ECSComp {
 
 
     traceRay(e) {
-        const tch = e.changedTouches[0]
+        const ray = new Ray()
+
+        e = e.changedTouches[0]
         const mouse = new Vector2()
         const bounds = this.canvas.getBoundingClientRect()
-        mouse.x = ((tch.clientX - bounds.left) / bounds.width) * 2 - 1
-        mouse.y = -((tch.clientY - bounds.top) / bounds.height) * 2 + 1
-        const target = new Vector3(mouse.x,mouse.y,-1)
-        target.add(this.app.camera.position)
-        this.app.stagePos.worldToLocal(target)
+        mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
 
-        const pos = this.app.camera.position.clone()
-        this.app.stagePos.worldToLocal(pos)
-        const ray = new Ray(pos)
-        ray.lookAt(target)
+        ray.origin.copy(this.app.camera.position)
+        ray.direction.set(mouse.x, mouse.y, 0.5).unproject(this.app.camera).sub(ray.origin).normalize()
+
+        this.app.stagePos.worldToLocal(ray.origin)
+        ray.origin.add(new Vector3(0,0,-0.5))
+        ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
+        ray.direction.applyAxisAngle(new Vector3(1,0,0), -this.app.stageRot.rotation.x)
 
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
