@@ -1,45 +1,70 @@
 import {Mesh, MeshLambertMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3, Vector2, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
+    Color, DirectionalLight, AmbientLight, Vector3, Vector2, TextureLoader, Group, DoubleSide,
+    Ray,
+} from "./node_modules/three/build/three.module.js"
 
 import {ECSComp} from './ECSComp.js'
 import {DIRS, on, $, toRad} from './utils.js'
+import {traceRay} from './raycast'
+import {EPSILON} from './utils'
 
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
 
 
 export class TouchControls extends ECSComp {
-    constructor(app, overlay, RAYCAST_DISTANCE, chunkManager) {
+    constructor(app, RAYCAST_DISTANCE, chunkManager) {
         super()
         this.app = app
         this.canvas = this.app.renderer.domElement
+        this.chunkManager = chunkManager
 
         this.dir_button = 'none'
 
         let point = new Vector2()
-        let startAngle = 0
         let startAngleY = 0
+        let startAngleX = 0
+        let startTime = 0
         this.touchStart = (e) => {
             e.preventDefault()
-            startAngle = this.app.stageRot.rotation.y
-            startAngleY = this.app.stageRot.rotation.x
+            startAngleY = this.app.stageRot.rotation.y
+            startAngleX = this.app.stageRot.rotation.x
             // this.app.stageRot.rotation.y -= toRad(3)
             if(e.changedTouches.length <= 0) return
             const tch = e.changedTouches[0]
             point.set(tch.clientX, tch.clientY)
+            startTime = Date.now()
+            const res = this.traceRay(e)
+            res.hitPosition.floor()
+            this._fire('highlight',res.hitPosition)
         }
         this.touchMove = (e) => {
             e.preventDefault()
             if(e.changedTouches.length <= 0) return
             const tch = e.changedTouches[0]
             const pt2 = new Vector2(tch.clientX, tch.clientY)
-            const diff = pt2.x - point.x
+            const diffx = pt2.x - point.x
             const diffy = pt2.y - point.y
-            this.app.stageRot.rotation.y = +diff/150 + startAngle
-            this.app.stageRot.rotation.x = +diffy/200 + startAngleY
+            this.app.stageRot.rotation.y = +diffx/150 + startAngleY
+            this.app.stageRot.rotation.x = +diffy/200 + startAngleX
         }
-        this.touchEnd = () => {
+        this.touchEnd = (e) => {
+            e.preventDefault()
+            if(e.changedTouches.length <= 0) return
+            const tch = e.changedTouches[0]
+            const pt2 = new Vector2(tch.clientX, tch.clientY)
 
+            const endTime = Date.now()
+            if(point.distanceTo(pt2) < 10) {
+
+                const res = this.traceRay(e)
+                if(endTime - startTime > 1000) {
+                    this._fire('removeblock',res.hitPosition)
+                } else {
+                    res.hitPosition.add(res.hitNormal)
+                    this._fire('setblock', res.hitPosition)
+                }
+            }
         }
 
         this.attachButton = (b,dir) => {
@@ -65,6 +90,33 @@ export class TouchControls extends ECSComp {
         this.attachButton ($("#up"),DIRS.UP)
         this.attachButton ($("#down"),DIRS.DOWN)
     }
+
+
+    traceRay(e) {
+        const tch = e.changedTouches[0]
+        const mouse = new Vector2()
+        const bounds = this.canvas.getBoundingClientRect()
+        mouse.x = ((tch.clientX - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((tch.clientY - bounds.top) / bounds.height) * 2 + 1
+        const target = new Vector3(mouse.x,mouse.y,-1)
+        target.add(this.app.camera.position)
+        this.app.stagePos.worldToLocal(target)
+
+        const pos = this.app.camera.position.clone()
+        this.app.stagePos.worldToLocal(pos)
+        const ray = new Ray(pos)
+        ray.lookAt(target)
+
+        const hitNormal = new Vector3(0,0,0)
+        const hitPosition = new Vector3(0,0,0)
+        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
+        return {
+            hitBlock:hitBlock,
+            hitPosition:hitPosition,
+            hitNormal: hitNormal
+        }
+    }
+
     update() {
         if(this.dir_button === DIRS.LEFT) this.glideLeft()
         if(this.dir_button === DIRS.RIGHT) this.glideRight()

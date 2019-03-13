@@ -337,6 +337,9 @@
         comps.push(keyboardControls)
 
         const touchControls = new TouchControls(app, RAYCAST_DISTANCE, chunkManager)
+        on(touchControls,'highlight',moveHighlight)
+        on(touchControls,'setblock',createBlock)
+        on(touchControls,'removeblock',removeBlock)
         comps.push(touchControls)
 
 
