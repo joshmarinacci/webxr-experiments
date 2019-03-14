@@ -105,6 +105,7 @@
     import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
     import {Pointer, POINTER_ENTER, POINTER_CLICK, POINTER_EXIT} from "./node_modules/webxr-boilerplate/Pointer.js"
     import InfoText from './InfoText.js'
+    import SimpleText from "./SimpleText.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -262,6 +263,8 @@
                 })
             }
 
+            def.id = key
+
             return sphere
         })
     }
@@ -315,6 +318,32 @@
         app.scene.add(app.infoText)
         app.infoText.visible = false
         app.infoText.position.set(-1.0,1.5,-1.5)
+
+
+        app.nextButton = new SimpleText(app,0.5,0.2,512)
+        app.nextButton.setFontSize(40)
+        app.nextButton.setText('next >')
+        app.nextButton.position.set(0.5,0.7,-1.5)
+        app.scene.add(app.nextButton)
+        on(app.nextButton,'click',()=>{
+            if(!cameraTarget) return
+            const names = Object.keys(defs)
+            const n = names.findIndex(n => n===cameraTarget)
+            zoomSphere(app,names[(n+1)%names.length])
+        })
+        app.prevButton = new SimpleText(app,0.5,0.2,512)
+        app.prevButton.setFontSize(40)
+        app.prevButton.setText('< prev')
+        app.prevButton.position.set(-0.5,0.7,-1.5)
+        app.scene.add(app.prevButton)
+        on(app.prevButton,'click',()=>{
+            if(!cameraTarget) return
+            const names = Object.keys(defs)
+            const n = names.findIndex(n => n===cameraTarget)
+            zoomSphere(app,names[(n-1)%names.length])
+        })
+
+
 
 
         // things to do on every render tick
