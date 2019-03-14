@@ -331,6 +331,7 @@
         on(fullscreenControls,'setblock',createBlock)
         on(fullscreenControls,'removeblock',removeBlock)
         on(fullscreenControls,'exit',()=>{
+            $("#touch-overlay").style.visibility = 'hidden'
             app.exitFullscreen()
             fullscreenControls.disable()
             desktopControls.enable()
@@ -426,6 +427,7 @@
                 }
             })
             on($('#exit-fullscreen'),'click',()=>{
+                $("#touch-overlay").style.visibility = 'hidden'
                 $("body").classList.remove('fullscreen')
                 app.resizeOnNextRepaint = true
             })
