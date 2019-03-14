@@ -101,6 +101,9 @@
         TextureLoader, AudioListener, Audio, AudioLoader,
         SphereBufferGeometry,
         Vector3, Group,
+        TorusBufferGeometry,
+        RingBufferGeometry,
+        DoubleSide,
     } from "./node_modules/three/build/three.module.js"
     import BackgroundAudioLoader from "./node_modules/webxr-boilerplate/BackgroundAudioLoader.js"
     import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
@@ -111,6 +114,7 @@
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const toRad = (deg) => deg * Math.PI/180
 
     const app = new WebXRBoilerPlate({
         container: $("#container")
@@ -118,7 +122,7 @@
 
     let animateOrbits = true
     let cameraTarget = null
-    const ORBIT_SPEED_SCALE = 0.2
+    const ORBIT_SPEED_SCALE = 3.2
     const ROTATION_SPEED_SCALE = 0.2
 
     const defs = {
@@ -265,6 +269,17 @@
             }
 
             def.id = key
+
+
+            const orbitMesh = new Mesh(
+                new RingBufferGeometry(def.orbit.radius-0.25, def.orbit.radius+0.25,64),
+                new MeshLambertMaterial({color:'white', side: DoubleSide})
+            )
+            orbitMesh.rotation.x = toRad(-90)
+            orbitMesh.position.set(0,-0,0)
+            orbitMesh.userData.clickable = false
+            def.orbitMesh = orbitMesh
+            app.virtualCamera.add(orbitMesh)
 
             return sphere
         })
