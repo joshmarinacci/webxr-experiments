@@ -8,8 +8,10 @@ import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
     PlaneBufferGeometry,
 } from "./node_modules/three/build/three.module.js"
 
+const toRad = (deg) => deg*Math.PI/180
+
 export default class InfoText extends Object3D {
-    constructor(w,h,density) {
+    constructor(app,w,h,density) {
         super()
         this.density = density?density:128
         this.htmlCanvas = document.createElement('canvas')
@@ -21,7 +23,7 @@ export default class InfoText extends Object3D {
             new MeshLambertMaterial({map:this.canvas_texture, transparent:true, opacity: 0.8})
         )
         this.add(this.mesh)
-        this.fheight = this.density/3.5
+        this.fheight = this.density/5.5
         this.font = `${this.fheight}px sans-serif`
         this.color = 'black';
         this.backgroundColor = '#f0f0f0'
@@ -31,8 +33,16 @@ export default class InfoText extends Object3D {
         this.mesh.userData.clickable = true
 
         this.mesh.addEventListener('click',()=>{
-            console.log("playing the audio")
+            if(this.def && this.def.loadedAudio) {
+                if(this.def.loadedAudio.paused) {
+                    this.def.loadedAudio.play()
+                } else {
+                    this.def.loadedAudio.pause()
+                }
+            }
         })
+
+        this.rotation.y = toRad(30)
 
     }
 

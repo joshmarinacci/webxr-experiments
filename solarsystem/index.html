@@ -13,7 +13,7 @@
         #container {
             border: 0px solid red;
             width: 500px;
-            height: 500px;
+            height: 300px;
         }
         #fullscreen, #entervr {
             display: none;
@@ -34,7 +34,7 @@
         body {
             display: grid;
             grid-template-columns: [sidebar]1fr [main]1fr 1fr;
-            grid-template-rows: 4em [main]1fr 4em;
+            grid-template-rows: 4em [main]1fr [bottom]4em;
         }
 
         #title {
@@ -50,12 +50,14 @@
             grid-row: main;
         }
         #overlay {
+            border:1px solid black;
             grid-column: main;
             grid-row: main;
-            /*background-color: rgba(255,255,255,0.8);*/
+            height: 2em;
+            background-color: rgba(255,255,255);
             display: flex;
             flex-direction: row;
-            align-items: end;
+            align-items: center;
             justify-content: center;
         }
     </style>
@@ -99,8 +101,9 @@
         SphereBufferGeometry,
         Vector3, Group,
     } from "./node_modules/three/build/three.module.js"
+    import BackgroundAudioLoader from "./node_modules/webxr-boilerplate/BackgroundAudioLoader.js"
     import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
-    import {Pointer} from "./node_modules/webxr-boilerplate/Pointer.js"
+    import {Pointer, POINTER_ENTER, POINTER_CLICK, POINTER_EXIT} from "./node_modules/webxr-boilerplate/Pointer.js"
     import InfoText from './InfoText.js'
 
     //JQuery-like selector
@@ -113,6 +116,8 @@
 
     let animateOrbits = true
     let cameraTarget = null
+    const ORBIT_SPEED_SCALE = 0.2
+    const ROTATION_SPEED_SCALE = 0.2
 
     const defs = {
         sun: {
@@ -120,6 +125,7 @@
             radius:8,
             color:'yellow',
             textureName:'./textures/sunmap.jpg',
+            audio:"./audio/sun.mp3",
             orbit: {
                 radius:0,
                 speed:10,
@@ -233,10 +239,29 @@
             )
             sphere.position.set(def.orbit.radius,0,0)
             sphere.userData.def = def
+            sphere.userData.clickable = true
             def.sphere = sphere
             app.virtualCamera.add(sphere)
             const button = $(`#show-${key}`)
             if(button) on(button,'click',() => zoomSphere(app,key))
+
+            on(sphere,'click',()=>{
+                zoomSphere(app,key)
+            })
+            on(sphere,POINTER_ENTER,()=>{
+                sphere.material.color.set(0xff8888)
+            })
+            on(sphere,POINTER_EXIT,()=>{
+                sphere.material.color.set(0xffffff)
+            })
+
+            if(def.audio) {
+                new BackgroundAudioLoader().load(def.audio,(music)=>{
+                    console.log("loaded")
+                    def.loadedAudio = music
+                })
+            }
+
             return sphere
         })
     }
@@ -254,7 +279,6 @@
         app.virtualCamera = new Group()
         app.scene.add(app.virtualCamera)
 
-
         const pointer = new Pointer(app,{
             //Pointer searches everything in the scene by default
             //override this to match just certain things
@@ -269,6 +293,7 @@
 
             //turn this off if you provide your own pointer model
             enableLaser: true,
+            laserLength: 20,
         })
 
 
@@ -286,10 +311,10 @@
         //a standard ambient light
         app.scene.add(new AmbientLight(0xffffff,0.3))
 
-        app.infoText = new InfoText(2,2,512)
+        app.infoText = new InfoText(app,0.75,1.5,512)
         app.scene.add(app.infoText)
         app.infoText.visible = false
-        app.infoText.position.set(-2,1.5,-3)
+        app.infoText.position.set(-1.0,1.5,-1.5)
 
 
         // things to do on every render tick
@@ -300,13 +325,13 @@
             if(animateOrbits) {
                 spheres.forEach(sphere => {
                     const def = sphere.userData.def
-                    const theta = time/300*def.orbit.speed/100
+                    const theta = time/300*def.orbit.speed/100*ORBIT_SPEED_SCALE
                     sphere.position.set(
                         Math.cos(theta)*def.orbit.radius,
                         0,
                         Math.sin(theta)*def.orbit.radius
                     )
-                    sphere.rotation.y = time/3000
+                    sphere.rotation.y = time/3000*ROTATION_SPEED_SCALE
                 })
             }
             if(cameraTarget) {
