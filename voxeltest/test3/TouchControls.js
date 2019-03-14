@@ -1,12 +1,6 @@
-import {Mesh, MeshLambertMaterial,
-    Color, DirectionalLight, AmbientLight, Vector3, Vector2, Quaternion, TextureLoader, Group, DoubleSide,
-    Ray,
-} from "./node_modules/three/build/three.module.js"
-
+import {Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
 import {ECSComp} from './ECSComp.js'
-import {DIRS, on, $, toRad} from './utils.js'
-import {traceRay} from './raycast.js'
-import {EPSILON} from './utils.js'
+import {$, DIRS, on, toRad, traceRayAtScreenCoords} from './utils.js'
 
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
@@ -34,13 +28,12 @@ export class TouchControls extends ECSComp {
             e.preventDefault()
             startAngleY = this.app.stageRot.rotation.y
             startAngleX = this.app.stageRot.rotation.x
-            // this.app.stageRot.rotation.y -= toRad(3)
             if(e.changedTouches.length <= 0) return
             const tch = e.changedTouches[0]
             point.set(tch.clientX, tch.clientY)
             currentPoint.copy(point)
             startTime = Date.now()
-            const res = this.traceRay(point)
+            const res = traceRayAtScreenCoords(this.app,point, this.distance)
             res.hitPosition.add(res.hitNormal)
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
@@ -48,14 +41,14 @@ export class TouchControls extends ECSComp {
         }
         this.startRemoval = () => {
             mode = 'remove'
-            const res = this.traceRay(currentPoint)
+            const res = traceRayAtScreenCoords(this.app,currentPoint, this.distance)
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
             this._fire('removeblock',res.hitPosition)
             intervalID = setInterval(this.removeAgain,500)
         }
         this.removeAgain = () => {
-            const res = this.traceRay(currentPoint)
+            const res = traceRayAtScreenCoords(this.app, currentPoint, this.distance)
             res.hitPosition.floor()
             this._fire('highlight',res.hitPosition)
             this._fire('removeblock',res.hitPosition)
@@ -71,7 +64,7 @@ export class TouchControls extends ECSComp {
             this.app.stageRot.rotation.x = +diffy/200 + startAngleX
 
             currentPoint.copy(pt2)
-            const res = this.traceRay(pt2)
+            const res = traceRayAtScreenCoords(this.app, pt2, this.distance)
             if(mode === 'add') {
                 res.hitPosition.add(res.hitNormal)
             }
@@ -94,7 +87,7 @@ export class TouchControls extends ECSComp {
             const endTime = Date.now()
             if(point.distanceTo(pt2) < 10) {
 
-                const res = this.traceRay(pt2)
+                const res = traceRayAtScreenCoords(this.app, pt2, this.distance)
                 if(endTime - startTime > 500) {
                     this._fire('removeblock',res.hitPosition)
                 } else {
@@ -129,36 +122,6 @@ export class TouchControls extends ECSComp {
     }
 
 
-    traceRay(pt) {
-        const ray = new Ray()
-
-        // e = e.changedTouches[0]
-        const mouse = new Vector2()
-        const bounds = this.canvas.getBoundingClientRect()
-        mouse.x = ((pt.x - bounds.left) / bounds.width) * 2 - 1
-        mouse.y = -((pt.y - bounds.top) / bounds.height) * 2 + 1
-
-        ray.origin.copy(this.app.camera.position)
-        ray.direction.set(mouse.x, mouse.y, 0.5).unproject(this.app.camera).sub(ray.origin).normalize()
-
-        this.app.stagePos.worldToLocal(ray.origin)
-        ray.origin.add(new Vector3(0,0,-0.5))
-        const quat = new Quaternion()
-        quat.copy(this.app.stageRot.quaternion)
-        quat.inverse()
-        ray.direction.applyQuaternion(quat)
-        // ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
-        // ray.direction.applyAxisAngle(new Vector3(1,0,0), -this.app.stageRot.rotation.x)
-
-        const hitNormal = new Vector3(0,0,0)
-        const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
-        return {
-            hitBlock:hitBlock,
-            hitPosition:hitPosition,
-            hitNormal: hitNormal
-        }
-    }
 
     update() {
         if(this.dir_button === DIRS.LEFT) this.glideLeft()
