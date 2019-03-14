@@ -78,6 +78,7 @@
     <li id="show-saturn">Saturn</li>
     <li id="show-uranus">Uranus</li>
     <li id="show-neptune">Neptune</li>
+    <li id="show-orbits">Toggle Orbit Lines</li>
 </ul>
 
 <div id="container"></div>
@@ -398,6 +399,12 @@
             })
         })
 
+
+        app.showOrbits = false
+
+        on($("#show-orbits"),'click',()=>{
+            app.showOrbits = !app.showOrbits
+        })
 
     })
 
