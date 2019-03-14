@@ -49,7 +49,7 @@ export class KeyboardControls extends ECSComp {
         if(this.keystates.s.current === true)  this.glideBackward()
 
         if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
-            this.fire('show-dialog',this)
+            this._fire('show-dialog',this)
         }
 
         Object.keys(this.keystates).forEach(key => {
