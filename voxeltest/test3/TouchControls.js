@@ -5,8 +5,8 @@ import {Mesh, MeshLambertMaterial,
 
 import {ECSComp} from './ECSComp.js'
 import {DIRS, on, $, toRad} from './utils.js'
-import {traceRay} from './raycast'
-import {EPSILON} from './utils'
+import {traceRay} from './raycast.js'
+import {EPSILON} from './utils.js'
 
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
