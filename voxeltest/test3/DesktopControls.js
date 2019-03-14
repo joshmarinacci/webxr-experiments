@@ -1,4 +1,4 @@
-import {Ray, Raycaster, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Ray, Raycaster, Vector2, Vector3, Quaternion} from "./node_modules/three/build/three.module.js"
 import {traceRay} from "./raycast.js"
 import {Pointer} from './Pointer.js'
 import {ECSComp} from './ECSComp.js'
@@ -62,7 +62,10 @@ export class DesktopControls extends ECSComp {
 
         this.app.stagePos.worldToLocal(ray.origin)
         ray.origin.add(new Vector3(0,0,-0.5))
-        ray.direction.applyAxisAngle(new Vector3(0,1,0), -this.app.stageRot.rotation.y)
+        const quat = new Quaternion()
+        quat.copy(this.app.stageRot.quaternion)
+        quat.inverse()
+        ray.direction.applyQuaternion(quat)
 
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
