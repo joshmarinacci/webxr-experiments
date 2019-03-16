@@ -29,7 +29,7 @@ export class BlockPicker extends Object3D {
         this.add(this.mesh)
 
 
-        this.selectedColorIndex = 1
+        this.selectedColorIndex = 0
         this.redraw()
 
         on(this.mesh,POINTER_CLICK,(e)=>{
