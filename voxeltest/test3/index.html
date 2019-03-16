@@ -136,7 +136,7 @@
     import {PersistenceManager} from './PersistenceManager.js'
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
-    import {Mesh, MeshLambertMaterial,
+    import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
         Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import * as THREE from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
@@ -228,6 +228,14 @@
 
         const mobs = new Group()
         app.stagePos.add(mobs)
+
+
+        const crosshairs_geometry = new PlaneGeometry(0.1,0.01)
+        crosshairs_geometry.merge(new PlaneGeometry(0.01,0.1))
+        const crosshairs = new Mesh( crosshairs_geometry, new MeshLambertMaterial({color:'red'}))
+        crosshairs.position.set(0,1.6,-1.0)
+        app.scene.add(crosshairs)
+        crosshairs.visible = false
 
         function chunkIndexToVector(pos) {
             return new Vector3(pos[0],pos[1],pos[2])
@@ -421,6 +429,7 @@
             on($("#fullscreen"),'click',()=> {
                 $("#touch-overlay").style.visibility = 'visible'
                 if(app.renderer.domElement.requestFullscreen) {
+                    crosshairs.visible = true
                     desktopControls.disable()
                     app.playFullscreen()
                     setTimeout(()=>{
