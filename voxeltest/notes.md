@@ -174,3 +174,32 @@ const pig = new Pig()
 pig.tick()  
 
 ```
+
+
+================
+
+
+texture mapping
+
+
+the meshing process turns a chunk, containing voxel data, into a threejs mesh.  this mesh is composed of many right
+triangles called Faces. the meshing process assigns UVs to these faces. Then the voxel-texture component (now called
+voxelTexture) 'paints' the faces by setting new UVs which match the textures in a texture atlas.
+
+This process fails for two reasons.  First, originally the texture system was for quads. With quads each face has 
+four unique UV values. With triangle faces (3 vertices each) one of the UVs is shared. The meshing process handles
+this, but the VoxelTexture component was written back in the quad era, so it doesn't work quite right. some UV
+values will be written twice, meaning half of the faces will have a bad UV value. This explains why the cubes
+always looked half wrong. I fixed this by calculating the UVs slightly differently for the even and odd faces. However
+this was a hack. Fundamentally they are trying to set UVs once during meshing, and then a second time during painting,
+but the painting process doesn't know about the meshing process and wasn't using the existing UV values, so any
+attempt to do this will fail if the meshing process changes. Really they should be combined so that the texture
+system just provides a texture atlas to the mesher, which then sets the correct UV valeus once.
+
+There is a second problem, however.  Some meshers, like the greedy mesher, will use faces which are larger
+than a one block square. If a bunch of blocks are next to each other and are of the same type, then the mesher
+will create one giant block with very large faces. These faces will still only get one set of UV values, however, so
+the texture will be stretched across it.  To solve this problem requires more thought. Possibly a custom shader.
+
+  
+ 
