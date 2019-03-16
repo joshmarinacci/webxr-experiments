@@ -174,9 +174,10 @@
             texturePath: './textures/',
             materialType: MeshLambertMaterial,
             materialParams: { side: DoubleSide},
-            materialFlatColor:true
+            materialFlatColor:false
         })
-        materials.load(COLORS.map(c => toHexColor(c.color)))
+        // materials.load(COLORS.map(c => toHexColor(c.color)))
+        materials.load([['grass','dirt','grass_dirt'],'brick','dirt'])
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
@@ -192,6 +193,11 @@
                 return 1
             }
 
+            return 0
+        }
+
+        const single = (i,j,k) => {
+            if((i >= 0 && i<=3 ) && j === 0 && k === -5) return 1
             return 0
         }
 
@@ -354,7 +360,7 @@
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
             chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
-            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh()
+            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(materials.material)
             materials.paint(chunk.surfaceMesh)
             group.add(chunk.surfaceMesh)
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))

@@ -8,6 +8,7 @@ import {
     MeshBasicMaterial,
     MeshLambertMaterial,
     NearestFilter,
+    MeshFaceMaterial,
     Texture,
 } from "./node_modules/three/build/three.module.js"
 
@@ -224,6 +225,7 @@ export class VoxelTexture {
     };
 
     paint(mesh, materials) {
+        var self = this;
         // if were loading put into queue
         if (this.loading > 0) {
             this._meshQueue.push({self: this, args: arguments});
@@ -233,24 +235,24 @@ export class VoxelTexture {
         var isVoxelMesh = (materials) ? false : true;
         if (!isVoxelMesh) materials = this._expandName(materials);
 
-        mesh.material.vertexColors = FaceColors
-        mesh.material.flatShading = true
+        // mesh.material.vertexColors = FaceColors
+        // mesh.material.flatShading = true
         mesh.geometry.faces.forEach((face, i) => {
             if (mesh.geometry.faceVertexUvs[0].length < 1) return;
 
             if (isVoxelMesh) {
-                var index = Math.floor(face.color.b * 255 + face.color.g * 255 * 255 + face.color.r * 255 * 255 * 255);
+                var index = Math.floor(face.color.b*255 + face.color.g*255*255 + face.color.r*255*255*255);
                 materials = this.materials[index - 1];
                 if (!materials) materials = this.materials[0];
             }
 
             // BACK, FRONT, TOP, BOTTOM, LEFT, RIGHT
             var name = materials[0] || '';
-            if (face.normal.z === 1) name = materials[1] || '';
-            else if (face.normal.y === 1) name = materials[2] || '';
+            if      (face.normal.z === 1)  name = materials[1] || '';
+            else if (face.normal.y === 1)  name = materials[2] || '';
             else if (face.normal.y === -1) name = materials[3] || '';
             else if (face.normal.x === -1) name = materials[4] || '';
-            else if (face.normal.x === 1) name = materials[5] || '';
+            else if (face.normal.x === 1)  name = materials[5] || '';
 
             // if just a simple color
             if (name.slice(0, 1) === '#') {
@@ -262,7 +264,7 @@ export class VoxelTexture {
             if (!atlasuv) return;
 
             // If a transparent texture use transparent material
-            face.materialIndex = (this.transparents.indexOf(name) !== -1) ? 1 : 0;
+            face.materialIndex = (self.transparents.indexOf(name) !== -1) ? 1 : 0;
 
             // 0 -- 1
             // |    |
@@ -277,8 +279,21 @@ export class VoxelTexture {
             } else {
                 atlasuv = uvrot(atlasuv, -90);
             }
-            for (var j = 0; j < mesh.geometry.faceVertexUvs[0][i].length; j++) {
-                mesh.geometry.faceVertexUvs[0][i][j].set(atlasuv[j][0], 1 - atlasuv[j][1]);
+            //use different indexes for even and odd.
+            if(i%2 === 0) {
+                for (var j = 0; j < mesh.geometry.faceVertexUvs[0][i].length; j++) {
+                    let n = j
+                    if(j === 0) n = 0;
+                    if(j === 1) n = 1;
+                    if(j === 2) n = 3
+                    mesh.geometry.faceVertexUvs[0][i][j].x = atlasuv[n][0]
+                    mesh.geometry.faceVertexUvs[0][i][j].y = 1 - atlasuv[n][1]
+                }
+            } else {
+                for (let j = 0; j < mesh.geometry.faceVertexUvs[0][i].length; j++) {
+                    mesh.geometry.faceVertexUvs[0][i][j].x = atlasuv[j+1][0]
+                    mesh.geometry.faceVertexUvs[0][i][j].y = 1 - atlasuv[j+1][1]
+                }
             }
         });
 
