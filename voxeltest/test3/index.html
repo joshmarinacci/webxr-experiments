@@ -167,6 +167,7 @@
 
         //load a cat texture
         const texture_loader = new TextureLoader()
+        app.textureLoader = texture_loader
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
@@ -399,7 +400,7 @@
         }
 
 
-        const pig = new PigComp(chunkManager)
+        const pig = new PigComp(app)
         mobs.add(pig.mesh)
         pig.enable()
         comps.push(pig)

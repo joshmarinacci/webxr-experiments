@@ -3,13 +3,13 @@ import {ECSComp} from "./ECSComp.js"
 import {traceRay} from './raycast.js'
 
 export class PigComp extends ECSComp {
-    constructor(chunkManager) {
+    constructor(app) {
         super()
 
-        this.chunkManager = chunkManager
+        this.chunkManager = app.chunkManager
         this.mesh = new Mesh(
             new BoxBufferGeometry(1,1,1),
-            new MeshLambertMaterial({color:'pink'})
+            new MeshLambertMaterial({color:'pink', map:app.textureLoader.load('./textures/pig.png')})
         )
 
         this.heading = new Vector3(-1,0,0).normalize()
