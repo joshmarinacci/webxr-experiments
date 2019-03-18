@@ -43,9 +43,15 @@ can build a real game out of it. The Game object has functions for
 * [voxel-perlin-terrain](https://github.com/maxogden/voxel-perlin-terrain) generate terrain with perlin noise.
 * [voxel-server](https://github.com/maxogden/voxel-server)  server for a multi player game
 * [voxel-client](https://github.com/maxogden/voxel-client) client for the game server
-* [voxel-builder](https://github.com/maxogden/voxel-builder) builder program to export to papercraft or 3d printing. http://voxelbuilder.com/
-* [minecraft-chunk](https://github.com/maxogden/minecraft-chunk) read voxel data from minecraft chunks. I assume this and it's related modules let you import levels/maps from minecraft.
-* [voxel-highlight](https://github.com/maxogden/voxel-highlight) highlight the voxel the player is currently looking at, along with adjacent area when control key is down. looking at the [code](https://github.com/maxogden/voxel-highlight/blob/master/index.js) it appears to create a ThreeJS wireframe mesh of a cube. On every game tick it calls game.raycastVoxels() to find what voxels are under the cursor / in front of the camera, then moves the highlight mesh around to match that.
+* [voxel-builder](https://github.com/maxogden/voxel-builder) builder program to export to papercraft or 3d 
+  printing. http://voxelbuilder.com/
+* [minecraft-chunk](https://github.com/maxogden/minecraft-chunk) read voxel data from minecraft chunks. 
+  I assume this and it's related modules let you import levels/maps from minecraft.
+* [voxel-highlight](https://github.com/maxogden/voxel-highlight) highlight the voxel the player is currently looking at, 
+  along with adjacent area when control key is down. looking at 
+  the [code](https://github.com/maxogden/voxel-highlight/blob/master/index.js) it appears to 
+  create a ThreeJS wireframe mesh of a cube. On every game tick it calls game.raycastVoxels() to 
+  find what voxels are under the cursor / in front of the camera, then moves the highlight mesh around to match that.
 * [voxel-2d-print](https://github.com/maxogden/voxel-2d-print) prints voxels to a color 2d printer
 * [ndarray-stl](https://github.com/maxogden/ndarray-stl) convert voxels into 3d printable STL files
 
@@ -60,7 +66,8 @@ voxel-critter, voxel-creature, ways of creating little creatures that move aroun
 * [voxel-region-change](https://github.com/maxogden/voxel-region-change) be alerted when player changes voxels or chunks.
 * [rle-voxeljs](https://github.com/maxogden/rle-voxeljs) convert RLE volumes to Voxeljs. ??? 
 * [voxel-mobs](https://github.com/maxogden/voxel-mobs) 3D JSON voxel data for various voxel creatures.
-* [voxel-transforms](https://github.com/maxogden/voxel-transforms) transformation functions for voxel regions. erase, overlay, replace, move, walls.
+* [voxel-transforms](https://github.com/maxogden/voxel-transforms) transformation functions for voxel regions. 
+  erase, overlay, replace, move, walls.
 * [voxel-share](https://github.com/maxogden/voxel-share) take a snapshot inside voxeljs and share to imgur/twitter
 * [voxel-stop-motion](https://github.com/maxogden/voxel-stop-motion) animated gif export
 * [voxel-control](https://github.com/maxogden/voxel-control) manipulate voxel physical objects
@@ -178,6 +185,7 @@ pig.tick()
 
 ================
 
+---------------
 
 texture mapping
 
@@ -203,3 +211,58 @@ the texture will be stretched across it.  To solve this problem requires more th
 
   
  
+----------------
+
+the fundamental issue seems to be that a quad gets one set of UVs representing the index into the texture atlas
+but the quad may be of any rectangular dimension and needs to repeat across those. The only way to solve
+this is using a custom shader.  The new system should
+
+* still load the textures into a single atlas and generate sub-texture UVs. 
+  Could allow for dynamic updates too.
+* animation is done by putting each frame in adjacent cells in the atlas so 
+  we can just move the uvs for each frame.
+* use the existing atlas class to do this. Load all of the sprites of an 
+  animation as a single long rectangular unit.
+* assume a constant animation speed
+* assign the sub-texture UVs during the mesh generation process, since they are very 
+  tightly coupled. Don’t ‘paint’ them afterwards.
+* when meshing set vertex attributes for
+	* if the face is animated
+	* the frame count for animated
+	* the wrap count
+	* the side of the cube this represents?
+* create a custom shader. The shader will
+	* draw the texture
+	* apply sub-texture wrapping based on a vertex attribute
+	* chose animation frame based on a uniform and vertex attribute indicating if it is animated
+	* apply ambient occlusion light based on vertex attribute
+	* apply directional sunlight based on a passed in uniform
+	* apply local light sources (are these per chunk? Passed in as uniforms? Vertex data?)
+
+
+implementation plan
+
+* create texture manager as an app global. preload it with textures into the atlas. 
+  method to get UVs for a particular blockid
+* store blockid on the face info from the mesher
+* new geometry maker. add vertex attributes for
+    * animation frame count (set to 1 for now)
+    * quad width and height in blocks
+    * UV values into the atlas (should already be there as part of the faces?). get from texture manager.
+    * ambient occlusion value (set to 0 for now)
+    * color, used for flat shading now, for tinting textures later
+* make a new custom shader. 
+    * passthrough vertex shader
+    * fragment shader uses vertex color
+* support textures
+    * fragment shader uses uv values and quad width and height values to texture the quad
+* support animation
+    * create an animated texture to test with (find some open source minecraft water or lava?)
+    * load into texture atlas. track that it is animated and the frame count
+    * generate UVs for just the first frame. 
+    * set the frame count on the vertex attributes
+    * pass time into the shader
+    * in shader use time to adjust UVs to get the correct frame
+* suupport ambient occlusion
+    * during meshing set AO values using simple equation
+    * in shader use AO value at each vertex to shade the side
