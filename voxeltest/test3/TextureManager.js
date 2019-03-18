@@ -23,11 +23,13 @@ export class TextureManager {
         this.atlas = createAtlas(this.canvas);
         const ctx = this.canvas.getContext('2d')
         ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillRect(0, 0, this.canvas.width/2, this.canvas.height/2);
         ctx.fillStyle = 'blue';
-        ctx.fillRect(1, 1, this.canvas.width, this.canvas.height);
+        ctx.fillRect(this.canvas.width/2, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
         ctx.fillStyle = 'yellow'
-        ctx.fillRect(0, this.canvas.height-4,4,4);
+        ctx.fillRect(0, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
+        ctx.fillStyle = 'green'
+        ctx.fillRect(this.canvas.width/2, 0,this.canvas.width/2,this.canvas.height/2);
         this.texture = new Texture(this.canvas);
         this.texture.needsUpdate = true
         this.texture.magFilter = NearestFilter;
@@ -41,10 +43,10 @@ export class TextureManager {
             },
             vertexColors:VertexColors,
             vertexShader: `
-            varying vec3 vColor;
+            // varying vec3 vColor;
             varying vec2 vUv;
             void main() {
-                vColor = color;
+                // vColor = color;
                 vUv = uv;
                 vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
                 gl_Position = projectionMatrix * mvPosition;
@@ -52,7 +54,7 @@ export class TextureManager {
             `,
             fragmentShader: `
                 uniform sampler2D texture;
-                varying vec3 vColor;
+                // varying vec3 vColor;
                 varying vec2 vUv;
                 void main() {
                     // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);

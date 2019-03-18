@@ -3,68 +3,76 @@ import {
     Face3,
     FaceColors,
     Geometry,
+    BufferGeometry,
     Mesh,
     MeshLambertMaterial,
     Vector2,
     Vector3,
     MeshNormalMaterial,
+    Float32BufferAttribute,
+    BufferAttribute,
 } from "./node_modules/three/build/three.module.js"
 
 export class VoxelMesh {
     constructor(data, mesher, scaleFactor, app) {
         this.data = data
-        const geometry = this.geometry = new Geometry()
+        const geometry = this.geometry = new BufferGeometry()
         this.scale = scaleFactor || new Vector3(10, 10, 10)
 
         const result = mesher.mesh(data.voxels, data.dims)
         this.meshed = result
 
         //create empty geometry
-        geometry.vertices.length = 0
-        geometry.faces.length = 0
+        const vertices = []
+        const repeatCount = []
 
         //copy all verticies in from meshed data
         for (let i = 0; i < result.vertices.length; ++i) {
             let q = result.vertices[i]
-            geometry.vertices.push(new Vector3(q[0], q[1], q[2]))
+            vertices.push(q[0],q[1],q[2])
+            repeatCount.push(1)
         }
 
-        //generate faces from meshed data
+        const indices = []
+        const guvs = []
+        if(result.faces.length > 0) console.log(result)
+        /*
+            generate faces from meshed data
+
+            Note: that quad faces do not use shared vertices. There will always be faces*4 vertices, even
+            if some of the faces could share vertices because all attributes are per vertex, and
+            those values, such as normals, cannot be shared even if the vertex positions could be.
+
+            each face is represented by two triangles using indexes and one set of uvs (4) for the whole
+            face.
+        */
         for (let i = 0; i < result.faces.length; ++i) {
             let q = result.faces[i]
             if (q.length === 5) {
                 const uvs = app.textureManager.lookupUVsForBlockType(q[4])
-                // console.log('real uvs',uvs)
-                const uv = this.faceVertexUv(i)
-                const f = new Face3(q[0], q[1], q[3])
-                //I think the point of this is to start block types as colors. there's probably a better way to do this
-                //with buffer attributes
-                f.color = new Color(0xff00ff)
-                geometry.faces.push(f)
-                // const uv1 = [uv[0].clone(),uv[1].clone(),uv[3].clone()]
-                const uv1 = [new Vector2(uvs[0][0], 1-uvs[0][1]),
-                             new Vector2(uvs[1][0], 1-uvs[1][1]),
-                             new Vector2(uvs[3][0], 1-uvs[3][1])]
-                geometry.faceVertexUvs[0].push(uv1)
+                const a = q[0]
+                const b = q[1]
+                const c = q[2]
+                const d = q[3]
 
-                const g = new Face3(q[1], q[2], q[3])
-                g.color = new Color(0x00ff00)
-                geometry.faces.push(g)
-                // const uv2x = [uv[1].clone(), uv[2].clone(),uv[3].clone()]
-                const uv2 = [
-                    new Vector2(uvs[1][0], 1-uvs[1][1]),
-                    new Vector2(uvs[2][0], 1-uvs[2][1]),
-                    new Vector2(uvs[3][0], 1-uvs[3][1])
-                ]
-                // console.log(uv2, uv2x)
-                geometry.faceVertexUvs[0].push(uv2)
+                //make two triangles
+                indices.push(a,b,d)
+                indices.push(b,c,d)
+                //set uvs for the whole quad
+                for(let j=0; j<4; j++) {
+                    //note that we are flipping y axis from canvas coords to opengl coords.
+                    guvs.push(uvs[j][0], 1-uvs[j][1])
+                }
             } else if (q.length === 4) {
-                const f = new Face3(q[0], q[1], q[2])
-                f.color = new Color(q[3])
-                geometry.faces.push(f)
-                geometry.faceVertexUvs[0].push(this.faceVertexUv(i))
+                console.log("bad")
             }
         }
+        geometry.setIndex(indices)
+        geometry.addAttribute('position',new Float32BufferAttribute(vertices,3))
+        geometry.addAttribute('uv', new Float32BufferAttribute(guvs,2))
+        geometry.addAttribute('repeatx', new Float32BufferAttribute(repeatCount,1))
+
+        if(result.faces.length > 0) console.log("geometry",geometry)
 
         geometry.computeFaceNormals()
         geometry.uvsNeedUpdate = true
