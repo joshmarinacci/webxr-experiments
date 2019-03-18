@@ -128,6 +128,7 @@
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
+    import CulledMesh from "./CulledMesher.js"
     // managers chunks
     import {ChunkManager} from "./ChunkManager.js"
     //converts chunks to three mesh
@@ -216,6 +217,7 @@
 
         const scale = new Vector3(1.0,1.0,1.0)
         const mesher = new GreedyMesh()
+        // const mesher = new CulledMesh()
 
         app.stageRot = new Group()
         app.scene.add(app.stageRot)
