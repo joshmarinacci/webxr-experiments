@@ -24,17 +24,17 @@ export class VoxelMesh {
 
         //create empty geometry
         const vertices = []
-        const repeatCount = []
+        const repeatUV = []
+        const subrects = []
 
         //copy all verticies in from meshed data
         for (let i = 0; i < result.vertices.length; ++i) {
             let q = result.vertices[i]
             vertices.push(q[0],q[1],q[2])
-            repeatCount.push(1)
         }
 
         const indices = []
-        const guvs = []
+        const normaluvs = []
         if(result.faces.length > 0) console.log(result)
         /*
             generate faces from meshed data
@@ -58,10 +58,44 @@ export class VoxelMesh {
                 //make two triangles
                 indices.push(a,b,d)
                 indices.push(b,c,d)
-                //set uvs for the whole quad
+
+                let repU = 1
+                let repV = 1
+                const size = this.faceVertexUv(i)
+                if(size.x > 0 && size.y > 0) {
+                    // console.log("front or back", size)
+                    repU = size.x
+                    repV = size.y
+                }
+
+                if(size.z > 0 && size.x > 0) {
+                    // console.log("top or bottom")
+                    repU = size.z
+                    repV = size.x
+                }
+
+                if(size.z > 0 && size.y > 0) {
+                    // console.log("left or right")
+                    repU = size.z
+                    repV = size.y
+                }
                 for(let j=0; j<4; j++) {
-                    //note that we are flipping y axis from canvas coords to opengl coords.
-                    guvs.push(uvs[j][0], 1-uvs[j][1])
+                    repeatUV.push(repU, repV);
+                }
+
+                //set standard uvs for the whole quad
+                normaluvs.push(0,0, 1,0, 1,1, 0,1)
+
+                const rect = {
+                    x:uvs[0][0],
+                    y:1.0 - uvs[0][1],
+                    w:uvs[1][0] - uvs[0][0],
+                    h:uvs[2][1] - uvs[1][1],
+                }
+                //flip the y axis properly
+                rect.y = 1.0 - uvs[0][1] - rect.h
+                for(let j=0; j<4; j++) {
+                    subrects.push(rect.x,rect.y,rect.w,rect.h)
                 }
             } else if (q.length === 4) {
                 console.log("bad")
@@ -69,10 +103,9 @@ export class VoxelMesh {
         }
         geometry.setIndex(indices)
         geometry.addAttribute('position',new Float32BufferAttribute(vertices,3))
-        geometry.addAttribute('uv', new Float32BufferAttribute(guvs,2))
-        geometry.addAttribute('repeatx', new Float32BufferAttribute(repeatCount,1))
-
-        if(result.faces.length > 0) console.log("geometry",geometry)
+        geometry.addAttribute('uv', new Float32BufferAttribute(normaluvs,2))
+        geometry.addAttribute('subrect',new Float32BufferAttribute(subrects,4))
+        geometry.addAttribute('repeat', new Float32BufferAttribute(repeatUV,2))
 
         geometry.computeFaceNormals()
         geometry.uvsNeedUpdate = true
@@ -114,6 +147,9 @@ export class VoxelMesh {
             y: Math.max(Math.abs(spans.y0), Math.abs(spans.y1)),
             z: Math.max(Math.abs(spans.z0), Math.abs(spans.z1))
         }
+        // console.log("size",size)
+        return size
+        /*
         if (size.x === 0) {
             if (spans.y0 > spans.y1) {
                 width = size.y
@@ -156,5 +192,6 @@ export class VoxelMesh {
                 new Vector2(width, 0)
             ]
         }
+        */
     }
 }

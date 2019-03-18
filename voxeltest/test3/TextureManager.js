@@ -18,8 +18,8 @@ const createAtlas = window.atlaspack
 export class TextureManager {
     constructor() {
         this.canvas = document.createElement('canvas')
-        this.canvas.width = 512;
-        this.canvas.height = 512;
+        this.canvas.width = 128;
+        this.canvas.height = 128;
         this.atlas = createAtlas(this.canvas);
         const ctx = this.canvas.getContext('2d')
         ctx.fillStyle = 'red';
@@ -30,6 +30,10 @@ export class TextureManager {
         ctx.fillRect(0, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
         ctx.fillStyle = 'green'
         ctx.fillRect(this.canvas.width/2, 0,this.canvas.width/2,this.canvas.height/2);
+
+        ctx.fillStyle = 'purple';
+        ctx.fillRect(0+4, 0+4, this.canvas.width/2-8, this.canvas.height/2-8);
+
         this.texture = new Texture(this.canvas);
         this.texture.needsUpdate = true
         this.texture.magFilter = NearestFilter;
@@ -44,10 +48,16 @@ export class TextureManager {
             vertexColors:VertexColors,
             vertexShader: `
             // varying vec3 vColor;
+            attribute vec2 repeat;
+            attribute vec4 subrect;
             varying vec2 vUv;
+            varying vec2 vRepeat;
+            varying vec4 vSubrect;
             void main() {
                 // vColor = color;
                 vUv = uv;
+                vSubrect = subrect;
+                vRepeat = repeat;
                 vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
                 gl_Position = projectionMatrix * mvPosition;
             } 
@@ -56,9 +66,20 @@ export class TextureManager {
                 uniform sampler2D texture;
                 // varying vec3 vColor;
                 varying vec2 vUv;
+                varying vec2 vRepeat;
+                varying vec4 vSubrect;
                 void main() {
                     // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                    vec4 color = texture2D(texture, vUv);
+                    vec2 fuv = vUv;
+                    vec4 sr = vSubrect;
+                    // sr.x = 0.0;
+                    // sr.y = 0.5;
+                    // sr.z = 0.5; // width
+                    // sr.w = 0.5; // height
+                    fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
+                    // subrect.w == height subrect.y = y
+                    fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
+                    vec4 color = texture2D(texture, fuv);
                     // gl_FragColor = vec4(vColor, 1.0);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
