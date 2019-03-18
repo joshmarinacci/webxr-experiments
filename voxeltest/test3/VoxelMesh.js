@@ -35,7 +35,7 @@ export class VoxelMesh {
 
         const indices = []
         const normaluvs = []
-        if(result.faces.length > 0) console.log(result)
+        // if(result.faces.length > 0) console.log(result)
         /*
             generate faces from meshed data
 

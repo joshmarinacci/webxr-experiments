@@ -47,14 +47,12 @@ export class TextureManager {
             },
             vertexColors:VertexColors,
             vertexShader: `
-            // varying vec3 vColor;
             attribute vec2 repeat;
             attribute vec4 subrect;
             varying vec2 vUv;
             varying vec2 vRepeat;
             varying vec4 vSubrect;
             void main() {
-                // vColor = color;
                 vUv = uv;
                 vSubrect = subrect;
                 vRepeat = repeat;
@@ -64,23 +62,15 @@ export class TextureManager {
             `,
             fragmentShader: `
                 uniform sampler2D texture;
-                // varying vec3 vColor;
                 varying vec2 vUv;
                 varying vec2 vRepeat;
                 varying vec4 vSubrect;
                 void main() {
-                    // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
                     vec2 fuv = vUv;
                     vec4 sr = vSubrect;
-                    // sr.x = 0.0;
-                    // sr.y = 0.5;
-                    // sr.z = 0.5; // width
-                    // sr.w = 0.5; // height
                     fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
-                    // subrect.w == height subrect.y = y
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
                     vec4 color = texture2D(texture, fuv);
-                    // gl_FragColor = vec4(vColor, 1.0);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
             `,
@@ -88,19 +78,23 @@ export class TextureManager {
     }
 
     lookupUVsForBlockType(typeNum) {
-        const name = this.names[typeNum]
-        // console.log("looking up for type",typeNum, name,this.atlas.uv()[name])
-        return this.atlas.uv()[name]
-        //find the UV values
+        return this.atlas.uv()[this.names[typeNum-1]]
     }
+
+    getAtlasIndex() {
+        return this.atlas.index()
+    }
+
+    getBlockTypeForName(name) {
+        return this.names.findIndex(n => n===name)+1
+    }
+
 
     load(names) {
         if (!Array.isArray(names)) names = [names];
         this.names = names
         const proms = names.map(name => this.pack(name))
         return Promise.all(proms).then(()=>{
-            // console.log('loaded all images',this.atlas, this.atlas.index())
-            // console.log("names",this.names)
             document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
@@ -110,7 +104,6 @@ export class TextureManager {
         return new Promise((res,rej)=>{
             const img = new Image()
             img.id = name;
-            // img.crossOrigin = this.options.crossOrigin;
             img.src = this.texturePath + ext(name);
             img.onload = () => {
                 const node = this.atlas.pack(img)

@@ -1,26 +1,17 @@
 import {POINTER_CLICK} from './Pointer.js'
 import {Object3D, Vector2, CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry} from "./node_modules/three/build/three.module.js"
-export const COLORS = [
-    { id:1, color:0xff0000, rgb:'rgb(255,0,0)'},
-    { id:2, color:0x00ff00, rgb:'rgb(0,255,0)'},
-    { id:3, color:0x0000ff, rgb:'rgb(0,0,255)'},
-    { id:4, color:0xffff00, rgb:'rgb(255,255,0)'},
-    { id:5, color:0x00ffff, rgb:'rgb(0,255,255)'},
-    { id:6, color:0xff00ff, rgb:'rgb(255,0,255)'},
-]
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 export class BlockPicker extends Object3D {
-    constructor() {
+    constructor(app) {
         super()
+        this.app = app
         this.type = 'panel2d'
         this.canvas = document.createElement('canvas')
-        this.canvas.width = 256
-        this.canvas.height = 256
+        this.canvas.width = 512
+        this.canvas.height = 512
         this.canvasTexture = new CanvasTexture(this.canvas)
-        // this.redrawHandler = (e) => this.redraw()
-        // this.redraw()
         this.mesh = new Mesh(
             new PlaneGeometry(1,1),
             new MeshBasicMaterial({color:'white',map:this.canvasTexture})
@@ -29,34 +20,52 @@ export class BlockPicker extends Object3D {
         this.add(this.mesh)
 
 
-        this.selectedColorIndex = 0
+        this.selectedColor = 'none'
         this.redraw()
 
         on(this.mesh,POINTER_CLICK,(e)=>{
             const uv = e.intersection.uv
-            const fpt = new Vector2(uv.x*256, 256-uv.y*256).divideScalar(64).floor()
+            const w = this.canvas.width
+            const h = this.canvas.height
+            const fpt = new Vector2(uv.x*w, h-uv.y*h).divideScalar(64).floor()
             const index = fpt.y*4 + fpt.x
             if(fpt.y >= 3) {
                 this.visible = false
                 return
             }
 
-            this.selectedColorIndex = index
+            const infos = this.app.textureManager.getAtlasIndex()
+            if(infos[index]) {
+                this.selectedColor = infos[index].name
+            } else {
+                console.log("nothing selected")
+            }
             this.redraw()
         })
 
+    }
+
+    setSelectedToDefault() {
+        const index = this.app.textureManager.getAtlasIndex()
+        this.selectedColor = index[0].name
     }
     redraw() {
         const ctx = this.canvas.getContext('2d')
         ctx.fillStyle = 'white'
         ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
-        COLORS.forEach((c,i)=>{
-            ctx.fillStyle = c.rgb
+        const index = this.app.textureManager.getAtlasIndex()
+        index.forEach((info,i) => {
+            console.log(info)
             const x = (i%4)*64
             const y = Math.floor((i/4))*64
+            ctx.fillStyle = 'red'
             ctx.fillRect(x,y,64,64)
+            ctx.drawImage(this.app.textureManager.canvas,
+                info.x,info.y,info.w,info.h,
+                x,y,64,64
+            )
 
-            if(this.selectedColorIndex === i) {
+            if(this.selectedColor === info.name) {
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = 'black'
                 ctx.strokeRect(x+2,y+2,64-4,64-4)
@@ -64,7 +73,6 @@ export class BlockPicker extends Object3D {
                 ctx.strokeRect(x+4,y+4,64-8,64-8)
             }
         })
-
 
         ctx.fillStyle = 'black'
         ctx.fillRect(0,256-64,64*4,64)

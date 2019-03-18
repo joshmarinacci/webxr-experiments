@@ -144,7 +144,7 @@
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
     import { KeyboardControls } from './KeyboardControls.js'
-    import {BlockPicker, COLORS} from './BlockPicker.js'
+    import {BlockPicker} from './BlockPicker.js'
     import {PigComp} from './PigComp.js'
     import {generateChunkInfoFromFunction, toHexColor, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
@@ -274,7 +274,7 @@
         app.scene.add(new AmbientLight(0xffffff,0.3))
 
 
-        const dialog = new BlockPicker()
+        const dialog = new BlockPicker(app)
         dialog.position.set(0,1.5,-1)
         dialog.visible = false
         app.scene.add(dialog)
@@ -297,7 +297,7 @@
 
         function createBlock(pos) {
             if(dialog.visible) return
-            setBlock(pos,COLORS[dialog.selectedColorIndex].id)
+            setBlock(pos, app.textureManager.getBlockTypeForName(dialog.selectedColor))
         }
 
         function removeBlock(pos) {
@@ -386,6 +386,8 @@
         })
         onload.then(()=>{
             chunkManager.requestMissingChunks(new Vector3(0,0,0))
+            dialog.setSelectedToDefault()
+            dialog.redraw()
         })
 
         function setBlock(pos, value) {
