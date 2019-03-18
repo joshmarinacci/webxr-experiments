@@ -240,7 +240,7 @@ this is using a custom shader.  The new system should
 	* apply local light sources (are these per chunk? Passed in as uniforms? Vertex data?)
 
 
-implementation plan
+Implementation plan
 
 * create texture manager as an app global. preload it with textures into the atlas. 
   method to get UVs for a particular blockid

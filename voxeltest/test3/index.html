@@ -148,6 +148,7 @@
     import {PigComp} from './PigComp.js'
     import {generateChunkInfoFromFunction, toHexColor, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
+    import {TextureManager} from './TextureManager.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -172,14 +173,18 @@
         //cat from http://creative-commons-cats.tumblr.com/page/3
         const texture = texture_loader.load('./cat.jpg')
 
-        const materials = new VoxelTexture({
-            texturePath: './textures/',
-            materialType: MeshLambertMaterial,
-            materialParams: { side: DoubleSide},
-            materialFlatColor:false
+        app.textureManager = new TextureManager()
+        const onload = app.textureManager.load(['grass','brick','dirt','grass']).then(()=>{
+            console.log('textures are loaded')
         })
+        // const materials = new VoxelTexture({
+        //     texturePath: './textures/',
+        //     materialType: MeshLambertMaterial,
+        //     materialParams: { side: DoubleSide},
+        //     materialFlatColor:false
+        // })
         // materials.load(COLORS.map(c => toHexColor(c.color)))
-        materials.load([['blablabla','blablabla','blablabla'],'brick','dirt'])
+        // materials.load([['blablabla','blablabla','blablabla'],'brick','dirt'])
 
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
@@ -209,7 +214,7 @@
             generateVoxelChunk: (low, high, cx,cy,cz) => {
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
-                return generateChunkInfoFromFunction(low, high, flat)
+                return generateChunkInfoFromFunction(low, high, single)
             },
         });
         app.chunkManager = chunkManager
@@ -369,9 +374,9 @@
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
-            chunk.vmesh = new VoxelMesh(chunk, mesher, scale)
-            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(materials.material)
-            materials.paint(chunk.surfaceMesh)
+            chunk.vmesh = new VoxelMesh(chunk, mesher, scale, app)
+            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
+            // materials.paint(chunk.surfaceMesh)
             group.add(chunk.surfaceMesh)
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
         }
@@ -388,7 +393,9 @@
             chunk.surfaceMesh.geometry.dispose()
             CHUNK_CACHE[chunk.id] = chunk.data
         })
-        chunkManager.requestMissingChunks(new Vector3(0,0,0))
+        onload.then(()=>{
+            chunkManager.requestMissingChunks(new Vector3(0,0,0))
+        })
 
         function setBlock(pos, value) {
             pos.floor()
@@ -402,16 +409,16 @@
         }
 
 
-        const pig = new PigComp(app)
-        mobs.add(pig.mesh)
-        pig.enable()
-        comps.push(pig)
+        // const pig = new PigComp(app)
+        // mobs.add(pig.mesh)
+        // pig.enable()
+        // comps.push(pig)
 
 
         // things to do on every render tick
         // this is the render loop
         app.onRender((time, app)=> {
-            materials.tick(time)
+            // materials.tick(time)
             updateChunks()
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
