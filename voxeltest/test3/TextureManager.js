@@ -41,40 +41,61 @@ export class TextureManager {
         this.texturePath =  './textures/';
         this.material = new ShaderMaterial( {
             uniforms: {
-                // time: { value: 1.0 },
-                // resolution: { value: new Vector2() },
+                'uTime': { value: 0.0 },
                 texture: { value: this.texture},
             },
             vertexColors:VertexColors,
             vertexShader: `
             attribute vec2 repeat;
             attribute vec4 subrect;
+            attribute float frameCount;
             varying vec2 vUv;
             varying vec2 vRepeat;
             varying vec4 vSubrect;
+            varying float vFrameCount;
             void main() {
                 vUv = uv;
                 vSubrect = subrect;
                 vRepeat = repeat;
+                vFrameCount = frameCount;
                 vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
                 gl_Position = projectionMatrix * mvPosition;
             } 
             `,
             fragmentShader: `
                 uniform sampler2D texture;
+                uniform float uTime;
                 varying vec2 vUv;
                 varying vec2 vRepeat;
                 varying vec4 vSubrect;
+                varying float vFrameCount;
                 void main() {
                     vec2 fuv = vUv;
                     vec4 sr = vSubrect;
+                    //sr.z = sub rect width
+                    //sr.w = sub rect height
+                    float frameCount = 3.0;
+                    // float cframe = mod(uTime,frameCount);
+                    float cframe = mod(uTime,vFrameCount);
+                    float cframe2 = floor(cframe); 
+                    sr.x = sr.x + cframe2*sr.z;
                     fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
+                    // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
                     vec4 color = texture2D(texture, fuv);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
             `,
         } );
+    }
+
+    isEnabled() {
+        return true
+    }
+
+    update(ttime) {
+        const time = ttime/1000
+        this.material.uniforms.uTime.value = time;
     }
 
     lookupUVsForBlockType(typeNum) {

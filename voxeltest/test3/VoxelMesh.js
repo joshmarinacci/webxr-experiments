@@ -35,6 +35,7 @@ export class VoxelMesh {
 
         const indices = []
         const normaluvs = []
+        const frameCount = []
         // if(result.faces.length > 0) console.log(result)
         /*
             generate faces from meshed data
@@ -97,6 +98,10 @@ export class VoxelMesh {
                 for(let j=0; j<4; j++) {
                     subrects.push(rect.x,rect.y,rect.w,rect.h)
                 }
+
+                for(let j=0; j<4; j++) {
+                    frameCount.push(1)
+                }
             } else if (q.length === 4) {
                 console.log("bad")
             }
@@ -106,6 +111,7 @@ export class VoxelMesh {
         geometry.addAttribute('uv', new Float32BufferAttribute(normaluvs,2))
         geometry.addAttribute('subrect',new Float32BufferAttribute(subrects,4))
         geometry.addAttribute('repeat', new Float32BufferAttribute(repeatUV,2))
+        geometry.addAttribute('frameCount',new Float32BufferAttribute(frameCount,1))
 
         geometry.computeFaceNormals()
         geometry.uvsNeedUpdate = true

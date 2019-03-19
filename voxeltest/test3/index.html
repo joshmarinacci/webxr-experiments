@@ -138,8 +138,8 @@
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
+        CubeGeometry,
         Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
-    import * as THREE from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
@@ -149,6 +149,7 @@
     import {generateChunkInfoFromFunction, toHexColor, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
     import {TextureManager} from './TextureManager.js'
+    import VRStats from "./VRStats.js";
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -177,6 +178,7 @@
         const onload = app.textureManager.load(['grass','brick','dirt']).then(()=>{
             console.log('textures are loaded')
         })
+        comps.push(app.textureManager)
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
@@ -251,10 +253,10 @@
             lastPos.copy(app.stagePos.position)
         }
 
-        const highlight_geo = new THREE.CubeGeometry(1.1,1.1,1.1, 4,4)
+        const highlight_geo = new CubeGeometry(1.1,1.1,1.1, 4,4)
         highlight_geo.translate(0.5,0.5,0.5)
         const highlight_cube = new Mesh(highlight_geo,
-            new THREE.MeshLambertMaterial({color:'green',
+            new MeshLambertMaterial({color:'green',
                 depthTest:true,
                 wireframe:true,
                 wireframeLinewidth: 3,
@@ -406,6 +408,10 @@
         // mobs.add(pig.mesh)
         // pig.enable()
         // comps.push(pig)
+
+        const vrstats = new VRStats(app)
+        vrstats.enable()
+        comps.push(vrstats)
 
 
         // things to do on every render tick
