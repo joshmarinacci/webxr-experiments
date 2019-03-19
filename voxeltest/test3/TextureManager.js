@@ -50,15 +50,18 @@ export class TextureManager {
             attribute vec2 repeat;
             attribute vec4 subrect;
             attribute float frameCount;
+            attribute float occlusion;
             varying vec2 vUv;
             varying vec2 vRepeat;
             varying vec4 vSubrect;
             varying float vFrameCount;
+            varying float vOcclusion;
             void main() {
                 vUv = uv;
                 vSubrect = subrect;
                 vRepeat = repeat;
                 vFrameCount = frameCount;
+                vOcclusion = occlusion;
                 vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
                 gl_Position = projectionMatrix * mvPosition;
             } 
@@ -70,6 +73,7 @@ export class TextureManager {
                 varying vec2 vRepeat;
                 varying vec4 vSubrect;
                 varying float vFrameCount;
+                varying float vOcclusion;
                 void main() {
                     vec2 fuv = vUv;
                     vec4 sr = vSubrect;
@@ -84,6 +88,7 @@ export class TextureManager {
                     // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
                     vec4 color = texture2D(texture, fuv);
+                    color = color*(vOcclusion);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
             `,
@@ -128,7 +133,7 @@ export class TextureManager {
         this.names = names
         const proms = names.map(name => this.pack(name))
         return Promise.all(proms).then(()=>{
-            document.body.appendChild(this.canvas)
+            // document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
     }

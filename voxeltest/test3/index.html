@@ -133,8 +133,9 @@
     import {ChunkManager} from "./ChunkManager.js"
     //converts chunks to three mesh
     import {VoxelMesh} from "./VoxelMesh.js"
-    import {VoxelTexture} from "./voxelTexture.js"
     import {PersistenceManager} from './PersistenceManager.js'
+    //manages loading textures and the custom shader
+    import {TextureManager} from './TextureManager.js'
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
@@ -146,9 +147,8 @@
     import { KeyboardControls } from './KeyboardControls.js'
     import {BlockPicker} from './BlockPicker.js'
     import {PigComp} from './PigComp.js'
-    import {generateChunkInfoFromFunction, toHexColor, toRad} from './utils.js'
+    import {generateChunkInfoFromFunction, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
-    import {TextureManager} from './TextureManager.js'
     import VRStats from "./VRStats.js";
 
     //JQuery-like selector
@@ -197,7 +197,18 @@
         }
 
         const single = (i,j,k) => {
-            if((i >= 3 && i<=5 ) && (j >= -3 && j <=-2) && (k >= -7 && k<=-4)) return 2
+            // if((i >= 3 && i<=5 ) && (j >= -3 && j <=-2) && (k >= -7 && k<=-4)) return 2
+            // if(i >= -3 && i <=3 && j === -1 && k === -7) return 2;
+            // if(i === 3 && j<5 && j>=-1 && k === -7 ) return 2;
+            // if(i >=  1 && i <=3  && j === 2 && k===-4) return 2
+            if(i === 2 && j === 1 && k===-5) return 3
+            if(i >=  1 && i <=3  && j >= 0 && j<=2 && k===-4) {
+                if(i===2 && j===1) return 0
+                return 2
+            }
+
+            // if(i === 2 && j === 1 && k===-5) return 2
+            // if(i === 3 && j === 1 && k===-4) return 2
             return 0
         }
 
@@ -215,8 +226,8 @@
 
 
         const scale = new Vector3(1.0,1.0,1.0)
-        const mesher = new GreedyMesh()
-        // const mesher = new CulledMesh()
+        // const mesher = new GreedyMesh()
+        const mesher = new CulledMesh()
 
         app.stageRot = new Group()
         app.scene.add(app.stageRot)

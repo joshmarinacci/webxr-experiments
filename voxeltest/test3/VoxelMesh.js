@@ -36,6 +36,7 @@ export class VoxelMesh {
         const indices = []
         const normaluvs = []
         const frameCount = []
+        const occlusion = []
         // if(result.faces.length > 0) console.log(result)
         /*
             generate faces from meshed data
@@ -49,6 +50,7 @@ export class VoxelMesh {
         */
         const atlasIndex = app.textureManager.getAtlasIndex()
         for (let i = 0; i < result.faces.length; ++i) {
+            // console.log("face",i)
             let q = result.faces[i]
             if (q.length === 5) {
                 const info = app.textureManager.lookupInfoForBlockType(q[4])
@@ -59,6 +61,11 @@ export class VoxelMesh {
                 const d = q[3]
 
                 //make two triangles
+                /*
+                    d --- c
+                    |     |
+                    a --- b
+                 */
                 indices.push(a,b,d)
                 indices.push(b,c,d)
 
@@ -66,16 +73,52 @@ export class VoxelMesh {
                 let repV = 1
                 const {size,uvs, spans} = this.faceVertexUv(i)
 
+                let ao_c = 1.0
+                let ao_a = 1.0
+                let ao_d = 1.0;
+                let ao_b = 1.0;
                 if(size.x > 0 && size.y > 0) {
                     // console.log("front or back", size, uvs, spans)
+
                     if(spans.x0 > spans.x1) {
                         repU = size.y
                         repV = size.x
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                        const block_self  = data.voxelAtCoordinates(pos)
+                        const left        = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  0, -1)))>0?1:0
+                        const below       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0, -1, -1)))>0?1:0
+                        const left_below  = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1, -1, -1)))>0?1:0
+                        ao_a = vertexAO(left, below, left_below)/3.0;
+                        console.log("back", pos.x,pos.y,pos.z, 'self',block_self,'sides', left, left_below, below, 'ao', ao_a)
                     } else {
+                        // console.log("front")
                         repU = size.x
                         repV = size.y
+
+                        //pos at a
+                        //have to shift back one
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
+                        const block_self = data.voxelAtCoordinates(pos)
+                        // console.log("self = ", pos, block_self)
+                        const left        = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1,  0,1)))>0?1:0
+                        const left_above  = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1,  1,1)))>0?1:0
+                        const above       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0,  1,1)))>0?1:0
+                        const right_above = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  1,1)))>0?1:0
+                        const right       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  0,1)))>0?1:0
+                        const right_below = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1, -1,1)))>0?1:0
+                        const below       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0, -1,1)))>0?1:0
+                        const left_below  = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1, -1,1)))>0?1:0
+
+                        ao_a = vertexAO(left, below, left_below)/3.0;
+                        ao_b = vertexAO(below, right, right_below)/3.0;
+                        ao_c = vertexAO(right,above,right_above)/3.0;
+                        ao_d = vertexAO(left,above,left_above)/3.0;
+
+                        console.log('front',left,left_above,above,right_above,right, 'ao', ao_a, ao_b, ao_c, ao_d, 'pos',pos.x,pos.y,pos.z)
                     }
                 }
+
+                occlusion.push(ao_a,ao_b,ao_c,ao_d)
 
                 if(size.z > 0 && size.x > 0) {
                     // console.log("top or bottom", size)
@@ -125,6 +168,8 @@ export class VoxelMesh {
                 for(let j=0; j<4; j++) {
                     frameCount.push(fc)
                 }
+
+
             } else if (q.length === 4) {
                 console.log("bad")
             }
@@ -135,6 +180,7 @@ export class VoxelMesh {
         geometry.addAttribute('subrect',new Float32BufferAttribute(subrects,4))
         geometry.addAttribute('repeat', new Float32BufferAttribute(repeatUV,2))
         geometry.addAttribute('frameCount',new Float32BufferAttribute(frameCount,1))
+        geometry.addAttribute('occlusion',new Float32BufferAttribute(occlusion,1))
 
         geometry.computeFaceNormals()
         geometry.uvsNeedUpdate = true
@@ -224,4 +270,12 @@ export class VoxelMesh {
         return {size, uvs, spans}
 
     }
+}
+
+
+function vertexAO(side1, side2, corner) {
+    if(side1 && side2) {
+        return 0
+    }
+    return 3 - (side1 + side2 + corner)
 }
