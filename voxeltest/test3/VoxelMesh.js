@@ -13,6 +13,11 @@ import {
     BufferAttribute,
 } from "./node_modules/three/build/three.module.js"
 
+
+function adj(data, pos,x,y,z) {
+    return data.voxelAtCoordinates(pos.clone().add(new Vector3( x,  y, z)))>0?1:0
+}
+
 export class VoxelMesh {
     constructor(data, mesher, scaleFactor, app) {
         this.data = data
@@ -77,44 +82,48 @@ export class VoxelMesh {
                 let ao_a = 1.0
                 let ao_d = 1.0;
                 let ao_b = 1.0;
+
+                let uv_a = new Vector2(0,0)
+                let uv_b = new Vector2(1,0)
+                let uv_c = new Vector2(1,1)
+                let uv_d = new Vector2(0,1)
+
                 if(size.x > 0 && size.y > 0) {
                     // console.log("front or back", size, uvs, spans)
 
                     if(spans.x0 > spans.x1) {
+                        //calculate AO for back face
                         repU = size.y
                         repV = size.x
+                        const norm = new Vector3(0,0,-1)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        const block_self  = data.voxelAtCoordinates(pos)
-                        const left        = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  0, -1)))>0?1:0
-                        const below       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0, -1, -1)))>0?1:0
-                        const left_below  = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1, -1, -1)))>0?1:0
-                        ao_a = vertexAO(left, below, left_below)/3.0;
-                        console.log("back", pos.x,pos.y,pos.z, 'self',block_self,'sides', left, left_below, below, 'ao', ao_a)
+
+                        const grid = []
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,p,q,norm.z))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
                     } else {
-                        // console.log("front")
+                        //calculate AO for front face
                         repU = size.x
                         repV = size.y
-
-                        //pos at a
-                        //have to shift back one
+                        const norm = new Vector3(0,0,1)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
-                        const block_self = data.voxelAtCoordinates(pos)
-                        // console.log("self = ", pos, block_self)
-                        const left        = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1,  0,1)))>0?1:0
-                        const left_above  = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1,  1,1)))>0?1:0
-                        const above       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0,  1,1)))>0?1:0
-                        const right_above = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  1,1)))>0?1:0
-                        const right       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1,  0,1)))>0?1:0
-                        const right_below = data.voxelAtCoordinates(pos.clone().add(new Vector3( 1, -1,1)))>0?1:0
-                        const below       = data.voxelAtCoordinates(pos.clone().add(new Vector3( 0, -1,1)))>0?1:0
-                        const left_below  = data.voxelAtCoordinates(pos.clone().add(new Vector3(-1, -1,1)))>0?1:0
-
-                        ao_a = vertexAO(left, below, left_below)/3.0;
-                        ao_b = vertexAO(below, right, right_below)/3.0;
-                        ao_c = vertexAO(right,above,right_above)/3.0;
-                        ao_d = vertexAO(left,above,left_above)/3.0;
-
-                        console.log('front',left,left_above,above,right_above,right, 'ao', ao_a, ao_b, ao_c, ao_d, 'pos',pos.x,pos.y,pos.z)
+                        const grid = []
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,p,q,norm.z))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
                     }
                 }
 
@@ -146,7 +155,7 @@ export class VoxelMesh {
                 }
 
                 //set standard uvs for the whole quad
-                normaluvs.push(0,0, 1,0, 1,1, 0,1)
+                normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
 
                 const rect = {
                     x:realUVs[0][0],
