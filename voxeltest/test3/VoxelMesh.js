@@ -47,10 +47,12 @@ export class VoxelMesh {
             each face is represented by two triangles using indexes and one set of uvs (4) for the whole
             face.
         */
+        const atlasIndex = app.textureManager.getAtlasIndex()
         for (let i = 0; i < result.faces.length; ++i) {
             let q = result.faces[i]
             if (q.length === 5) {
-                const uvs = app.textureManager.lookupUVsForBlockType(q[4])
+                const info = app.textureManager.lookupInfoForBlockType(q[4])
+                const realUVs = app.textureManager.lookupUVsForBlockType(q[4])
                 const a = q[0]
                 const b = q[1]
                 const c = q[2]
@@ -62,23 +64,39 @@ export class VoxelMesh {
 
                 let repU = 1
                 let repV = 1
-                const size = this.faceVertexUv(i)
+                const {size,uvs, spans} = this.faceVertexUv(i)
+
                 if(size.x > 0 && size.y > 0) {
-                    // console.log("front or back", size)
-                    repU = size.x
-                    repV = size.y
+                    // console.log("front or back", size, uvs, spans)
+                    if(spans.x0 > spans.x1) {
+                        repU = size.y
+                        repV = size.x
+                    } else {
+                        repU = size.x
+                        repV = size.y
+                    }
                 }
 
                 if(size.z > 0 && size.x > 0) {
-                    // console.log("top or bottom")
-                    repU = size.z
-                    repV = size.x
+                    // console.log("top or bottom", size)
+                    if(spans.x0 > spans.x1) {
+                        repU = size.z
+                        repV = size.x
+                    } else {
+                        repU = size.x
+                        repV = size.z
+                    }
                 }
 
                 if(size.z > 0 && size.y > 0) {
-                    // console.log("left or right")
-                    repU = size.z
-                    repV = size.y
+                    // console.log("left or right", size, spans)
+                    if(spans.y0 > spans.y1) {
+                        repU = size.z
+                        repV = size.y
+                    } else {
+                        repU = size.y
+                        repV = size.z
+                    }
                 }
                 for(let j=0; j<4; j++) {
                     repeatUV.push(repU, repV);
@@ -88,19 +106,24 @@ export class VoxelMesh {
                 normaluvs.push(0,0, 1,0, 1,1, 0,1)
 
                 const rect = {
-                    x:uvs[0][0],
-                    y:1.0 - uvs[0][1],
-                    w:uvs[1][0] - uvs[0][0],
-                    h:uvs[2][1] - uvs[1][1],
+                    x:realUVs[0][0],
+                    y:1.0 - realUVs[0][1],
+                    w:realUVs[1][0] - realUVs[0][0],
+                    h:realUVs[2][1] - realUVs[1][1],
+                }
+                let fc = 1
+                if(info.animated) {
+                    fc = rect.w/rect.h
+                    rect.w = rect.h
                 }
                 //flip the y axis properly
-                rect.y = 1.0 - uvs[0][1] - rect.h
+                rect.y = 1.0 - realUVs[0][1] - rect.h
                 for(let j=0; j<4; j++) {
                     subrects.push(rect.x,rect.y,rect.w,rect.h)
                 }
 
                 for(let j=0; j<4; j++) {
-                    frameCount.push(1)
+                    frameCount.push(fc)
                 }
             } else if (q.length === 4) {
                 console.log("bad")
@@ -153,9 +176,7 @@ export class VoxelMesh {
             y: Math.max(Math.abs(spans.y0), Math.abs(spans.y1)),
             z: Math.max(Math.abs(spans.z0), Math.abs(spans.z1))
         }
-        // console.log("size",size)
-        return size
-        /*
+
         if (size.x === 0) {
             if (spans.y0 > spans.y1) {
                 width = size.y
@@ -183,21 +204,24 @@ export class VoxelMesh {
                 height = size.x
             }
         }
+
+        let uvs = []
         if ((size.z === 0 && spans.x0 < spans.x1) || (size.x === 0 && spans.y0 > spans.y1)) {
-            return [
+            uvs = [
                 new Vector2(height, 0),
                 new Vector2(0, 0),
                 new Vector2(0, width),
                 new Vector2(height, width)
             ]
         } else {
-            return [
+            uvs = [
                 new Vector2(0, 0),
                 new Vector2(0, height),
                 new Vector2(width, height),
                 new Vector2(width, 0)
             ]
         }
-        */
+        return {size, uvs, spans}
+
     }
 }

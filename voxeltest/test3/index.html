@@ -175,7 +175,8 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
-        const onload = app.textureManager.load(['grass','brick','dirt']).then(()=>{
+        const onload = app.textureManager.load(['grass','brick','dirt','anim']).then(()=>{
+            app.textureManager.markAsAnimated('anim')
             console.log('textures are loaded')
         })
         comps.push(app.textureManager)

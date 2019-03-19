@@ -21,6 +21,7 @@ export class TextureManager {
         this.canvas.width = 128;
         this.canvas.height = 128;
         this.atlas = createAtlas(this.canvas);
+        this.animated = {}
         const ctx = this.canvas.getContext('2d')
         ctx.fillStyle = 'red';
         ctx.fillRect(0, 0, this.canvas.width/2, this.canvas.height/2);
@@ -102,9 +103,20 @@ export class TextureManager {
         return this.atlas.uv()[this.names[typeNum-1]]
     }
 
-    getAtlasIndex() {
-        return this.atlas.index()
+    lookupInfoForBlockType(typeNum) {
+        const index = this.getAtlasIndex()
+        const name = this.names[typeNum-1]
+        return index.find(info => info.name === name)
     }
+
+    getAtlasIndex() {
+        const index = this.atlas.index()
+        index.forEach(info => {
+            info.animated = this.animated[info.name]?true:false
+        })
+        return index
+    }
+
 
     getBlockTypeForName(name) {
         return this.names.findIndex(n => n===name)+1
@@ -119,6 +131,10 @@ export class TextureManager {
             document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
+    }
+
+    markAsAnimated(name) {
+        this.animated[name] = true
     }
 
     pack(name) {

@@ -55,7 +55,6 @@ export class BlockPicker extends Object3D {
         ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
         const index = this.app.textureManager.getAtlasIndex()
         index.forEach((info,i) => {
-            console.log(info)
             const x = (i%4)*64
             const y = Math.floor((i/4))*64
             ctx.fillStyle = 'red'
