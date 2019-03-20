@@ -21,6 +21,7 @@ export class TextureManager {
         this.canvas.width = 128;
         this.canvas.height = 128;
         this.atlas = createAtlas(this.canvas);
+        this.atlas.tilepad = false // this will cost 8x texture memory.
         this.animated = {}
         const ctx = this.canvas.getContext('2d')
 
@@ -145,7 +146,7 @@ export class TextureManager {
         this.names = names
         const proms = names.map(name => this.pack(name))
         return Promise.all(proms).then(()=>{
-            // document.body.appendChild(this.canvas)
+            document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
     }
