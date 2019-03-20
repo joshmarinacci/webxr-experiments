@@ -27,6 +27,32 @@ function generateAmbientOcclusion(grid) {
     ]
 }
 
+function generateGrid(ds,pos,indexes,vertices) {
+    const quad = []
+    for(let r=0; r<4; r++) {
+        quad.push(new Vector3(
+            vertices[indexes[r]][0],
+            vertices[indexes[r]][1],
+            vertices[indexes[r]][2],
+            ))
+    }
+
+    const ab = quad[1].clone().sub(quad[0])
+    const ad = quad[3].clone().sub(quad[0])
+    const norm1 = ab.clone().cross(ad)
+    const grid = []
+    for(let q=-1; q<2; q++) {
+        for(let p=-1;p<2; p++) {
+            const pt2 = pos.clone()
+                .add(ab.clone().multiplyScalar(p))
+                .add(ad.clone().multiplyScalar(q))
+                .add(norm1.clone().multiplyScalar(1))
+            grid.push(ds.voxelAtCoordinates(pt2)>0?1:0)
+        }
+    }
+    return grid
+}
+
 export class VoxelMesh {
     constructor(data, mesher, scaleFactor, app) {
         this.data = data
@@ -102,17 +128,9 @@ export class VoxelMesh {
                         //calculate AO for back face
                         repU = size.y
                         repV = size.x
-                        const norm = new Vector3(0,0,-1)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-
-                        const grid = []
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,q,p,norm.z))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
                         //rotate UVs by 90 degrees
                         normaluvs.push(
                             uv_b.x,uv_b.y,
@@ -124,14 +142,8 @@ export class VoxelMesh {
                         //calculate AO for front face
                         repU = size.x
                         repV = size.y
-                        const norm = new Vector3(0,0,1)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
-                        const grid = []
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,p,q,norm.z))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
                         //set standard uvs for the whole quad
                         normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
@@ -145,19 +157,8 @@ export class VoxelMesh {
                         //calculate AO for top face
                         repU = size.z
                         repV = size.x
-                        const norm = new Vector3(0,1,0)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
-                        const grid = []
-                        /*
-                          678
-                          345
-                          012
-                         */
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,q,norm.y,p))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
                         //set standard uvs for the whole quad
                         normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
@@ -165,14 +166,8 @@ export class VoxelMesh {
                         // bottom
                         repU = size.x
                         repV = size.z
-                        const norm = new Vector3(0,-1,0)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        const grid = []
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,p,norm.y,q))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
                         //set standard uvs for the whole quad
                         normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
@@ -185,14 +180,8 @@ export class VoxelMesh {
                         //left side
                         repU = size.z
                         repV = size.y
-                        const norm = new Vector3(-1,0,0)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        const grid = []
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,norm.x,q,p))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
                         //set standard uvs for the whole quad
                         normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
@@ -200,17 +189,9 @@ export class VoxelMesh {
                         //right side
                         repU = size.y
                         repV = size.z
-                        const norm = new Vector3(1,0,0)
                         const pos = new Vector3(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
-                        // console.log(pos)
-                        const grid = []
-                        for(let q=-1; q<2; q++) {
-                            for(let p=-1;p<2; p++) {
-                                grid.push(adj(ds,pos,norm.x,p,q))
-                            }
-                        }
+                        const grid = generateGrid(ds,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
                         //rotate UVs by 90 degrees
                         normaluvs.push(
                             uv_b.x,uv_b.y,

@@ -233,6 +233,22 @@
             return 0
         }
 
+        const pyramid = (i,j,k) => {
+            const ox = 0
+            const oy = 5
+            const oz = 0
+            const w = 7
+            const d = 7
+            const h = 4
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 2
+            }
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 2
+            }
+            return 0
+        }
+
         const chunkManager = new ChunkManager({
             chunkDistance:3,
             cubeSize:1,
@@ -240,7 +256,7 @@
             generateVoxelChunk: (low, high, cx,cy,cz) => {
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
-                return generateChunkInfoFromFunction(low, high, flat)
+                return generateChunkInfoFromFunction(low, high, pyramid)
             },
         });
         app.chunkManager = chunkManager
@@ -254,9 +270,9 @@
         app.scene.add(app.stageRot)
         app.stagePos = new Group()
         app.stageRot.add(app.stagePos)
-        app.stagePos.position.z = 0
+        app.stagePos.position.z = -10
         app.stagePos.position.y = -1.5
-        app.stagePos.position.x = 0
+        app.stagePos.position.x = -2
 
         const group = new Group()
         app.stagePos.add(group)
