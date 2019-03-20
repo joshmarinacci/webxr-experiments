@@ -296,9 +296,13 @@
         let lastPos = new Vector3(0,0,0)
         function updateChunks() {
             if(!lastPos.equals(app.stagePos.position)) {
+                const startTime = Date.now()
                 const pos = app.stagePos.position.clone().multiplyScalar(-1)
                 chunkManager.requestMissingChunks(pos)
                 chunkManager.removeFarChunks(pos, group)
+                const endTime = Date.now()
+                const diff = endTime - startTime
+                if(diff > 5)  console.log("meshing time",diff)
             }
             lastPos.copy(app.stagePos.position)
         }

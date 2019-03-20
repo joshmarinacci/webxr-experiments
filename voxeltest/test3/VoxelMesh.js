@@ -33,16 +33,32 @@ function generateGrid(chunkManager,pos,indexes,vertices) {
             ))
     }
 
-    const ab = quad[1].clone().sub(quad[0])
-    const ad = quad[3].clone().sub(quad[0])
-    const norm1 = ab.clone().cross(ad)
+    const ab = new Vector3()
+    ab.copy(quad[1])
+    ab.sub(quad[0])
+
+    const ad = new Vector3()
+    ad.copy(quad[3])
+    ad.sub(quad[0])
+
+    const anorm = new Vector3()
+    anorm.copy(ab)
+    anorm.cross(ad)
+
     const grid = []
+    const pt2 = new Vector3()
     for(let q=-1; q<2; q++) {
         for(let p=-1;p<2; p++) {
-            const pt2 = pos.clone()
-                .add(ab.clone().multiplyScalar(p))
-                .add(ad.clone().multiplyScalar(q))
-                .add(norm1.clone().multiplyScalar(1))
+            pt2.copy(pos)
+            pt2.x += ab.x * p
+            pt2.y += ab.y * p
+            pt2.z += ab.z * p
+            pt2.x += ad.x * q
+            pt2.y += ad.y * q
+            pt2.z += ad.z * q
+            pt2.x += anorm.x * 1
+            pt2.y += anorm.y * 1
+            pt2.z += anorm.z * 1
             const type =chunkManager.voxelAtCoordinates(pt2)
             grid.push(type>0?1:0)
         }
@@ -90,163 +106,156 @@ export class VoxelMesh {
         const chunkManager = app.chunkManager
 
         for (let i = 0; i < result.faces.length; ++i) {
-            // console.log("face",i)
             let q = result.faces[i]
-            if (q.length === 5) {
-                const info = app.textureManager.lookupInfoForBlockType(q[4])
-                const realUVs = app.textureManager.lookupUVsForBlockType(q[4])
-                const a = q[0]
-                const b = q[1]
-                const c = q[2]
-                const d = q[3]
+            const info = app.textureManager.lookupInfoForBlockType(q[4])
+            const realUVs = app.textureManager.lookupUVsForBlockType(q[4])
+            const a = q[0]
+            const b = q[1]
+            const c = q[2]
+            const d = q[3]
 
-                //make two triangles
-                /*
-                    d --- c
-                    |     |
-                    a --- b
-                 */
-                indices.push(a,b,d)
-                indices.push(b,c,d)
-                let repU = 1
-                let repV = 1
-                const {size,uvs, spans} = this.faceVertexUv(i)
+            //make two triangles
+            /*
+                d --- c
+                |     |
+                a --- b
+             */
+            indices.push(a,b,d)
+            indices.push(b,c,d)
+            let repU = 1
+            let repV = 1
+            const {size,uvs, spans} = this.faceVertexUv(i)
 
-                let ao = [1,1,1,1]
+            let ao = [1,1,1,1]
 
-                let uv_a = new Vector2(0,0)
-                let uv_b = new Vector2(1,0)
-                let uv_c = new Vector2(1,1)
-                let uv_d = new Vector2(0,1)
+            let uv_a = new Vector2(0,0)
+            let uv_b = new Vector2(1,0)
+            let uv_c = new Vector2(1,1)
+            let uv_d = new Vector2(0,1)
 
-                if(size.x > 0 && size.y > 0) {
-                    // console.log("front or back", size, uvs, spans)
+            if(size.x > 0 && size.y > 0) {
+                // console.log("front or back", size, uvs, spans)
 
-                    if(spans.x0 > spans.x1) {
-                        //calculate AO for back face
-                        repU = size.y
-                        repV = size.x
-                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //rotate UVs by 90 degrees
-                        normaluvs.push(
-                            uv_b.x,uv_b.y,
-                            uv_c.x, uv_c.y,
-                            uv_d.x,uv_d.y,
-                            uv_a.x,uv_a.y,
-                        )
-                    } else {
-                        //calculate AO for front face
-                        repU = size.x
-                        repV = size.y
-                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
-                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
-                    }
-                }
-
-
-                //top and bottom
-                if(size.z > 0 && size.x > 0) {
-                    if(spans.x0 > spans.x1) {
-                        //calculate AO for top face
-                        repU = size.z
-                        repV = size.x
-                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
-                        //rotate UVs by -90 degrees
-                        normaluvs.push(
-                            uv_d.x,uv_d.y,
-                            uv_a.x,uv_a.y,
-                            uv_b.x,uv_b.y,
-                            uv_c.x, uv_c.y,
-                        )
-                    } else {
-                        // bottom
-                        repU = size.x
-                        repV = size.z
-                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
-                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
-                    }
-                }
-
-                //left and right
-                if(size.z > 0 && size.y > 0) {
-                    if(spans.y0 > spans.y1) {
-                        //left side
-                        repU = size.z
-                        repV = size.y
-                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //set standard uvs for the whole quad
-                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
-                    } else {
-                        //right side
-                        repU = size.y
-                        repV = size.z
-                        const pos = new Vector3(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
-                        pos.add(chunkOffset)
-                        const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                        ao = generateAmbientOcclusion(grid)
-                        //rotate UVs by 90 degrees
-                        normaluvs.push(
-                            uv_b.x,uv_b.y,
-                            uv_c.x,uv_c.y,
-                            uv_d.x,uv_d.y,
-                            uv_a.x,uv_a.y,
-                        )
-                    }
-                }
-
-                if(app.aoEnabled) {
-                    occlusion.push(ao[0], ao[1], ao[2], ao[3])
+                if(spans.x0 > spans.x1) {
+                    //calculate AO for back face
+                    repU = size.y
+                    repV = size.x
+                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //rotate UVs by 90 degrees
+                    normaluvs.push(
+                        uv_b.x,uv_b.y,
+                        uv_c.x, uv_c.y,
+                        uv_d.x,uv_d.y,
+                        uv_a.x,uv_a.y,
+                    )
                 } else {
-                    occlusion.push(1,1,1,1)
+                    //calculate AO for front face
+                    repU = size.x
+                    repV = size.y
+                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //set standard uvs for the whole quad
+                    normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                 }
-
-                for(let j=0; j<4; j++) {
-                    repeatUV.push(repU, repV);
-                }
-
-
-                const rect = {
-                    x:realUVs[0][0],
-                    y:1.0 - realUVs[0][1],
-                    w:realUVs[1][0] - realUVs[0][0],
-                    h:realUVs[2][1] - realUVs[1][1],
-                }
-                let fc = 1
-                if(info.animated) {
-                    fc = rect.w/rect.h
-                    rect.w = rect.h
-                }
-                //flip the y axis properly
-                rect.y = 1.0 - realUVs[0][1] - rect.h
-                for(let j=0; j<4; j++) {
-                    subrects.push(rect.x,rect.y,rect.w,rect.h)
-                }
-
-                for(let j=0; j<4; j++) {
-                    frameCount.push(fc)
-                }
+            }
 
 
-            } else if (q.length === 4) {
-                console.log("bad")
+            //top and bottom
+            if(size.z > 0 && size.x > 0) {
+                if(spans.x0 > spans.x1) {
+                    //calculate AO for top face
+                    repU = size.z
+                    repV = size.x
+                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //set standard uvs for the whole quad
+                    //rotate UVs by -90 degrees
+                    normaluvs.push(
+                        uv_d.x,uv_d.y,
+                        uv_a.x,uv_a.y,
+                        uv_b.x,uv_b.y,
+                        uv_c.x, uv_c.y,
+                    )
+                } else {
+                    // bottom
+                    repU = size.x
+                    repV = size.z
+                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //set standard uvs for the whole quad
+                    normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
+                }
+            }
+
+            //left and right
+            if(size.z > 0 && size.y > 0) {
+                if(spans.y0 > spans.y1) {
+                    //left side
+                    repU = size.z
+                    repV = size.y
+                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //set standard uvs for the whole quad
+                    normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
+                } else {
+                    //right side
+                    repU = size.y
+                    repV = size.z
+                    const pos = new Vector3(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
+                    pos.add(chunkOffset)
+                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                    ao = generateAmbientOcclusion(grid)
+                    //rotate UVs by 90 degrees
+                    normaluvs.push(
+                        uv_b.x,uv_b.y,
+                        uv_c.x,uv_c.y,
+                        uv_d.x,uv_d.y,
+                        uv_a.x,uv_a.y,
+                    )
+                }
+            }
+
+            if(app.aoEnabled) {
+                occlusion.push(ao[0], ao[1], ao[2], ao[3])
+            } else {
+                occlusion.push(1,1,1,1)
+            }
+
+            for(let j=0; j<4; j++) {
+                repeatUV.push(repU, repV);
+            }
+
+
+            const rect = {
+                x:realUVs[0][0],
+                y:1.0 - realUVs[0][1],
+                w:realUVs[1][0] - realUVs[0][0],
+                h:realUVs[2][1] - realUVs[1][1],
+            }
+            let fc = 1
+            if(info.animated) {
+                fc = rect.w/rect.h
+                rect.w = rect.h
+            }
+            //flip the y axis properly
+            rect.y = 1.0 - realUVs[0][1] - rect.h
+            for(let j=0; j<4; j++) {
+                subrects.push(rect.x,rect.y,rect.w,rect.h)
+            }
+
+            for(let j=0; j<4; j++) {
+                frameCount.push(fc)
             }
         }
         geometry.setIndex(indices)
