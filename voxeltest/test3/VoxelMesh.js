@@ -216,7 +216,11 @@ export class VoxelMesh {
                     }
                 }
 
-                occlusion.push(ao_a,ao_b,ao_c,ao_d)
+                if(app.aoEnabled) {
+                    occlusion.push(ao_a, ao_b, ao_c, ao_d)
+                } else {
+                    occlusion.push(1,1,1,1)
+                }
 
                 for(let j=0; j<4; j++) {
                     repeatUV.push(repU, repV);

@@ -170,6 +170,8 @@
 
         app.scene.background = new Color( 0xcccccc );
 
+        app.aoEnabled = false
+
         //load a cat texture
         const texture_loader = new TextureLoader()
         app.textureLoader = texture_loader
@@ -506,6 +508,10 @@
         })
         on($("#toggle-texture"),'click',()=>{
             app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
+        })
+        on($("#toggle-ao"),'click',()=>{
+            app.aoEnabled = !app.aoEnabled
+            rebuildAllMeshes()
         })
 
     })
