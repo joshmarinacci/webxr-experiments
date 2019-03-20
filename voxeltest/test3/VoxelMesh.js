@@ -94,6 +94,7 @@ export class VoxelMesh {
                 let uv_c = new Vector2(1,1)
                 let uv_d = new Vector2(0,1)
 
+                const ds = app.chunkManager
                 if(size.x > 0 && size.y > 0) {
                     // console.log("front or back", size, uvs, spans)
 
@@ -107,7 +108,7 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,q,p,norm.z))
+                                grid.push(adj(ds,pos,q,p,norm.z))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
@@ -128,7 +129,7 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,p,q,norm.z))
+                                grid.push(adj(ds,pos,p,q,norm.z))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
@@ -154,7 +155,7 @@ export class VoxelMesh {
                          */
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,q,norm.y,p))
+                                grid.push(adj(ds,pos,q,norm.y,p))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
@@ -169,7 +170,7 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,p,norm.y,q))
+                                grid.push(adj(ds,pos,p,norm.y,q))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
@@ -189,7 +190,7 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,norm.x,q,p))
+                                grid.push(adj(ds,pos,norm.x,q,p))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
@@ -205,7 +206,7 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,norm.x,p,q))
+                                grid.push(adj(ds,pos,norm.x,p,q))
                             }
                         }
                         ao = generateAmbientOcclusion(grid)
