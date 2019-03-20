@@ -162,7 +162,13 @@ export class VoxelMesh {
                         const grid = generateGrid(chunkManager,pos,q,result.vertices)
                         ao = generateAmbientOcclusion(grid)
                         //set standard uvs for the whole quad
-                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
+                        //rotate UVs by -90 degrees
+                        normaluvs.push(
+                            uv_d.x,uv_d.y,
+                            uv_a.x,uv_a.y,
+                            uv_b.x,uv_b.y,
+                            uv_c.x, uv_c.y,
+                        )
                     } else {
                         // bottom
                         repU = size.x

@@ -234,8 +234,8 @@
         }
 
         const pyramid = (i,j,k) => {
-            const ox = 0
-            const oy = 5
+            const ox = -4
+            const oy = 4
             const oz = 0
             const w = 7
             const d = 7
@@ -256,7 +256,7 @@
             generateVoxelChunk: (low, high, cx,cy,cz) => {
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
-                return generateChunkInfoFromFunction(low, high, pyramid)
+                return generateChunkInfoFromFunction(low, high, flat)
             },
         });
         app.chunkManager = chunkManager
