@@ -124,7 +124,7 @@ export class VoxelMesh {
             indices.push(b,c,d)
             let repU = 1
             let repV = 1
-            const {size,uvs, spans} = this.faceVertexUv(i)
+            const {size, spans} = this.faceVertexUv(i)
 
             let ao = [1,1,1,1]
 
@@ -133,6 +133,8 @@ export class VoxelMesh {
             let uv_c = new Vector2(1,1)
             let uv_d = new Vector2(0,1)
 
+            const pos = new Vector3()
+
             if(size.x > 0 && size.y > 0) {
                 // console.log("front or back", size, uvs, spans)
 
@@ -140,10 +142,8 @@ export class VoxelMesh {
                     //calculate AO for back face
                     repU = size.y
                     repV = size.x
-                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //rotate UVs by 90 degrees
                     normaluvs.push(
                         uv_b.x,uv_b.y,
@@ -155,10 +155,8 @@ export class VoxelMesh {
                     //calculate AO for front face
                     repU = size.x
                     repV = size.y
-                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
+                    pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //set standard uvs for the whole quad
                     normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                 }
@@ -171,10 +169,8 @@ export class VoxelMesh {
                     //calculate AO for top face
                     repU = size.z
                     repV = size.x
-                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
+                    pos.set(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //set standard uvs for the whole quad
                     //rotate UVs by -90 degrees
                     normaluvs.push(
@@ -187,10 +183,8 @@ export class VoxelMesh {
                     // bottom
                     repU = size.x
                     repV = size.z
-                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //set standard uvs for the whole quad
                     normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                 }
@@ -202,20 +196,16 @@ export class VoxelMesh {
                     //left side
                     repU = size.z
                     repV = size.y
-                    const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                    pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //set standard uvs for the whole quad
                     normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                 } else {
                     //right side
                     repU = size.y
                     repV = size.z
-                    const pos = new Vector3(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
+                    pos.set(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
-                    const grid = generateGrid(chunkManager,pos,q,result.vertices)
-                    ao = generateAmbientOcclusion(grid)
                     //rotate UVs by 90 degrees
                     normaluvs.push(
                         uv_b.x,uv_b.y,
@@ -227,6 +217,8 @@ export class VoxelMesh {
             }
 
             if(app.aoEnabled) {
+                const grid = generateGrid(chunkManager,pos,q,result.vertices)
+                ao = generateAmbientOcclusion(grid)
                 occlusion.push(ao[0], ao[1], ao[2], ao[3])
             } else {
                 occlusion.push(1,1,1,1)
@@ -335,6 +327,7 @@ export class VoxelMesh {
             }
         }
 
+    /*
         let uvs = []
         if ((size.z === 0 && spans.x0 < spans.x1) || (size.x === 0 && spans.y0 > spans.y1)) {
             uvs = [
@@ -351,7 +344,8 @@ export class VoxelMesh {
                 new Vector2(width, 0)
             ]
         }
-        return {size, uvs, spans}
+        */
+        return {size, spans}
 
     }
 }
