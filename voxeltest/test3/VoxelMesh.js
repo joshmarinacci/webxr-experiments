@@ -132,8 +132,21 @@ export class VoxelMesh {
                 if(size.z > 0 && size.x > 0) {
                     // console.log("top or bottom", size)
                     if(spans.x0 > spans.x1) {
+                        console.log("top")
                         repU = size.z
                         repV = size.x
+                        const norm = new Vector3(0,1,0)
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                        const grid = []
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,p,norm.y,q))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
                     } else {
                         repU = size.x
                         repV = size.z
