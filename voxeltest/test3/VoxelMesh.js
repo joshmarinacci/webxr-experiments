@@ -18,6 +18,15 @@ function adj(data, pos,x,y,z) {
     return data.voxelAtCoordinates(pos.clone().add(new Vector3( x,  y, z)))>0?1:0
 }
 
+function generateAmbientOcclusion(grid) {
+    return [
+        vertexAO(grid[3], grid[1], grid[0])/3.0,
+        vertexAO(grid[1], grid[5], grid[2])/3.0,
+        vertexAO(grid[5], grid[7], grid[8])/3.0,
+        vertexAO(grid[3], grid[7], grid[6])/3.0
+    ]
+}
+
 export class VoxelMesh {
     constructor(data, mesher, scaleFactor, app) {
         this.data = data
@@ -78,10 +87,7 @@ export class VoxelMesh {
                 let repV = 1
                 const {size,uvs, spans} = this.faceVertexUv(i)
 
-                let ao_c = 1.0
-                let ao_a = 1.0
-                let ao_d = 1.0;
-                let ao_b = 1.0;
+                let ao = [1,1,1,1]
 
                 let uv_a = new Vector2(0,0)
                 let uv_b = new Vector2(1,0)
@@ -101,13 +107,18 @@ export class VoxelMesh {
                         const grid = []
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
-                                grid.push(adj(data,pos,p,q,norm.z))
+                                grid.push(adj(data,pos,q,p,norm.z))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        //rotate UVs by 90 degrees
+                        normaluvs.push(
+                            uv_b.x,uv_b.y,
+                            uv_c.x, uv_c.y,
+                            uv_d.x,uv_d.y,
+                            uv_a.x,uv_a.y,
+                        )
                     } else {
                         //calculate AO for front face
                         repU = size.x
@@ -120,14 +131,14 @@ export class VoxelMesh {
                                 grid.push(adj(data,pos,p,q,norm.z))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                     }
                 }
 
 
+                //top and bottom
                 if(size.z > 0 && size.x > 0) {
                     if(spans.x0 > spans.x1) {
                         //calculate AO for top face
@@ -146,11 +157,9 @@ export class VoxelMesh {
                                 grid.push(adj(data,pos,q,norm.y,p))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
-                        // console.log("top grid",grid, ao_a, ao_b,ao_c,ao_d)
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                     } else {
                         // bottom
                         repU = size.x
@@ -163,41 +172,31 @@ export class VoxelMesh {
                                 grid.push(adj(data,pos,p,norm.y,q))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
-                        // console.log("bot grid",grid, ao_a, ao_b,ao_c,ao_d)
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                     }
                 }
 
+                //left and right
                 if(size.z > 0 && size.y > 0) {
-                    // console.log("left or right", size, spans)
                     if(spans.y0 > spans.y1) {
-                        // console.log("left")
+                        //left side
                         repU = size.z
                         repV = size.y
                         const norm = new Vector3(-1,0,0)
                         const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                         const grid = []
-                        /*
-                          678
-                          345
-                          012
-                         */
                         for(let q=-1; q<2; q++) {
                             for(let p=-1;p<2; p++) {
                                 grid.push(adj(data,pos,norm.x,q,p))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
-                        // ao_a = 0;
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                     } else {
-
-                        //right
+                        //right side
                         repU = size.y
                         repV = size.z
                         const norm = new Vector3(1,0,0)
@@ -209,15 +208,20 @@ export class VoxelMesh {
                                 grid.push(adj(data,pos,norm.x,p,q))
                             }
                         }
-                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
-                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
-                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
-                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        ao = generateAmbientOcclusion(grid)
+                        //set standard uvs for the whole quad
+                        //rotate UVs by 90 degrees
+                        normaluvs.push(
+                            uv_b.x,uv_b.y,
+                            uv_c.x,uv_c.y,
+                            uv_d.x,uv_d.y,
+                            uv_a.x,uv_a.y,
+                        )
                     }
                 }
 
                 if(app.aoEnabled) {
-                    occlusion.push(ao_a, ao_b, ao_c, ao_d)
+                    occlusion.push(ao[0], ao[1], ao[2], ao[3])
                 } else {
                     occlusion.push(1,1,1,1)
                 }
@@ -226,8 +230,6 @@ export class VoxelMesh {
                     repeatUV.push(repU, repV);
                 }
 
-                //set standard uvs for the whole quad
-                normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
 
                 const rect = {
                     x:realUVs[0][0],
