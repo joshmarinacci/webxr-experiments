@@ -100,6 +100,8 @@
     <button id="entervr">play in vr</button>
     <button id="save">save</button>
     <button id="reload">reload</button>
+    <button id="toggle-texture">toggle textures</button>
+    <button id="toggle-ao">toggle ambient occlusion</button>
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -168,6 +170,8 @@
 
         app.scene.background = new Color( 0xcccccc );
 
+        app.aoEnabled = true
+
         //load a cat texture
         const texture_loader = new TextureLoader()
         app.textureLoader = texture_loader
@@ -175,22 +179,23 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
-        const onload = app.textureManager.load(['grass','brick','dirt','anim']).then(()=>{
+        const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
             console.log('textures are loaded')
+            rebuildAllMeshes()
         })
         comps.push(app.textureManager)
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
             if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
-            if(j === -2) {
+            if(j === 0) {
                 if(i === -8) return 2
                 if(i === +8) return 2
                 if(k === -18) return 2
                 if(k === -8) return 2
             }
-            if(j < -3 && j > -10) {
+            if(j < 1 && j > -10) {
                 return 1
             }
             return 0
@@ -215,6 +220,35 @@
             return 0
         }
 
+        const center = (i,j,k) => {
+            // if(i===2 && j===4 && k===2) return 2
+            if(i===+16 && j===0 && k===1) return 2
+            // if(i===3 && j===5 && k===1) return 2
+            if(i===+16 && j===1 && k===0) return 3
+            return 0
+        }
+
+        const gradient = (i,j,k) => {
+            if(i>=-5 && i<5 && j===0 && k === -5) return i
+            return 0
+        }
+
+        const pyramid = (i,j,k) => {
+            const ox = -4
+            const oy = 4
+            const oz = 0
+            const w = 7
+            const d = 7
+            const h = 4
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 2
+            }
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 2
+            }
+            return 0
+        }
+
         const chunkManager = new ChunkManager({
             chunkDistance:3,
             cubeSize:1,
@@ -222,7 +256,7 @@
             generateVoxelChunk: (low, high, cx,cy,cz) => {
                 const id = [cx,cy,cz].join('|')
                 if(CHUNK_CACHE[id]) return CHUNK_CACHE[id]
-                return generateChunkInfoFromFunction(low, high, single)
+                return generateChunkInfoFromFunction(low, high, flat)
             },
         });
         app.chunkManager = chunkManager
@@ -236,8 +270,9 @@
         app.scene.add(app.stageRot)
         app.stagePos = new Group()
         app.stageRot.add(app.stagePos)
-        app.stagePos.position.z = 0
-        app.stagePos.position.x = 0
+        app.stagePos.position.z = -10
+        app.stagePos.position.y = -1.5
+        app.stagePos.position.x = -2
 
         const group = new Group()
         app.stagePos.add(group)
@@ -322,9 +357,12 @@
             setBlock(pos,0)
         }
 
-        function moveHighlight(pos) {
+        function moveHighlight(res) {
             if(dialog.visible) return
+            const pos = res.hitPosition
             highlight_cube.position.copy(pos)
+            vrstats.setProperty('pos',`${pos.x} ${pos.y} ${pos.z}`)
+            vrstats.setProperty('block',`${res.hitBlock}`)
         }
 
 
@@ -492,6 +530,13 @@
             return new PersistenceManager()
                 .load(chunkManager)
                 .then(() => rebuildAllMeshes())
+        })
+        on($("#toggle-texture"),'click',()=>{
+            app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
+        })
+        on($("#toggle-ao"),'click',()=>{
+            app.aoEnabled = !app.aoEnabled
+            rebuildAllMeshes()
         })
 
     })

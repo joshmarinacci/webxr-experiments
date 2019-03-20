@@ -21,8 +21,11 @@ export class TextureManager {
         this.canvas.width = 128;
         this.canvas.height = 128;
         this.atlas = createAtlas(this.canvas);
+        this.atlas.tilepad = false // this will cost 8x texture memory.
         this.animated = {}
         const ctx = this.canvas.getContext('2d')
+
+        this.texturesEnabled = true
         ctx.fillStyle = 'red';
         ctx.fillRect(0, 0, this.canvas.width/2, this.canvas.height/2);
         ctx.fillStyle = 'blue';
@@ -44,6 +47,7 @@ export class TextureManager {
             uniforms: {
                 'uTime': { value: 0.0 },
                 texture: { value: this.texture},
+                texturesEnabled: { value: this.texturesEnabled },
             },
             vertexColors:VertexColors,
             vertexShader: `
@@ -69,6 +73,7 @@ export class TextureManager {
             fragmentShader: `
                 uniform sampler2D texture;
                 uniform float uTime;
+                uniform bool texturesEnabled;
                 varying vec2 vUv;
                 varying vec2 vRepeat;
                 varying vec4 vSubrect;
@@ -87,7 +92,10 @@ export class TextureManager {
                     fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
                     // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
-                    vec4 color = texture2D(texture, fuv);
+                    vec4 color = vec4(1.0,1.0,1.0,1.0);
+                    if(texturesEnabled) {
+                        color = texture2D(texture, fuv);
+                    }
                     color = color*(vOcclusion);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
@@ -102,16 +110,21 @@ export class TextureManager {
     update(ttime) {
         const time = ttime/1000
         this.material.uniforms.uTime.value = time;
+        this.material.uniforms.texturesEnabled.value = this.texturesEnabled
     }
 
     lookupUVsForBlockType(typeNum) {
-        return this.atlas.uv()[this.names[typeNum-1]]
+        const uvs = this.atlas.uv()[this.names[typeNum-1]]
+        if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
+        return uvs
     }
 
     lookupInfoForBlockType(typeNum) {
         const index = this.getAtlasIndex()
         const name = this.names[typeNum-1]
-        return index.find(info => info.name === name)
+        const found = index.find(info => info.name === name)
+        if(!found) return { animated:false }
+        return found
     }
 
     getAtlasIndex() {
@@ -133,7 +146,7 @@ export class TextureManager {
         this.names = names
         const proms = names.map(name => this.pack(name))
         return Promise.all(proms).then(()=>{
-            // document.body.appendChild(this.canvas)
+            document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
     }

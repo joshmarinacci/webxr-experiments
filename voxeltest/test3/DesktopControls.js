@@ -23,7 +23,7 @@ export class DesktopControls extends ECSComp {
             const pt = new Vector2(e.clientX,e.clientY)
             const res = traceRayAtScreenCoords(this.app,pt, this.distance)
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
         })
         this.canvas.addEventListener('mousedown',e => {
             if(!this.isEnabled()) return

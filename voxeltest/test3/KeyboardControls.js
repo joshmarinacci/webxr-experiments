@@ -18,6 +18,8 @@ export class KeyboardControls extends ECSComp {
             d: { current: false, previous: false},
             s: { current: false, previous: false},
             w: { current: false, previous: false},
+            q: { current: false, previous: false},
+            e: { current: false, previous: false},
             Enter: { current: false, previous: false},
         }
 
@@ -47,6 +49,8 @@ export class KeyboardControls extends ECSComp {
         if(this.keystates.d.current === true)  this.glideRight()
         if(this.keystates.w.current === true)  this.glideForward()
         if(this.keystates.s.current === true)  this.glideBackward()
+        if(this.keystates.q.current === true)  this.glideDown()
+        if(this.keystates.e.current === true)  this.glideUp()
 
         if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
             this._fire('show-dialog',this)
@@ -70,6 +74,12 @@ export class KeyboardControls extends ECSComp {
     }
     glideBackward() {
         this.app.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+    }
+    glideUp() {
+        this.app.stagePos.position.add(new Vector3(0,-1,0).normalize().multiplyScalar(SPEED))
+    }
+    glideDown() {
+        this.app.stagePos.position.add(new Vector3(0,1,0).normalize().multiplyScalar(SPEED))
     }
     getSpeedDirection() {
         const dir = new Vector3(0,0,1)
