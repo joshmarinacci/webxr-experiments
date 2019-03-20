@@ -88,6 +88,7 @@ export class TextureManager {
                     // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
                     vec4 color = texture2D(texture, fuv);
+                    // vec4 color = vec4(1.0,1.0,1.0,1.0);
                     color = color*(vOcclusion);
                     gl_FragColor = vec4(color.xyz,1.0);
                 }
@@ -105,13 +106,17 @@ export class TextureManager {
     }
 
     lookupUVsForBlockType(typeNum) {
-        return this.atlas.uv()[this.names[typeNum-1]]
+        const uvs = this.atlas.uv()[this.names[typeNum-1]]
+        if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
+        return uvs
     }
 
     lookupInfoForBlockType(typeNum) {
         const index = this.getAtlasIndex()
         const name = this.names[typeNum-1]
-        return index.find(info => info.name === name)
+        const found = index.find(info => info.name === name)
+        if(!found) return { animated:false }
+        return found
     }
 
     getAtlasIndex() {
