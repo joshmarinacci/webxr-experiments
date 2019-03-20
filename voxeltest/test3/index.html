@@ -228,6 +228,11 @@
             return 0
         }
 
+        const gradient = (i,j,k) => {
+            if(i>=-20 && i<20 && j===0 && k === -5) return i
+            return 0
+        }
+
         const chunkManager = new ChunkManager({
             chunkDistance:3,
             cubeSize:1,
@@ -336,10 +341,12 @@
             setBlock(pos,0)
         }
 
-        function moveHighlight(pos) {
+        function moveHighlight(res) {
             if(dialog.visible) return
+            const pos = res.hitPosition
             highlight_cube.position.copy(pos)
             vrstats.setProperty('pos',`${pos.x} ${pos.y} ${pos.z}`)
+            vrstats.setProperty('block',`${res.hitBlock}`)
         }
 
 

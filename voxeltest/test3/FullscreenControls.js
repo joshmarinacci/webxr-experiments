@@ -41,7 +41,7 @@ export class FullScreenControls extends ECSComp {
 
             const res = this.traceRay()
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
         }
         this.mousedownCallback = (e) => {
             if(!this.isEnabled()) return

@@ -36,21 +36,21 @@ export class TouchControls extends ECSComp {
             const res = traceRayAtScreenCoords(this.app,point, this.distance)
             res.hitPosition.add(res.hitNormal)
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
             timeoutID = setTimeout(this.startRemoval,1000)
         }
         this.startRemoval = () => {
             mode = 'remove'
             const res = traceRayAtScreenCoords(this.app,currentPoint, this.distance)
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
             this._fire('removeblock',res.hitPosition)
             intervalID = setInterval(this.removeAgain,500)
         }
         this.removeAgain = () => {
             const res = traceRayAtScreenCoords(this.app, currentPoint, this.distance)
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
             this._fire('removeblock',res.hitPosition)
         }
         this.touchMove = (e) => {
@@ -69,7 +69,7 @@ export class TouchControls extends ECSComp {
                 res.hitPosition.add(res.hitNormal)
             }
             res.hitPosition.floor()
-            this._fire('highlight',res.hitPosition)
+            this._fire('highlight',res)
 
             if(this.mode === 'remove') {
                 this._fire('removeblock',res.hitPosition)
