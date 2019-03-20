@@ -100,6 +100,8 @@
     <button id="entervr">play in vr</button>
     <button id="save">save</button>
     <button id="reload">reload</button>
+    <button id="toggle-texture">toggle textures</button>
+    <button id="toggle-ao">toggle ambient occlusion</button>
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -501,6 +503,9 @@
             return new PersistenceManager()
                 .load(chunkManager)
                 .then(() => rebuildAllMeshes())
+        })
+        on($("#toggle-texture"),'click',()=>{
+            app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
         })
 
     })
