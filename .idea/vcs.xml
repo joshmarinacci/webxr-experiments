@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/voxeltest/old/voxel-hello-world" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/voxeltest/test2/node_modules/voxel-engine" vcs="Git" />
   </component>
 </project>
