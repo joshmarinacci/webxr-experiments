@@ -127,29 +127,97 @@ export class VoxelMesh {
                     }
                 }
 
-                occlusion.push(ao_a,ao_b,ao_c,ao_d)
 
                 if(size.z > 0 && size.x > 0) {
-                    // console.log("top or bottom", size)
                     if(spans.x0 > spans.x1) {
+                        //calculate AO for top face
                         repU = size.z
                         repV = size.x
+                        const norm = new Vector3(0,1,0)
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
+                        const grid = []
+                        /*
+                          678
+                          345
+                          012
+                         */
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,q,norm.y,p))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        // console.log("top grid",grid, ao_a, ao_b,ao_c,ao_d)
                     } else {
+                        // bottom
                         repU = size.x
                         repV = size.z
+                        const norm = new Vector3(0,-1,0)
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                        const grid = []
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,p,norm.y,q))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        // console.log("bot grid",grid, ao_a, ao_b,ao_c,ao_d)
                     }
                 }
 
                 if(size.z > 0 && size.y > 0) {
                     // console.log("left or right", size, spans)
                     if(spans.y0 > spans.y1) {
+                        // console.log("left")
                         repU = size.z
                         repV = size.y
+                        const norm = new Vector3(-1,0,0)
+                        const pos = new Vector3(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
+                        const grid = []
+                        /*
+                          678
+                          345
+                          012
+                         */
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,norm.x,q,p))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
+                        // ao_a = 0;
                     } else {
+
+                        //right
                         repU = size.y
                         repV = size.z
+                        const norm = new Vector3(1,0,0)
+                        const pos = new Vector3(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
+                        // console.log(pos)
+                        const grid = []
+                        for(let q=-1; q<2; q++) {
+                            for(let p=-1;p<2; p++) {
+                                grid.push(adj(data,pos,norm.x,p,q))
+                            }
+                        }
+                        ao_a = vertexAO(grid[3], grid[1], grid[0])/3.0;
+                        ao_b = vertexAO(grid[1], grid[5], grid[2])/3.0;
+                        ao_c = vertexAO(grid[5], grid[7], grid[8])/3.0;
+                        ao_d = vertexAO(grid[3], grid[7], grid[6])/3.0;
                     }
                 }
+
+                occlusion.push(ao_a,ao_b,ao_c,ao_d)
+
                 for(let j=0; j<4; j++) {
                     repeatUV.push(repU, repV);
                 }
