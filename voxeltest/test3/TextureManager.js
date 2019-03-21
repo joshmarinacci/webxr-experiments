@@ -146,7 +146,7 @@ export class TextureManager {
         this.names = names
         const proms = names.map(name => this.pack(name))
         return Promise.all(proms).then(()=>{
-            document.body.appendChild(this.canvas)
+            // document.body.appendChild(this.canvas)
             this.texture.needsUpdate = true
         })
     }

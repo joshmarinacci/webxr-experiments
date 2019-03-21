@@ -222,9 +222,9 @@
 
         const center = (i,j,k) => {
             // if(i===2 && j===4 && k===2) return 2
-            if(i===+16 && j===0 && k===1) return 2
+            if(i>=0 && i<=5 && j===0 && k===0) return 5
             // if(i===3 && j===5 && k===1) return 2
-            if(i===+16 && j===1 && k===0) return 3
+            // if(i===+16 && j===1 && k===0) return 3
             return 0
         }
 
@@ -241,10 +241,10 @@
             const d = 7
             const h = 4
             for(let r = 0; r<h; r++) {
-                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 2
+                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 5
             }
             for(let r = 0; r<h; r++) {
-                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 2
+                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 5
             }
             return 0
         }
@@ -263,8 +263,8 @@
 
 
         const scale = new Vector3(1.0,1.0,1.0)
-        // const mesher = new GreedyMesh()
-        const mesher = new CulledMesh()
+        const mesher = new GreedyMesh()
+        // const mesher = new CulledMesh()
 
         app.stageRot = new Group()
         app.scene.add(app.stageRot)
@@ -272,7 +272,7 @@
         app.stageRot.add(app.stagePos)
         app.stagePos.position.z = -10
         app.stagePos.position.y = -1.5
-        app.stagePos.position.x = -2
+        app.stagePos.position.x = 0
 
         const group = new Group()
         app.stagePos.add(group)

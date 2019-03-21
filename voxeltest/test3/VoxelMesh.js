@@ -140,8 +140,8 @@ export class VoxelMesh {
 
                 if(spans.x0 > spans.x1) {
                     //calculate AO for back face
-                    repU = size.y
-                    repV = size.x
+                    repU = size.x
+                    repV = size.y
                     pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
                     //rotate UVs by 90 degrees
@@ -158,7 +158,12 @@ export class VoxelMesh {
                     pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2]-1)
                     pos.add(chunkOffset)
                     //set standard uvs for the whole quad
-                    normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
+                    normaluvs.push(
+                        uv_a.x,uv_a.y,
+                        uv_b.x,uv_b.y,
+                        uv_c.x, uv_c.y,
+                        uv_d.x,uv_d.y,
+                        )
                 }
             }
 
@@ -172,12 +177,11 @@ export class VoxelMesh {
                     pos.set(result.vertices[a][0], result.vertices[a][1]-1, result.vertices[a][2])
                     pos.add(chunkOffset)
                     //set standard uvs for the whole quad
-                    //rotate UVs by -90 degrees
                     normaluvs.push(
-                        uv_d.x,uv_d.y,
-                        uv_a.x,uv_a.y,
-                        uv_b.x,uv_b.y,
+                        uv_a.x, uv_a.y,
+                        uv_b.x, uv_b.y,
                         uv_c.x, uv_c.y,
+                        uv_d.x, uv_d.y,
                     )
                 } else {
                     // bottom
@@ -186,7 +190,12 @@ export class VoxelMesh {
                     pos.set(result.vertices[a][0], result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
                     //set standard uvs for the whole quad
-                    normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
+                    normaluvs.push(
+                        uv_a.x, uv_a.y,
+                        uv_b.x, uv_b.y,
+                        uv_c.x, uv_c.y,
+                        uv_d.x, uv_d.y,
+                    )
                 }
             }
 
@@ -202,8 +211,8 @@ export class VoxelMesh {
                     normaluvs.push(uv_a.x,uv_a.y, uv_b.x,uv_b.y, uv_c.x, uv_c.y, uv_d.x,uv_d.y)
                 } else {
                     //right side
-                    repU = size.y
-                    repV = size.z
+                    repU = size.z
+                    repV = size.y
                     pos.set(result.vertices[a][0]-1, result.vertices[a][1], result.vertices[a][2])
                     pos.add(chunkOffset)
                     //rotate UVs by 90 degrees
