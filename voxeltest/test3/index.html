@@ -154,6 +154,7 @@
     import VRStats from "./VRStats.js";
     import {AABB} from "./aabb.js"
     import {Physical} from "./physical.js"
+    import {makeCollider} from "./collide-tilemap.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -184,6 +185,16 @@
         app.textureManager = new TextureManager()
         let player_phys
 
+
+
+
+        // const collideVoxels = collisions(
+        //     this.getBlock.bind(this),
+        //     1,
+        //     [Infinity, Infinity, Infinity],
+        //     [-Infinity, -Infinity, -Infinity]
+        // )
+
         let jumpping = false
         app.startJump = () => {
             if(!jumpping) {
@@ -201,12 +212,34 @@
         }
 
         const floor = new AABB(new Vector3(-2,-4,-2), new Vector3(2,-0.5,2))
+        const collideVoxels = makeCollider((pos)=> {
+            // console.log("getting",pos)
+            return app.chunkManager.voxelAtCoordinates(pos)
+        },
+            1
+        )
         class MainCollider {
             constructor(app) {
                 this.app = app
             }
             collide(physics, bbox, desired, resting) {
+                // console.log("bbox",desired)
+                const d2 = [desired.x,desired.y,desired.z]
+                // console.log(d2)
+                const axes = ['x','y','z']
+                collideVoxels(bbox, d2, (axis, tile, coords, dir, edge) => {
+                    // console.log(tile,axis)
+                    if(!tile) return
+                    if(Math.abs(desired[axis]) < Math.abs(edge)) return
+                    desired[axes[axis]] = edge
+                    physics.acceleration[axes[axis]] = 0
+                    resting[axes[axis]] = dir
+                    // console.log(edge)
+                    // console.log("hit",tile)
+                    return true
+                })
                 // console.log(floor.intersects(bbox))
+                /*
                 if(physics.avatar.position.y < 0) {
                     physics.velocity.y = 0.0
                     // console.log("now at",physics.avatar.position.y)
@@ -216,6 +249,8 @@
                     physics.acceleration.y = 0
                     // physics.resting.y = true
                 }
+                */
+                // app.stagePos.position.z = -physics.avatar.position.z
                 app.stagePos.position.y = -physics.avatar.position.y
             }
         }
@@ -239,14 +274,15 @@
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
             if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
+            /*
             if(j === 0) {
                 if(i === -8) return 2
                 if(i === +8) return 2
                 if(k === -18) return 2
                 if(k === -8) return 2
-            }
+            }*/
             if(j < 1 && j > -10) {
-                return 1
+                return 2
             }
             return 0
         }
