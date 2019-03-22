@@ -187,27 +187,34 @@
         let jumpping = false
         app.startJump = () => {
             if(!jumpping) {
-                player_phys.velocity.y = 0.01
+                console.log("jumping")
+                player_phys.resting.y = false
+                player_phys.velocity.y += 0.03
             }
+            // player_phys.subjectTo([0,0.01,0])
             jumpping = true
         }
         app.endJump = () => {
+            // console.log('done')
+            // player_phys.removeForce([0,0.01,0])
             jumpping = false
         }
 
+        const floor = new AABB(new Vector3(-2,-4,-2), new Vector3(2,-0.5,2))
         class MainCollider {
             constructor(app) {
                 this.app = app
             }
-            collide(physics, bbox, vec, resting) {
-                // console.log(physics.resting)
-                //vec is the velocity direction?
-                //resting indicates if the motion is stopped in the three axes
-                // console.log("colliding",vec)
+            collide(physics, bbox, desired, resting) {
+                // console.log(floor.intersects(bbox))
                 if(physics.avatar.position.y < 0) {
-                    physics.velocity.y = 0
-                    // physics.acceleration.y = 0
-                    physics.resting.y = true
+                    physics.velocity.y = 0.0
+                    // console.log("now at",physics.avatar.position.y)
+                    // move up by however far underneath the floor we are
+                    desired.y = -physics.avatar.position.y/2
+                    physics.avatar.position.y = 0
+                    physics.acceleration.y = 0
+                    // physics.resting.y = true
                 }
                 app.stagePos.position.y = -physics.avatar.position.y
             }
@@ -219,9 +226,11 @@
             rebuildAllMeshes()
 
             console.log("player aabb is", app.getPlayerAABB())
+            console.log("floor is",floor)
+            console.log("intersection",app.getPlayerAABB().intersects(floor))
 
             const foo = new Mesh()
-            player_phys = new Physical(foo,[collider],new Vector3(10,10,10), new Vector3(30,5.6,30))
+            player_phys = new Physical(foo,[collider],null, new Vector3(30,5.6,30))
             player_phys.subjectTo(GRAVITY)
 
         })
@@ -514,10 +523,14 @@
 
         // things to do on every render tick
         // this is the render loop
+        let last = 0
         app.onRender((time, app)=> {
             // materials.tick(time)
+            const dt = time-last
+            // console.log('dt',dt)
+            last = time
             updateChunks()
-            if(player_phys) player_phys.tick(time/1000)
+            if(player_phys) player_phys.tick(dt)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -599,7 +612,7 @@
             console.log("making aabb for",lower,upper)
             try {
                 var bbox = AABB(lower, upper)
-                console.log("bbox is", bbox)
+                // console.log("bbox is", bbox)
                 return bbox
             } catch (e) {
                 console.log(e)
