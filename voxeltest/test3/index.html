@@ -25,8 +25,8 @@
         }
         #container {
             border: 3px solid red;
-            width: 500px;
-            height: 300px;
+            width: 700px;
+            height: 400px;
         }
         #fullscreen, #entervr {
             display: none;
@@ -183,7 +183,6 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
-        let player_phys
 
 
 
@@ -199,8 +198,8 @@
         app.startJump = () => {
             if(!jumpping) {
                 console.log("jumping")
-                player_phys.resting.y = false
-                player_phys.velocity.y += 0.03
+                app.player_phys.resting.y = false
+                app.player_phys.velocity.y += 0.03
             }
             // player_phys.subjectTo([0,0.01,0])
             jumpping = true
@@ -211,13 +210,9 @@
             jumpping = false
         }
 
+
         const floor = new AABB(new Vector3(-2,-4,-2), new Vector3(2,-0.5,2))
-        const collideVoxels = makeCollider((pos)=> {
-            // console.log("getting",pos)
-            return app.chunkManager.voxelAtCoordinates(pos)
-        },
-            1
-        )
+        const collideVoxels = makeCollider((pos)=> app.chunkManager.voxelAtCoordinates(pos), 1)
         class MainCollider {
             constructor(app) {
                 this.app = app
@@ -250,24 +245,20 @@
                     // physics.resting.y = true
                 }
                 */
-                // app.stagePos.position.z = -physics.avatar.position.z
+                app.stagePos.position.x = -physics.avatar.position.x
+                app.stagePos.position.z = -physics.avatar.position.z
                 app.stagePos.position.y = -physics.avatar.position.y
+                physics.friction.z = 0.8
+                physics.friction.x = 0.8
             }
         }
         const collider = new MainCollider(app)
+        app.player = new Mesh()
+        app.player_phys = new Physical(app.player,[collider],null, new Vector3(30,5.6,30))
+        app.player_phys.subjectTo(GRAVITY)
         const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
-            console.log('textures are loaded')
             rebuildAllMeshes()
-
-            console.log("player aabb is", app.getPlayerAABB())
-            console.log("floor is",floor)
-            console.log("intersection",app.getPlayerAABB().intersects(floor))
-
-            const foo = new Mesh()
-            player_phys = new Physical(foo,[collider],null, new Vector3(30,5.6,30))
-            player_phys.subjectTo(GRAVITY)
-
         })
         comps.push(app.textureManager)
 
@@ -566,7 +557,7 @@
             // console.log('dt',dt)
             last = time
             updateChunks()
-            if(player_phys) player_phys.tick(dt)
+            if(app.player_phys) app.player_phys.tick(dt)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })

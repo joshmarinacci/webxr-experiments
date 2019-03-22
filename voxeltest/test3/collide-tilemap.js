@@ -1,3 +1,5 @@
+import {Vector3} from "./node_modules/three/build/three.module.js"
+
 export const makeCollider = function(field, tilesize, dimensions, offset) {
     dimensions = dimensions || [
         Math.sqrt(field.length) >> 0
@@ -89,7 +91,7 @@ export const makeCollider = function(field, tilesize, dimensions, offset) {
 
             coords[0] = coords[1] = coords[2] = 0
             coords[i_axis] = vec[i_axis]
-            box.translate(coords)
+            box.translate(new Vector3(coords[0],coords[1],coords[2]))
         }
     }
 }
