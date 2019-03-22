@@ -187,20 +187,14 @@
         let jumpping = false
         app.startJump = () => {
             if(!jumpping) {
-                console.log("jumping")
-                // player_phys.resting.y = false
                 player_phys.velocity.y = 0.01
             }
             jumpping = true
-            // console.log(player_phys)
         }
         app.endJump = () => {
             jumpping = false
-            // console.log("jumping")
-            // player_phys.acceleration.y += 0.01
-            // player_phys.resting.y = false
-            // console.log(player_phys)
         }
+
         class MainCollider {
             constructor(app) {
                 this.app = app
