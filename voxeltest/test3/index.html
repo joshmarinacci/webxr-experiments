@@ -152,6 +152,8 @@
     import {generateChunkInfoFromFunction, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
     import VRStats from "./VRStats.js";
+    import {AABB} from "./aabb.js"
+    import {Physical} from "./physical.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -161,6 +163,7 @@
     const CHUNK_SIZE = 16
     const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
+    const GRAVITY = [0,-0.0000036,0]
 
     const app = new WebXRBoilerPlate({
         container: $("#container")
@@ -179,10 +182,54 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
+        let player_phys
+
+        let jumpping = false
+        app.startJump = () => {
+            if(!jumpping) {
+                console.log("jumping")
+                // player_phys.resting.y = false
+                player_phys.velocity.y = 0.01
+            }
+            jumpping = true
+            // console.log(player_phys)
+        }
+        app.endJump = () => {
+            jumpping = false
+            // console.log("jumping")
+            // player_phys.acceleration.y += 0.01
+            // player_phys.resting.y = false
+            // console.log(player_phys)
+        }
+        class MainCollider {
+            constructor(app) {
+                this.app = app
+            }
+            collide(physics, bbox, vec, resting) {
+                // console.log(physics.resting)
+                //vec is the velocity direction?
+                //resting indicates if the motion is stopped in the three axes
+                // console.log("colliding",vec)
+                if(physics.avatar.position.y < 0) {
+                    physics.velocity.y = 0
+                    // physics.acceleration.y = 0
+                    physics.resting.y = true
+                }
+                app.stagePos.position.y = -physics.avatar.position.y
+            }
+        }
+        const collider = new MainCollider(app)
         const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
             console.log('textures are loaded')
             rebuildAllMeshes()
+
+            console.log("player aabb is", app.getPlayerAABB())
+
+            const foo = new Mesh()
+            player_phys = new Physical(foo,[collider],new Vector3(10,10,10), new Vector3(30,5.6,30))
+            player_phys.subjectTo(GRAVITY)
+
         })
         comps.push(app.textureManager)
 
@@ -476,6 +523,7 @@
         app.onRender((time, app)=> {
             // materials.tick(time)
             updateChunks()
+            if(player_phys) player_phys.tick(time/1000)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -543,6 +591,26 @@
             rebuildAllMeshes()
         })
 
+
+
+        app.getPlayerAABB = () => {
+            const pos = new Vector3(0,0,0)
+            const lower = new Vector3()
+            const upper = new Vector3()
+            upper.fromArray([1/2, 1.62, 1/2])
+            const playerBottom = new Vector3()
+            playerBottom.fromArray([1/4, 1.62, 1/4])
+            lower.copy(pos)
+            lower.sub(playerBottom)
+            console.log("making aabb for",lower,upper)
+            try {
+                var bbox = AABB(lower, upper)
+                console.log("bbox is", bbox)
+                return bbox
+            } catch (e) {
+                console.log(e)
+            }
+        }
     })
 
 

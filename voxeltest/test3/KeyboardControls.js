@@ -22,6 +22,7 @@ export class KeyboardControls extends ECSComp {
             e: { current: false, previous: false},
             Enter: { current: false, previous: false},
         }
+        this.keystates[' '] = { current: false, previous: false}
 
 
         this._keydown_handler = (e)=>{
@@ -51,6 +52,8 @@ export class KeyboardControls extends ECSComp {
         if(this.keystates.s.current === true)  this.glideBackward()
         if(this.keystates.q.current === true)  this.glideDown()
         if(this.keystates.e.current === true)  this.glideUp()
+        if(this.keystates[' '].current === true) this.app.startJump()
+        if(this.keystates[' '].current === false && this.keystates[' '].previous === true) this.app.endJump()
 
         if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
             this._fire('show-dialog',this)
@@ -91,5 +94,8 @@ export class KeyboardControls extends ECSComp {
     }
     glideRight() {
         this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(-90)))
+    }
+    jump() {
+        this.app.jump()
     }
 }

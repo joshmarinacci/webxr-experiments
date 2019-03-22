@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aabb-3d": "^0.1.0",
     "atlaspack": "^1.0.0",
-    "three": "^0.102.0"
+    "three": "^0.102.0",
+    "voxel-physical": "^0.1.3"
   }
 }
