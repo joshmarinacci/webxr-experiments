@@ -14,17 +14,22 @@ export class ItemManager extends ECSComp {
 
     removeItem(pos) {
         const type = this.app.chunkManager.voxelAtCoordinates(pos)
-        const radius = 2;
+        const radius = 3;
         if(type === 5) {
             console.log("triggering TNT explosion")
             const cursor = new Vector3()
-            for(let x=pos.x-radius; x<=pos.x+radius; x++) {
+            const actual = new Vector3()
+            for(let x=-radius; x<+radius; x++) {
                 cursor.x = x
-                for(let y=pos.y-radius; y<=pos.y+radius; y++) {
+                for(let y=-radius; y<=+radius; y++) {
                     cursor.y = y
-                    for(let z = pos.z-radius; z<=pos.z+radius; z++) {
+                    for(let z = -radius; z<=+radius; z++) {
                         cursor.z = z
-                        this.app.chunkManager.setVoxelAtCoordinates(cursor, 0)
+                        if(cursor.length()<radius) {
+                            actual.copy(pos)
+                            actual.add(cursor)
+                            this.app.chunkManager.setVoxelAtCoordinates(actual, 0)
+                        }
                     }
                 }
             }
@@ -32,5 +37,6 @@ export class ItemManager extends ECSComp {
             const chunk = this.app.chunkManager.chunks[chunkIndex.join("|")]
             if(chunk) this.app.rebuildMesh(chunk)
         }
+        this.app.fireParticles(pos)
     }
 }

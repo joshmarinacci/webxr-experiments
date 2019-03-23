@@ -167,7 +167,7 @@
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
         CubeGeometry,
-        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
+        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, AdditiveBlending } from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
@@ -182,11 +182,13 @@
     import {PhysHandler} from './PhysHandler.js'
     import {RemotePlayersProxy} from './RemotePlayersProxy.js'
     import {ItemManager} from './ItemManager.js'
+    import {GPUParticleSystem} from './GPUParticleSystem.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
     const $$ = (sel) => document.querySelectorAll(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const rand = (min,max) => Math.random()*(max-min) + min
 
 
     const CHUNK_SIZE = 16
@@ -355,6 +357,7 @@
             }
 
             if(i===5 && j===1 && k===-2) return 5
+            if(i===10 && j===1 && k===-2) return 5
 
             /*
             if(j === 0) {
@@ -672,6 +675,7 @@
             last = time
             updateChunks()
             if(app.player_phys) app.player_phys.update(dt)
+            if(app.particles) app.particles.update(time)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -764,6 +768,45 @@
             }
             rebuildAllMeshes()
         })
+
+
+        app.fireParticles = (pos,dur,timeout) => {
+            console.log("making particles at",pos)
+            let startTime = -1
+            const options = {
+                position: new Vector3(0,0,0),
+                positionRandomness: 0.0,
+                velocity: new Vector3(0.0, 1.0, 0.0),
+                velocityRandomness: 1.0,
+                acceleration: new Vector3(0.0,0.0,0.0),
+
+                color: new Color(1.0,1.0,1.0),
+                endColor: new Color(0.0,1.0,1.0),
+                colorRandomness: 0.0,
+
+                lifetime: 1,
+                fadeIn:0.001,
+                fadeOut:0.001,
+                size: 60,
+                sizeRandomness: 1.0,
+            }
+            let scorch_texture = texture_loader.load('../../particles/kenney_particlePack/PNG/scorch_01.png')
+            app.particles = new GPUParticleSystem({
+                maxParticles: 10000,
+                particleSpriteTex: scorch_texture,
+                blending: AdditiveBlending,
+                onTick:(system,time) => {
+                    if(startTime === -1) startTime = time
+                    if(time < startTime+0.5) {
+                        for (let i = 0; i < 100; i++) {
+                            options.velocity.set(rand(-5, 5), rand(-5, 5), rand(-5, 5))
+                            system.spawnParticle(options);
+                        }
+                    }
+                }})
+            app.particles.position.copy(pos)
+            app.playersGroup.add(app.particles)
+        }
 
 
         app.remotePlayers = new RemotePlayersProxy(app)
