@@ -187,13 +187,13 @@
         app.textureManager = new TextureManager()
 
 
-        let jumpping = false
-        app.startJump = () => {
-            jumpping = true
-        }
-        app.endJump = () => {
-            jumpping = false
-        }
+        // let jumping = false
+        // app.startJump = () => {
+        //     jumping = true
+        // }
+        // app.endJump = () => {
+        //     jumping = false
+        // }
 
 
         /*
@@ -221,6 +221,7 @@
                 this.target = target
                 this.colliders = colliders
                 this.vel = new Vector3(0,0,0)
+                // this.gravity = GRAVITY
             }
             tick(time) {
                 // console.log('starting',this.vel.y)
@@ -331,9 +332,9 @@
                     target.position.z = 0
                 }
 
-                if(jumpping) {
-                    phys.vel.y = 1.0;
-                }
+                // if(jumping) {
+                //     phys.vel.y = 1.0;
+                // }
             }
         }
 
