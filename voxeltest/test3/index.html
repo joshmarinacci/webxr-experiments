@@ -26,7 +26,7 @@
             margin: auto;
         }
         #container {
-            border: 3px solid red;
+            border: 3px solid black;
             width: 700px;
             height: 400px;
         }
@@ -83,6 +83,18 @@
             width:100%;
             height:100%;
         }
+
+
+        button {
+            border: 1px solid black;
+            border-radius: 0.25em;
+            background-color: aqua;
+        }
+        button.selected {
+            background-color: darkblue;
+            color:white;
+        }
+
     </style>
 </head>
 <body>
@@ -100,10 +112,18 @@
     </div>
     <button id="fullscreen">play full screen</button>
     <button id="entervr">play in vr</button>
-    <button id="save">save</button>
-    <button id="reload">reload</button>
-    <button id="toggle-texture">toggle textures</button>
-    <button id="toggle-ao">toggle shadows</button>
+    <div class="button-bar">
+        <button id="save">save</button>
+        <button id="reload">reload</button>
+    </div>
+    <div class="button-bar">
+        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>
+        <button id="use-culled-mesher" class="mesher">culled mesher</button>
+        <button id="toggle-texture" class="selected">textures</button>
+        <button id="toggle-ao" class="selected">shadows</button>
+        <button id="connect-voice">voice</button>
+        <button id="share">shared playing</button>
+    </div>
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -126,9 +146,12 @@
         <li>click left to toggle create vs destroy</li>
         <li>click right to open block settings</li>
     </ul>
+    <li>voice: turn on voice to talk to others playing the game</li>
 </ul>
 
 <script src="node_modules/atlaspack/index.js"></script>
+<script src="node_modules/webrtc-sdk/js/webrtc-v2.js"></script>
+<script src="node_modules/pubnub/dist/web/pubnub.js"></script>
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
@@ -144,7 +167,7 @@
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
         CubeGeometry,
-        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
+        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, AdditiveBlending } from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
@@ -154,23 +177,28 @@
     import {generateChunkInfoFromFunction, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
     import VRStats from "./VRStats.js";
-    import {AABB} from "./aabb.js"
-    import {Physical} from "./physical.js"
-    import {makeCollider} from "./collide-tilemap.js"
+    import {WebRTCAudioChat} from './WebRTCAudioChat.js'
+    import {PubnubNetworkplay} from './PubnubNetworkplay.js'
+    import {PhysHandler} from './PhysHandler.js'
+    import {RemotePlayersProxy} from './RemotePlayersProxy.js'
+    import {ItemManager} from './ItemManager.js'
+    import {GPUParticleSystem} from './GPUParticleSystem.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
+    const $$ = (sel) => document.querySelectorAll(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const rand = (min,max) => Math.random()*(max-min) + min
 
 
     const CHUNK_SIZE = 16
     const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
-    const GRAVITY = new Vector3(0,-9.8,0)
 
     const app = new WebXRBoilerPlate({
         container: $("#container")
     })
+
     app.init().then((app) => {
         const comps = []
 
@@ -186,14 +214,16 @@
 
         app.textureManager = new TextureManager()
 
+        app.webrtcAudio = new WebRTCAudioChat(app)
 
-        // let jumping = false
-        // app.startJump = () => {
-        //     jumping = true
-        // }
-        // app.endJump = () => {
-        //     jumping = false
-        // }
+
+        let jumpping = false
+        app.startJump = () => {
+            jumpping = true
+        }
+        app.endJump = () => {
+            jumpping = false
+        }
 
 
         /*
@@ -216,44 +246,6 @@
 
         */
 
-        class PhysHandler {
-            constructor(target, colliders) {
-                this.target = target
-                this.colliders = colliders
-                this.vel = new Vector3(0,0,0)
-                // this.gravity = GRAVITY
-            }
-            tick(time) {
-                // console.log('starting',this.vel.y)
-                const dt = (time/1000)
-                // console.log("tick",dt)
-                let acc = GRAVITY.y*0.5
-                this.vel.y += acc*dt
-                // console.log("now",this.vel.y)
-                const pos = this.target.position.clone()
-                pos.y += this.vel.y*dt
-                pos.z += this.vel.z*dt
-                pos.x += this.vel.x*dt
-                // console.log(this.vel)
-                const diff = new Vector3()
-                diff.y = this.vel.y*dt
-                diff.x = this.vel.x*dt
-                diff.z = this.vel.z*dt
-                this.colliders.forEach(col => {
-                    col.collide(this,this.target,pos,diff)
-                })
-
-                //apply final velocity
-                this.target.position.y += this.vel.y
-                this.target.position.z += this.vel.z*dt
-                this.target.position.x += this.vel.x*dt
-
-                //apply some friction
-                this.vel.z *= 0.8
-                this.vel.x *= 0.8
-                // console.log(this.vel.y)
-            }
-        }
 
         const SIZE = new Vector3()
         const CENTER = new Vector3()
@@ -326,15 +318,16 @@
                 }
                 //if fell off the world
                 if(pos.y < -30) {
+                    console.log("fell off the world")
                     phys.vel.y = 0
                     target.position.y = 10
                     target.position.x = 0
                     target.position.z = 0
                 }
 
-                // if(jumping) {
-                //     phys.vel.y = 1.0;
-                // }
+                if(jumpping) {
+                    phys.vel.y = 1.0;
+                }
             }
         }
 
@@ -344,6 +337,13 @@
             app.textureManager.markAsAnimated('anim')
             rebuildAllMeshes()
             app.player_phys = new PhysHandler(app.player,[new SimpleMeshCollider()])
+            on(app.player_phys,"move",()=>{
+                if(app.networkPlay) app.networkPlay.playerMoved(app.player_phys)
+            })
+            on(app.networkPlay,'remote-player-moved',(msg)=>{
+                console.log(msg.publisher,'moved to',msg.message.position)
+                app.remotePlayers.remotePlayerMoved(msg.publisher,msg.message.position)
+            })
         })
         comps.push(app.textureManager)
 
@@ -355,6 +355,9 @@
                 if(k > 2 && k < 5) return 4
                 if(k > 5 && k < 8) return 4
             }
+
+            if(i===5 && j===1 && k===-2) return 5
+            if(i===10 && j===1 && k===-2) return 5
 
             /*
             if(j === 0) {
@@ -432,8 +435,21 @@
 
 
         const scale = new Vector3(1.0,1.0,1.0)
-        const mesher = new GreedyMesh()
-        // const mesher = new CulledMesh()
+        const greedyMesher = new GreedyMesh()
+        const culledMesher = new CulledMesh()
+        app.mesher = greedyMesher
+        on($('#use-culled-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-culled-mesher").classList.add('selected')
+            app.mesher = culledMesher
+            rebuildAllMeshes()
+        })
+        on($('#use-greedy-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-greedy-mesher").classList.add('selected')
+            app.mesher = greedyMesher
+            rebuildAllMeshes()
+        })
 
         app.stageRot = new Group()
         app.scene.add(app.stageRot)
@@ -448,6 +464,8 @@
 
         const mobs = new Group()
         app.stagePos.add(mobs)
+        app.playersGroup = new Group()
+        app.stagePos.add(app.playersGroup)
 
 
         const crosshairs_geometry = new PlaneGeometry(0.1,0.01)
@@ -527,7 +545,13 @@
 
         function removeBlock(pos) {
             if(dialog.visible) return
-            setBlock(pos,0)
+            pos.floor()
+            const old_block = app.chunkManager.voxelAtCoordinates(pos)
+            if(app.itemManager.isBlockTypeItem(old_block)) {
+                app.itemManager.removeItem(pos)
+            } else {
+                setBlock(pos, 0)
+            }
         }
 
         function moveHighlight(res) {
@@ -593,12 +617,13 @@
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
-            chunk.vmesh = new VoxelMesh(chunk, mesher, scale, app)
+            chunk.vmesh = new VoxelMesh(chunk, app.mesher, scale, app)
             chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
             // materials.paint(chunk.surfaceMesh)
             group.add(chunk.surfaceMesh)
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
         }
+        app.rebuildMesh = rebuildMesh
 
         function rebuildAllMeshes() {
             Object.keys(chunkManager.chunks).forEach(key => rebuildMesh(chunkManager.chunks[key]))
@@ -649,7 +674,8 @@
             // console.log('dt',dt)
             last = time
             updateChunks()
-            if(app.player_phys) app.player_phys.tick(dt)
+            if(app.player_phys) app.player_phys.update(dt)
+            if(app.particles) app.particles.update(time)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -709,34 +735,93 @@
                 .load(chunkManager)
                 .then(() => rebuildAllMeshes())
         })
-        on($("#toggle-texture"),'click',()=>{
+        const texture_button = $("#toggle-texture")
+        on(texture_button,'click',()=>{
             app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
+            if(app.textureManager.texturesEnabled) {
+                texture_button.classList.add('selected')
+            } else {
+                texture_button.classList.remove('selected')
+            }
         })
-        on($("#toggle-ao"),'click',()=>{
+
+        const AO_button = $("#toggle-ao")
+        on(AO_button,'click',()=>{
             app.aoEnabled = !app.aoEnabled
+            if(app.aoEnabled) {
+                AO_button.classList.add('selected')
+            } else {
+                AO_button.classList.remove('selected')
+            }
             rebuildAllMeshes()
         })
 
 
-
-        app.getPlayerAABB = () => {
-            const pos = new Vector3(0,0,0)
-            const lower = new Vector3()
-            const upper = new Vector3()
-            upper.fromArray([1/2, 1.62, 1/2])
-            const playerBottom = new Vector3()
-            playerBottom.fromArray([1/4, 1.62, 1/4])
-            lower.copy(pos)
-            lower.sub(playerBottom)
-            console.log("making aabb for",lower,upper)
-            try {
-                var bbox = AABB(lower, upper)
-                // console.log("bbox is", bbox)
-                return bbox
-            } catch (e) {
-                console.log(e)
+        app.networkPlay = new PubnubNetworkplay()
+        const shared_button = $("#share")
+        on(shared_button,'click',()=>{
+            app.networkPlay.connect()
+            if(app.networkPlay.isConnected() || app.networkPlay.isConnecting()) {
+                shared_button.classList.add('selected')
+            } else {
+                shared_button.classList.remove('selected')
             }
+            rebuildAllMeshes()
+        })
+
+
+        app.fireParticles = (pos,dur,timeout) => {
+            console.log("making particles at",pos)
+            let startTime = -1
+            const options = {
+                position: new Vector3(0,0,0),
+                positionRandomness: 0.0,
+                velocity: new Vector3(0.0, 1.0, 0.0),
+                velocityRandomness: 1.0,
+                acceleration: new Vector3(0.0,0.0,0.0),
+
+                color: new Color(1.0,1.0,1.0),
+                endColor: new Color(0.5,0.5,0.5),
+                colorRandomness: 0.0,
+
+                lifetime: 1,
+                fadeIn:0.001,
+                fadeOut:0.001,
+                size: 60,
+                sizeRandomness: 1.0,
+            }
+            let scorch_texture = texture_loader.load('../../particles/kenney_particlePack/PNG/smoke_08.png')
+            app.particles = new GPUParticleSystem({
+                maxParticles: 10000,
+                particleSpriteTex: scorch_texture,
+                blending: AdditiveBlending,
+                onTick:(system,time) => {
+                    if(startTime === -1) startTime = time
+                    if(time < startTime+0.2) {
+                        for (let i = 0; i < 100; i++) {
+                            options.velocity.set(rand(-5, 5), rand(-5, 5), rand(-5, 5))
+                            system.spawnParticle(options);
+                        }
+                    }
+                }})
+            app.particles.position.copy(pos)
+            app.playersGroup.add(app.particles)
         }
+
+
+        app.remotePlayers = new RemotePlayersProxy(app)
+
+        app.itemManager = new ItemManager(app)
+
+        on($("#connect-voice"),'click',() => {
+            if(app.webrtcAudio.connected) {
+                $("#connect-voice").classList.remove('selected')
+                app.webrtcAudio.disconnect()
+            } else {
+                $("#connect-voice").classList.add('selected')
+                app.webrtcAudio.connect()
+            }
+        })
     })
 
 

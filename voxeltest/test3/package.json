@@ -12,7 +12,9 @@
     "aabb-3d": "^0.1.0",
     "atlaspack": "^1.0.0",
     "collide-3d-tilemap": "^1.0.0",
+    "pubnub": "^4.23.0",
     "three": "^0.102.0",
-    "voxel-physical": "^0.1.3"
+    "voxel-physical": "^0.1.3",
+    "webrtc-sdk": "^2.2.5"
   }
 }
