@@ -8,6 +8,27 @@ export class PhysHandler extends ECSComp {
         this.target = target
         this.colliders = colliders
         this.vel = new Vector3(0,0,0)
+        this.flying = false
+        this.jumping = false
+    }
+    isFlying() {
+        return this.flying
+    }
+    startFlying() {
+        this.flying = true
+    }
+    endFlying() {
+        this.flying = false
+    }
+    startJump() {
+        if(!this.jumping) {
+            this.jumping = true
+            this.flying = false
+            this.jumpTime = Date.now()
+        }
+    }
+    endJump() {
+        this.jumping = false
     }
     markChanged() {
         this._fire('move',{position:this.target.position})
@@ -16,8 +37,10 @@ export class PhysHandler extends ECSComp {
         // console.log('starting',this.vel.y)
         const dt = (time/1000)
         // console.log("tick",dt)
-        let acc = GRAVITY.y*0.5
-        this.vel.y += acc*dt
+        if(!this.flying) {
+            let acc = GRAVITY.y * 0.5
+            this.vel.y += acc * dt
+        }
         // console.log("now",this.vel.y)
         const pos = this.target.position.clone()
         pos.y += this.vel.y*dt
@@ -40,6 +63,9 @@ export class PhysHandler extends ECSComp {
         //apply some friction
         this.vel.z *= 0.8
         this.vel.x *= 0.8
+        if(this.flying) {
+            this.vel.y *= 0.8
+        }
         // console.log(this.vel.y)
         this.markChanged()
     }

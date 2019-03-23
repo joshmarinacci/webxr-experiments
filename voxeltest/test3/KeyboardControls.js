@@ -52,8 +52,8 @@ export class KeyboardControls extends ECSComp {
         if(this.keystates.s.current === true)  this.glideBackward()
         if(this.keystates.q.current === true)  this.glideDown()
         if(this.keystates.e.current === true)  this.glideUp()
-        if(this.keystates[' '].current === true) this.app.startJump()
-        if(this.keystates[' '].current === false && this.keystates[' '].previous === true) this.app.endJump()
+        if(this.keystates[' '].current === true) this.app.player_phys.startJump()
+        if(this.keystates[' '].current === false && this.keystates[' '].previous === true) this.app.player_phys.endJump()
 
         if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
             this._fire('show-dialog',this)
@@ -103,14 +103,17 @@ export class KeyboardControls extends ECSComp {
     }
 
     glideUp() {
-        this.app.stagePos.position.add(new Vector3(0,-1,0).normalize().multiplyScalar(SPEED))
+        if(!this.app.player_phys.isFlying()) {
+            this.app.player_phys.startFlying()
+        }
+        this.app.player_phys.vel.y = 0.1
         this.app.player_phys.markChanged()
     }
     glideDown() {
-        this.app.stagePos.position.add(new Vector3(0,1,0).normalize().multiplyScalar(SPEED))
+        if(!this.app.player_phys.isFlying()) {
+            this.app.player_phys.startFlying()
+        }
+        this.app.player_phys.vel.y = -0.1
         this.app.player_phys.markChanged()
-    }
-    jump() {
-        this.app.jump()
     }
 }

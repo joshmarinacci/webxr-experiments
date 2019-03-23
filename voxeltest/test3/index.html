@@ -305,7 +305,9 @@
                 const bounds = new Box3(new Vector3(0,0,0),new Vector3(1,1,1))
                 //check downwards
                 if(checkHitTileY(chunkManager,bounds,pos)) {
-                    phys.vel.y = 0
+                    if(!phys.isFlying()) {
+                        phys.vel.y = 0
+                    }
                 }
                 //check forwards
                 if(checkHitTileX(chunkManager,bounds,pos)) {
@@ -325,8 +327,14 @@
                     target.position.z = 0
                 }
 
-                if(jumpping) {
-                    phys.vel.y = 1.0;
+                if(phys.jumping) {
+                    const diff = Date.now() - phys.jumpTime;
+                    console.log(diff)
+                    if(diff > 300) {
+                        // console.log("over one second")
+                    } else {
+                        phys.vel.y = 1.0;
+                    }
                 }
             }
         }
