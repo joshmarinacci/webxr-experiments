@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Mine Kitten</title>
     <script>
+        /*
         (function(f, a, t, h, o, m){
             a[h]=a[h]||function(){
                 (a[h].q=a[h].q||[]).push(arguments)
@@ -15,6 +16,7 @@
         })(document, window, '//stats.josh.earth/tracker.js', 'fathom');
         fathom('set', 'siteId', 'GISNV');
         fathom('trackPageview');
+        */
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,8 +27,8 @@
         }
         #container {
             border: 3px solid red;
-            width: 500px;
-            height: 300px;
+            width: 700px;
+            height: 400px;
         }
         #fullscreen, #entervr {
             display: none;
@@ -142,7 +144,7 @@
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
         CubeGeometry,
-        Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
+        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, } from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
@@ -152,6 +154,9 @@
     import {generateChunkInfoFromFunction, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
     import VRStats from "./VRStats.js";
+    import {AABB} from "./aabb.js"
+    import {Physical} from "./physical.js"
+    import {makeCollider} from "./collide-tilemap.js"
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -161,6 +166,7 @@
     const CHUNK_SIZE = 16
     const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
+    const GRAVITY = new Vector3(0,-9.8,0)
 
     const app = new WebXRBoilerPlate({
         container: $("#container")
@@ -179,24 +185,281 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
+
+
+
+
+        // const collideVoxels = collisions(
+        //     this.getBlock.bind(this),
+        //     1,
+        //     [Infinity, Infinity, Infinity],
+        //     [-Infinity, -Infinity, -Infinity]
+        // )
+
+        let jumpping = false
+        app.startJump = () => {
+            jumpping = true
+        }
+        app.endJump = () => {
+            // console.log('done')
+            // player_phys.removeForce([0,0.01,0])
+            jumpping = false
+        }
+
+
+        const floor = new AABB(new Vector3(-2,-4,-2), new Vector3(2,-0.5,2))
+        const size = 3
+        const collideVoxels = makeCollider((pos)=> app.chunkManager.voxelAtCoordinates(pos), 1)
+            // [4,4,4], [0,0,0])
+        /*
+
+        new physics which does
+        dt is number of seconds past since last physics tick
+        accel = gravity
+        velocity += accel*dt
+        desired_position = position + velocity
+        checkCollision(this, object, bounds, desired_position)
+            can modify this.accl to 0
+            can modify this.vel to 0 to stop it from moving
+            can also modify this.position to manually move it
+
+
+        collsion checker does given voxelProvider and bounding box,
+            scans all block indexes that could intersect the bounding box
+            asks callback if should really count as a collision. if yes then stop and return collision hit
+            if collision hit then tell check collision to stop
+
+
+
+        */
+
+        class PhysHandler {
+            constructor(target, colliders) {
+                this.target = target
+                this.colliders = colliders
+                this.vel = new Vector3(0,0,0)
+            }
+            tick(time) {
+                // console.log('starting',this.vel.y)
+                const dt = (time/1000)
+                // console.log("tick",dt)
+                let acc = GRAVITY.y*0.5
+                this.vel.y += acc*dt
+                // console.log("now",this.vel.y)
+                const pos = this.target.position.clone()
+                pos.y += this.vel.y*dt
+                pos.z += this.vel.z*dt
+                pos.x += this.vel.x*dt
+                // console.log(this.vel)
+                const diff = new Vector3()
+                diff.y = this.vel.y*dt
+                diff.x = this.vel.x*dt
+                diff.z = this.vel.z*dt
+                this.colliders.forEach(col => {
+                    col.collide(this,this.target,pos,diff)
+                })
+
+                //apply final velocity
+                this.target.position.y += this.vel.y
+                this.target.position.z += this.vel.z*dt
+                this.target.position.x += this.vel.x*dt
+
+                //apply some friction
+                this.vel.z *= 0.8
+                this.vel.x *= 0.8
+                // console.log(this.vel.y)
+            }
+        }
+
+        const SIZE = new Vector3()
+        const CENTER = new Vector3()
+
+        function checkHitTileY(voxels, bounds, pos) {
+            bounds.getSize(SIZE)
+            // console.log("checking for hits near height",SIZE.y)
+            //scan in the y direction only for now.
+            let sy = Math.floor(pos.y)
+            let ey = Math.ceil(pos.y+SIZE.y)
+            let sz = Math.floor(pos.z)
+            let sx = Math.floor(pos.x)
+            let ex = Math.ceil(pos.x+SIZE.x)
+            for(let i=sy; i<=ey; i++) {
+                // for(let j=sx; j<ex; j++) {
+                    const vox = voxels.voxelAtCoordinates(new Vector3(sx, i, sz))
+                    // console.log("hit", vox)
+                    if (vox > 0) return true
+                // }
+            }
+            return false
+        }
+        function checkHitTileX(voxels, bounds, pos) {
+            bounds.getCenter(CENTER)
+            let sx = Math.floor(pos.x-CENTER.x)
+            let ex = Math.ceil(pos.x+CENTER.x)
+            let sy = Math.round(pos.y+1)
+            let sz = Math.floor(pos.z)
+            for(let j=sx; j<ex; j++) {
+                const vox = voxels.voxelAtCoordinates(new Vector3(j, sy, sz))
+                if (vox > 0) return true
+            }
+            return false
+        }
+        function checkHitTileZ(voxels, bounds, pos) {
+            bounds.getCenter(CENTER)
+            let sx = Math.floor(pos.x)
+            let sy = Math.round(pos.y+1)
+            let sz = Math.floor(pos.z-CENTER.z)
+            let ez = Math.ceil(pos.z+CENTER.z)
+            for(let k=sz; k<ez; k++) {
+                const vox = voxels.voxelAtCoordinates(new Vector3(sx, sy, k))
+                if (vox > 0) return true
+            }
+            return false
+        }
+
+        class SimpleMeshCollider {
+            collide(phys, target, pos, diff) {
+                //pos is the potential position. we can choose to veto it
+                app.stagePos.position.y = -target.position.y
+                app.stagePos.position.z = -target.position.z
+                app.stagePos.position.x = -target.position.x
+                //check if too far beyond terminal velocity
+                if(phys.vel.y < -1) phys.vel.y = -1
+
+                const bounds = new Box3(new Vector3(0,0,0),new Vector3(1,1,1))
+                //check downwards
+                if(checkHitTileY(chunkManager,bounds,pos)) {
+                    phys.vel.y = 0
+                }
+                //check forwards
+                if(checkHitTileX(chunkManager,bounds,pos)) {
+                    // console.log("hit something to the left or right")
+                    phys.vel.x = 0
+                }
+                if(checkHitTileZ(chunkManager,bounds,pos)) {
+                    // console.log("hit something to the front or back")
+                    phys.vel.z = 0
+                }
+                //if fell off the world
+                if(pos.y < -30) {
+                    phys.vel.y = 0
+                    target.position.y = 10
+                    target.position.x = 0
+                    target.position.z = 0
+                }
+
+                if(jumpping) {
+                    phys.vel.y = 1.0;
+                }
+            }
+        }
+
+
+
+
+        let count = 0
+        class MainCollider {
+            constructor(app) {
+                this.app = app
+            }
+            collide(other, bbox, world_desired, resting) {
+                console.log("--- check collide", other.avatar.position, bbox, world_desired,resting)
+                // const vec3 = [world_desired.x,world_desired.y,world_desired.z]
+                // console.log("bbox",bbox, 'vec3',vec3)
+                // console.log('desired',d2)
+                // const axes = ['x','y','z']
+                const check = new Vector3()
+                check.copy(other.avatar.position)
+                check.add(world_desired)
+                console.log("new pos would be",check, other.velocity.y)
+                if(check.y < 0) {
+                    // console.log("too far")
+                    world_desired.y = 0
+                }
+                // console.log("before",resting)
+                // collideYVoxels(bbox, vec3)
+                /*
+                collideVoxels(bbox, vec3, (axis, tile, coords, dir, diff) => {
+                    if(!tile) return
+                    console.log("comparing",Math.abs(vec3[axis]),'to',Math.abs(diff))
+                    // if(Math.abs(vec3[axis]) < Math.abs(diff)) return
+                    // vec3[axis] = vec[axes[axis]] = diff
+                    if(axis === 1) {
+                        other.acceleration[axes[axis]] = 0
+                        other.velocity[axes[axis]] = 0
+                        resting[axes[axis]] = dir
+                        console.log('==== hit something', axes[axis], tile, coords, dir, diff)
+                        console.log("now vec3 is", vec3, world_desired, other.acceleration, resting)
+                    }
+                    // other.friction[axes[(axis+1)%3]]
+                    // resting[axes[axis]] = true
+                    // console.log("set resting",resting,dir)
+                    // console.log(edge)
+                    // console.log("hit",tile)
+                    return true
+                })
+                */
+
+                // console.log(floor.intersects(bbox))
+                /*
+                if(physics.avatar.position.y < 0) {
+                    physics.velocity.y = 0.0
+                    // console.log("now at",physics.avatar.position.y)
+                    // move up by however far underneath the floor we are
+                    desired.y = -physics.avatar.position.y/2
+                    physics.avatar.position.y = 0
+                    physics.acceleration.y = 0
+                    // physics.resting.y = true
+                }
+                */
+                // console.log("y = ", other.avatar.position.y)
+                app.stagePos.position.x = -other.avatar.position.x
+                app.stagePos.position.z = -other.avatar.position.z
+                app.stagePos.position.y = -other.avatar.position.y
+                if(other.avatar.position.y < -1) throw new Error('fell too far ' + other.avatar.position.y)
+                if(count > 100) {
+                    console.log('exceeded')
+                    throw new Error('count exceeded')
+                }
+                count++
+                other.friction.z = 0.5
+                other.friction.x = 0.5
+                // other.friction.y = 0.8
+            }
+        }
+        const collider = new MainCollider(app)
+        app.player = new Mesh()
+        app.player.position.y = 30
         const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
-            console.log('textures are loaded')
             rebuildAllMeshes()
+            app.player_phys = new PhysHandler(app.player,[new SimpleMeshCollider()])
+            // app.player_phys = new Physical(app.player,[collider], new Vector3(1,1,1), new Vector3(30,5.6,30))
+            // app.player_phys.subjectTo(GRAVITY)
+            checkHitTileY(chunkManager,new Box3(new Vector3(0,0,0),new Vector3(1,1,1)),new Vector3(0.5,0.5,0.5))
+            checkHitTileY(chunkManager,new Box3(new Vector3(0,0,0),new Vector3(1,1,1)),new Vector3(0.5,8.5,0.5))
         })
         comps.push(app.textureManager)
 
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
-            if(i%16 === 0 && k%16 === 0 && j < 3 && j > -3) return 2
+            // if((i+2)%4 === 0 && k%4 === 0 && j < 3 && j > -3) return 3
+            if(j>0 && j <3 && i>-5 && i<5) {
+                if(k< -2 && k >-5) return 4
+                if(k > 2 && k < 5) return 4
+                if(k > 5 && k < 8) return 4
+            }
+
+            /*
             if(j === 0) {
                 if(i === -8) return 2
                 if(i === +8) return 2
                 if(k === -18) return 2
                 if(k === -8) return 2
-            }
+            }*/
+            if(j <1 && k < -5 && k > -10 ) return 0
             if(j < 1 && j > -10) {
-                return 1
+                return 2
             }
             return 0
         }
@@ -473,9 +736,14 @@
 
         // things to do on every render tick
         // this is the render loop
+        let last = 0
         app.onRender((time, app)=> {
             // materials.tick(time)
+            const dt = time-last
+            // console.log('dt',dt)
+            last = time
             updateChunks()
+            if(app.player_phys) app.player_phys.tick(dt)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -543,6 +811,26 @@
             rebuildAllMeshes()
         })
 
+
+
+        app.getPlayerAABB = () => {
+            const pos = new Vector3(0,0,0)
+            const lower = new Vector3()
+            const upper = new Vector3()
+            upper.fromArray([1/2, 1.62, 1/2])
+            const playerBottom = new Vector3()
+            playerBottom.fromArray([1/4, 1.62, 1/4])
+            lower.copy(pos)
+            lower.sub(playerBottom)
+            console.log("making aabb for",lower,upper)
+            try {
+                var bbox = AABB(lower, upper)
+                // console.log("bbox is", bbox)
+                return bbox
+            } catch (e) {
+                console.log(e)
+            }
+        }
     })
 
 
