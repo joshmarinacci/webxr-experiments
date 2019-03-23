@@ -26,7 +26,7 @@
             margin: auto;
         }
         #container {
-            border: 3px solid red;
+            border: 3px solid black;
             width: 700px;
             height: 400px;
         }
@@ -83,6 +83,18 @@
             width:100%;
             height:100%;
         }
+
+
+        button {
+            border: 1px solid black;
+            border-radius: 0.25em;
+            background-color: aqua;
+        }
+        button.selected {
+            background-color: darkblue;
+            color:white;
+        }
+
     </style>
 </head>
 <body>
@@ -100,10 +112,15 @@
     </div>
     <button id="fullscreen">play full screen</button>
     <button id="entervr">play in vr</button>
-    <button id="save">save</button>
-    <button id="reload">reload</button>
-    <button id="toggle-texture">toggle textures</button>
-    <button id="toggle-ao">toggle shadows</button>
+    <div class="button-bar">
+        <button id="save">save</button>
+        <button id="reload">reload</button>
+    </div>
+    <div class="button-bar">
+        <button id="toggle-texture" class="selected">textures</button>
+        <button id="toggle-ao" class="selected">shadows</button>
+        <button id="connect-voice">voice</button>
+    </div>
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -126,9 +143,11 @@
         <li>click left to toggle create vs destroy</li>
         <li>click right to open block settings</li>
     </ul>
+    <li>voice: turn on voice to talk to others playing the game</li>
 </ul>
 
 <script src="node_modules/atlaspack/index.js"></script>
+<script src="node_modules/webrtc-sdk/js/webrtc-v2.js"></script>
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
@@ -157,6 +176,7 @@
     import {AABB} from "./aabb.js"
     import {Physical} from "./physical.js"
     import {makeCollider} from "./collide-tilemap.js"
+    import {WebRTCAudioChat} from './WebRTCAudioChat'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -185,6 +205,8 @@
         const texture = texture_loader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
+
+        app.webrtcAudio = new WebRTCAudioChat(app)
 
 
         let jumpping = false
@@ -708,11 +730,24 @@
                 .load(chunkManager)
                 .then(() => rebuildAllMeshes())
         })
-        on($("#toggle-texture"),'click',()=>{
+        const texture_button = $("#toggle-texture")
+        on(texture_button,'click',()=>{
             app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
+            if(app.textureManager.texturesEnabled) {
+                texture_button.classList.add('selected')
+            } else {
+                texture_button.classList.remove('selected')
+            }
         })
-        on($("#toggle-ao"),'click',()=>{
+
+        const AO_button = $("#toggle-ao")
+        on(AO_button,'click',()=>{
             app.aoEnabled = !app.aoEnabled
+            if(app.aoEnabled) {
+                AO_button.classList.add('selected')
+            } else {
+                AO_button.classList.remove('selected')
+            }
             rebuildAllMeshes()
         })
 
@@ -736,6 +771,16 @@
                 console.log(e)
             }
         }
+
+        on($("#connect-voice"),'click',() => {
+            if(app.webrtcAudio.connected) {
+                $("#connect-voice").classList.remove('selected')
+                app.webrtcAudio.disconnect()
+            } else {
+                $("#connect-voice").classList.add('selected')
+                app.webrtcAudio.connect()
+            }
+        })
     })
 
 
