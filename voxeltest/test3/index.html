@@ -120,6 +120,7 @@
         <button id="toggle-texture" class="selected">textures</button>
         <button id="toggle-ao" class="selected">shadows</button>
         <button id="connect-voice">voice</button>
+        <button id="share">shared playing</button>
     </div>
 </div>
 <div id="container">
@@ -148,6 +149,7 @@
 
 <script src="node_modules/atlaspack/index.js"></script>
 <script src="node_modules/webrtc-sdk/js/webrtc-v2.js"></script>
+<script src="node_modules/pubnub/dist/web/pubnub.js"></script>
 <script type="module">
     // converter function from chunks to meshs
     import GreedyMesh from "./GreedyMesher.js"
@@ -173,10 +175,10 @@
     import {generateChunkInfoFromFunction, toRad} from './utils.js'
     import {TouchControls} from './TouchControls.js'
     import VRStats from "./VRStats.js";
-    import {AABB} from "./aabb.js"
-    import {Physical} from "./physical.js"
-    import {makeCollider} from "./collide-tilemap.js"
-    import {WebRTCAudioChat} from './WebRTCAudioChat'
+    import {WebRTCAudioChat} from './WebRTCAudioChat.js'
+    import {PubnubNetworkplay} from './PubnubNetworkplay.js'
+    import {PhysHandler} from './PhysHandler.js'
+    import {RemotePlayersProxy} from './RemotePlayersProxy.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -186,11 +188,11 @@
     const CHUNK_SIZE = 16
     const CHUNK_CACHE = {}
     const RAYCAST_DISTANCE = 30
-    const GRAVITY = new Vector3(0,-9.8,0)
 
     const app = new WebXRBoilerPlate({
         container: $("#container")
     })
+
     app.init().then((app) => {
         const comps = []
 
@@ -238,43 +240,6 @@
 
         */
 
-        class PhysHandler {
-            constructor(target, colliders) {
-                this.target = target
-                this.colliders = colliders
-                this.vel = new Vector3(0,0,0)
-            }
-            tick(time) {
-                // console.log('starting',this.vel.y)
-                const dt = (time/1000)
-                // console.log("tick",dt)
-                let acc = GRAVITY.y*0.5
-                this.vel.y += acc*dt
-                // console.log("now",this.vel.y)
-                const pos = this.target.position.clone()
-                pos.y += this.vel.y*dt
-                pos.z += this.vel.z*dt
-                pos.x += this.vel.x*dt
-                // console.log(this.vel)
-                const diff = new Vector3()
-                diff.y = this.vel.y*dt
-                diff.x = this.vel.x*dt
-                diff.z = this.vel.z*dt
-                this.colliders.forEach(col => {
-                    col.collide(this,this.target,pos,diff)
-                })
-
-                //apply final velocity
-                this.target.position.y += this.vel.y
-                this.target.position.z += this.vel.z*dt
-                this.target.position.x += this.vel.x*dt
-
-                //apply some friction
-                this.vel.z *= 0.8
-                this.vel.x *= 0.8
-                // console.log(this.vel.y)
-            }
-        }
 
         const SIZE = new Vector3()
         const CENTER = new Vector3()
@@ -347,6 +312,7 @@
                 }
                 //if fell off the world
                 if(pos.y < -30) {
+                    console.log("fell off the world")
                     phys.vel.y = 0
                     target.position.y = 10
                     target.position.x = 0
@@ -365,6 +331,13 @@
             app.textureManager.markAsAnimated('anim')
             rebuildAllMeshes()
             app.player_phys = new PhysHandler(app.player,[new SimpleMeshCollider()])
+            on(app.player_phys,"move",()=>{
+                if(app.networkPlay) app.networkPlay.playerMoved(app.player_phys)
+            })
+            on(app.networkPlay,'remote-player-moved',(msg)=>{
+                console.log(msg.publisher,'moved to',msg.message.position)
+                app.remotePlayers.remotePlayerMoved(msg.publisher,msg.message.position)
+            })
         })
         comps.push(app.textureManager)
 
@@ -469,6 +442,8 @@
 
         const mobs = new Group()
         app.stagePos.add(mobs)
+        app.playersGroup = new Group()
+        app.stagePos.add(app.playersGroup)
 
 
         const crosshairs_geometry = new PlaneGeometry(0.1,0.01)
@@ -670,7 +645,7 @@
             // console.log('dt',dt)
             last = time
             updateChunks()
-            if(app.player_phys) app.player_phys.tick(dt)
+            if(app.player_phys) app.player_phys.update(dt)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time)
             })
@@ -752,25 +727,21 @@
         })
 
 
-
-        app.getPlayerAABB = () => {
-            const pos = new Vector3(0,0,0)
-            const lower = new Vector3()
-            const upper = new Vector3()
-            upper.fromArray([1/2, 1.62, 1/2])
-            const playerBottom = new Vector3()
-            playerBottom.fromArray([1/4, 1.62, 1/4])
-            lower.copy(pos)
-            lower.sub(playerBottom)
-            console.log("making aabb for",lower,upper)
-            try {
-                var bbox = AABB(lower, upper)
-                // console.log("bbox is", bbox)
-                return bbox
-            } catch (e) {
-                console.log(e)
+        app.networkPlay = new PubnubNetworkplay()
+        const shared_button = $("#share")
+        on(shared_button,'click',()=>{
+            app.networkPlay.connect()
+            if(app.networkPlay.isConnected() || app.networkPlay.isConnecting()) {
+                shared_button.classList.add('selected')
+            } else {
+                shared_button.classList.remove('selected')
             }
-        }
+            rebuildAllMeshes()
+        })
+
+
+        app.remotePlayers = new RemotePlayersProxy(app)
+
 
         on($("#connect-voice"),'click',() => {
             if(app.webrtcAudio.connected) {

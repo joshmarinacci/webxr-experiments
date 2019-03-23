@@ -1,0 +1,46 @@
+import {Vector3,} from "./node_modules/three/build/three.module.js"
+import {ECSComp} from './ECSComp'
+const GRAVITY = new Vector3(0,-9.8,0)
+
+export class PhysHandler extends ECSComp {
+    constructor(target, colliders) {
+        super()
+        this.target = target
+        this.colliders = colliders
+        this.vel = new Vector3(0,0,0)
+    }
+    markChanged() {
+        this._fire('move',{position:this.target.position})
+    }
+    update(time) {
+        // console.log('starting',this.vel.y)
+        const dt = (time/1000)
+        // console.log("tick",dt)
+        let acc = GRAVITY.y*0.5
+        this.vel.y += acc*dt
+        // console.log("now",this.vel.y)
+        const pos = this.target.position.clone()
+        pos.y += this.vel.y*dt
+        pos.z += this.vel.z*dt
+        pos.x += this.vel.x*dt
+        // console.log(this.vel)
+        const diff = new Vector3()
+        diff.y = this.vel.y*dt
+        diff.x = this.vel.x*dt
+        diff.z = this.vel.z*dt
+        this.colliders.forEach(col => {
+            col.collide(this,this.target,pos,diff)
+        })
+
+        //apply final velocity
+        this.target.position.y += this.vel.y
+        this.target.position.z += this.vel.z*dt
+        this.target.position.x += this.vel.x*dt
+
+        //apply some friction
+        this.vel.z *= 0.8
+        this.vel.x *= 0.8
+        // console.log(this.vel.y)
+        this.markChanged()
+    }
+}
