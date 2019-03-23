@@ -117,6 +117,8 @@
         <button id="reload">reload</button>
     </div>
     <div class="button-bar">
+        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>
+        <button id="use-culled-mesher" class="mesher">culled mesher</button>
         <button id="toggle-texture" class="selected">textures</button>
         <button id="toggle-ao" class="selected">shadows</button>
         <button id="connect-voice">voice</button>
@@ -182,6 +184,7 @@
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
+    const $$ = (sel) => document.querySelectorAll(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 
@@ -426,8 +429,21 @@
 
 
         const scale = new Vector3(1.0,1.0,1.0)
-        const mesher = new GreedyMesh()
-        // const mesher = new CulledMesh()
+        const greedyMesher = new GreedyMesh()
+        const culledMesher = new CulledMesh()
+        app.mesher = greedyMesher
+        on($('#use-culled-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-culled-mesher").classList.add('selected')
+            app.mesher = culledMesher
+            rebuildAllMeshes()
+        })
+        on($('#use-greedy-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-greedy-mesher").classList.add('selected')
+            app.mesher = greedyMesher
+            rebuildAllMeshes()
+        })
 
         app.stageRot = new Group()
         app.scene.add(app.stageRot)
@@ -589,7 +605,7 @@
         function rebuildMesh(chunk) {
             const pos = chunkIndexToVector(chunk.chunkPosition)
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
-            chunk.vmesh = new VoxelMesh(chunk, mesher, scale, app)
+            chunk.vmesh = new VoxelMesh(chunk, app.mesher, scale, app)
             chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
             // materials.paint(chunk.surfaceMesh)
             group.add(chunk.surfaceMesh)
