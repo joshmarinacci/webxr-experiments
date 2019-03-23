@@ -781,7 +781,7 @@
                 acceleration: new Vector3(0.0,0.0,0.0),
 
                 color: new Color(1.0,1.0,1.0),
-                endColor: new Color(0.0,1.0,1.0),
+                endColor: new Color(0.5,0.5,0.5),
                 colorRandomness: 0.0,
 
                 lifetime: 1,
@@ -790,14 +790,14 @@
                 size: 60,
                 sizeRandomness: 1.0,
             }
-            let scorch_texture = texture_loader.load('../../particles/kenney_particlePack/PNG/scorch_01.png')
+            let scorch_texture = texture_loader.load('../../particles/kenney_particlePack/PNG/smoke_08.png')
             app.particles = new GPUParticleSystem({
                 maxParticles: 10000,
                 particleSpriteTex: scorch_texture,
                 blending: AdditiveBlending,
                 onTick:(system,time) => {
                     if(startTime === -1) startTime = time
-                    if(time < startTime+0.5) {
+                    if(time < startTime+0.2) {
                         for (let i = 0; i < 100; i++) {
                             options.velocity.set(rand(-5, 5), rand(-5, 5), rand(-5, 5))
                             system.spawnParticle(options);
