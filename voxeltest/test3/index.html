@@ -272,6 +272,7 @@
         }
 
         const SIZE = new Vector3()
+        const CENTER = new Vector3()
 
         function checkHitTileY(voxels, bounds, pos) {
             bounds.getSize(SIZE)
@@ -292,12 +293,11 @@
             return false
         }
         function checkHitTileX(voxels, bounds, pos) {
-            bounds.getSize(SIZE)
+            bounds.getCenter(CENTER)
+            let sx = Math.floor(pos.x-CENTER.x)
+            let ex = Math.ceil(pos.x+CENTER.x)
             let sy = Math.round(pos.y+1)
-            let ey = Math.ceil(pos.y+SIZE.y)
             let sz = Math.floor(pos.z)
-            let sx = Math.floor(pos.x)
-            let ex = Math.ceil(pos.x+SIZE.x)
             for(let j=sx; j<ex; j++) {
                 const vox = voxels.voxelAtCoordinates(new Vector3(j, sy, sz))
                 if (vox > 0) return true
@@ -305,14 +305,13 @@
             return false
         }
         function checkHitTileZ(voxels, bounds, pos) {
-            bounds.getSize(SIZE)
-            let sy = Math.round(pos.y+1)
-            let sz = Math.floor(pos.z)
+            bounds.getCenter(CENTER)
             let sx = Math.floor(pos.x)
-            let ez = Math.ceil(pos.z+SIZE.z)
+            let sy = Math.round(pos.y+1)
+            let sz = Math.floor(pos.z-CENTER.z)
+            let ez = Math.ceil(pos.z+CENTER.z)
             for(let k=sz; k<ez; k++) {
                 const vox = voxels.voxelAtCoordinates(new Vector3(sx, sy, k))
-                // console.log("hit", vox)
                 if (vox > 0) return true
             }
             return false
@@ -331,7 +330,6 @@
                 //check downwards
                 if(checkHitTileY(chunkManager,bounds,pos)) {
                     phys.vel.y = 0
-                    target.position.y = 0
                 }
                 //check forwards
                 if(checkHitTileX(chunkManager,bounds,pos)) {
@@ -342,7 +340,7 @@
                     // console.log("hit something to the front or back")
                     phys.vel.z = 0
                 }
-                //if hit the ground
+                //if fell off the world
                 if(pos.y < -30) {
                     phys.vel.y = 0
                     target.position.y = 10
@@ -446,7 +444,7 @@
         const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
         const flat = (i,j,k) => {
             // if((i+2)%4 === 0 && k%4 === 0 && j < 3 && j > -3) return 3
-            if(k<-2 && k>-4 && j>0 && j <3 && i>-5 && i<5) return 4;
+            if(k< -2 && k >-5 && j>0 && j <3 && i>-5 && i<5) return 4;
             /*
             if(j === 0) {
                 if(i === -8) return 2
