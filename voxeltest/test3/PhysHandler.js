@@ -3,8 +3,9 @@ import {ECSComp} from './ECSComp'
 const GRAVITY = new Vector3(0,-9.8,0)
 
 export class PhysHandler extends ECSComp {
-    constructor(target, colliders) {
+    constructor(app, target, colliders) {
         super()
+        this.app = app
         this.target = target
         this.colliders = colliders
         this.vel = new Vector3(0,0,0)
@@ -37,7 +38,7 @@ export class PhysHandler extends ECSComp {
         // console.log('starting',this.vel.y)
         const dt = (time/1000)
         // console.log("tick",dt)
-        if(!this.flying) {
+        if(!this.flying && this.app.active) {
             let acc = GRAVITY.y * 0.5
             this.vel.y += acc * dt
         }

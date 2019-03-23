@@ -21,6 +21,7 @@ export class KeyboardControls extends ECSComp {
             q: { current: false, previous: false},
             e: { current: false, previous: false},
             Enter: { current: false, previous: false},
+            c: { current: false, previous: false},
         }
         this.keystates[' '] = { current: false, previous: false}
 
@@ -57,6 +58,10 @@ export class KeyboardControls extends ECSComp {
 
         if(this.keystates.Enter.current === false && this.keystates.Enter.previous === true) {
             this._fire('show-dialog',this)
+        }
+        if(this.keystates.c.current === true && this.keystates.c.previous === false) {
+            this.app.active = !this.app.active
+            this.app.player_phys.endFlying()
         }
 
         Object.keys(this.keystates).forEach(key => {
