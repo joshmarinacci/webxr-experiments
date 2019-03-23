@@ -73,12 +73,12 @@ export class KeyboardControls extends ECSComp {
     }
 
     glideForward() {
-        this.app.player_phys.velocity.z = -0.01
-        // this.app.stagePos.position.add(this.getSpeedDirection())
+        this.app.player_phys.vel.copy(this.getSpeedDirection().multiplyScalar(-40))
     }
     glideBackward() {
-        this.app.player_phys.velocity.z = 0.01
-        // this.app.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+        const vel = this.getSpeedDirection().multiplyScalar(40)
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
     }
     glideUp() {
         this.app.stagePos.position.add(new Vector3(0,-1,0).normalize().multiplyScalar(SPEED))
@@ -92,12 +92,14 @@ export class KeyboardControls extends ECSComp {
         return dir.normalize().multiplyScalar(SPEED)
     }
     glideLeft() {
-        this.app.player_phys.velocity.x =  -0.01
-        // this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(90)))
+        const vel = this.getSpeedDirection().multiplyScalar(40).applyAxisAngle(Y_AXIS,toRad(-90))
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
     }
     glideRight() {
-        this.app.player_phys.velocity.x = 0.01
-        // this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(-90)))
+        const vel = this.getSpeedDirection().multiplyScalar(40).applyAxisAngle(Y_AXIS,toRad(90))
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
     }
     jump() {
         this.app.jump()

@@ -108,10 +108,13 @@ export class Physical {
         }
         */
 
+        dt = dt/1000
+        // console.log('the forces',this.forces)
+        // console.log("dt",dt)
         // apply the forces
         if (!this.resting.x) {
             acceleration.x /= 8 * dt
-            acceleration.x += TOTAL_FORCES.x * dt
+            // acceleration.x += TOTAL_FORCES.x * dt
             acceleration.x += forces.x * dt
 
             velocity.x += acceleration.x * dt
@@ -126,15 +129,24 @@ export class Physical {
             acceleration.x = velocity.x = 0
         }
         if (!this.resting.y) {
-            acceleration.y /= 8 * dt
-            acceleration.y += TOTAL_FORCES.y * dt
+            // console.log('starting acc',acceleration.y)
+            // acceleration.y /= 8 * dt
+            acceleration.y = 0;
+            // console.log("now",acceleration.y)
+            // acceleration.y += TOTAL_FORCES.y * dt
             acceleration.y += forces.y * dt
+            // console.log("ending accel",acceleration.y)
+            // console.log('starting vel',velocity.y)
+            velocity.y += acceleration.y// * dt
+            // velocity.y *= friction.y
+            console.log("ending vel",velocity.y)
 
-            velocity.y += acceleration.y * dt
-            velocity.y *= friction.y
-
+            // console.log('desired y', desired.y)
+            console.log('ternimal',terminal.y)
             if (abs(velocity.y) < terminal.y) {
+                // console.log('less than terminal',)
                 desired.y = (velocity.y * dt)
+                // console.log('dt is',dt)
             } else if (velocity.y !== 0) {
                 desired.y = (velocity.y / abs(velocity.y)) * terminal.y
             }
@@ -159,6 +171,8 @@ export class Physical {
             acceleration.z = velocity.z = 0
         }
 
+        // console.log('starting postion',this.avatar.position)
+        // console.log('desired is',desired)
         START.copy(this.avatar.position)
         this.avatar.translateX(desired.x)
         this.avatar.translateY(desired.y)
@@ -173,7 +187,9 @@ export class Physical {
         world_desired.x = END.x - START.x
         world_desired.y = END.y - START.y
         world_desired.z = END.z - START.z
+        // console.log('world destired stare is',world_desired)
 
+        // console.log('start',START,'end',END, 'diff', world_desired)
         // console.log("world desired",world_desired)
         //set the friction in all directions
         this.friction.x =
