@@ -35,8 +35,8 @@ export class FullScreenControls extends ECSComp {
 
             if(e.movementY) {
                 this.app.stageRot.rotation.x += e.movementY/500
-                this.app.stageRot.rotation.x = Math.max(this.app.stageRot.rotation.x,toRad(-45))
-                this.app.stageRot.rotation.x = Math.min(this.app.stageRot.rotation.x,toRad(45))
+                this.app.stageRot.rotation.x = Math.max(this.app.stageRot.rotation.x,toRad(-60))
+                this.app.stageRot.rotation.x = Math.min(this.app.stageRot.rotation.x,toRad(60))
             }
 
             const res = this.traceRay()
