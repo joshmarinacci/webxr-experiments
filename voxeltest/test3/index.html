@@ -187,30 +187,15 @@
         app.textureManager = new TextureManager()
 
 
-
-
-        // const collideVoxels = collisions(
-        //     this.getBlock.bind(this),
-        //     1,
-        //     [Infinity, Infinity, Infinity],
-        //     [-Infinity, -Infinity, -Infinity]
-        // )
-
         let jumpping = false
         app.startJump = () => {
             jumpping = true
         }
         app.endJump = () => {
-            // console.log('done')
-            // player_phys.removeForce([0,0.01,0])
             jumpping = false
         }
 
 
-        const floor = new AABB(new Vector3(-2,-4,-2), new Vector3(2,-0.5,2))
-        const size = 3
-        const collideVoxels = makeCollider((pos)=> app.chunkManager.voxelAtCoordinates(pos), 1)
-            // [4,4,4], [0,0,0])
         /*
 
         new physics which does
@@ -228,8 +213,6 @@
             scans all block indexes that could intersect the bounding box
             asks callback if should really count as a collision. if yes then stop and return collision hit
             if collision hit then tell check collision to stop
-
-
 
         */
 
@@ -354,90 +337,12 @@
             }
         }
 
-
-
-
-        let count = 0
-        class MainCollider {
-            constructor(app) {
-                this.app = app
-            }
-            collide(other, bbox, world_desired, resting) {
-                console.log("--- check collide", other.avatar.position, bbox, world_desired,resting)
-                // const vec3 = [world_desired.x,world_desired.y,world_desired.z]
-                // console.log("bbox",bbox, 'vec3',vec3)
-                // console.log('desired',d2)
-                // const axes = ['x','y','z']
-                const check = new Vector3()
-                check.copy(other.avatar.position)
-                check.add(world_desired)
-                console.log("new pos would be",check, other.velocity.y)
-                if(check.y < 0) {
-                    // console.log("too far")
-                    world_desired.y = 0
-                }
-                // console.log("before",resting)
-                // collideYVoxels(bbox, vec3)
-                /*
-                collideVoxels(bbox, vec3, (axis, tile, coords, dir, diff) => {
-                    if(!tile) return
-                    console.log("comparing",Math.abs(vec3[axis]),'to',Math.abs(diff))
-                    // if(Math.abs(vec3[axis]) < Math.abs(diff)) return
-                    // vec3[axis] = vec[axes[axis]] = diff
-                    if(axis === 1) {
-                        other.acceleration[axes[axis]] = 0
-                        other.velocity[axes[axis]] = 0
-                        resting[axes[axis]] = dir
-                        console.log('==== hit something', axes[axis], tile, coords, dir, diff)
-                        console.log("now vec3 is", vec3, world_desired, other.acceleration, resting)
-                    }
-                    // other.friction[axes[(axis+1)%3]]
-                    // resting[axes[axis]] = true
-                    // console.log("set resting",resting,dir)
-                    // console.log(edge)
-                    // console.log("hit",tile)
-                    return true
-                })
-                */
-
-                // console.log(floor.intersects(bbox))
-                /*
-                if(physics.avatar.position.y < 0) {
-                    physics.velocity.y = 0.0
-                    // console.log("now at",physics.avatar.position.y)
-                    // move up by however far underneath the floor we are
-                    desired.y = -physics.avatar.position.y/2
-                    physics.avatar.position.y = 0
-                    physics.acceleration.y = 0
-                    // physics.resting.y = true
-                }
-                */
-                // console.log("y = ", other.avatar.position.y)
-                app.stagePos.position.x = -other.avatar.position.x
-                app.stagePos.position.z = -other.avatar.position.z
-                app.stagePos.position.y = -other.avatar.position.y
-                if(other.avatar.position.y < -1) throw new Error('fell too far ' + other.avatar.position.y)
-                if(count > 100) {
-                    console.log('exceeded')
-                    throw new Error('count exceeded')
-                }
-                count++
-                other.friction.z = 0.5
-                other.friction.x = 0.5
-                // other.friction.y = 0.8
-            }
-        }
-        const collider = new MainCollider(app)
         app.player = new Mesh()
         app.player.position.y = 30
         const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
             rebuildAllMeshes()
             app.player_phys = new PhysHandler(app.player,[new SimpleMeshCollider()])
-            // app.player_phys = new Physical(app.player,[collider], new Vector3(1,1,1), new Vector3(30,5.6,30))
-            // app.player_phys.subjectTo(GRAVITY)
-            checkHitTileY(chunkManager,new Box3(new Vector3(0,0,0),new Vector3(1,1,1)),new Vector3(0.5,0.5,0.5))
-            checkHitTileY(chunkManager,new Box3(new Vector3(0,0,0),new Vector3(1,1,1)),new Vector3(0.5,8.5,0.5))
         })
         comps.push(app.textureManager)
 
