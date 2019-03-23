@@ -181,6 +181,7 @@
     import {PubnubNetworkplay} from './PubnubNetworkplay.js'
     import {PhysHandler} from './PhysHandler.js'
     import {RemotePlayersProxy} from './RemotePlayersProxy.js'
+    import {ItemManager} from './ItemManager.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -352,6 +353,8 @@
                 if(k > 2 && k < 5) return 4
                 if(k > 5 && k < 8) return 4
             }
+
+            if(i===5 && j===1 && k===-2) return 5
 
             /*
             if(j === 0) {
@@ -539,7 +542,13 @@
 
         function removeBlock(pos) {
             if(dialog.visible) return
-            setBlock(pos,0)
+            pos.floor()
+            const old_block = app.chunkManager.voxelAtCoordinates(pos)
+            if(app.itemManager.isBlockTypeItem(old_block)) {
+                app.itemManager.removeItem(pos)
+            } else {
+                setBlock(pos, 0)
+            }
         }
 
         function moveHighlight(res) {
@@ -611,6 +620,7 @@
             group.add(chunk.surfaceMesh)
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(CHUNK_SIZE))
         }
+        app.rebuildMesh = rebuildMesh
 
         function rebuildAllMeshes() {
             Object.keys(chunkManager.chunks).forEach(key => rebuildMesh(chunkManager.chunks[key]))
@@ -758,6 +768,7 @@
 
         app.remotePlayers = new RemotePlayersProxy(app)
 
+        app.itemManager = new ItemManager(app)
 
         on($("#connect-voice"),'click',() => {
             if(app.webrtcAudio.connected) {
