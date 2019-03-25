@@ -223,7 +223,7 @@
 
         app.player = new Mesh()
         app.player.position.y = 30
-        const onload = app.textureManager.load(['grass','brick','dirt','anim','arrows']).then(()=>{
+        const onload = app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
             rebuildAllMeshes()
             app.player_phys = new PhysHandler(app, app.player,[new SimpleMeshCollider(app)])

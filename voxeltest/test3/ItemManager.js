@@ -15,7 +15,7 @@ export class ItemManager extends ECSComp {
     removeItem(pos) {
         const type = this.app.chunkManager.voxelAtCoordinates(pos)
         const radius = 3;
-        if(type === 5) {
+        if(type === 5) { //the type code for TNT
             console.log("triggering TNT explosion")
             const cursor = new Vector3()
             const actual = new Vector3()
