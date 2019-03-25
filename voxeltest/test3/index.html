@@ -212,10 +212,8 @@
         app.active = true
 
         //load a cat texture
-        const texture_loader = new TextureLoader()
-        app.textureLoader = texture_loader
-        //cat from http://creative-commons-cats.tumblr.com/page/3
-        const texture = texture_loader.load('./cat.jpg')
+        app.textureLoader = new TextureLoader()
+        const texture = app.textureLoader.load('./cat.jpg')
 
         app.textureManager = new TextureManager()
 
@@ -508,7 +506,8 @@
 
 
         function rebuildMesh(chunk) {
-            const pos = chunkIndexToVector(chunk.chunkPosition)
+            const pos = new Vector3(chunk.chunkPosition[0],chunk.chunkPosition[1],chunk.chunkPosition[2])
+
             if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
             chunk.vmesh = new VoxelMesh(chunk, app.mesher, scale, app)
             chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
@@ -523,7 +522,7 @@
         }
 
         chunkManager.on('missingChunk',(chunkId)=>{
-            rebuildMesh(chunkManager.generateChunk(chunkIndexToVector(chunkId)))
+            rebuildMesh(chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
         })
         chunkManager.on('removingChunk',(chunk) => {
             group.remove(chunk.surfaceMesh)
