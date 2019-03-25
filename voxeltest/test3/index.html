@@ -234,6 +234,16 @@
                 console.log(msg.publisher,'moved to',msg.message.position)
                 app.remotePlayers.remotePlayerMoved(msg.publisher,msg.message.position)
             })
+            on(app.networkPlay,'remote-player-voxels',(msg) => {
+                console.log(msg.publisher,'changed voxels',msg.message.voxels)
+                msg.message.voxels.forEach(voxel => {
+                    const pos = new Vector3(voxel.position.x,voxel.position.y,voxel.position.z)
+                    app.chunkManager.setVoxelAtCoordinates(pos, voxel.type)
+                    const chunkIndex = app.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
+                    const chunk = app.chunkManager.chunks[chunkIndex.join("|")]
+                    if(chunk) rebuildMesh(chunk)
+                })
+            })
         })
         comps.push(app.textureManager)
 
@@ -539,12 +549,14 @@
             pos.floor()
             //set the actual value
             chunkManager.setVoxelAtCoordinates(pos, value)
+            app.networkPlay.playerSetVoxel(pos,value)
 
             // update the chunk
             const chunkIndex = chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
             const chunk = chunkManager.chunks[chunkIndex.join("|")]
             if(chunk) rebuildMesh(chunk)
         }
+        app.setBlock = setBlock
 
 
         const pig = new PigComp(app)

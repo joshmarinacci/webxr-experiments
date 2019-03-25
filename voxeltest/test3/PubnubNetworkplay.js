@@ -13,6 +13,7 @@ export class PubnubNetworkplay extends ECSComp {
         this.connected = false
         this.lastPos = new Vector3(-100,-100,-100)
         this.currPos = new Vector3()
+        this.voxels = []
         this.pubnub = new PubNub({
             publishKey: pubkey,
             subscribeKey: subkey,
@@ -29,7 +30,8 @@ export class PubnubNetworkplay extends ECSComp {
                 if(msg.publisher !== this.pubnub.getUUID()) {
                     // console.log("someone else moved",msg.publisher)
                     // console.log("PUBNUB message",msg)
-                    this._fire('remote-player-moved',msg)
+                    if(msg.message.type === 'movement') this._fire('remote-player-moved',msg)
+                    if(msg.message.type === 'voxels') this._fire('remote-player-voxels',msg)
                 } else {
                     // console.log("it's me")
                 }
@@ -37,7 +39,7 @@ export class PubnubNetworkplay extends ECSComp {
         })
         this.sendUpdates = () => {
             if(!this.lastPos.equals(this.currPos)) {
-                console.log("sending updates", this.currPos)
+                // console.log("sending updates", this.currPos)
                 this.lastPos.copy(this.currPos)
                 this.pubnub.publish({
                     channel:CHANNEL,
@@ -50,7 +52,21 @@ export class PubnubNetworkplay extends ECSComp {
                         }
                     }
                 },(status,response)=>{
-                    console.log("PUBNUB error?",status.error)
+                    if(status.error)   console.log("PUBNUB error?",status)
+                })
+            }
+            if(this.voxels.length > 0) {
+                const voxels = this.voxels.slice()
+                // console.log("sending changed voxels:",voxels.length)
+                this.voxels = []
+                this.pubnub.publish({
+                    channel: CHANNEL,
+                    message: {
+                        type:'voxels',
+                        voxels:voxels
+                    }
+                }, (status,response) => {
+                    if(status.error)   console.log("PUBNUB error?",status)
                 })
             }
         }
@@ -73,5 +89,15 @@ export class PubnubNetworkplay extends ECSComp {
 
     playerMoved(phys) {
         this.currPos.copy(phys.target.position)
+    }
+    playerSetVoxel(pos,type) {
+        this.voxels.push({
+            type:type,
+            position: {
+                x:pos.x,
+                y:pos.y,
+                z:pos.z
+            }
+        })
     }
 }

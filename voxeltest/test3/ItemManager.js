@@ -28,7 +28,7 @@ export class ItemManager extends ECSComp {
                         if(cursor.length()<radius) {
                             actual.copy(pos)
                             actual.add(cursor)
-                            this.app.chunkManager.setVoxelAtCoordinates(actual, 0)
+                            this.app.setBlock(actual,0)
                         }
                     }
                 }
