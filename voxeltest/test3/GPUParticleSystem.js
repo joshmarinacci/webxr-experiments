@@ -1,5 +1,5 @@
 import {Object3D, Vector3, Color, AdditiveBlending, RepeatWrapping, ShaderMaterial, BufferGeometry, BufferAttribute, Points } from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp'
+import {ECSComp} from './ECSComp.js'
 
 /*
 * modified from the version from the ThreeJS examples repo
