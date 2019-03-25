@@ -375,11 +375,6 @@
         app.scene.add(crosshairs)
         crosshairs.visible = false
 
-        function chunkIndexToVector(pos) {
-            return new Vector3(pos[0],pos[1],pos[2])
-        }
-
-
         let lastPos = new Vector3(0,0,0)
         function updateChunks() {
             if(!lastPos.equals(app.stagePos.position)) {
