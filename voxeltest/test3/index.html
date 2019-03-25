@@ -166,9 +166,9 @@
     import {TextureManager} from './TextureManager.js'
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
-    import {Mesh, MeshLambertMaterial, BoxBufferGeometry, PlaneBufferGeometry, PlaneGeometry,
+    import {Mesh, MeshLambertMaterial, PlaneGeometry,
         CubeGeometry,
-        Color, DirectionalLight, AmbientLight, Vector3, Box3, TextureLoader, Group, DoubleSide, AdditiveBlending } from "./node_modules/three/build/three.module.js"
+        Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group} from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
     import { FullScreenControls} from './FullscreenControls.js'
@@ -183,8 +183,9 @@
     import {PhysHandler} from './PhysHandler.js'
     import {RemotePlayersProxy} from './RemotePlayersProxy.js'
     import {ItemManager} from './ItemManager.js'
-    import {GPUParticleSystem} from './GPUParticleSystem.js'
     import {SimpleMeshCollider} from "./SimpleMeshCollider.js"
+    import {SmashParticles} from './SmashParticles.js'
+    import {ExplosionParticles} from './ExplosionParticles.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -271,8 +272,8 @@
             // if(i >=  1 && i <=3  && j === 2 && k===-4) return 2
             if(i === 2 && j === -1 && (k<=-5 && k>=-5)) return 3
             // if(i >=  1 && i <=3  && j >= -2 && j<=0 && k===-6 ) {
-                // if(i===2 && j===1) return 0
-                // return 2
+            // if(i===2 && j===1) return 0
+            // return 2
             // }
             // if(i >=  0 && i <=4  && j >= -1 && j<=3 && k===-7) {
             //     return 2
@@ -442,6 +443,7 @@
                 app.itemManager.removeItem(pos)
             } else {
                 setBlock(pos, 0)
+                app.smashParticles.fire(pos)
             }
         }
 
@@ -555,6 +557,11 @@
         comps.push(vrstats)
 
 
+        app.smashParticles = new SmashParticles(app)
+        comps.push(app.smashParticles)
+        app.explosionParticles = new ExplosionParticles(app)
+        comps.push(app.explosionParticles)
+
         // things to do on every render tick
         // this is the render loop
         let last = 0
@@ -565,7 +572,6 @@
             last = time
             updateChunks()
             if(app.player_phys) app.player_phys.update(dt)
-            if(app.particles) app.particles.update(time)
             comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time,dt)
             })
@@ -590,7 +596,7 @@
                     desktopControls.disable()
                     app.playFullscreen()
                     setTimeout(()=>{
-                       fullscreenControls.enable()
+                        fullscreenControls.enable()
                     },100)
                 } else {
                     $("body").classList.add('fullscreen')
@@ -658,45 +664,6 @@
             }
             rebuildAllMeshes()
         })
-
-
-        app.fireParticles = (pos,dur,timeout) => {
-            console.log("making particles at",pos)
-            let startTime = -1
-            const options = {
-                position: new Vector3(0,0,0),
-                positionRandomness: 0.0,
-                velocity: new Vector3(0.0, 1.0, 0.0),
-                velocityRandomness: 1.0,
-                acceleration: new Vector3(0.0,0.0,0.0),
-
-                color: new Color(1.0,1.0,1.0),
-                endColor: new Color(0.5,0.5,0.5),
-                colorRandomness: 0.0,
-
-                lifetime: 1,
-                fadeIn:0.001,
-                fadeOut:0.001,
-                size: 60,
-                sizeRandomness: 1.0,
-            }
-            let scorch_texture = texture_loader.load('../../particles/kenney_particlePack/PNG/smoke_08.png')
-            app.particles = new GPUParticleSystem({
-                maxParticles: 10000,
-                particleSpriteTex: scorch_texture,
-                blending: AdditiveBlending,
-                onTick:(system,time) => {
-                    if(startTime === -1) startTime = time
-                    if(time < startTime+0.2) {
-                        for (let i = 0; i < 100; i++) {
-                            options.velocity.set(rand(-5, 5), rand(-5, 5), rand(-5, 5))
-                            system.spawnParticle(options);
-                        }
-                    }
-                }})
-            app.particles.position.copy(pos)
-            app.playersGroup.add(app.particles)
-        }
 
 
         app.remotePlayers = new RemotePlayersProxy(app)

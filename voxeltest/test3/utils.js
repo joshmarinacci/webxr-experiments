@@ -73,3 +73,6 @@ export function traceRayAtScreenCoords(app, pt, distance) {
         hitNormal: hitNormal
     }
 }
+
+
+export const rand = (min,max) => Math.random()*(max-min) + min

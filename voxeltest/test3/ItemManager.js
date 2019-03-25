@@ -1,5 +1,5 @@
 import {Vector3,} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp'
+import {ECSComp} from './ECSComp.js'
 
 export class ItemManager extends ECSComp {
     constructor(app) {
@@ -37,6 +37,6 @@ export class ItemManager extends ECSComp {
             const chunk = this.app.chunkManager.chunks[chunkIndex.join("|")]
             if(chunk) this.app.rebuildMesh(chunk)
         }
-        this.app.fireParticles(pos)
+        this.app.explosionParticles.fire(pos)
     }
 }
