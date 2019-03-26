@@ -91,7 +91,6 @@ export class SimpleMeshCollider {
 
         if(phys.jumping) {
             const diff = Date.now() - phys.jumpTime;
-            console.log(diff)
             if(diff > 300) {
                 // console.log("over one second")
             } else {

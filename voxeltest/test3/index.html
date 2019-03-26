@@ -41,6 +41,7 @@
             border: 0px solid black;
             position: absolute;
             bottom: 0;
+            top:0;
             left:0;
             right:0;
             display: none;
@@ -71,10 +72,15 @@
         }
         #touch-overlay #exit-fullscreen {
             position: absolute;
-            bottom: 0em;
-            right: 0em;
+            top: 0vmin;
+            right: 0vmin;
         }
         #touch-overlay #menu-button {
+            position: absolute;
+            bottom: 0vmin;
+            right: 0em;
+        }
+        #touch-overlay #jump-button {
             position: absolute;
             bottom: 15vmin;
             right: 0em;
@@ -138,6 +144,7 @@
         <button id="down">down</button>
         <button id="exit-fullscreen">escape</button>
         <button id="menu-button">menu</button>
+        <button id="jump-button">jump</button>
     </div>
 </div>
 
@@ -623,6 +630,12 @@
             })
             on($("#menu-button"),'click',()=>{
                 toggleDialog()
+            })
+            on($("#jump-button"),'mousedown',()=>{
+                app.player_phys.startJump()
+            })
+            on($("#jump-button"),'mouseup',()=>{
+                app.player_phys.endJump()
             })
         })
         //when VR support is detected
