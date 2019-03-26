@@ -66,10 +66,16 @@ export default class VRControls extends ECSComp {
         return direction.normalize().multiplyScalar(SPEED)
     }
     glideBackward() {
-        this.app.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+        const vel = this.getSpeedDirection().multiplyScalar(40)
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
     glideForward() {
-        this.app.stagePos.position.add(this.getSpeedDirection())
+        const vel = this.getSpeedDirection().multiplyScalar(-40)
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
 
     update(time) {
