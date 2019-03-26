@@ -1,11 +1,43 @@
-import {POINTER_CLICK} from './Pointer.js'
-import {Object3D, Vector2, CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry} from "./node_modules/three/build/three.module.js"
 import Panel2D from "./node_modules/threejs-2d-components/src/panel2d.js"
 import Label2D from "./node_modules/threejs-2d-components/src/label2d.js"
 import Button2D from "./node_modules/threejs-2d-components/src/button2d.js"
 
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
+
+class BlockTypeButton extends Button2D {
+    draw(ctx) {
+        ctx.font = `${this.fsize}px sans-serif`
+        const metrics = ctx.measureText(this.text)
+        // this.w = 5 + metrics.width + 5
+        // this.h = 0 + this.fsize + 4
+        ctx.fillStyle = this.bg
+        ctx.fillRect(this.x,this.y,this.w,this.h)
+        ctx.fillStyle = 'black'
+        ctx.fillText(this.text,this.x+3,this.y+this.fsize-2)
+        ctx.strokeStyle = 'black'
+        ctx.strokeRect(this.x,this.y,this.w,this.h)
+
+
+        // const x = (i%4)*64
+        // const y = Math.floor((i/4))*64
+        ctx.fillStyle = 'red'
+        ctx.fillRect(this.x,this.y,64,64)
+        let info = this.info
+        ctx.drawImage(this.owner.app.textureManager.canvas,
+            info.x,info.y,info.w,info.h,
+            this.x,this.y,64,64
+        )
+
+        if(this.owner.selectedColor === this.text) {
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'black'
+            ctx.strokeRect(this.x+2,this.y+2,64-4,64-4)
+            ctx.strokeStyle = 'white'
+            ctx.strokeRect(this.x+4,this.y+4,64-8,64-8)
+        }
+    }
+}
 
 export class BlockPicker {
     constructor(app) {
@@ -15,47 +47,8 @@ export class BlockPicker {
             width: 256,
             height: 256,
         })
-        // this.type = 'panel2d'
-        /*
-        this.canvas = document.createElement('canvas')
-        this.canvas.width = 512
-        this.canvas.height = 512
-        this.canvasTexture = new CanvasTexture(this.canvas)
-        this.mesh = new Mesh(
-            new PlaneGeometry(1,1),
-            new MeshBasicMaterial({color:'white',map:this.canvasTexture})
-        )
-        this.mesh.userData.clickable = true
-        this.add(this.mesh)
-        */
         this.app.scene.add(this.panel)
-
-
         this.selectedColor = 'none'
-        // this.redraw()
-
-        /*
-        on(this.mesh,POINTER_CLICK,(e)=>{
-            const uv = e.intersection.uv
-            const w = this.canvas.width
-            const h = this.canvas.height
-            const fpt = new Vector2(uv.x*w, h-uv.y*h).divideScalar(64).floor()
-            const index = fpt.y*4 + fpt.x
-            if(fpt.y >= 3) {
-                this.visible = false
-                return
-            }
-
-            const infos = this.app.textureManager.getAtlasIndex()
-            if(infos[index]) {
-                this.selectedColor = infos[index].name
-            } else {
-                console.log("nothing selected")
-            }
-            this.redraw()
-        })
-        */
-
     }
 
     rebuild() {
@@ -63,18 +56,21 @@ export class BlockPicker {
         this.panel.add(new Label2D().set('text','block type').set('x',20).set('y',0))
         const index = this.app.textureManager.getAtlasIndex()
         index.forEach((info,i) => {
-            const button = new Button2D().setAll({
+            const button = new BlockTypeButton().setAll({
                 text:info.name,
-                x:(i%4)*70+10,
-                y:Math.floor(i/4)*40+40,
-                w:40,
-                h:40,
+                x:(i%4)*64,
+                y:Math.floor(i/4)*64+40,
+                w:64,
+                h:64,
+                owner:this,
+                info:info,
             },info.name)
             on(button,'click',()=>{
                 console.log("selected block", info.name)
                 const infos = this.app.textureManager.getAtlasIndex()
                 if(infos[i]) {
                     this.selectedColor = infos[i].name
+                    this.panel.redraw()
                 } else {
                     console.log("nothing selected")
                 }
@@ -131,13 +127,6 @@ export class BlockPicker {
                 ctx.strokeRect(x+4,y+4,64-8,64-8)
             }
         })
-
-        ctx.fillStyle = 'black'
-        ctx.fillRect(0,256-64,64*4,64)
-        ctx.fillStyle = 'white'
-        ctx.font = '32px sans-serif';
-        ctx.fillText('close',32,256-64+32)
-        this.canvasTexture.needsUpdate = true
     }
     */
 }
