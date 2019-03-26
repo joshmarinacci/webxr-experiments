@@ -1,13 +1,22 @@
 import {POINTER_CLICK} from './Pointer.js'
 import {Object3D, Vector2, CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry} from "./node_modules/three/build/three.module.js"
+import Panel2D from "./node_modules/threejs-2d-components/src/panel2d.js"
+import Label2D from "./node_modules/threejs-2d-components/src/label2d.js"
+import Button2D from "./node_modules/threejs-2d-components/src/button2d.js"
+
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
-export class BlockPicker extends Object3D {
+export class BlockPicker {
     constructor(app) {
-        super()
         this.app = app
-        this.type = 'panel2d'
+        this.panel = new Panel2D(app.scene,app.camera, {
+            draggable: false,
+            width: 256,
+            height: 256,
+        })
+        // this.type = 'panel2d'
+        /*
         this.canvas = document.createElement('canvas')
         this.canvas.width = 512
         this.canvas.height = 512
@@ -18,11 +27,14 @@ export class BlockPicker extends Object3D {
         )
         this.mesh.userData.clickable = true
         this.add(this.mesh)
+        */
+        this.app.scene.add(this.panel)
 
 
         this.selectedColor = 'none'
-        this.redraw()
+        // this.redraw()
 
+        /*
         on(this.mesh,POINTER_CLICK,(e)=>{
             const uv = e.intersection.uv
             const w = this.canvas.width
@@ -42,13 +54,59 @@ export class BlockPicker extends Object3D {
             }
             this.redraw()
         })
+        */
 
+    }
+
+    rebuild() {
+        this.panel.removeAll()
+        this.panel.add(new Label2D().set('text','block type').set('x',20).set('y',0))
+        const index = this.app.textureManager.getAtlasIndex()
+        index.forEach((info,i) => {
+            const button = new Button2D().setAll({
+                text:info.name,
+                x:(i%4)*70+10,
+                y:Math.floor(i/4)*40+40,
+                w:40,
+                h:40,
+            },info.name)
+            on(button,'click',()=>{
+                console.log("selected block", info.name)
+                const infos = this.app.textureManager.getAtlasIndex()
+                if(infos[i]) {
+                    this.selectedColor = infos[i].name
+                } else {
+                    console.log("nothing selected")
+                }
+            })
+            this.panel.add(button)
+        })
+
+        this.panel.add(new Button2D().setAll({
+            text:'creative/active',
+            x:10,
+            y:225,
+            w:40,
+            h:40,
+        }).on('click',()=>{
+            console.log('toggling creative mode')
+            this.app.active = !this.app.active
+            this.app.player_phys.endFlying()
+        }))
+        this.panel.add(new Button2D().setAll({
+            text:'close',
+            x: 190,
+            y: 225,
+        }).on('click',()=>{
+            this.panel.visible = false
+        }))
     }
 
     setSelectedToDefault() {
         const index = this.app.textureManager.getAtlasIndex()
         this.selectedColor = index[0].name
     }
+    /*
     redraw() {
         const ctx = this.canvas.getContext('2d')
         ctx.fillStyle = 'white'
@@ -80,4 +138,5 @@ export class BlockPicker extends Object3D {
         ctx.fillText('close',32,256-64+32)
         this.canvasTexture.needsUpdate = true
     }
+    */
 }
