@@ -83,7 +83,7 @@ export class BlockPicker {
         })
 
         this.panel.add(new Button2D().setAll({
-            text:'creative/active',
+            text:this.app.active?'creative':'active',
             x:10,
             y:225,
             w:40,
@@ -92,6 +92,7 @@ export class BlockPicker {
             console.log('toggling creative mode')
             this.app.active = !this.app.active
             this.app.player_phys.endFlying()
+            this.panel.visible = false
         }))
         this.panel.add(new Button2D().setAll({
             text:'close',
