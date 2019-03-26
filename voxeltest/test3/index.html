@@ -74,6 +74,11 @@
             bottom: 0em;
             right: 0em;
         }
+        #touch-overlay #menu-button {
+            position: absolute;
+            bottom: 15vmin;
+            right: 0em;
+        }
 
         body.fullscreen #container {
             border-width:0;
@@ -132,6 +137,7 @@
         <button id="up">up</button>
         <button id="down">down</button>
         <button id="exit-fullscreen">escape</button>
+        <button id="menu-button">menu</button>
     </div>
 </div>
 
@@ -614,6 +620,9 @@
                 $("#touch-overlay").style.visibility = 'hidden'
                 $("body").classList.remove('fullscreen')
                 app.resizeOnNextRepaint = true
+            })
+            on($("#menu-button"),'click',()=>{
+                toggleDialog()
             })
         })
         //when VR support is detected

@@ -148,10 +148,16 @@ export class TouchControls extends ECSComp {
     }
 
     glideForward() {
-        this.app.stagePos.position.add(this.getSpeedDirection())
+        const vel = this.getSpeedDirection().multiplyScalar(-40)
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
     glideBackward() {
-        this.app.stagePos.position.add(this.getSpeedDirection().multiplyScalar(-1))
+        const vel = this.getSpeedDirection().multiplyScalar(40)
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
     getSpeedDirection() {
         const dir = new Vector3(0,0,1)
@@ -159,9 +165,16 @@ export class TouchControls extends ECSComp {
         return dir.normalize().multiplyScalar(SPEED)
     }
     glideLeft() {
-        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(90)))
+        const vel = this.getSpeedDirection().multiplyScalar(40).applyAxisAngle(Y_AXIS,toRad(-90))
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
     glideRight() {
-        this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(-90)))
+        // this.app.stagePos.position.add(this.getSpeedDirection().applyAxisAngle(Y_AXIS,toRad(-90)))
+        const vel = this.getSpeedDirection().multiplyScalar(40).applyAxisAngle(Y_AXIS,toRad(90))
+        this.app.player_phys.vel.x = vel.x
+        this.app.player_phys.vel.z = vel.z
+        this.app.player_phys.markChanged()
     }
 }
