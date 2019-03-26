@@ -466,6 +466,7 @@
         function moveHighlight(res) {
             if(dialog.panel.visible) return
             const pos = res.hitPosition
+            console.log(res)
             if(res && pos) {
                 highlight_cube.position.copy(pos)
                 vrstats.setProperty('pos', `${pos.x} ${pos.y} ${pos.z}`)
@@ -478,10 +479,10 @@
         comps.push(vrControls)
         on(vrControls,'highlight',(res) => {
             if(destroyBlockActive) {
-                moveHighlight(res.hitPosition)
+                moveHighlight(res)
             } else {
                 res.hitPosition.add(res.hitNormal)
-                moveHighlight(res.hitPosition)
+                moveHighlight(res)
             }
         })
         on(vrControls,'trigger',(res) => {
