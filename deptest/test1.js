@@ -1,61 +1,55 @@
-function makeToc(blah) {
-    deps(['base','chap1','chap2'])
+const MakeToc = memoize(function () {
+    base()
+    MakeChap(1)
+    MakeChap(2)
     log("make toc")
-}
+})
 
-function chap1(foo) {
-    deps(['base'])
-    log('making chapter 1')
-}
-function chap2() {
-    deps(['base'])
-    log('making chapter 2')
-}
+const MakeChap = memoize(function(num) {
+    base()
+    log(`making chapter ${num}`)
+    return `made-chap${num}`
+})
 
-function base() {
+const base = memoize(function() {
     log('making the base')
-}
+})
 
-const scope = { makeToc, chap1, chap2, base}
-
-
-
+const tasks = {base, MakeChap, MakeToc}
 // don't need to edit below this line
+
+function memoize(fun) {
+    const memo = new Map()
+    const slice = Array.prototype.slice
+    return function() {
+        const args = slice.call(arguments)
+        if(!(args in memo)) {
+            memo[args] = fun.apply(this, args)
+        }
+        return memo[args]
+    }
+}
 
 function log() {
     console.log.call(null,...arguments)
 }
 
-const done = {
-
-}
-
-function deps(arr) {
-    // console.log(scope)
-    arr.forEach((dep)=>{
-        // console.log(`-- trying ${dep}`)
-        if(done[dep]) {
-            // console.log(`skipping ${dep}`)
-            return
-        }
-        log(scope[dep].length)
-        scope[dep]()
-        done[dep] = true
-    })
-}
-
 function printUsage() {
     console.log("node test1.js <taskname>")
+    Object.keys(tasks).forEach((taskName)=>{
+        console.log(`    ${taskName}`)
+    })
 }
 
 function printMissingTask(taskname) {
     console.log(`no task with name "${taskname}"`)
 }
 
-function runTask() {
-    const taskname = process.argv[2]
-    if (!taskname) return printUsage()
-    if (!scope[taskname]) return printMissingTask(taskname)
-    scope[taskname]()
+function runTask(args) {
+    console.log("using args",args)
+    const taskName = process.argv[2]
+    if (!taskName) return printUsage()
+    if (!tasks[taskName]) return printMissingTask(taskName)
+    tasks[taskName](...args.slice(1))
 }
-runTask()
+runTask(process.argv.slice(2))
