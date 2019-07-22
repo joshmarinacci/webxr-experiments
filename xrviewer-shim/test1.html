@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Normal page that wants to use XR</title>
+    <script src="./xrshim.js"></script>
+    <style type="text/css">
+        .toolbar {
+            display: flex;
+            flex-direction: row;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <label>XR supported?</label>
+    <b id="xrsupported">no</b>
+    <label>Shim loaded?</label>
+    <b id="xrshimloaded">no</b>
+    <button id="enterXR" disabled>enter XR</button>
+
+</div>
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<script type="module">
+    const $ = (sel) => document.querySelector(sel)
+    navigator.xr.supportsSession('immersive-ar').then(()=>{
+        $("#xrsupported").innerText = "yes"
+        $("#enterXR").disabled = false
+    }).catch(e => {
+        $("#xrsupported").innerText = "no"
+    })
+    $("#enterXR").addEventListener('click',()=>{
+        console.log("requesting XR")
+        const opts = {
+            requiredFeatures:["viewer","immersive-vr"],
+            optionalFeatures:[],
+        }
+        navigator.xr.requestSession('immersive-ar',opts)
+            .then(xrSession => {
+                console.log("request succeeded")
+            })
+            .catch(err => {
+                console.log("request session error",err)
+            })
+    })
+</script>
+
+</body>
+</html>
