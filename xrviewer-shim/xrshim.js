@@ -20,13 +20,12 @@ window.navigator.XRReferenceSpaceType = {
    "unbounded":'unbounded',
 };
 */
+
+const REALAPI_URL = "https://vr.josh.earth/webxr-experiments/xrviewer-shim/webxr-ios-js/dist/webxr.js"
+
+
 class XR {
 	constructor() {
-		this._devices = []
-		this._listeners= []
-		this._activeDevice = null
-		this._immersive = false
-		this._pendingImmersive = false
 	}
 	supportsSession(mode) {
 		if(mode === 'inline') return Promise.resolve()
@@ -34,46 +33,24 @@ class XR {
 		return Promise.reject(new DOMException("NotSupportedError"))
 	}
 	requestSession(mode, opts) {
-		if(mode === 'immersive-vr') {
-			return Promise.reject(new DOMException("NotSupportedError"))
-		}
+		console.log("going to load from ",REALAPI_URL)
+		return new Promise((res,rej)=>{
+			delete window.navigator.xr
+			const script = document.createElement('script');
+			script.setAttribute('src', REALAPI_URL);
+			script.setAttribute('type', 'text/javascript');
 
-		if(mode === 'inline') {
-			this._immersive = false
-		}
-		if(mode === 'immersive-ar') {
-			this._immersive = true
-		}
-
-		if(this._immersive) {
-			if(!this._isUserActivation()) {
-				return Promise.reject(new DOMException("InvalidState"))
-			}
-		}
-		this._pendingImmersive = true
-
-		if(this._immersive) {
-			this._activeDevice = new MozillaFullscreenXRDevice()
-		} else {
-			this._activeDevice = new MozillaInlineXRDevice()
-		}
-
-		if(!this.activeDevice) {
-			if(this._immersive) this._pendingImmersive = false
-			return Promise.reject(new DOMException("NotSupportedError"))
-		}
-		const session = new XRSession(mode,this._activeDevice)
-		//resolve requested features in opts. or reject
-		if(this._immersive) {
-			this._activeImmersiveSession = session
-			this._pendingImmersive = false
-		} else {
-			this._inlineSessions.push(session)
-		}
-		return Promise.resolve(session)
-	}
-	ondevicechange(cb) {
-		this._listeners.push(cb)
+			let loaded = false;
+			let loadFunction = function () {
+				if (loaded) return;
+				loaded = true;
+				console.log("now the script is really loaded",navigator.xr)
+				res()
+			};
+			script.onload = loadFunction;
+			script.onreadystatechange = loadFunction;
+			document.getElementsByTagName("head")[0].appendChild(script);
+		})
 	}
 }
 
