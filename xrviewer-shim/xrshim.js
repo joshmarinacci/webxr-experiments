@@ -1,9 +1,5 @@
 const REALAPI_URL = "https://vr.josh.earth/webxr-experiments/xrviewer-shim/webxr-ios-js/dist/webxr.js"
-
-
 class XR {
-	constructor() {
-	}
 	supportsSession(mode) {
 		if(mode === 'inline') return Promise.resolve()
 		if(mode === 'immersive-ar') return Promise.resolve()
