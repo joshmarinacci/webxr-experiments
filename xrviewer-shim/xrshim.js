@@ -1,26 +1,3 @@
-
-// * Query `navigator.xr.supportSession`
-// * In promise, indicate if it’s supported.
-// * On user action, call `navigator.xr.requestSession`.
-// * At this point we can load the rest of the API
-// * We must support inline XR, even if we don’t provide pose info. This could be done w/o the full API I think. Maybe.
-//
-/*
-
-window.navigator.XRSessionMode = {
-	'inline':'inline',
-	'immersive-ar':'immersive-ar',
-	'immersive-vr':'immersive-vr',
-}
-window.navigator.XRReferenceSpaceType = {
-   "viewer":'viewer',
-   "local":"local",
-   "local-floor":'local-floor',
-   "bounded-floor":'bounded-floor',
-   "unbounded":'unbounded',
-};
-*/
-
 const REALAPI_URL = "https://vr.josh.earth/webxr-experiments/xrviewer-shim/webxr-ios-js/dist/webxr.js"
 
 
@@ -55,10 +32,3 @@ class XR {
 }
 
 window.navigator.xr = new XR()
-
-// loads the ARKit api
-class MozillaInlineXRDevice {
-}
-class MozillaFullscreenXRDevice {
-}
-
