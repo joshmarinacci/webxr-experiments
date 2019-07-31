@@ -13,11 +13,15 @@ class XR {
 			script.setAttribute('src', REALAPI_URL);
 			script.setAttribute('type', 'text/javascript');
 
+			const self = this
 			let loaded = false;
 			let loadFunction = function () {
 				if (loaded) return;
 				loaded = true;
 				console.log("now the script is really loaded",navigator.xr)
+				delete self.supportsSession
+				delete self.requestSession
+				Object.setPrototypeOf(self,navigator.xr)
 				res()
 			};
 			script.onload = loadFunction;

@@ -28,7 +28,8 @@
 
 <script type="module">
     const $ = (sel) => document.querySelector(sel)
-    navigator.xr.supportsSession('immersive-ar').then(()=>{
+    const xr = navigator.xr
+    xr.supportsSession('immersive-ar').then(()=>{
         $("#xrsupported").innerText = "yes"
         $("#enterXR").disabled = false
     }).catch(e => {
@@ -40,7 +41,7 @@
             requiredFeatures:["viewer","immersive-vr"],
             optionalFeatures:[],
         }
-        navigator.xr.requestSession('immersive-ar',opts)
+        xr.requestSession('immersive-ar',opts)
             .then(xrSession => {
                 console.log("request succeeded")
             })
