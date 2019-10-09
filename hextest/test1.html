@@ -7,54 +7,89 @@
 </head>
 <body>
 
-<canvas id="canvas" width="500" height="300"></canvas>
+<canvas id="canvas" width="600" height="400"></canvas>
 <script type="module">
-    import {Point, pointy_hex_corner, Hex, pointy_hex_to_pixel} from "./hex.js"
+    import {Point,
+        pointy_hex_corner,
+        Hex, pointy_hex_to_pixel,
+        pixel_to_pointy_hex,
+        HexMap
+    } from "./hex.js"
+    import {COLORS} from "./gfx.js"
     const $ = (sel) => document.querySelector(sel)
 
 
     const c = $("#canvas").getContext('2d')
-    c.fillStyle = 'red'
-    c.fillRect(0,0,500,300)
+    const canvas = $("#canvas")
+    c.fillStyle = COLORS.PALE_GREY
+    c.fillRect(0,0,canvas.width,canvas.height)
+    const SIZE = 50
 
-    function simpleHex(c) {
-        const center = new Point(250, 150)
-        c.fillStyle = 'black'
-        c.beginPath()
-        for (let i = 0; i < 6; i++) {
-            const pt = pointy_hex_corner(center, 50, i)
-            c.lineTo(pt.x, pt.y)
-        }
-        c.closePath()
-        c.fill()
-    }
-    // simpleHex(c)
-
-    function drawHexAtQR(c, hex) {
-        const center = pointy_hex_to_pixel(hex,50)
-        console.log("center",center)
-        c.fillStyle = 'black'
-        c.beginPath()
-        for (let i = 0; i < 6; i++) {
-            const pt = pointy_hex_corner(center, 50, i)
-            c.lineTo(pt.x, pt.y)
-        }
-        c.closePath()
-        c.stroke()
+    function makeEnum(...args) {
+        const obj = {}
+        args.forEach((val)=>{
+            obj[val] = val
+        })
+        return obj
     }
 
-    function drawFour(c) {
-        c.save()
-        c.translate(100,100)
-        for(let q=0; q<3; q++) {
-            for(let r=0; r<2; r++) {
-                drawHexAtQR(c,new Hex(q,r))
+    const TERRAINS = makeEnum('GRASS','DIRT','WATER')
+
+    const TERRAIN_TO_COLOR = {}
+    TERRAIN_TO_COLOR[TERRAINS.GRASS]=COLORS.GREEN
+    TERRAIN_TO_COLOR[TERRAINS.DIRT]=COLORS.BROWN
+    TERRAIN_TO_COLOR[TERRAINS.WATER]=COLORS.TURQUOISE
+
+    const map = new HexMap()
+    map.set(new Hex(0,0),{terrain:TERRAINS.GRASS})
+    map.set(new Hex(1,0),{terrain:TERRAINS.DIRT})
+    map.set(new Hex(0,1),{terrain:TERRAINS.DIRT})
+    map.set(new Hex(1,1),{terrain:TERRAINS.WATER})
+
+    function pickOneEnumValue(obj) {
+        const keys = Object.keys(obj)
+        const index =  Math.floor(Math.random()*keys.length)
+        return keys[index]
+    }
+
+    function generateMap(map) {
+        for(let q=0; q<4; q++) {
+            for(let r=0; r<5; r++) {
+                map.set(new Hex(q-Math.floor(r/2),r),{
+                    terrain:pickOneEnumValue(TERRAINS)
+                })
             }
         }
+    }
+
+    generateMap(map)
+
+    function terrainToColor(terrain) {
+        if(TERRAIN_TO_COLOR[terrain]) return TERRAIN_TO_COLOR[terrain]
+        if(terrain === TERRAINS.WATER) return COLORS.TURQUOISE
+        return COLORS.RED
+    }
+
+    function drawMap(c, map) {
+        c.save()
+        c.translate(50,50)
+        map.forEachPair((hex,data)=>{
+            const center = pointy_hex_to_pixel(hex,SIZE)
+            c.beginPath()
+            for (let i = 0; i < 6; i++) {
+                const pt = pointy_hex_corner(center, SIZE, i)
+                c.lineTo(pt.x, pt.y)
+            }
+            c.closePath()
+            c.fillStyle = terrainToColor(data.terrain)
+            c.fill()
+            c.strokeStyle = 'black'
+            c.stroke()
+        })
         c.restore()
     }
 
-    drawFour(c)
+    drawMap(c,map)
 
     $("#canvas").addEventListener('click',(e)=>{
         const bounds = e.target.getBoundingClientRect()
@@ -62,8 +97,9 @@
             e.clientX - bounds.x,
             e.clientY - bounds.y
         )
-        pt = pt.subtract(new Point(100,100))
-        console.log("clicked at",pt)
+        pt = pt.subtract(new Point(50,50))
+        const hp = pixel_to_pointy_hex(pt,SIZE)
+        console.log("clicked at",pt,hp)
     })
 </script>
 

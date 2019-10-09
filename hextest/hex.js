@@ -1,16 +1,12 @@
-console.log("loading up and doign stuff")
 
 /*
-
-create a grid map
-run some tests on it
-draw it on a canvas
+//create a grid map
+//run some tests on it
+//draw it on a canvas
 fill with noise
 smooth out the noise
 color based on height and terrain
-
-
- */
+*/
 
 export class Point {
     constructor(x,y) {
@@ -32,12 +28,58 @@ export class Cube {
         this.y = y
         this.z = z
     }
+
+    round() {
+        let rx = Math.round(this.x)
+        let ry = Math.round(this.y)
+        let rz = Math.round(this.z)
+
+        const x_diff = Math.abs(rx - this.x)
+        const y_diff = Math.abs(ry - this.y)
+        const z_diff = Math.abs(rz - this.z)
+
+        if ( x_diff > y_diff && x_diff > z_diff) {
+            rx = -ry-rz
+        } else if ( y_diff > z_diff) {
+            ry = -rx-rz
+        } else {
+            rz = -rx-ry
+        }
+        return new Cube(rx,ry,rz)
+    }
 }
 
 export class Hex {
     constructor(q,r) {
         this.q = q
         this.r = r
+    }
+    round() {
+        return cube_to_axial(axial_to_cube(this).round())
+    }
+}
+
+export class HexMap {
+    constructor() {
+        this._storage = {}
+    }
+
+    set(hexCoord, data) {
+        this._storage[this.hexHash(hexCoord)] = {hex:hexCoord,data:data}
+    }
+    get(hexCoord) {
+        return this._storage[this.hexHash(hexCoord)].data
+    }
+
+    hexHash(hexCoord) {
+        return hexCoord.q + "_" + hexCoord.r
+    }
+
+    forEachPair(cb) {
+        Object.keys(this._storage).forEach(key => {
+            const val = this._storage[key]
+            cb(val.hex,val.data)
+        })
     }
 }
 
@@ -83,3 +125,10 @@ export function pointy_hex_to_pixel(hex,size) {
     const y = size * (Q_BASIS_VECTOR.y*hex.q + R_BASIS_VECTOR.y*hex.r)
     return new Point(x,y)
 }
+
+export function pixel_to_pointy_hex(pt, SIZE) {
+    const q = (Math.sqrt(3)/3 * pt.x - 1/3 * pt.y)/SIZE
+    const r = (                          2/3 * pt.y)/SIZE
+    return new Hex(q,r).round()
+}
+
