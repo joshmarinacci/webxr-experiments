@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="module" src="hex.js"></script>
+</head>
+<body>
+
+<canvas id="canvas" width="500" height="300"></canvas>
+<script type="module">
+    import {Point, pointy_hex_corner, Hex, pointy_hex_to_pixel} from "./hex.js"
+    const $ = (sel) => document.querySelector(sel)
+
+
+    const c = $("#canvas").getContext('2d')
+    c.fillStyle = 'red'
+    c.fillRect(0,0,500,300)
+
+    function simpleHex(c) {
+        const center = new Point(250, 150)
+        c.fillStyle = 'black'
+        c.beginPath()
+        for (let i = 0; i < 6; i++) {
+            const pt = pointy_hex_corner(center, 50, i)
+            c.lineTo(pt.x, pt.y)
+        }
+        c.closePath()
+        c.fill()
+    }
+    // simpleHex(c)
+
+    function drawHexAtQR(c, hex) {
+        const center = pointy_hex_to_pixel(hex,50)
+        console.log("center",center)
+        c.fillStyle = 'black'
+        c.beginPath()
+        for (let i = 0; i < 6; i++) {
+            const pt = pointy_hex_corner(center, 50, i)
+            c.lineTo(pt.x, pt.y)
+        }
+        c.closePath()
+        c.stroke()
+    }
+
+    function drawFour(c) {
+        c.save()
+        c.translate(100,100)
+        for(let q=0; q<3; q++) {
+            for(let r=0; r<2; r++) {
+                drawHexAtQR(c,new Hex(q,r))
+            }
+        }
+        c.restore()
+    }
+
+    drawFour(c)
+
+    $("#canvas").addEventListener('click',(e)=>{
+        const bounds = e.target.getBoundingClientRect()
+        let pt = new Point(
+            e.clientX - bounds.x,
+            e.clientY - bounds.y
+        )
+        pt = pt.subtract(new Point(100,100))
+        console.log("clicked at",pt)
+    })
+</script>
+
+</body>
+</html>
