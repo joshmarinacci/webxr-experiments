@@ -20,6 +20,8 @@ import {COLORS} from "./gfx.js"
 import {HexSystem, HexMapView} from './hexsystem.js'
 import {HexMap, Hex} from './hex.js'
 import {TERRAINS} from "./globals.js"
+import {MouseInputSystem} from './mousesystem.js'
+import {KeyboardInputSystem} from "./keyboardsystem.js"
 
 
 let game
@@ -38,6 +40,8 @@ function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(HexSystem)
+    world.registerSystem(MouseInputSystem)
+    world.registerSystem(KeyboardInputSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
