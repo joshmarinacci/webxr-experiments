@@ -36,6 +36,12 @@ function setupLights(core) {
     core.scene.add(ambient)
 }
 
+
+function pickOneArrayValue(arr) {
+    const index = Math.floor(Math.random()*arr.length)
+    return arr[index]
+}
+
 function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
@@ -47,11 +53,16 @@ function setupGame() {
     game.addComponent(ThreeCore)
 
     function generateMap(map) {
-        for(let q=-4; q<4; q++) {
+        for(let q=-8; q<8; q++) {
             for(let r=-4; r<4; r++) {
-                map.set(new Hex(q-Math.floor(r/2),r),{
-                    terrain:pickOneEnumValue(TERRAINS)
-                })
+                const info = {
+                    terrain:pickOneEnumValue(TERRAINS),
+                    // tree:pickOneArrayValue([true,false,false,false])
+                }
+                if(info.terrain === TERRAINS.GRASS) {
+                    info.tree = pickOneArrayValue([true,false,false,false])
+                }
+                map.set(new Hex(q-Math.floor(r/2),r),info)
             }
         }
     }

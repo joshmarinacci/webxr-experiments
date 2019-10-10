@@ -1,7 +1,11 @@
 import {Vector2, Raycaster} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
+import {terrainToColor, TERRAINS} from './globals.js'
 import {pixel_to_pointy_hex, Point} from './hex.js'
+import {HexMapView, makeTree} from './hexsystem.js'
+import {pointy_hex_to_pixel} from './hex'
+import {terrainToHeight} from './globals'
 
 export class MouseInputSystem extends System {
 
@@ -9,37 +13,73 @@ export class MouseInputSystem extends System {
         this.raycaster = new Raycaster()
         this.mouse = new Vector2()
         document.addEventListener('mousemove',(e)=>{
-            // console.log("mouse moved",e.buttons,e.clientX, e.clientY,e.target)
-            this.mouse = new Vector2()
-            const bounds = e.target.getBoundingClientRect()
-            this.mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
-            this.mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+            const {hex,node} = this.findHexAtMouseEvent(e)
+            if(hex) {
+                if(this.current) {
+                    this.current.material.color.set(this.current.userData.regularColor)
+                }
+                this.current = node
+                node.material.color.set('red')
+            }
+        })
+        document.addEventListener('mousedown',(e)=>{
+            const {hex,node} = this.findHexAtMouseEvent(e)
+            if(!hex) return
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            console.log(mapView.map)
+            const data = mapView.map.get(hex)
+            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
+                const tree = makeTree()
+                const center = pointy_hex_to_pixel(hex,mapView.size)
+                const h = terrainToHeight(data.terrain)
+                tree.position.x = center.x*1.05
+                tree.position.z = center.y*1.05
+                tree.position.y = h/2 + 2
+                data.treeNode = tree
+                data.tree = true
+                mapView.threeNode.add(tree)
+                return
+            }
+            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
+                const tree = data.treeNode
+                console.log("found a tree",tree)
+                data.tree = false
+                data.treeNode = null
+                mapView.threeNode.remove(tree)
+            }
         })
         this.current = null
     }
     execute() {
-        this.queries.three.results.forEach(ent => {
-            const core = ent.getMutableComponent(ThreeCore)
-            this.raycaster.setFromCamera(this.mouse, core.camera)
-            const intersects = this.raycaster.intersectObjects(core.scene.children,true)
-            for(let i=0; i<intersects.length; i++) {
-                const it = intersects[i]
-                if(it.object.userData.hex) {
-                    if(this.current) {
-                        this.current.material.color.set(this.current.userData.regularColor)
-                    }
-                    this.current = it.object
-                    it.object.material.color.set('red')
-                }
-            }
-        })
     }
 
     initialize() {
+    }
+
+    findHexAtMouseEvent(e) {
+        this.mouse = new Vector2()
+        const bounds = e.target.getBoundingClientRect()
+        this.mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
+        this.mouse.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1
+
+        const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
+        this.raycaster.setFromCamera(this.mouse, core.camera)
+        const intersects = this.raycaster.intersectObjects(core.scene.children,true)
+        for(let i=0; i<intersects.length; i++) {
+            const it = intersects[i]
+            if(it.object.userData.hex) {
+                return {hex:it.object.userData.hex, node:it.object}
+            }
+        }
+
+        return {}
     }
 }
 MouseInputSystem.queries = {
     three: {
         components:[ThreeCore]
+    },
+    map: {
+        components: [HexMapView]
     }
 }
