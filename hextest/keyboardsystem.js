@@ -4,17 +4,12 @@ import {ThreeCore} from './threesystem'
 export class KeyboardInputSystem extends System {
 
     init() {
-        console.log("doing init")
-        console.log('attaching keyboard listeners')
         document.addEventListener('keypress',(e)=>{
             if(e.key === 'a') this.turnLeft()
             if(e.key === 'd') this.turnRight()
         })
     }
     execute() {
-    }
-
-    initialize() {
     }
 
     turnLeft() {
