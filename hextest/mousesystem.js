@@ -12,48 +12,13 @@ export class MouseInputSystem extends System {
     init() {
         this.raycaster = new Raycaster()
         this.mouse = new Vector2()
-        document.addEventListener('mousemove',(e)=>{
-            const {hex,node} = this.findHexAtMouseEvent(e)
-            if(hex) {
-                if(this.current) {
-                    this.current.material.color.set(this.current.userData.regularColor)
-                }
-                this.current = node
-                node.material.color.set('red')
-            }
-        })
-        document.addEventListener('mousedown',(e)=>{
-            const {hex,node} = this.findHexAtMouseEvent(e)
-            if(!hex) return
-            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
-            console.log(mapView.map)
-            const data = mapView.map.get(hex)
-            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
-                const tree = makeTree()
-                const center = pointy_hex_to_pixel(hex,mapView.size)
-                const h = terrainToHeight(data.terrain)
-                tree.position.x = center.x*1.05
-                tree.position.z = center.y*1.05
-                tree.position.y = h/2 + 2
-                data.treeNode = tree
-                data.tree = true
-                mapView.threeNode.add(tree)
-                return
-            }
-            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
-                const tree = data.treeNode
-                console.log("found a tree",tree)
-                data.tree = false
-                data.treeNode = null
-                mapView.threeNode.remove(tree)
-            }
-        })
         this.current = null
     }
     execute() {
-    }
-
-    initialize() {
+        if(!this.doneSetup) {
+            this.setupListeners(this.queries.three.results[0].getMutableComponent(ThreeCore))
+            this.doneSetup = true
+        }
     }
 
     findHexAtMouseEvent(e) {
@@ -73,6 +38,44 @@ export class MouseInputSystem extends System {
         }
 
         return {}
+    }
+
+    setupListeners(core) {
+        core.getCanvas().addEventListener('mousemove',(e)=>{
+            const {hex,node} = this.findHexAtMouseEvent(e)
+            if(hex) {
+                if(this.current) {
+                    this.current.material.color.set(this.current.userData.regularColor)
+                }
+                this.current = node
+                node.material.color.set('red')
+            }
+        })
+        core.getCanvas().addEventListener('mousedown',(e)=>{
+            const {hex,node} = this.findHexAtMouseEvent(e)
+            if(!hex) return
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            console.log(mapView.map)
+            const data = mapView.map.get(hex)
+            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
+                const tree = makeTree()
+                const center = pointy_hex_to_pixel(hex,mapView.size)
+                const h = terrainToHeight(data.terrain)
+                tree.position.x = center.x*1.05
+                tree.position.z = center.y*1.05
+                tree.position.y = h/2 + 2
+                data.treeNode = tree
+                data.tree = true
+                mapView.threeNode.add(tree)
+                return
+            }
+            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
+                const tree = data.treeNode
+                data.tree = false
+                data.treeNode = null
+                mapView.threeNode.remove(tree)
+            }
+        })
     }
 }
 MouseInputSystem.queries = {

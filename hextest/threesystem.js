@@ -29,6 +29,12 @@ export class ThreeCore {
         this.renderer = null
         this.stage = null
         this.initialized = false
+        this.canvas = null
+    }
+
+    getCanvas() {
+        if(!this.canvas) throw new Error("canvas not initialized")
+        return this.canvas
     }
 }
 
@@ -48,11 +54,9 @@ export class ThreeSystem extends System {
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( window.innerWidth, window.innerHeight );
         app.renderer.gammaOutput = true
-        // app.renderer.vr.enabled = true;
+        app.renderer.vr.enabled = true;
         container.appendChild( app.renderer.domElement );
-
-
-        app.scene.add
+        app.canvas = app.renderer.domElement
 
         window.addEventListener( 'resize', ()=>{
             app.camera.aspect = window.innerWidth / window.innerHeight;

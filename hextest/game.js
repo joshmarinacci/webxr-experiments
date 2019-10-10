@@ -14,7 +14,7 @@ import {
     Vector3
 } from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {makeEnum, pickOneEnumValue} from './common.js'
+import {$,makeEnum, pickOneEnumValue} from './common.js'
 import {ThreeSystem, ThreeCore} from "./threesystem.js"
 import {COLORS} from "./gfx.js"
 import {HexSystem, HexMapView} from './hexsystem.js'
@@ -88,6 +88,12 @@ function setupGame() {
         const elapsedTime = clock.elapsedTime;
         world.execute(delta, elapsedTime)
         core.renderer.render(core.scene, core.camera)
+    })
+
+
+    $("#enter-desktop").addEventListener('click',()=>{
+        console.log("toggling")
+        $("#overlay").classList.toggle('hidden')
     })
 
 }

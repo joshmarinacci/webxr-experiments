@@ -3,8 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style type="text/css">
+        #overlay {
+            position: fixed;
+            top:0;
+            bottom:0;
+            left:0;
+            right:0;
+            background-color: #beecef;
+        }
+
+        html, body, canvas {
+            border: 0px solid red;
+            padding:0;
+            margin:0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
+<div id="overlay">
+    <h1>Hex Test</h1>
+    <button id="enter-desktop">play desktop</button>
+    <button id="enter-vr">play vr</button>
+</div>
 <script src="./game.js" type="module"></script>
 </body>
 </html>
