@@ -77,6 +77,7 @@ function setupGame() {
     world.execute(0.1,0)
     core.scene.add(game.getComponent(HexMapView).threeNode)
 
+
     setupLights(core)
 
 
@@ -88,12 +89,6 @@ function setupGame() {
         const elapsedTime = clock.elapsedTime;
         world.execute(delta, elapsedTime)
         core.renderer.render(core.scene, core.camera)
-    })
-
-
-    $("#enter-desktop").addEventListener('click',()=>{
-        console.log("toggling")
-        $("#overlay").classList.toggle('hidden')
     })
 
 }

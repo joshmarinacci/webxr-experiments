@@ -55,7 +55,6 @@ export class MouseInputSystem extends System {
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
-            console.log(mapView.map)
             const data = mapView.map.get(hex)
             if(data.terrain === TERRAINS.GRASS && data.tree === false) {
                 const tree = makeTree()
