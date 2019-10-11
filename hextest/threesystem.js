@@ -1,25 +1,4 @@
-import {
-    BackSide,
-    BoxGeometry,
-    CanvasTexture,
-    CylinderGeometry,
-    DefaultLoadingManager,
-    DoubleSide,
-    Group,
-    Mesh,
-    MeshBasicMaterial,
-    MeshLambertMaterial,
-    MeshStandardMaterial,
-    Object3D,
-    PerspectiveCamera,
-    PlaneGeometry,
-    RepeatWrapping,
-    Scene,
-    SphereGeometry,
-    TextureLoader,
-    Vector3,
-    WebGLRenderer
-} from "./node_modules/three/build/three.module.js"
+import {Group, PerspectiveCamera, Scene, WebGLRenderer} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {WEBVR} from "./node_modules/three/examples/jsm/vr/WebVR.js"
 

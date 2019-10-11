@@ -1,24 +1,9 @@
-import {
-    AmbientLight,
-    Clock,
-    Color,
-    ConeGeometry,
-    DirectionalLight,
-    Geometry,
-    Mesh,
-    MeshLambertMaterial,
-    PCFSoftShadowMap,
-    RepeatWrapping,
-    SphereGeometry,
-    TextureLoader,
-    Vector3
-} from "./node_modules/three/build/three.module.js"
-import {World, System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {$,makeEnum, pickOneEnumValue} from './common.js'
-import {ThreeSystem, ThreeCore} from "./threesystem.js"
-import {COLORS} from "./gfx.js"
-import {HexSystem, HexMapView} from './hexsystem.js'
-import {HexMap, Hex} from './hex.js'
+import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
+import {World} from "./node_modules/ecsy/build/ecsy.module.js"
+import {pickOneEnumValue} from './common.js'
+import {ThreeCore, ThreeSystem} from "./threesystem.js"
+import {HexMapView, HexSystem} from './hexsystem.js'
+import {Hex, HexMap} from './hex.js'
 import {TERRAINS} from "./globals.js"
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"

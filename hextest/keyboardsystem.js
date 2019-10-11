@@ -1,5 +1,5 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {ThreeCore} from './threesystem'
+import {ThreeCore} from './threesystem.js'
 
 export class KeyboardInputSystem extends System {
 

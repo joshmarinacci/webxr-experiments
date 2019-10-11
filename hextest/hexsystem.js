@@ -1,19 +1,18 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {Mesh, MeshBasicMaterial, MeshLambertMaterial,
-    SphereBufferGeometry,
-    CylinderBufferGeometry,
-    Group,
+import {
+    BoxGeometry,
     ConeGeometry,
+    CylinderBufferGeometry,
     CylinderGeometry,
     Geometry,
-    BoxGeometry,
-    VertexColors,
-}  from "./node_modules/three/build/three.module.js"
+    Group,
+    Mesh,
+    MeshLambertMaterial,
+    VertexColors
+} from "./node_modules/three/build/three.module.js"
 import {pointy_hex_to_pixel, toRad} from './hex.js'
-import {terrainToColor, TERRAINS} from './globals.js'
-import {terrainToHeight} from './globals.js'
-import {COLORS} from "./gfx"
-
+import {TERRAINS, terrainToColor, terrainToHeight} from './globals.js'
+import {COLORS} from "./gfx.js"
 
 
 export class HexMapView {

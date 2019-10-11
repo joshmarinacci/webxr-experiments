@@ -1,4 +1,4 @@
-import {makeEnum} from './common'
+import {makeEnum} from './common.js'
 import {COLORS} from './gfx.js'
 
 export const TERRAINS = makeEnum('GRASS','DIRT','WATER')

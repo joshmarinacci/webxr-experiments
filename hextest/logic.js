@@ -1,6 +1,6 @@
-import {World, System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {HexMapView} from './hexsystem'
-import {TERRAINS} from './globals'
+import {System} from "./node_modules/ecsy/build/ecsy.module.js"
+import {HexMapView} from './hexsystem.js'
+import {TERRAINS} from './globals.js'
 
 export class GameLogicSystem extends System {
     init() {

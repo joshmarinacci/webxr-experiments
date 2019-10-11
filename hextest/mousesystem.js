@@ -1,11 +1,8 @@
-import {Vector2, Raycaster} from "./node_modules/three/build/three.module.js"
+import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {terrainToColor, TERRAINS} from './globals.js'
-import {pixel_to_pointy_hex, Point} from './hex.js'
+import {TERRAINS} from './globals.js'
 import {HexMapView, makeTree} from './hexsystem.js'
-import {pointy_hex_to_pixel} from './hex'
-import {terrainToHeight} from './globals'
 
 export class MouseInputSystem extends System {
 

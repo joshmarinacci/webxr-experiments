@@ -10,8 +10,8 @@ import {
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {HexMapView} from './hexsystem.js'
-import {TERRAINS} from './globals'
-import {makeTree} from './hexsystem'
+import {TERRAINS} from './globals.js'
+import {makeTree} from './hexsystem.js'
 
 class VRController {
     constructor() {
