@@ -57,7 +57,7 @@ export class MouseInputSystem extends System {
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
             const data = mapView.map.get(hex)
             if(data.terrain === TERRAINS.GRASS && data.tree === false) {
-                const tree = makeTree()
+                const tree = makeTree(0)
                 const center = pointy_hex_to_pixel(hex,mapView.size)
                 const h = terrainToHeight(data.terrain)
                 tree.position.x = center.x*1.05
@@ -72,6 +72,7 @@ export class MouseInputSystem extends System {
                 const tree = data.treeNode
                 data.tree = false
                 data.treeNode = null
+                data.treeLevel = 0
                 mapView.threeNode.remove(tree)
             }
         })

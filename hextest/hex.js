@@ -57,6 +57,9 @@ export class Hex {
     round() {
         return cube_to_axial(axial_to_cube(this).round())
     }
+    toString() {
+        return `hex(${this.q},${this.r})`
+    }
 }
 
 export class HexMap {
@@ -79,6 +82,13 @@ export class HexMap {
         Object.keys(this._storage).forEach(key => {
             const val = this._storage[key]
             cb(val.hex,val.data)
+        })
+    }
+    dump() {
+        console.log("the map")
+        console.log("length", Object.keys(this._storage).length)
+        this.forEachPair((hex,data)=>{
+            console.log(hex.toString(),data)
         })
     }
 }

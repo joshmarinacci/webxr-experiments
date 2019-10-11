@@ -23,20 +23,28 @@ export class HexMapView {
     }
 }
 
-export function makeTree() {
+export function makeTree(level) {
+    console.log("making tree at level",level)
     const geo = new Geometry()
-    const level1 = new ConeGeometry(1.5,2,8)
-    level1.faces.forEach(f => f.color.set(COLORS.GREEN))
-    level1.translate(0,4,0)
-    geo.merge(level1)
-    const level2 = new ConeGeometry(2,2,8)
-    level2.faces.forEach(f => f.color.set(COLORS.GREEN))
-    level2.translate(0,3,0)
-    geo.merge(level2)
-    const level3 = new ConeGeometry(3,2,8)
-    level3.faces.forEach(f => f.color.set(COLORS.GREEN))
-    level3.translate(0,2,0)
-    geo.merge(level3)
+    if(level >= 3) {
+        const level1 = new ConeGeometry(1.5, 2, 8)
+        level1.faces.forEach(f => f.color.set(COLORS.GREEN))
+        level1.translate(0, 4, 0)
+        geo.merge(level1)
+    }
+    if(level >= 2) {
+        const level2 = new ConeGeometry(2,2,8)
+        level2.faces.forEach(f => f.color.set(COLORS.GREEN))
+        level2.translate(0,3,0)
+        geo.merge(level2)
+    }
+    if(level >= 1) {
+        const level3 = new ConeGeometry(3, 2, 8)
+        level3.faces.forEach(f => f.color.set(COLORS.GREEN))
+        level3.translate(0, 2, 0)
+        geo.merge(level3)
+    }
+
     const trunk = new CylinderGeometry(0.5,0.5,2)
     trunk.faces.forEach(f => f.color.set(COLORS.BROWN))
     trunk.translate(0,0,0)
@@ -45,6 +53,7 @@ export function makeTree() {
     const material = new MeshLambertMaterial({vertexColors: VertexColors})
     const obj = new Mesh(geo,material)
     obj.position.y = 2
+    obj.userData.level = level
     return obj
 }
 
@@ -54,6 +63,7 @@ export class HexSystem extends System {
         this.queries.maps.results.forEach(ent => {
             const map = ent.getMutableComponent(HexMapView)
             if(!map.started) this.initMapView(map)
+            this.updateMap(map)
         })
     }
 
@@ -77,7 +87,7 @@ export class HexSystem extends System {
             hexView.userData.regularColor = terrainToColor(data.terrain)
 
             if(data.tree === true && data.terrain === TERRAINS.GRASS) {
-                const tree = makeTree()
+                const tree = makeTree(data.treeLevel)
                 tree.position.x = center.x*1.05
                 tree.position.z = center.y*1.05
                 tree.position.y = h/2 + 2
@@ -89,6 +99,25 @@ export class HexSystem extends System {
         view.threeNode.position.x = -4
         view.threeNode.position.y = -10
         view.threeNode.rotation.x += 0.3
+
+        view.map.dump()
+    }
+
+    updateMap(view) {
+        view.map.forEachPair((hex,data)=>{
+            if(!data.tree) return
+            if(data.treeLevel !== data.treeNode.userData.level) {
+                console.log("must update the tree model")
+                view.threeNode.remove(data.treeNode)
+                const center = pointy_hex_to_pixel(hex,view.size)
+                const h = terrainToHeight(data.terrain)
+                data.treeNode = makeTree(data.treeLevel)
+                data.treeNode.position.x = center.x*1.05
+                data.treeNode.position.z = center.y*1.05
+                data.treeNode.position.y = h/2 + 2
+                view.threeNode.add(data.treeNode)
+            }
+        })
     }
 }
 

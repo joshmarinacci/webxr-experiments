@@ -13,7 +13,7 @@ import {
     TextureLoader,
     Vector3
 } from "./node_modules/three/build/three.module.js"
-import {World} from "./node_modules/ecsy/build/ecsy.module.js"
+import {World, System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {$,makeEnum, pickOneEnumValue} from './common.js'
 import {ThreeSystem, ThreeCore} from "./threesystem.js"
 import {COLORS} from "./gfx.js"
@@ -26,6 +26,53 @@ import {KeyboardInputSystem} from "./keyboardsystem.js"
 
 let game
 
+class ScoreBoard {
+    constructor() {
+
+    }
+}
+
+class GameLogicSystem extends System {
+    init() {
+        this.lastTime = 0
+    }
+    execute(delta,time) {
+        //every second update map
+        if(time - this.lastTime > 1) {
+            this.lastTime = time
+            this.queries.map.results.forEach(ent => this.updateMap(ent.getComponent(HexMapView)))
+            // this.queries.score.results.forEach(score => {
+            //     this.updateScore(score.getMutableComponent(ScoreBoard))
+            // })
+        }
+    }
+
+    updateMap(mapView) {
+        mapView.map.forEachPair((hex, data) => {
+            if(data.tree) {
+                if(data.treeLevel < 3) {
+                    data.treeLevel++
+                    console.log("tree level",data.treeLevel)
+                }
+            }
+            // if(data.terrain === TERRAINS.DIRT) {
+            //     const adj = mapView.getAdjacent(hex)
+            //     const trees = adj.filter(d => d.tree === true && d.treeLevel === 3)
+            //     if (trees.count >= 2) {
+            //         mapView.get(hex).house = true
+            //     }
+            // }
+        })
+    }
+}
+GameLogicSystem.queries = {
+    map: {
+        components: [HexMapView]
+    },
+    score: {
+        components: [ScoreBoard]
+    }
+}
 
 function setupLights(core) {
     //set the background color of the scene
@@ -42,25 +89,37 @@ function pickOneArrayValue(arr) {
     return arr[index]
 }
 
+
+
+function setupScore(core, world) {
+    const score = world.createEntity()
+    score.addComponent(ScoreBoard)
+    core.scene.add(score.getMutableComponent(ScoreBoard).threeNode)
+}
+
 function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(HexSystem)
     world.registerSystem(MouseInputSystem)
     world.registerSystem(KeyboardInputSystem)
+    world.registerSystem(GameLogicSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
 
     function generateMap(map) {
-        for(let q=-8; q<8; q++) {
-            for(let r=-4; r<4; r++) {
+        for(let q=-2; q<2; q++) {
+            for(let r=-1; r<1; r++) {
                 const info = {
                     terrain:pickOneEnumValue(TERRAINS),
-                    // tree:pickOneArrayValue([true,false,false,false])
+                    treeLevel:0,
+                    tree:false,
+                    house:false,
                 }
                 if(info.terrain === TERRAINS.GRASS) {
                     info.tree = pickOneArrayValue([true,false,false,false])
+                    // info.tree = true
                 }
                 map.set(new Hex(q-Math.floor(r/2),r),info)
             }
@@ -80,6 +139,7 @@ function setupGame() {
 
     setupLights(core)
 
+    // setupScore(core,world)
 
 
 
