@@ -70,8 +70,8 @@ function setupGame() {
     game.addComponent(ThreeCore)
 
     function generateMap(map) {
-        for(let q=-2; q<2; q++) {
-            for(let r=-2; r<2; r++) {
+        for(let q=-4; q<4; q++) {
+            for(let r=-4; r<4; r++) {
                 const info = {
                     terrain:pickOneEnumValue(TERRAINS),
                     treeLevel:0,
