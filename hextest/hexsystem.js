@@ -116,10 +116,6 @@ export class HexSystem extends System {
                 view.threeNode.add(data.treeNode)
             }
         })
-        view.threeNode.position.z = 0
-        view.threeNode.position.x = 0
-        view.threeNode.position.y = 1.5
-        // view.threeNode.rotation.x += 0.3
 
         view.map.dump()
     }

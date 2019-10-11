@@ -66,6 +66,7 @@ export class ThreeSystem extends System {
         app.scene.add(app.stagePos)
         app.stagePos.add(app.stageRot)
         app.stageRot.add(app.stage)
+        app.stagePos.position.y = -1.5
 
         window.addEventListener( 'resize', ()=>{
             app.camera.aspect = window.innerWidth / window.innerHeight;

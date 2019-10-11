@@ -22,7 +22,8 @@ import {HexMap, Hex} from './hex.js'
 import {TERRAINS} from "./globals.js"
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
-import {GameLogicSystem} from './logic'
+import {GameLogicSystem} from './logic.js'
+import {VRInputSystem} from './vrinputsystem.js'
 
 
 let game
@@ -62,6 +63,7 @@ function setupGame() {
     world.registerSystem(HexSystem)
     world.registerSystem(MouseInputSystem)
     world.registerSystem(KeyboardInputSystem)
+    world.registerSystem(VRInputSystem)
     world.registerSystem(GameLogicSystem)
 
     game = world.createEntity()
