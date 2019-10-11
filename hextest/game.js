@@ -54,13 +54,19 @@ class GameLogicSystem extends System {
                     data.treeLevel++
                 }
             }
-            // if(data.terrain === TERRAINS.DIRT) {
-            //     const adj = mapView.getAdjacent(hex)
-            //     const trees = adj.filter(d => d.tree === true && d.treeLevel === 3)
-            //     if (trees.count >= 2) {
-            //         mapView.get(hex).house = true
-            //     }
-            // }
+            if(data.terrain === TERRAINS.DIRT) {
+                const adj = mapView.map.findAdjacent(hex)
+                const datas = adj.map(h => {
+                    // console.log("hex",h, mapView.map.get(h))
+                    return mapView.map.get(h)
+                }).filter(d=>d !== null)
+                const trees = datas.filter(d => d.tree === true).filter(d => d.treeLevel === 3)
+                // console.log("mature trees",trees.length)
+                if(trees.length >= 2 && data.house === false) {
+                    data.house = true
+                    console.log("adding a house")
+                }
+            }
         })
     }
 }

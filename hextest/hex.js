@@ -71,7 +71,10 @@ export class HexMap {
         this._storage[this.hexHash(hexCoord)] = {hex:hexCoord,data:data}
     }
     get(hexCoord) {
-        return this._storage[this.hexHash(hexCoord)].data
+        const hash = this.hexHash(hexCoord)
+        if(!hash) return null
+        if(!this._storage[hash]) return null
+        return this._storage[hash].data
     }
 
     hexHash(hexCoord) {
@@ -90,6 +93,13 @@ export class HexMap {
         this.forEachPair((hex,data)=>{
             console.log(hex.toString(),data)
         })
+    }
+    findAdjacent(hexCoords) {
+        const arr = []
+        for(let i=0; i<6; i++) {
+            arr[i] = hex_neighbor(hexCoords,i)
+        }
+        return arr
     }
 }
 
@@ -126,6 +136,19 @@ export function cube_direction(direction) {
 export function cube_neighbor(cube,direction) {
     return cube_add(cube, cube_direction(direction))
 }
+const axial_directions = [
+    new Hex(+1,0), new Hex(+1,-1), new Hex(0,-1),
+    new Hex(-1,0), new Hex(-1,+1), new Hex(0,+1),
+]
+
+function hex_direction(direction) {
+    return axial_directions[direction]
+}
+function hex_neighbor(hex, direction) {
+    const dir = hex_direction(direction)
+    return new Hex(hex.q+dir.q, hex.r+dir.r)
+}
+
 
 const Q_BASIS_VECTOR = new Point(Math.sqrt(3),0)
 const R_BASIS_VECTOR = new Point(Math.sqrt(3)/2,3/2)
