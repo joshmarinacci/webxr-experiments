@@ -10,10 +10,13 @@ import {
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {HexMapView} from './hexsystem.js'
+import {TERRAINS} from './globals'
+import {makeTree} from './hexsystem'
 
 class VRController {
     constructor() {
         this.vrid = -1
+        this.prevPressed = false
         this.pressed = false
     }
 }
@@ -50,6 +53,7 @@ export class VRInputSystem extends System {
         this.queries.controllers.results.forEach(ent => {
             const cont = ent.getMutableComponent(VRController)
             this.updatePointing(core,cont)
+            this.updateClick(core,cont)
         })
     }
 
@@ -76,6 +80,31 @@ export class VRInputSystem extends System {
             this.current = node
             node.material.color.set('red')
         }
+    }
+
+    updateClick(core, cont) {
+        if(cont.prevPressed === false && cont.pressed === true) {
+            cont.prevPressed = cont.pressed
+            const {hex,node} = this.findHexAtController(core,cont.controller)
+            if(!hex) return
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            const data = mapView.map.get(hex)
+            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
+                data.tree = true
+                data.treeNode = makeTree(hex,data,2)
+                mapView.threeNode.add(data.treeNode)
+                return
+            }
+            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
+                const tree = data.treeNode
+                data.tree = false
+                data.treeNode = null
+                data.treeLevel = 0
+                mapView.threeNode.remove(tree)
+                return
+            }
+        }
+        cont.prevPressed = cont.pressed
     }
 }
 
