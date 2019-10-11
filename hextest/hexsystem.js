@@ -24,8 +24,11 @@ export class HexMapView {
     }
 }
 
-export function makeTree(level) {
-    console.log("making tree at level",level)
+export function makeTree(hex, data, size) {
+    const level = data.treeLevel
+    const center = pointy_hex_to_pixel(hex,size)
+    const h = terrainToHeight(data.terrain)
+
     const geo = new Geometry()
     if(level >= 3) {
         const level1 = new ConeGeometry(1.5, 2, 8)
@@ -53,8 +56,10 @@ export function makeTree(level) {
 
     const material = new MeshLambertMaterial({vertexColors: VertexColors})
     const obj = new Mesh(geo,material)
-    obj.position.y = 2
     obj.userData.level = level
+    obj.position.x = center.x*1.05
+    obj.position.z = center.y*1.05
+    obj.position.y = h/2 + 1
     return obj
 }
 
@@ -107,12 +112,8 @@ export class HexSystem extends System {
             hexView.userData.regularColor = terrainToColor(data.terrain)
 
             if(data.tree === true && data.terrain === TERRAINS.GRASS) {
-                const tree = makeTree(data.treeLevel)
-                tree.position.x = center.x*1.05
-                tree.position.z = center.y*1.05
-                tree.position.y = h/2 + 2
-                data.treeNode = tree
-                view.threeNode.add(tree)
+                data.treeNode = makeTree(hex,data,view.size)
+                view.threeNode.add(data.treeNode)
             }
         })
         view.threeNode.position.z = -40
@@ -127,12 +128,7 @@ export class HexSystem extends System {
         view.map.forEachPair((hex,data)=>{
             if(data.tree && data.treeLevel !== data.treeNode.userData.level) {
                 view.threeNode.remove(data.treeNode)
-                const center = pointy_hex_to_pixel(hex,view.size)
-                const h = terrainToHeight(data.terrain)
-                data.treeNode = makeTree(data.treeLevel)
-                data.treeNode.position.x = center.x*1.05
-                data.treeNode.position.z = center.y*1.05
-                data.treeNode.position.y = h/2 + 2
+                data.treeNode = makeTree(hex,data,view.size)
                 view.threeNode.add(data.treeNode)
             }
             if(data.house && !data.houseNode) {
