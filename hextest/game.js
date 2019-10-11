@@ -52,7 +52,6 @@ class GameLogicSystem extends System {
             if(data.tree) {
                 if(data.treeLevel < 3) {
                     data.treeLevel++
-                    console.log("tree level",data.treeLevel)
                 }
             }
             // if(data.terrain === TERRAINS.DIRT) {

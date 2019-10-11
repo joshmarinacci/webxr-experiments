@@ -107,7 +107,6 @@ export class HexSystem extends System {
         view.map.forEachPair((hex,data)=>{
             if(!data.tree) return
             if(data.treeLevel !== data.treeNode.userData.level) {
-                console.log("must update the tree model")
                 view.threeNode.remove(data.treeNode)
                 const center = pointy_hex_to_pixel(hex,view.size)
                 const h = terrainToHeight(data.terrain)
