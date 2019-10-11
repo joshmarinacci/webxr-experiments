@@ -29,6 +29,8 @@ export class ThreeCore {
         this.camera = null
         this.renderer = null
         this.stage = null
+        this.stagePos = null
+        this.stageRot = null
         this.initialized = false
         this.canvas = null
     }
@@ -58,6 +60,12 @@ export class ThreeSystem extends System {
         app.renderer.vr.enabled = true;
         container.appendChild( app.renderer.domElement );
         app.canvas = app.renderer.domElement
+        app.stage = new Group()
+        app.stagePos = new Group()
+        app.stageRot = new Group()
+        app.scene.add(app.stagePos)
+        app.stagePos.add(app.stageRot)
+        app.stageRot.add(app.stage)
 
         window.addEventListener( 'resize', ()=>{
             app.camera.aspect = window.innerWidth / window.innerHeight;

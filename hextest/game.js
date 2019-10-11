@@ -93,7 +93,7 @@ function setupGame() {
     //manually do one tick
     const core = game.getMutableComponent(ThreeCore)
     world.execute(0.1,0)
-    core.scene.add(game.getComponent(HexMapView).threeNode)
+    core.stage.add(game.getComponent(HexMapView).threeNode)
 
 
     setupLights(core)
