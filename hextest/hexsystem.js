@@ -6,9 +6,10 @@ import {Mesh, MeshBasicMaterial, MeshLambertMaterial,
     ConeGeometry,
     CylinderGeometry,
     Geometry,
+    BoxGeometry,
     VertexColors,
 }  from "./node_modules/three/build/three.module.js"
-import {pointy_hex_to_pixel} from './hex.js'
+import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, TERRAINS} from './globals.js'
 import {terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx"
@@ -54,6 +55,25 @@ export function makeTree(level) {
     const obj = new Mesh(geo,material)
     obj.position.y = 2
     obj.userData.level = level
+    return obj
+}
+
+export function makeHouse(data) {
+    const geo = new Geometry()
+    const sides = new BoxGeometry(1,1,1)
+    sides.faces.forEach(f => f.color.set(COLORS.RED))
+    sides.translate(0,0.5,0)
+    sides.rotateY(toRad(45))
+    geo.merge(sides)
+
+    const top = new ConeGeometry(1.2,1.0,8)
+    top.faces.forEach(f => f.color.set(COLORS.DARK_BROWN))
+    top.translate(0,1.5,0,)
+    geo.merge(top)
+
+    const material = new MeshLambertMaterial({vertexColors: VertexColors})
+    const obj = new Mesh(geo,material)
+    obj.position.y = 0
     return obj
 }
 
@@ -105,8 +125,7 @@ export class HexSystem extends System {
 
     updateMap(view) {
         view.map.forEachPair((hex,data)=>{
-            if(!data.tree) return
-            if(data.treeLevel !== data.treeNode.userData.level) {
+            if(data.tree && data.treeLevel !== data.treeNode.userData.level) {
                 view.threeNode.remove(data.treeNode)
                 const center = pointy_hex_to_pixel(hex,view.size)
                 const h = terrainToHeight(data.terrain)
@@ -115,6 +134,15 @@ export class HexSystem extends System {
                 data.treeNode.position.z = center.y*1.05
                 data.treeNode.position.y = h/2 + 2
                 view.threeNode.add(data.treeNode)
+            }
+            if(data.house && !data.houseNode) {
+                const center = pointy_hex_to_pixel(hex,view.size)
+                const h = terrainToHeight(data.terrain)
+                data.houseNode = makeHouse(data)
+                data.houseNode.position.x = center.x*1.05
+                data.houseNode.position.z = center.y*1.05
+                data.houseNode.position.y = h/2 + 0
+                view.threeNode.add(data.houseNode)
             }
         })
     }

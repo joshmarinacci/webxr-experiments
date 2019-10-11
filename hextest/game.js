@@ -49,19 +49,16 @@ class GameLogicSystem extends System {
 
     updateMap(mapView) {
         mapView.map.forEachPair((hex, data) => {
-            if(data.tree) {
-                if(data.treeLevel < 3) {
-                    data.treeLevel++
-                }
-            }
+            //grow trees
+            if(data.tree && data.treeLevel < 3) data.treeLevel++
+            //if dirt
             if(data.terrain === TERRAINS.DIRT) {
+                //find valid adjacent hexes
                 const adj = mapView.map.findAdjacent(hex)
-                const datas = adj.map(h => {
-                    // console.log("hex",h, mapView.map.get(h))
-                    return mapView.map.get(h)
-                }).filter(d=>d !== null)
+                const datas = adj.map(h => mapView.map.get(h)).filter(d=>d !== null)
+                //find adjacent trees at level 3 or more
                 const trees = datas.filter(d => d.tree === true).filter(d => d.treeLevel === 3)
-                // console.log("mature trees",trees.length)
+                //if no house and next to two trees, add a house
                 if(trees.length >= 2 && data.house === false) {
                     data.house = true
                     console.log("adding a house")
@@ -115,7 +112,7 @@ function setupGame() {
 
     function generateMap(map) {
         for(let q=-2; q<2; q++) {
-            for(let r=-1; r<1; r++) {
+            for(let r=-2; r<2; r++) {
                 const info = {
                     terrain:pickOneEnumValue(TERRAINS),
                     treeLevel:0,
