@@ -42,9 +42,9 @@ export class ThreeSystem extends System {
         app.stage = new Group()
         app.stagePos = new Group()
         app.stageRot = new Group()
-        app.scene.add(app.stagePos)
-        app.stagePos.add(app.stageRot)
-        app.stageRot.add(app.stage)
+        app.scene.add(app.stageRot)
+        app.stageRot.add(app.stagePos)
+        app.stagePos.add(app.stage)
         app.stagePos.position.y = -1.5
 
         window.addEventListener( 'resize', ()=>{

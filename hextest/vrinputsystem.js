@@ -52,6 +52,7 @@ export class VRInputSystem extends System {
         })
         this.queries.controllers.results.forEach(ent => {
             const cont = ent.getMutableComponent(VRController)
+            this.updateGP(core,cont)
             this.updatePointing(core,cont)
             this.updateClick(core,cont)
         })
@@ -105,6 +106,48 @@ export class VRInputSystem extends System {
             }
         }
         cont.prevPressed = cont.pressed
+    }
+
+    updateGP(core, con) {
+        function findGamepad( id ) {
+            // Iterate across gamepads as Vive Controllers may not be
+            // in position 0 and 1.
+            var gamepads = navigator.getGamepads && navigator.getGamepads();
+            for ( var i = 0, j = 0; i < gamepads.length; i ++ ) {
+                var gamepad = gamepads[ i ];
+                if ( gamepad && ( gamepad.id === 'OpenVR Gamepad' || gamepad.id.startsWith( 'Oculus Touch' ) || gamepad.id.startsWith( 'Spatial Controller' ) ) ) {
+                    if ( j === id ) return gamepad;
+                    j ++;
+                }
+            }
+        }
+        const gamepad = findGamepad(con.vrid)
+        if(gamepad) {
+//              console.log("trigger", gamepad.buttons[1].pressed)
+//             console.log("grip", gamepad.buttons[2].pressed)
+//             console.log("menu", gamepad.buttons[3].pressed)
+//             console.log(gamepad.axes[0],gamepad.axes[1])
+
+            //if not left or right too far then do forward back
+            const thresh = 0.4
+            if(gamepad.axes[0]>-thresh && gamepad.axes[0]<thresh) {
+                if (gamepad.axes[1] < -thresh) {
+                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stagePos.position.z += 0.2)
+                }
+                if (gamepad.axes[1] > +thresh) {
+                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stagePos.position.z -= 0.2)
+                }
+                return
+            }
+            if(gamepad.axes[1] >-thresh && gamepad.axes[1] < thresh) {
+                if(gamepad.axes[0]<-thresh) {
+                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stageRot.rotation.y -= 0.05)
+                }
+                if(gamepad.axes[0]>+thresh) {
+                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stageRot.rotation.y += 0.05)
+                }
+            }
+        }
     }
 }
 
