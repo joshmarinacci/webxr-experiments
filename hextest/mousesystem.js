@@ -3,6 +3,7 @@ import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {TERRAINS} from './globals.js'
 import {HexMapView, makeTree, Highlighted} from './hexsystem.js'
+import {CommandComp, COMMANDS, DirtTile} from './logic2.js'
 
 export class MouseInputSystem extends System {
 
@@ -40,18 +41,16 @@ export class MouseInputSystem extends System {
     setupListeners(core) {
         core.getCanvas().addEventListener('mousemove',(e)=>{
             const {hex,node} = this.findHexAtMouseEvent(e)
-            if(hex) {
-                const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
-                const data = mapView.map.get(hex)
-                const ent = data.ent
+            if(!hex) return
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            const ent = mapView.map.get(hex).ent
 
-                if(this.current && this.current.hasComponent(Highlighted) && this.current !== ent) {
-                    this.current.removeComponent(Highlighted)
-                }
-                if(!ent.hasComponent(Highlighted)) {
-                    ent.addComponent(Highlighted)
-                    this.current = ent
-                }
+            if(this.current && this.current.hasComponent(Highlighted) && this.current !== ent) {
+                this.current.removeComponent(Highlighted)
+            }
+            if(!ent.hasComponent(Highlighted)) {
+                ent.addComponent(Highlighted)
+                this.current = ent
             }
         })
         core.getCanvas().addEventListener('mousedown',(e)=>{
@@ -59,18 +58,10 @@ export class MouseInputSystem extends System {
             if(!hex) return
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
             const data = mapView.map.get(hex)
-            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
-                data.tree = true
-                data.treeNode = makeTree(hex,data,2)
-                mapView.threeNode.add(data.treeNode)
+            const ent = data.ent
+            if(ent.hasComponent(DirtTile)) {
+                ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
                 return
-            }
-            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
-                const tree = data.treeNode
-                data.tree = false
-                data.treeNode = null
-                data.treeLevel = 0
-                mapView.threeNode.remove(tree)
             }
         })
     }
