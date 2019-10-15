@@ -3,9 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style type="text/css">
+        button {
+            border: 1px solid black;
+            background-color: #ccc;
+            color: black;
+        }
+        button.selected {
+            background-color: #61dafb;
+        }
+    </style>
 </head>
 <body>
-<canvas id="canvas" width="600" height="600"></canvas>
+<div id="wrapper">
+    <div>
+        <button id="make-forest">make forest</button>
+        <button id="make-farm">make farm</button>
+        <button id="cut-wood">cut wood</button>
+        <button id="build-city">build city</button>
+    </div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+</div>
 <script src="./game2d.js" type="module"></script>
 </body>
 </html>

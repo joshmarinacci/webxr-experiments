@@ -1,13 +1,12 @@
 import {HexMapView, HexSystem} from './hexsystem.js'
 import {CanvasSystem, MouseCanvasInput, HexMapView2D} from "./canvassystem.js"
-import {GameLogicSystem} from './logic.js'
 import {HexMap, generateMap} from './hex.js'
 
 import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {pickOneEnumValue} from './common.js'
 import {TERRAINS} from "./globals.js"
-import {LogicSystem} from "./logic2.js"
+import {LogicSystem, HexMapComp, GameState} from "./logic2.js"
 
 function setupGame() {
     let world = new World();
@@ -18,8 +17,10 @@ function setupGame() {
 
     const map = new HexMap()
     generateMap(map,4,4)
-    game.addComponent(HexMapView2D,{map:map})
-    game.addComponent(MouseCanvasInput, {map:map})
+    game.addComponent(GameState,{bank:10})
+    game.addComponent(HexMapComp, {map:map})
+    game.addComponent(HexMapView2D)
+    game.addComponent(MouseCanvasInput)
 
     const clock = new Clock();
     function render(){
