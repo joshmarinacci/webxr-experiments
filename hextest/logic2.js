@@ -46,14 +46,14 @@ export class LogicSystem extends System {
         this.lastTick = 0
     }
     execute(delta,time) {
+        const state = this.queries.state.results[0].getMutableComponent(GameState)
         this.queries.commands.added.forEach(ent => {
             const cmd = ent.getComponent(CommandComp)
-            const state = this.queries.state.results[0].getMutableComponent(GameState)
             this.processCommand(cmd,state)
             ent.removeComponent(CommandComp)
         })
-        if(time > this.lastTick + 1.0) {
-            this.queries.maps.results.forEach(map => this.updateMap(map.getMutableComponent(HexMapComp).map))
+        if(time > this.lastTick + 2.0) {
+            this.queries.maps.results.forEach(map => this.updateMap(map.getMutableComponent(HexMapComp).map,state))
             this.lastTick = time
         }
     }
@@ -83,32 +83,51 @@ export class LogicSystem extends System {
             if(cmd.data.terrain === TERRAINS.DIRT && state.bank >= 2 && state.wood >= 2) {
                 cmd.data.terrain = TERRAINS.CITY
                 cmd.data.people = 1
+                cmd.data.food = 2
                 state.bank -= 2
                 state.wood -= 2
             }
         }
     }
-    updateMap(map) {
+    updateMap(map,state) {
         map.forEachPair((hex,data) => {
-            // if(hex.isTerrain(FARM)) {
-            //     hex.findAdjacent(CITY).forEach(city => city.food += 1)
-            // }
+            if(data.terrain === TERRAINS.FARM) {
+                const adjs = map.findAdjacent(hex)
+                adjs.forEach(h2 => {
+                    const d2 = map.get(h2)
+                    if(d2 && d2.terrain === TERRAINS.CITY) {
+                        d2.food += 1
+                    }
+                })
+            }
             if(data.terrain === TERRAINS.FOREST && data.treeLevel <= 3) {
                 data.treeLevel += 1
             }
+            if(data.terrain === TERRAINS.CITY) {
+                state.bank += data.people
+            }
         })
-        /*
-        map.forEachHex(hex => {
-            if (hex.isTerrain(CITY)) {
-                hex.food -= hex.people
-                if (hex.food < 0) {
-                    hex.starving = true
+        map.forEachPair((hex,data)=>{
+            if(data.terrain === TERRAINS.CITY) {
+                data.food -= data.people
+                if(data.food < -2) {
+                    data.people += -1
                 }
-                if(hex.food >= 2) {
-                    hex.people += 1
+                if(data.food >= 4) {
+                    const adjs = map.findAdjacent(hex)
+                    const total = adjs.reduce((acc,val) => {
+                        const d2 = map.get(val)
+                        if(d2 && d2.terrain === TERRAINS.FARM) {
+                            return acc + 1
+                        }
+                        return acc
+                    },0)
+                    if(data.people < total) {
+                        data.people += 1
+                    }
                 }
             }
-        })*/
+        })
     }
 }
 LogicSystem.queries = {

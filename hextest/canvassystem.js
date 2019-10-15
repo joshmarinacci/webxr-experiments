@@ -145,6 +145,14 @@ export class CanvasSystem extends System {
                 if(data.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
                 if(data.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
             }
+            if(data.terrain === TERRAINS.CITY) {
+                c.fillStyle = '#888888'
+                c.fillRect(center.x-5,center.y-5,10,10)
+                c.fillStyle = 'black'
+                c.fillText(''+data.people, center.x - 10, center.y - 10)
+                c.fillStyle = 'red'
+                c.fillText(''+data.food, center.x + 10, center.y - 10)
+            }
         })
         c.restore()
     }
