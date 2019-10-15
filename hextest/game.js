@@ -54,23 +54,6 @@ function setupGame() {
     game = world.createEntity()
     game.addComponent(ThreeCore)
 
-    function generateMap(map) {
-        for(let q=-4; q<4; q++) {
-            for(let r=-4; r<4; r++) {
-                const info = {
-                    terrain:pickOneEnumValue(TERRAINS),
-                    treeLevel:0,
-                    tree:false,
-                    house:false,
-                }
-                if(info.terrain === TERRAINS.GRASS) {
-                    info.tree = pickOneArrayValue([true,false,false,false])
-                    // info.tree = true
-                }
-                map.set(new Hex(q-Math.floor(r/2),r),info)
-            }
-        }
-    }
 
 
     const map = new HexMap()

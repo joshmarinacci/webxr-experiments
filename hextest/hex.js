@@ -8,6 +8,9 @@ smooth out the noise
 color based on height and terrain
 */
 
+import {pickOneEnumValue, pickOneArrayValue} from './common'
+import {TERRAINS} from './globals'
+
 export class Point {
     constructor(x,y) {
         this.x = x
@@ -19,6 +22,14 @@ export class Point {
             this.x-point.x,
             this.y-point.y
         )
+    }
+    copy(pt) {
+        this.x = pt.x
+        this.y = pt.y
+        return this
+    }
+    toString() {
+        return `point(${this.x},${this.y})`
     }
 }
 
@@ -165,3 +176,21 @@ export function pixel_to_pointy_hex(pt, SIZE) {
     return new Hex(q,r).round()
 }
 
+
+export function generateMap(map,w,h) {
+    for(let q=-w; q<w; q++) {
+        for(let r=-h; r<h; r++) {
+            const info = {
+                terrain:pickOneEnumValue(TERRAINS),
+                treeLevel:0,
+                tree:false,
+                house:false,
+            }
+            if(info.terrain === TERRAINS.GRASS) {
+                info.tree = pickOneArrayValue([true,false,false,false])
+                // info.tree = true
+            }
+            map.set(new Hex(q-Math.floor(r/2),r),info)
+        }
+    }
+}
