@@ -42,20 +42,27 @@ export class HexMapComp {
     }
 }
 export class LogicSystem extends System {
-    execute() {
+    init() {
+        this.lastTick = 0
+    }
+    execute(delta,time) {
         this.queries.commands.added.forEach(ent => {
             const cmd = ent.getComponent(CommandComp)
             const state = this.queries.state.results[0].getMutableComponent(GameState)
             this.processCommand(cmd,state)
             ent.removeComponent(CommandComp)
         })
-        // this.queries.maps.forEach(map => updateMap(map.getMutableComponent(HexMapComponent)))
+        if(time > this.lastTick + 1.0) {
+            this.queries.maps.results.forEach(map => this.updateMap(map.getMutableComponent(HexMapComp).map))
+            this.lastTick = time
+        }
     }
     processCommand(cmd, state) {
-        console.log("Processing",cmd,state,cmd.data.terrain)
+        // console.log("Processing",cmd,state,cmd.data.terrain)
         if(cmd.type === COMMANDS.PLANT_FOREST) {
             if(cmd.data.terrain === TERRAINS.DIRT) {
                 cmd.data.terrain = TERRAINS.FOREST
+                cmd.data.treeLevel = 1
             }
             return
         }
@@ -82,14 +89,15 @@ export class LogicSystem extends System {
         }
     }
     updateMap(map) {
-        map.forEachHex(hex => {
-            if(hex.isTerrain(FARM)) {
-                hex.findAdjacent(CITY).forEach(city => city.food += 1)
-            }
-            if(hex.isTerrain(FOREST)) {
-                hex.treeLevel = max(hex.treeLevel+1,3)
+        map.forEachPair((hex,data) => {
+            // if(hex.isTerrain(FARM)) {
+            //     hex.findAdjacent(CITY).forEach(city => city.food += 1)
+            // }
+            if(data.terrain === TERRAINS.FOREST && data.treeLevel <= 3) {
+                data.treeLevel += 1
             }
         })
+        /*
         map.forEachHex(hex => {
             if (hex.isTerrain(CITY)) {
                 hex.food -= hex.people
@@ -100,7 +108,7 @@ export class LogicSystem extends System {
                     hex.people += 1
                 }
             }
-        })
+        })*/
     }
 }
 LogicSystem.queries = {

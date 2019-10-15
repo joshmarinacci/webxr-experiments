@@ -73,6 +73,13 @@ export class CanvasSystem extends System {
             c.fill()
             c.strokeStyle = 'black'
             c.stroke()
+
+            if(data.terrain === TERRAINS.FOREST) {
+                c.fillStyle = '#008800'
+                if(data.treeLevel >= 1) c.fillRect(center.x+5,center.y-5,10,10)
+                if(data.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
+                if(data.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
+            }
         })
         c.restore()
 
@@ -89,7 +96,7 @@ export class CanvasSystem extends System {
         if(terrain === TERRAINS.DIRT) return "#ffb536"
         if(terrain === TERRAINS.WATER) return "aqua"
         if(terrain === TERRAINS.STONE) return "grey"
-        if(terrain === TERRAINS.FOREST) return "green"
+        if(terrain === TERRAINS.FOREST) return "#9aff84"
         if(terrain === TERRAINS.FARM) return "red"
         if(terrain === TERRAINS.CITY) return "yellow"
         return 'purple'
