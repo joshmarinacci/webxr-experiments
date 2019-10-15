@@ -175,22 +175,3 @@ export function pixel_to_pointy_hex(pt, SIZE) {
     const r = (                          2/3 * pt.y)/SIZE
     return new Hex(q,r).round()
 }
-
-
-export function generateMap(map,w,h) {
-    for(let q=-w; q<w; q++) {
-        for(let r=-h; r<h; r++) {
-            const info = {
-                terrain:pickOneArrayValue([TERRAINS.DIRT, TERRAINS.WATER, TERRAINS.STONE]),
-                treeLevel:0,
-                tree:false,
-                house:false,
-            }
-            // if(info.terrain === TERRAINS.DIRT) {
-                // info.tree = pickOneArrayValue([true,false,false,false])
-                // info.tree = true
-            // }
-            map.set(new Hex(q-Math.floor(r/2),r),info)
-        }
-    }
-}

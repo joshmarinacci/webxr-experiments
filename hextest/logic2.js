@@ -15,6 +15,31 @@
 
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {TERRAINS} from "./globals.js"
+import {pickOneArrayValue} from './common.js'
+import {Hex} from './hex.js'
+
+export class HexTileComponent {
+    constructor() {
+        this.map = null
+        this.hex = new Hex(-1,-1)
+        this.terrain = TERRAINS.DIRT
+    }
+}
+export class DirtTile {
+}
+export class FarmTile {
+}
+export class ForestTile {
+    constructor() {
+        this.treeLevel = 0
+    }
+}
+export class CityTile {
+    constructor() {
+        this.cityLevel = 0
+        this.food = 0
+    }
+}
 
 export class GameState {
     constructor() {
@@ -41,6 +66,30 @@ export class HexMapComp {
         this.map = null
     }
 }
+
+function findAdjacentCities(map, hex) {
+    const adjs = map.findAdjacent(hex)
+    const res = []
+    adjs.forEach(h2 => {
+        const d2 = map.get(h2)
+        if(d2 && d2.ent.hasComponent(CityTile)) {
+            res.push(d2.ent)
+        }
+    })
+    return res
+}
+function findAdjacentFarms(map, hex) {
+    const adjs = map.findAdjacent(hex)
+    const res = []
+    adjs.forEach(h2 => {
+        const d2 = map.get(h2)
+        if(d2 && d2.ent.hasComponent(FarmTile)) {
+            res.push(d2.ent)
+        }
+    })
+    return res
+}
+
 export class LogicSystem extends System {
     init() {
         this.lastTick = 0
@@ -49,41 +98,62 @@ export class LogicSystem extends System {
         const state = this.queries.state.results[0].getMutableComponent(GameState)
         this.queries.commands.added.forEach(ent => {
             const cmd = ent.getComponent(CommandComp)
-            this.processCommand(cmd,state)
+            this.processCommand(ent,cmd,state)
             ent.removeComponent(CommandComp)
         })
         if(time > this.lastTick + 2.0) {
             this.queries.maps.results.forEach(map => this.updateMap(map.getMutableComponent(HexMapComp).map,state))
+            this.queries.forests.results.forEach(ent => {
+                const forest = ent.getMutableComponent(ForestTile)
+                if(forest.treeLevel <= 3) forest.treeLevel += 1
+            })
+            this.queries.farms.results.forEach(ent => {
+                const farm = ent.getMutableComponent(FarmTile)
+                const tile = ent.getComponent(HexTileComponent)
+                findAdjacentCities(tile.map,tile.hex).forEach(cityEnt=> {
+                    cityEnt.getMutableComponent(CityTile).food += 1
+                })
+            })
+            this.queries.cities.results.forEach(ent => {
+                const tile = ent.getComponent(HexTileComponent)
+                const city = ent.getMutableComponent(CityTile)
+                city.food -= city.people
+                //starvation
+                if(city.food < -2) {
+                    city.people += -1
+                }
+                //growth
+                if(city.food >= 4) {
+                    if(city.people < findAdjacentFarms(tile.map,tile.hex).length) {
+                        city.people += 1
+                    }
+                }
+            })
             this.lastTick = time
         }
     }
-    processCommand(cmd, state) {
+    processCommand(ent, cmd, state) {
         // console.log("Processing",cmd,state,cmd.data.terrain)
-        if(cmd.type === COMMANDS.PLANT_FOREST) {
-            if(cmd.data.terrain === TERRAINS.DIRT) {
-                cmd.data.terrain = TERRAINS.FOREST
-                cmd.data.treeLevel = 1
-            }
+        if(cmd.type === COMMANDS.PLANT_FOREST && ent.hasComponent(DirtTile)) {
+                ent.removeComponent(DirtTile)
+                ent.addComponent(ForestTile, {treeLevel: 1})
             return
         }
-        if(cmd.type === COMMANDS.PLANT_FARM) {
-            if(cmd.data.terrain === TERRAINS.DIRT) {
-                cmd.data.terrain = TERRAINS.FARM
-            }
+        if(cmd.type === COMMANDS.PLANT_FARM && ent.hasComponent(DirtTile)) {
+            ent.removeComponent(DirtTile)
+            ent.addComponent(FarmTile)
             return
         }
-        if(cmd.type === COMMANDS.CHOP_WOOD) {
-            if(cmd.data.terrain === TERRAINS.FOREST) {
-                cmd.data.terrain = TERRAINS.DIRT
-                state.wood += 1
-            }
+        if(cmd.type === COMMANDS.CHOP_WOOD && ent.hasComponent(ForestTile)) {
+            ent.removeComponent(ForestTile)
+            ent.addComponent(DirtTile)
+            state.wood += 1
             return
         }
         if(cmd.type === COMMANDS.BUILD_CITY) {
-            if(cmd.data.terrain === TERRAINS.DIRT && state.bank >= 2 && state.wood >= 2) {
-                cmd.data.terrain = TERRAINS.CITY
-                cmd.data.people = 1
-                cmd.data.food = 2
+            if(ent.hasComponent(DirtTile) && state.bank >= 2 && state.wood >= 2) {
+                ent.removeComponent(DirtTile)
+                ent.addComponent(CityTile,{people:1,food:2})
                 state.bank -= 2
                 state.wood -= 2
             }
@@ -91,41 +161,8 @@ export class LogicSystem extends System {
     }
     updateMap(map,state) {
         map.forEachPair((hex,data) => {
-            if(data.terrain === TERRAINS.FARM) {
-                const adjs = map.findAdjacent(hex)
-                adjs.forEach(h2 => {
-                    const d2 = map.get(h2)
-                    if(d2 && d2.terrain === TERRAINS.CITY) {
-                        d2.food += 1
-                    }
-                })
-            }
-            if(data.terrain === TERRAINS.FOREST && data.treeLevel <= 3) {
-                data.treeLevel += 1
-            }
             if(data.terrain === TERRAINS.CITY) {
                 state.bank += data.people
-            }
-        })
-        map.forEachPair((hex,data)=>{
-            if(data.terrain === TERRAINS.CITY) {
-                data.food -= data.people
-                if(data.food < -2) {
-                    data.people += -1
-                }
-                if(data.food >= 4) {
-                    const adjs = map.findAdjacent(hex)
-                    const total = adjs.reduce((acc,val) => {
-                        const d2 = map.get(val)
-                        if(d2 && d2.terrain === TERRAINS.FARM) {
-                            return acc + 1
-                        }
-                        return acc
-                    },0)
-                    if(data.people < total) {
-                        data.people += 1
-                    }
-                }
             }
         })
     }
@@ -135,11 +172,20 @@ LogicSystem.queries = {
         components: [GameState]
     },
     commands: {
-        components:[CommandComp],
+        components:[CommandComp, HexTileComponent],
         listen: {
             added:true,
             removed:true,
         }
+    },
+    forests: {
+        components:[HexTileComponent, ForestTile]
+    },
+    farms: {
+        components:[HexTileComponent, FarmTile]
+    },
+    cities: {
+        components:[HexTileComponent, CityTile]
     },
     maps: {
         components:[HexMapComp],
@@ -150,3 +196,24 @@ LogicSystem.queries = {
     },
 }
 
+
+export function generateMap(world,map,w,h) {
+    for(let q=-w; q<w; q++) {
+        for(let r=-h; r<h; r++) {
+            const ent = world.createEntity()
+            const hex = new Hex(q-Math.floor(r/2),r)
+            const info = {
+                map:map,
+                terrain:pickOneArrayValue([TERRAINS.DIRT, TERRAINS.WATER, TERRAINS.STONE]),
+                treeLevel:0,
+                hex:hex,
+                ent:ent,
+            }
+            ent.addComponent(HexTileComponent, info)
+            if(info.terrain === TERRAINS.DIRT) {
+                ent.addComponent(DirtTile)
+            }
+            map.set(hex,info)
+        }
+    }
+}

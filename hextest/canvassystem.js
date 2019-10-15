@@ -1,11 +1,13 @@
-import {ThreeCore, ThreeSystem} from './threesystem.js'
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {$, $$} from "./common.js"
-import {pointy_hex_to_pixel, pointy_hex_corner, Point, pixel_to_pointy_hex} from "./hex.js"
-import {TERRAINS, terrainToColor, terrainToHeight} from './globals.js'
-import {HexMapComp} from './logic2.js'
-import {CommandComp, COMMANDS} from './logic2.js'
-import {GameState} from './logic2.js'
+import {pixel_to_pointy_hex, Point, pointy_hex_corner, pointy_hex_to_pixel} from "./hex.js"
+import {TERRAINS} from './globals.js'
+import {CommandComp, COMMANDS,
+    DirtTile,
+    FarmTile,
+    ForestTile,
+    CityTile,
+    GameState, HexMapComp} from './logic2.js'
 
 export class HexMapView2D {
     constructor() {
@@ -74,19 +76,19 @@ export class CanvasSystem extends System {
             )
             pt = pt.subtract(new Point(view.size*8,view.size*8))
             const hp = pixel_to_pointy_hex(pt,view.size)
-            const ent = this.world.createEntity()
             const data = mapComp.map.get(hp)
-            if(this.mode === COMMANDS.PLANT_FOREST && data.terrain === TERRAINS.DIRT) {
-                ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hp, data: data })
+            const hexEnt = data.ent
+            if(this.mode === COMMANDS.PLANT_FOREST && hexEnt.hasComponent(DirtTile)) {
+                hexEnt.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hp, data: data })
             }
-            if(this.mode === COMMANDS.CHOP_WOOD && data.terrain === TERRAINS.FOREST) {
-                ent.addComponent(CommandComp, { type: COMMANDS.CHOP_WOOD, hex: hp, data: data })
+            if(this.mode === COMMANDS.CHOP_WOOD && hexEnt.hasComponent(ForestTile)) {
+                hexEnt.addComponent(CommandComp, { type: COMMANDS.CHOP_WOOD, hex: hp, data: data })
             }
-            if(this.mode === COMMANDS.PLANT_FARM && data.terrain === TERRAINS.DIRT) {
-                ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FARM, hex: hp, data: data })
+            if(this.mode === COMMANDS.PLANT_FARM && hexEnt.hasComponent(DirtTile)) {
+                hexEnt.addComponent(CommandComp, { type: COMMANDS.PLANT_FARM, hex: hp, data: data })
             }
-            if(this.mode === COMMANDS.BUILD_CITY && data.terrain === TERRAINS.DIRT) {
-                ent.addComponent(CommandComp, { type: COMMANDS.BUILD_CITY, hex: hp, data: data })
+            if(this.mode === COMMANDS.BUILD_CITY && hexEnt.hasComponent(DirtTile)) {
+                hexEnt.addComponent(CommandComp, { type: COMMANDS.BUILD_CITY, hex: hp, data: data })
             }
         })
     }
@@ -127,6 +129,7 @@ export class CanvasSystem extends System {
         c.save()
         c.translate(view.size*8,view.size*8)
         map.forEachPair((hex,data)=>{
+            const ent = data.ent
             const center = pointy_hex_to_pixel(hex,view.size)
             c.beginPath()
             for (let i = 0; i < 6; i++) {
@@ -135,23 +138,34 @@ export class CanvasSystem extends System {
             }
             c.closePath()
             c.fillStyle = this.terrainToColor(data.terrain)
+            if(ent.hasComponent(ForestTile)) {
+                c.fillStyle = "#9aff84"
+            }
+            if(ent.hasComponent(FarmTile)) {
+                c.fillStyle = "#ff7f82"
+            }
+            if(ent.hasComponent(CityTile)) {
+                c.fillStyle = "#ffff00"
+            }
             c.fill()
             c.strokeStyle = 'black'
             c.stroke()
 
-            if(data.terrain === TERRAINS.FOREST) {
+            if(ent.hasComponent(ForestTile)) {
+                const forest = ent.getComponent(ForestTile)
                 c.fillStyle = '#008800'
-                if(data.treeLevel >= 1) c.fillRect(center.x+5,center.y-5,10,10)
-                if(data.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
-                if(data.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
+                if(forest.treeLevel >= 1) c.fillRect(center.x+5,center.y-5,10,10)
+                if(forest.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
+                if(forest.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
             }
-            if(data.terrain === TERRAINS.CITY) {
+            if(ent.hasComponent(CityTile)) {
+                const city = ent.getComponent(CityTile)
                 c.fillStyle = '#888888'
                 c.fillRect(center.x-5,center.y-5,10,10)
                 c.fillStyle = 'black'
-                c.fillText(''+data.people, center.x - 10, center.y - 10)
+                c.fillText(''+city.people, center.x - 10, center.y - 10)
                 c.fillStyle = 'red'
-                c.fillText(''+data.food, center.x + 10, center.y - 10)
+                c.fillText(''+city.food, center.x + 10, center.y - 10)
             }
         })
         c.restore()
