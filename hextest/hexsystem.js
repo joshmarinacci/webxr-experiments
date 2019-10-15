@@ -11,8 +11,13 @@ import {
     VertexColors
 } from "./node_modules/three/build/three.module.js"
 import {pointy_hex_to_pixel, toRad} from './hex.js'
-import {TERRAINS, terrainToColor, terrainToHeight} from './globals.js'
+import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
+import {HexTileComponent} from './logic2.js'
+
+export class Highlighted {
+
+}
 
 
 export class HexMapView {
@@ -81,19 +86,31 @@ export function makeHouse(data) {
     return obj
 }
 
+class HexTileGroup {
+    constructor() {
+        this.threeNode = null
+    }
+}
+
 
 export class HexSystem extends System {
     execute(delta,time) {
         this.queries.maps.results.forEach(ent => {
             const map = ent.getMutableComponent(HexMapView)
             if(!map.started) this.initMapView(map)
-            this.updateMap(map)
+            // this.updateMap(map)
+        })
+        this.queries.highlighted.added.forEach(ent => {
+            ent.getMutableComponent(HexTileGroup).threeNode.material.color.set('red')
+        })
+        this.queries.highlighted.removed.forEach(ent => {
+            const node = ent.getMutableComponent(HexTileGroup).threeNode
+            node.material.color.set(node.userData.regularColor)
         })
     }
 
     initMapView(view) {
         view.started = true
-
         view.threeNode = new Group()
         view.map.forEachPair((hex,data)=>{
             const center = pointy_hex_to_pixel(hex,view.size)
@@ -109,14 +126,8 @@ export class HexSystem extends System {
             hexView.userData.hex = hex
             hexView.userData.data = data
             hexView.userData.regularColor = terrainToColor(data.terrain)
-
-            if(data.tree === true && data.terrain === TERRAINS.GRASS) {
-                data.treeNode = makeTree(hex,data,view.size)
-                view.threeNode.add(data.treeNode)
-            }
+            data.ent.addComponent(HexTileGroup, {threeNode:hexView})
         })
-
-        view.map.dump()
     }
 
     updateMap(view) {
@@ -142,6 +153,13 @@ export class HexSystem extends System {
 HexSystem.queries = {
     maps: {
         components:[HexMapView]
+    },
+    highlighted: {
+        components: [Highlighted],
+        listen: {
+            added:true,
+            removed:true,
+        }
     }
 }
 

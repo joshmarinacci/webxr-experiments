@@ -16,6 +16,7 @@ function setupGame() {
     generateMap(world,map,4,4)
     game.addComponent(GameState,{bank:10})
     game.addComponent(HexMapComp, {map:map})
+
     game.addComponent(HexMapView2D)
     game.addComponent(MouseCanvasInput)
 

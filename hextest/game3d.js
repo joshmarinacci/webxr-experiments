@@ -1,15 +1,12 @@
-import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
+import {AmbientLight, Clock, Color, DirectionalLight, BoxGeometry, Mesh, MeshLambertMaterial} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {pickOneEnumValue} from './common.js'
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
 import {HexMapView, HexSystem} from './hexsystem.js'
-import {Hex, HexMap} from './hex.js'
-import {generateMap} from './hex.js'
-import {TERRAINS} from "./globals.js"
+import {HexMap} from './hex.js'
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
-import {GameLogicSystem} from './logic.js'
 import {VRInputSystem} from './vrinputsystem.js'
+import {GameState, generateMap, LogicSystem} from "./logic2.js"
 
 
 let game
@@ -50,15 +47,14 @@ function setupGame() {
     world.registerSystem(MouseInputSystem)
     world.registerSystem(KeyboardInputSystem)
     world.registerSystem(VRInputSystem)
-    world.registerSystem(GameLogicSystem)
+    world.registerSystem(LogicSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
-
-
+    game.addComponent(GameState,{bank:10})
 
     const map = new HexMap()
-    generateMap(map)
+    generateMap(world,map,4,4)
     game.addComponent(HexMapView,{map:map})
 
     //manually do one tick
@@ -70,8 +66,6 @@ function setupGame() {
     setupLights(core)
 
     // setupScore(core,world)
-
-
 
     const clock = new Clock();
     core.renderer.setAnimationLoop(()=> {

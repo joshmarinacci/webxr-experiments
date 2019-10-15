@@ -2,7 +2,7 @@ import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {TERRAINS} from './globals.js'
-import {HexMapView, makeTree} from './hexsystem.js'
+import {HexMapView, makeTree, Highlighted} from './hexsystem.js'
 
 export class MouseInputSystem extends System {
 
@@ -41,11 +41,17 @@ export class MouseInputSystem extends System {
         core.getCanvas().addEventListener('mousemove',(e)=>{
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(hex) {
-                if(this.current) {
-                    this.current.material.color.set(this.current.userData.regularColor)
+                const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+                const data = mapView.map.get(hex)
+                const ent = data.ent
+
+                if(this.current && this.current.hasComponent(Highlighted) && this.current !== ent) {
+                    this.current.removeComponent(Highlighted)
                 }
-                this.current = node
-                node.material.color.set('red')
+                if(!ent.hasComponent(Highlighted)) {
+                    ent.addComponent(Highlighted)
+                    this.current = ent
+                }
             }
         })
         core.getCanvas().addEventListener('mousedown',(e)=>{

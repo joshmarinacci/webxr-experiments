@@ -5,27 +5,23 @@
     <title>Title</title>
 
     <style type="text/css">
-        #overlay {
-            position: fixed;
-            top:0;
-            bottom:0;
-            left:0;
-            right:0;
-            background-color: #beecef;
-        }
-
         html, body, canvas {
-            border: 0px solid red;
             padding:0;
             margin:0;
+        }
+        canvas {
+            position: fixed;
         }
         .hidden {
             display: none;
         }
+        button {
+            z-index: 5;
+        }
     </style>
 </head>
 <body>
-<canvas id="canvas" width="600" height="400"></canvas>
-<script src="./game.js" type="module"></script>
+<canvas id="canvas" width="400" height="400"></canvas>
+<script src="game3d.js" type="module"></script>
 </body>
 </html>
