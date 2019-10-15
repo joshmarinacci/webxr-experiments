@@ -4,6 +4,7 @@ import {pickOneEnumValue} from './common.js'
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
 import {HexMapView, HexSystem} from './hexsystem.js'
 import {Hex, HexMap} from './hex.js'
+import {generateMap} from './hex.js'
 import {TERRAINS} from "./globals.js"
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"

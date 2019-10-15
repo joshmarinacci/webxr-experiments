@@ -1,12 +1,9 @@
-import {HexMapView, HexSystem} from './hexsystem.js'
-import {CanvasSystem, MouseCanvasInput, HexMapView2D} from "./canvassystem.js"
-import {HexMap, generateMap} from './hex.js'
-
-import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
+import {HexSystem} from './hexsystem.js'
+import {CanvasSystem, HexMapView2D, MouseCanvasInput} from "./canvassystem.js"
+import {generateMap, HexMap} from './hex.js'
+import {Clock} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {pickOneEnumValue} from './common.js'
-import {TERRAINS} from "./globals.js"
-import {LogicSystem, HexMapComp, GameState} from "./logic2.js"
+import {GameState, HexMapComp, LogicSystem} from "./logic2.js"
 
 function setupGame() {
     let world = new World();

@@ -10,6 +10,7 @@ import {GameState} from './logic2.js'
 export class HexMapView2D {
     constructor() {
         this.context = null
+        this.canvas = null
         this.size = 30
     }
     getContext2D() {
@@ -44,54 +45,16 @@ export class CanvasSystem extends System {
             this.initCanvasInput(view,mapComp)
             this.initButtons()
         })
-        this.queries.maps.results.forEach(ent => this.drawMap(ent))
-    }
-    drawMap(ent) {
-        const view = ent.getComponent(HexMapView2D)
-        const mapComp = ent.getComponent(HexMapComp)
-        const state = ent.getComponent(GameState)
-        const c = view.getContext2D()
-
-        //clear
-        c.fillStyle = 'white'
-        c.fillRect(0,0,view.getCanvas().width,view.getCanvas().height)
-
-
-        //draw map
-        const map = mapComp.map
-        c.save()
-        c.translate(view.size*8,view.size*8)
-        map.forEachPair((hex,data)=>{
-            const center = pointy_hex_to_pixel(hex,view.size)
-            c.beginPath()
-            for (let i = 0; i < 6; i++) {
-                const pt = pointy_hex_corner(center, view.size, i)
-                c.lineTo(pt.x, pt.y)
-            }
-            c.closePath()
-            c.fillStyle = this.terrainToColor(data.terrain)
-            c.fill()
-            c.strokeStyle = 'black'
-            c.stroke()
-
-            if(data.terrain === TERRAINS.FOREST) {
-                c.fillStyle = '#008800'
-                if(data.treeLevel >= 1) c.fillRect(center.x+5,center.y-5,10,10)
-                if(data.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
-                if(data.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
-            }
+        this.queries.maps.results.forEach(ent => {
+            const view = ent.getComponent(HexMapView2D)
+            const mapComp = ent.getComponent(HexMapComp)
+            const state = ent.getComponent(GameState)
+            this.clearCanvas(view)
+            this.drawMap(view,mapComp)
+            this.drawScore(view,state)
         })
-        c.restore()
-
-        //draw score
-        c.save()
-        c.translate(450,20)
-        c.fillStyle = 'black'
-        c.font = '15pt sans-serif'
-        c.fillText(`bank ${state.bank}`,0,0)
-        c.fillText(`wood ${state.wood}`,0,15+5)
-        c.restore()
     }
+
     terrainToColor(terrain) {
         if(terrain === TERRAINS.DIRT) return "#ffb536"
         if(terrain === TERRAINS.WATER) return "aqua"
@@ -149,6 +112,53 @@ export class CanvasSystem extends System {
             $("#build-city").classList.add("selected")
             this.mode = COMMANDS.BUILD_CITY
         })
+    }
+
+    clearCanvas(view) {
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'white'
+        c.fillRect(0,0,can.width,can.height)
+    }
+    drawMap(view, mapComp) {
+        const c = view.getContext2D()
+        //draw map
+        const map = mapComp.map
+        c.save()
+        c.translate(view.size*8,view.size*8)
+        map.forEachPair((hex,data)=>{
+            const center = pointy_hex_to_pixel(hex,view.size)
+            c.beginPath()
+            for (let i = 0; i < 6; i++) {
+                const pt = pointy_hex_corner(center, view.size, i)
+                c.lineTo(pt.x, pt.y)
+            }
+            c.closePath()
+            c.fillStyle = this.terrainToColor(data.terrain)
+            c.fill()
+            c.strokeStyle = 'black'
+            c.stroke()
+
+            if(data.terrain === TERRAINS.FOREST) {
+                c.fillStyle = '#008800'
+                if(data.treeLevel >= 1) c.fillRect(center.x+5,center.y-5,10,10)
+                if(data.treeLevel >= 2) c.fillRect(center.x-15,center.y-15,10,10)
+                if(data.treeLevel >= 3) c.fillRect(center.x-15,center.y+5,10,10)
+            }
+        })
+        c.restore()
+    }
+
+    drawScore(view, state) {
+        const c = view.getContext2D()
+        //draw score
+        c.save()
+        c.translate(450,20)
+        c.fillStyle = 'black'
+        c.font = '15pt sans-serif'
+        c.fillText(`bank ${state.bank}`,0,0)
+        c.fillText(`wood ${state.wood}`,0,15+5)
+        c.restore()
     }
 }
 
