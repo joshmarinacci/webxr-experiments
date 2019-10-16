@@ -52,7 +52,8 @@ export const COMMANDS = {
     PLANT_FOREST:'PLANT_FOREST',
     PLANT_FARM:'PLANT_FARM',
     CHOP_WOOD:'CHOP_WOOD',
-    BUILD_CITY:'BUILD_CITY'
+    BUILD_CITY:'BUILD_CITY',
+    INVALID:'INVALID'
 }
 export class CommandComp {
     constructor() {
