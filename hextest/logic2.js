@@ -41,15 +41,45 @@ export class CityTile {
     }
 }
 
+export const GameStateEnums = {
+    PLAY:'PLAY',
+    SHOW_WIN:'SHOW_WIN',
+    SHOW_INSTRUCTIONS:'SHOW_INSTRUCTIONS',
+    NEXT_LEVEL:'NEXT_LEVEL',
+    WON_GAME:'WON_GAME',
+    NONE:'NONE',
+}
+export const GameStateMachine = {
+}
+
+GameStateMachine[GameStateEnums.SHOW_INSTRUCTIONS] = [GameStateEnums.PLAY]
+GameStateMachine[GameStateEnums.SHOW_WIN] = [GameStateEnums.NEXT_LEVEL]
+GameStateMachine[GameStateEnums.NEXT_LEVEL] = [GameStateEnums.WON_GAME, GameStateEnums.SHOW_INSTRUCTIONS]
+GameStateMachine[GameStateEnums.WON_GAME] = []
+GameStateMachine[GameStateEnums.NONE] = []
+
 export class GameState {
     constructor() {
         this.levelIndex = 0
         this.bank = 0
         this.wood = 0
-        this.mode = 'NONE'
+        this.mode = GameStateEnums.NONE
         this.levels = []
     }
+    isMode(val) {
+        return this.mode === val
+    }
+    toMode(mode) {
+        console.log("going from",this.mode,'to',mode)
+        if(GameStateMachine[this.mode].indexOf(mode) >= 0) {
+            this.mode = mode
+        } else {
+            throw new Error(`Invalid Mode Change from ${this.mode} to ${mode}`)
+        }
+    }
 }
+
+
 export const COMMANDS = {
     UNKNOWN:'UNKNOWN',
     PLANT_FOREST:'PLANT_FOREST',

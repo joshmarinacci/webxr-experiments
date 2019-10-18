@@ -1,5 +1,5 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {GameState, HexMapComp} from './logic2.js'
+import {GameState, GameStateEnums, HexMapComp} from './logic2.js'
 import Game from '../canvas2vr/breakout'
 
 /*
@@ -39,12 +39,10 @@ export class LevelsSystem extends System {
         })
         this.queries.levels.results.forEach(ent => {
             const state = ent.getMutableComponent(GameState)
-            if(state.mode === 'NEXT_LEVEL') {
+            if(state.isMode(GameStateEnums.NEXT_LEVEL)) {
                 state.levelIndex++
-                console.log("processing the next level", state.levelIndex, state.levels.length)
                 if(state.levelIndex >= state.levels.length) {
-                    console.log("won the game")
-                    state.mode = 'WON_GAME'
+                    state.toMode(GameStateEnums.WON_GAME)
                     return
                 }
                 ent.removeComponent(Level)
@@ -52,12 +50,10 @@ export class LevelsSystem extends System {
                 state.wood = 0
                 ent.addComponent(Level,state.levels[state.levelIndex])
                 ent.getComponent(HexMapComp).map = ent.getComponent(Level).map(ent)
-                state.mode = 'SHOW_INSTRUCTIONS'
+                state.toMode(GameStateEnums.SHOW_INSTRUCTIONS)
             }
             this.checkWin(ent,time)
         })
-        //check if won yet
-        //check if should display instructions
     }
 
     checkWin(ent,time) {
