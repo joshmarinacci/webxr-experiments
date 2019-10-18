@@ -8,6 +8,7 @@ import {CommandComp, COMMANDS,
     ForestTile,
     CityTile,
     GameState, HexMapComp} from './logic2.js'
+import {Level} from './levelssystem.js'
 
 class TileOverlay {
     constructor() {
@@ -61,6 +62,9 @@ export class CanvasSystem extends System {
             this.clearCanvas(view)
             this.drawMap(view,mapComp)
             this.drawScore(view,state)
+            this.queries.levels.results.forEach(ent => {
+                this.drawInstructions(view,ent)
+            })
         })
     }
 
@@ -266,6 +270,25 @@ export class CanvasSystem extends System {
         c.fillText(`wood ${state.wood}`,0,15+5)
         c.restore()
     }
+
+    drawInstructions(view, ent) {
+        const level = ent.getComponent(Level)
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'rgba(255,255,255,0.9)'
+        const s = 100
+        c.save()
+        c.translate(s,s)
+        c.fillRect(0,0,can.width-s*2,can.height-s*2)
+        c.fillStyle = 'black'
+        c.strokeRect(0,0,can.width-s*2,can.height-s*2)
+
+        const padding = {left:5, top:5}
+        const lineHeight = 20
+        c.font = '25px serif'
+        c.fillText(level.instructions, padding.left, padding.top+lineHeight)
+        c.restore()
+    }
 }
 
 
@@ -279,5 +302,12 @@ CanvasSystem.queries = {
     },
     inputs: {
         components:[HexMapComp, MouseCanvasInput],
-    }
+    },
+    levels: {
+        components:[Level, GameState, HexMapComp],
+        listen: {
+            added:true,
+            removed:true,
+        }
+    },
 }

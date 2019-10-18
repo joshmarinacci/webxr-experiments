@@ -7,6 +7,7 @@ import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
 import {GameState, generateMap, LogicSystem} from "./logic2.js"
+import {LevelsSystem} from './levelssystem'
 
 
 let game
@@ -48,6 +49,7 @@ function setupGame() {
     world.registerSystem(KeyboardInputSystem)
     world.registerSystem(VRInputSystem)
     world.registerSystem(LogicSystem)
+    world.registerSystem(LevelsSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
