@@ -56,7 +56,8 @@ GameStateMachine[GameStateEnums.SHOW_INSTRUCTIONS] = [GameStateEnums.PLAY]
 GameStateMachine[GameStateEnums.SHOW_WIN] = [GameStateEnums.NEXT_LEVEL]
 GameStateMachine[GameStateEnums.NEXT_LEVEL] = [GameStateEnums.WON_GAME, GameStateEnums.SHOW_INSTRUCTIONS]
 GameStateMachine[GameStateEnums.WON_GAME] = []
-GameStateMachine[GameStateEnums.NONE] = []
+GameStateMachine[GameStateEnums.NONE] = [GameStateEnums.SHOW_INSTRUCTIONS]
+GameStateMachine[GameStateEnums.PLAY] = [GameStateEnums.SHOW_WIN]
 
 export class GameState {
     constructor() {

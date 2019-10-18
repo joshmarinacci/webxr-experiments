@@ -9,6 +9,7 @@ import {CommandComp, COMMANDS,
     CityTile,
     GameState, HexMapComp} from './logic2.js'
 import {Level} from './levelssystem.js'
+import {GameStateEnums} from './logic2'
 
 class TileOverlay {
     constructor() {
@@ -64,9 +65,9 @@ export class CanvasSystem extends System {
             if(mapComp.map) this.drawMap(view,mapComp)
             this.drawScore(view,state)
             const level = ent.getComponent(Level)
-            if(state.mode === 'SHOW_INSTRUCTIONS') this.drawInstructions(view,ent)
-            if(state.mode === 'SHOW_WIN') this.drawWonLevelScreen(view,level)
-            if(state.mode === 'WON_GAME') this.drawWonGameScreen(view,level)
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) this.drawInstructions(view,ent)
+            if(state.isMode(GameStateEnums.SHOW_WIN)) this.drawWonLevelScreen(view,level)
+            if(state.isMode(GameStateEnums.WON_GAME)) this.drawWonGameScreen(view,level)
         })
     }
 
@@ -133,19 +134,12 @@ export class CanvasSystem extends System {
         })
         $("#canvas").addEventListener('click',(e)=>{
             const state = ent.getMutableComponent(GameState)
-            console.log("doing click",state.mode)
-            if(state.mode === 'SHOW_INSTRUCTIONS') {
-                state.mode = 'PLAY'
-                return
-            }
-            if(state.mode === 'SHOW_WIN') {
-                state.mode = 'NEXT_LEVEL'
-                return
-            }
-            if(state.mode === 'WON_GAME') {
-                return
-            }
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return state.toMode(GameStateEnums.PLAY)
+            if(state.isMode(GameStateEnums.SHOW_WIN)) return state.toMode(GameStateEnums.NEXT_LEVEL)
+            if(state.isMode(GameStateEnums.WON_GAME)) return
+
             const {hex, data} = mouseToHex(e)
+            if(!data) return
             const hexEnt = data.ent
             if(this.mode === COMMANDS.PLANT_FOREST && hexEnt.hasComponent(DirtTile)) {
                 hexEnt.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })

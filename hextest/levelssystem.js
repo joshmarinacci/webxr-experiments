@@ -59,12 +59,12 @@ export class LevelsSystem extends System {
     checkWin(ent,time) {
         if(time - this.lastTime > 1.0) {
             const state = ent.getMutableComponent(GameState)
-            if(state.mode === 'PLAY') {
+            if(state.isMode(GameStateEnums.PLAY)) {
                 this.lastTime = time
                 const level = ent.getComponent(Level)
                 const won = level.winCheck(ent)
                 if (won) {
-                    ent.getMutableComponent(GameState).mode = 'SHOW_WIN'
+                    ent.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_WIN)
                     console.log("you finished the level")
                 }
             }
