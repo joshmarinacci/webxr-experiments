@@ -48,6 +48,8 @@ export class LevelsSystem extends System {
                     return
                 }
                 ent.removeComponent(Level)
+                state.bank = 10
+                state.wood = 0
                 ent.addComponent(Level,state.levels[state.levelIndex])
                 ent.getComponent(HexMapComp).map = ent.getComponent(Level).map(ent)
                 state.mode = 'SHOW_INSTRUCTIONS'

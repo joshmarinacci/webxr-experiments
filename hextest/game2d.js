@@ -3,7 +3,7 @@ import {CanvasSystem, HexMapView2D, MouseCanvasInput} from "./canvassystem.js"
 import {HexMap} from './hex.js'
 import {Clock} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {FarmTile, GameState, generateMap, HexMapComp, LogicSystem} from "./logic2.js"
+import {CityTile, FarmTile, GameState, generateMap, HexMapComp, LogicSystem} from "./logic2.js"
 import {Level, LevelsSystem} from './levelssystem.js'
 
 function setupGame() {
@@ -15,8 +15,7 @@ function setupGame() {
     let game = world.createEntity()
 
     game.addComponent(GameState,{bank:10})
-    const state = game.getMutableComponent(GameState)
-    state.levelIndex = 0
+    const state = game.getMutableComponent(GameState, {levelIndex:0})
     state.levels = [
         {
             map:(ent)=>{
@@ -45,6 +44,23 @@ function setupGame() {
             winCheck: (ent) => {
                 const state =  game.getComponent(GameState)
                 return (state.wood >= 4)
+            }
+        },
+        {
+            map:(ent)=>{
+                const map = new HexMap()
+                generateMap(world,map,4,4)
+                return map
+            },
+            instructions: 'collect 2 wood, make two farms, and build a city',
+            winCheck: (ent) => {
+                const map = game.getComponent(HexMapComp).map
+                let farmCount = 0
+                map.forEachPair((hex,data) => {
+                    if(data.ent.hasComponent(CityTile)) farmCount += 1
+                })
+                if(farmCount >= 1) return true
+                return false
             }
         }
     ]
