@@ -3,9 +3,8 @@ import {CanvasSystem, HexMapView2D, MouseCanvasInput} from "./canvassystem.js"
 import {HexMap} from './hex.js'
 import {Clock} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {CityTile, FarmTile, GameState, generateMap, HexMapComp, LogicSystem} from "./logic2.js"
+import {CityTile, FarmTile, GameState, GameStateEnums, generateMap, HexMapComp, LogicSystem} from "./logic2.js"
 import {Level, LevelsSystem} from './levelssystem.js'
-import {GameStateEnums, GameStateMachine} from './logic2'
 
 function setupGame() {
     let world = new World();

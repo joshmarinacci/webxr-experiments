@@ -2,14 +2,18 @@ import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {$, $$} from "./common.js"
 import {pixel_to_pointy_hex, Point, pointy_hex_corner, pointy_hex_to_pixel} from "./hex.js"
 import {TERRAINS} from './globals.js'
-import {CommandComp, COMMANDS,
+import {
+    CityTile,
+    CommandComp,
+    COMMANDS,
     DirtTile,
     FarmTile,
     ForestTile,
-    CityTile,
-    GameState, HexMapComp} from './logic2.js'
+    GameState,
+    GameStateEnums,
+    HexMapComp
+} from './logic2.js'
 import {Level} from './levelssystem.js'
-import {GameStateEnums} from './logic2'
 
 class TileOverlay {
     constructor() {
