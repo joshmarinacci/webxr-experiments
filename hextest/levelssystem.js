@@ -1,6 +1,5 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {GameState, GameStateEnums, HexMapComp} from './logic2.js'
-import Game from '../canvas2vr/breakout'
 
 /*
 

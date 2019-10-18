@@ -8,8 +8,6 @@ smooth out the noise
 color based on height and terrain
 */
 
-import {pickOneEnumValue, pickOneArrayValue} from './common'
-import {TERRAINS} from './globals'
 
 export class Point {
     constructor(x,y) {
