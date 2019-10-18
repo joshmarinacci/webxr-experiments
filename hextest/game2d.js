@@ -14,24 +14,44 @@ function setupGame() {
     world.registerSystem(LevelsSystem)
     let game = world.createEntity()
 
-
-    const map = new HexMap()
-    generateMap(world,map,4,4)
-    game.addComponent(Level,{
-        map:map,
-        instructions:'create five farms to advance',
-        winCheck:(ent)=>{
-            const map = game.getComponent(HexMapComp).map
-            let farmCount = 0
-            map.forEachPair((hex,data) => {
-                if(data.ent.hasComponent(FarmTile)) farmCount += 1
-            })
-            if(farmCount >= 5) return true
-            return false
-        }
-    })
     game.addComponent(GameState,{bank:10})
-    game.addComponent(HexMapComp, {map:map})
+    const state = game.getMutableComponent(GameState)
+    state.levelIndex = 0
+    state.levels = [
+        {
+            map:(ent)=>{
+                const map = new HexMap()
+                generateMap(world,map,4,4)
+                return map
+            },
+            instructions:'create five farms to advance',
+            winCheck:(ent)=>{
+                const map = game.getComponent(HexMapComp).map
+                let farmCount = 0
+                map.forEachPair((hex,data) => {
+                    if(data.ent.hasComponent(FarmTile)) farmCount += 1
+                })
+                if(farmCount >= 5) return true
+                return false
+            }
+        },
+        {
+            map:(ent)=>{
+                const map = new HexMap()
+                generateMap(world,map,4,4)
+                return map
+            },
+            instructions: 'collect 4 wood to advance',
+            winCheck: (ent) => {
+                const state =  game.getComponent(GameState)
+                return (state.wood >= 4)
+            }
+        }
+    ]
+    game.addComponent(HexMapComp, {})
+    game.addComponent(Level,state.levels[state.levelIndex])
+
+    game.getMutableComponent(GameState).mode = 'SHOW_INSTRUCTIONS'
 
     game.addComponent(HexMapView2D)
     game.addComponent(MouseCanvasInput)

@@ -43,8 +43,11 @@ export class CityTile {
 
 export class GameState {
     constructor() {
+        this.levelIndex = 0
         this.bank = 0
         this.wood = 0
+        this.mode = 'NONE'
+        this.levels = []
     }
 }
 export const COMMANDS = {

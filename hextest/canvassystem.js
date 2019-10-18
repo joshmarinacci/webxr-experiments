@@ -52,19 +52,21 @@ export class CanvasSystem extends System {
             view.canvas = $("#canvas")
             view.context = view.canvas.getContext('2d')
             const mapComp = ent.getComponent(HexMapComp)
-            this.initCanvasInput(view,mapComp)
+            const state = ent.getComponent(GameState)
+            this.initCanvasInput(ent)
             this.initModeButtons()
         })
         this.queries.maps.results.forEach(ent => {
             const view = ent.getComponent(HexMapView2D)
             const mapComp = ent.getComponent(HexMapComp)
-            const state = ent.getComponent(GameState)
+            const state = ent.getMutableComponent(GameState)
             this.clearCanvas(view)
-            this.drawMap(view,mapComp)
+            if(mapComp.map) this.drawMap(view,mapComp)
             this.drawScore(view,state)
-            this.queries.levels.results.forEach(ent => {
-                this.drawInstructions(view,ent)
-            })
+            const level = ent.getComponent(Level)
+            if(state.mode === 'SHOW_INSTRUCTIONS') this.drawInstructions(view,ent)
+            if(state.mode === 'SHOW_WIN') this.drawWonLevelScreen(view,level)
+            if(state.mode === 'WON_GAME') this.drawWonGameScreen(view,level)
         })
     }
 
@@ -78,8 +80,9 @@ export class CanvasSystem extends System {
         return 'purple'
     }
 
-    initCanvasInput(view, mapComp) {
+    initCanvasInput(ent) {
         function mouseToHex(e) {
+            const view = ent.getComponent(HexMapView2D)
             const bounds = e.target.getBoundingClientRect()
             let pt = new Point(
                 e.clientX - bounds.x,
@@ -87,7 +90,7 @@ export class CanvasSystem extends System {
             )
             pt = pt.subtract(new Point(view.size*8,view.size*8))
             const hex = pixel_to_pointy_hex(pt,view.size)
-            const data = mapComp.map.get(hex)
+            const data = ent.getComponent(HexMapComp).map.get(hex)
             return {hex,data}
         }
         $("#canvas").addEventListener('mousemove',e => {
@@ -129,6 +132,19 @@ export class CanvasSystem extends System {
             }
         })
         $("#canvas").addEventListener('click',(e)=>{
+            const state = ent.getMutableComponent(GameState)
+            console.log("doing click",state.mode)
+            if(state.mode === 'SHOW_INSTRUCTIONS') {
+                state.mode = 'PLAY'
+                return
+            }
+            if(state.mode === 'SHOW_WIN') {
+                state.mode = 'NEXT_LEVEL'
+                return
+            }
+            if(state.mode === 'WON_GAME') {
+                return
+            }
             const {hex, data} = mouseToHex(e)
             const hexEnt = data.ent
             if(this.mode === COMMANDS.PLANT_FOREST && hexEnt.hasComponent(DirtTile)) {
@@ -174,7 +190,7 @@ export class CanvasSystem extends System {
         const map = mapComp.map
         c.save()
         c.translate(view.size*8,view.size*8)
-        map.forEachPair((hex,data)=>{
+        mapComp.map.forEachPair((hex,data)=>{
             const ent = data.ent
             const center = pointy_hex_to_pixel(hex,view.size)
 
@@ -289,12 +305,50 @@ export class CanvasSystem extends System {
         c.fillText(level.instructions, padding.left, padding.top+lineHeight)
         c.restore()
     }
+
+    drawWonLevelScreen(view, level) {
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'rgba(255,255,255,0.9)'
+        const s = 100
+        c.save()
+        c.translate(s,s)
+        c.fillRect(0,0,can.width-s*2,can.height-s*2)
+        c.fillStyle = 'black'
+        c.strokeRect(0,0,can.width-s*2,can.height-s*2)
+
+        const padding = {left:5, top:5}
+        const lineHeight = 30
+        c.font = '25px serif'
+        c.fillText('Level complete!', padding.left, padding.top+lineHeight)
+        c.fillText('Click to continue', padding.left, padding.top+lineHeight*2)
+        c.restore()
+    }
+
+    drawWonGameScreen(view, level) {
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'rgba(255,255,255,0.9)'
+        const s = 100
+        c.save()
+        c.translate(s,s)
+        c.fillRect(0,0,can.width-s*2,can.height-s*2)
+        c.fillStyle = 'black'
+        c.strokeRect(0,0,can.width-s*2,can.height-s*2)
+
+        const padding = {left:5, top:5}
+        const lineHeight = 30
+        c.font = '25px serif'
+        c.fillText('You won the game!', padding.left, padding.top+lineHeight)
+        c.fillText('Click to restart', padding.left, padding.top+lineHeight*2)
+        c.restore()
+    }
 }
 
 
 CanvasSystem.queries = {
     maps: {
-        components:[HexMapComp, HexMapView2D, GameState],
+        components:[HexMapComp, HexMapView2D, GameState, Level],
         listen: {
             added:true,
             removed:true,
