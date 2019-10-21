@@ -1,5 +1,10 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
+import {CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry,
+    Vector3
+} from "./node_modules/three/build/three.module.js"
+
+const Y_AXIS = new Vector3(0,1,0)
 
 export class KeyboardInputSystem extends System {
 
@@ -31,13 +36,19 @@ export class KeyboardInputSystem extends System {
 
     moveForward() {
         this.queries.three.results.forEach(ent => {
-            ent.getMutableComponent(ThreeCore).stagePos.position.z += 1.0
+            const core = ent.getMutableComponent(ThreeCore)
+            const dir = new Vector3(0,0,1)
+            dir.applyAxisAngle(Y_AXIS, -core.stageRot.rotation.y)
+            ent.getMutableComponent(ThreeCore).stagePos.position.add(dir)
         })
     }
 
     moveBackward() {
         this.queries.three.results.forEach(ent => {
-            ent.getMutableComponent(ThreeCore).stagePos.position.z -= 1.0
+            const core = ent.getMutableComponent(ThreeCore)
+            const dir = new Vector3(0,0,1)
+            dir.applyAxisAngle(Y_AXIS, -core.stageRot.rotation.y)
+            ent.getMutableComponent(ThreeCore).stagePos.position.sub(dir)
         })
     }
 }
