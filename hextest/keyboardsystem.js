@@ -1,6 +1,7 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {Vector3} from "./node_modules/three/build/three.module.js"
+import {GameState, GameStateEnums} from './logic2.js'
 
 const Y_AXIS = new Vector3(0,1,0)
 const ROT_SPEED = 0.03
@@ -32,6 +33,7 @@ export class KeyboardInputSystem extends System {
         if(this.isKeyDown('ArrowRight')) this.turnRight()
         if(this.isKeyDown('ArrowUp')) this.moveForward()
         if(this.isKeyDown('ArrowDown')) this.moveBackward()
+        if(this.isKeyDown('Enter')) this.pressedEnter()
     }
 
     turnLeft() {
@@ -72,9 +74,16 @@ export class KeyboardInputSystem extends System {
         if(this.state[a] && this.state[a].current === true) return true
         return false
     }
+
+    pressedEnter() {
+        this.queries.three.results.forEach(ent => {
+            const state = ent.getMutableComponent(GameState)
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return state.toMode(GameStateEnums.PLAY)
+        })
+    }
 }
 KeyboardInputSystem.queries = {
     three: {
-        components:[ThreeCore]
+        components:[ThreeCore, GameState]
     }
 }

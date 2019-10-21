@@ -54,16 +54,19 @@ export class Instructions3DSystem extends System {
 
         this.queries.state.results.forEach(ent => {
             const state = ent.getMutableComponent(GameState)
-            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) {
-                this.queries.instructions.results.forEach(ent2 => {
-                    const inst = ent2.getMutableComponent(Instructions3D)
+            this.queries.instructions.results.forEach(ent2 => {
+                const inst = ent2.getMutableComponent(Instructions3D)
+                if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) {
                     if(inst.obj.visible === false) {
                         inst.obj.visible = true
-                        const level = ent.getComponent(Level)
-                        this.drawInstructions(inst,level)
+                        this.drawInstructions(inst, ent.getComponent(Level))
                     }
-                })
-            }
+                } else {
+                    if(inst.obj.visible === true) {
+                        inst.obj.visible = false
+                    }
+                }
+            })
         })
     }
 
