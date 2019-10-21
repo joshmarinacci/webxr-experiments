@@ -1,4 +1,4 @@
-import {AmbientLight, Clock, Color, DirectionalLight, BoxGeometry, Mesh, MeshLambertMaterial} from "./node_modules/three/build/three.module.js"
+import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
 import {HexMapView, HexSystem} from './hexsystem.js'
@@ -7,16 +7,12 @@ import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
 import {GameState, generateMap, LogicSystem} from "./logic2.js"
-import {LevelsSystem} from './levelssystem'
+import {LevelsSystem} from './levelssystem.js'
+import {VRStats, VRStatsSystem} from './vrstats.js'
 
 
 let game
 
-class ScoreBoard {
-    constructor() {
-
-    }
-}
 
 function setupLights(core) {
     //set the background color of the scene
@@ -28,19 +24,6 @@ function setupLights(core) {
 }
 
 
-function pickOneArrayValue(arr) {
-    const index = Math.floor(Math.random()*arr.length)
-    return arr[index]
-}
-
-
-
-function setupScore(core, world) {
-    const score = world.createEntity()
-    score.addComponent(ScoreBoard)
-    core.scene.add(score.getMutableComponent(ScoreBoard).threeNode)
-}
-
 function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
@@ -50,6 +33,7 @@ function setupGame() {
     world.registerSystem(VRInputSystem)
     world.registerSystem(LogicSystem)
     world.registerSystem(LevelsSystem)
+    world.registerSystem(VRStatsSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
@@ -64,6 +48,7 @@ function setupGame() {
     world.execute(0.1,0)
     core.stage.add(game.getComponent(HexMapView).threeNode)
 
+    game.addComponent(VRStats)
 
     setupLights(core)
 
