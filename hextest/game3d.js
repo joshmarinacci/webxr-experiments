@@ -1,15 +1,15 @@
 import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
-import {HexMapView, HexSystem} from './hexsystem.js'
-import {HexMap} from './hex.js'
+import {HexSystem} from './hexsystem.js'
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
-import {GameState, generateMap, LogicSystem} from "./logic2.js"
-import {LevelsSystem} from './levelssystem.js'
+import {GameState, GameStateEnums, LogicSystem} from "./logic2.js"
+import {Level, LevelsSystem} from './levelssystem.js'
 import {VRStats, VRStatsSystem} from './vrstats.js'
-import {setupLevels} from './levels'
+import {setupLevels} from './levels.js'
+import {Instructions3D, Instructions3DSystem} from './Instructions3D.js'
 
 
 let game
@@ -35,23 +35,24 @@ function setupGame() {
     world.registerSystem(LogicSystem)
     world.registerSystem(LevelsSystem)
     world.registerSystem(VRStatsSystem)
+    world.registerSystem(Instructions3DSystem)
 
     game = world.createEntity()
     game.addComponent(ThreeCore)
     game.addComponent(GameState,{bank:10})
     setupLevels(game,world)
 
-
-    // const map = new HexMap()
-    // generateMap(world,map,4,4)
-    // game.addComponent(HexMapView,{map:map})
+    const state = game.getMutableComponent(GameState)
+    game.addComponent(Level,state.levels[state.levelIndex])
 
     //manually do one tick
     const core = game.getMutableComponent(ThreeCore)
     world.execute(0.1,0)
-    // core.stage.add(game.getComponent(HexMapView).threeNode)
 
     game.addComponent(VRStats)
+    game.addComponent(Instructions3D)
+    game.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_INSTRUCTIONS)
+
 
     setupLights(core)
 
