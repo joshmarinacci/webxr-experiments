@@ -9,6 +9,7 @@ import {VRInputSystem} from './vrinputsystem.js'
 import {GameState, generateMap, LogicSystem} from "./logic2.js"
 import {LevelsSystem} from './levelssystem.js'
 import {VRStats, VRStatsSystem} from './vrstats.js'
+import {setupLevels} from './levels'
 
 
 let game
@@ -38,15 +39,17 @@ function setupGame() {
     game = world.createEntity()
     game.addComponent(ThreeCore)
     game.addComponent(GameState,{bank:10})
+    setupLevels(game,world)
 
-    const map = new HexMap()
-    generateMap(world,map,4,4)
-    game.addComponent(HexMapView,{map:map})
+
+    // const map = new HexMap()
+    // generateMap(world,map,4,4)
+    // game.addComponent(HexMapView,{map:map})
 
     //manually do one tick
     const core = game.getMutableComponent(ThreeCore)
     world.execute(0.1,0)
-    core.stage.add(game.getComponent(HexMapView).threeNode)
+    // core.stage.add(game.getComponent(HexMapView).threeNode)
 
     game.addComponent(VRStats)
 
