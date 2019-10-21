@@ -10,6 +10,8 @@ import {Level, LevelsSystem} from './levelssystem.js'
 import {VRStats, VRStatsSystem} from './vrstats.js'
 import {setupLevels} from './levels.js'
 import {Instructions3D, Instructions3DSystem} from './Instructions3D.js'
+import {HexMapComp} from './logic2.js'
+import {HexMapView} from './hexsystem.js'
 
 
 let game
@@ -28,11 +30,11 @@ function setupLights(core) {
 function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
+    world.registerSystem(LogicSystem)
     world.registerSystem(HexSystem)
     world.registerSystem(MouseInputSystem)
     world.registerSystem(KeyboardInputSystem)
     world.registerSystem(VRInputSystem)
-    world.registerSystem(LogicSystem)
     world.registerSystem(LevelsSystem)
     world.registerSystem(VRStatsSystem)
     world.registerSystem(Instructions3DSystem)
@@ -42,6 +44,8 @@ function setupGame() {
     game.addComponent(GameState,{bank:10})
     setupLevels(game,world)
 
+    game.addComponent(HexMapComp, {})
+    game.addComponent(HexMapView)
     const state = game.getMutableComponent(GameState)
     game.addComponent(Level,state.levels[state.levelIndex])
 

@@ -1,9 +1,8 @@
 import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {TERRAINS} from './globals.js'
-import {HexMapView, makeTree, Highlighted} from './hexsystem.js'
-import {CommandComp, COMMANDS, DirtTile} from './logic2.js'
+import {Highlighted} from './hexsystem.js'
+import {CommandComp, COMMANDS, DirtTile, HexMapComp} from './logic2.js'
 
 export class MouseInputSystem extends System {
 
@@ -42,7 +41,7 @@ export class MouseInputSystem extends System {
         core.getCanvas().addEventListener('mousemove',(e)=>{
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
-            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
             const ent = mapView.map.get(hex).ent
 
             if(this.current && this.current.hasComponent(Highlighted) && this.current !== ent) {
@@ -56,12 +55,11 @@ export class MouseInputSystem extends System {
         core.getCanvas().addEventListener('mousedown',(e)=>{
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
-            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
             const data = mapView.map.get(hex)
             const ent = data.ent
             if(ent.hasComponent(DirtTile)) {
                 ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
-                return
             }
         })
     }
@@ -71,6 +69,6 @@ MouseInputSystem.queries = {
         components:[ThreeCore]
     },
     map: {
-        components: [HexMapView]
+        components: [HexMapComp]
     }
 }

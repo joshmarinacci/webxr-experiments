@@ -13,7 +13,8 @@ import {
 import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
-import {ForestTile} from './logic2.js'
+import {ForestTile, HexMapComp} from './logic2.js'
+import {ThreeCore} from './threesystem.js'
 
 export class Highlighted {
 
@@ -98,8 +99,10 @@ class HexTileGroup {
 export class HexSystem extends System {
     execute(delta,time) {
         this.queries.maps.results.forEach(ent => {
-            const map = ent.getMutableComponent(HexMapView)
-            if(!map.started) this.initMapView(map)
+            const mapView = ent.getMutableComponent(HexMapView)
+            const mapComp = ent.getMutableComponent(HexMapComp)
+            if(!mapComp.map) return
+            if(!mapView.started) this.initMapView(mapView, mapComp)
         })
         this.queries.highlighted.added.forEach(ent => {
             ent.getMutableComponent(HexTileGroup).threeNode.material.color.set('red')
@@ -127,10 +130,10 @@ export class HexSystem extends System {
         })
     }
 
-    initMapView(view) {
+    initMapView(view, mapComp) {
         view.started = true
         view.threeNode = new Group()
-        view.map.forEachPair((hex,data)=>{
+        mapComp.map.forEachPair((hex,data)=>{
             const center = pointy_hex_to_pixel(hex,view.size)
             const h = terrainToHeight(data.terrain)
             const hexView = new Mesh(
@@ -146,12 +149,21 @@ export class HexSystem extends System {
             hexView.userData.regularColor = terrainToColor(data.terrain)
             data.ent.addComponent(HexTileGroup, {threeNode:hexView, hex:hex,data:data})
         })
+        const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
+        core.stage.add(view.threeNode)
     }
 }
 
 HexSystem.queries = {
+    three: {
+        components: [ThreeCore]
+    },
     maps: {
-        components:[HexMapView]
+        components:[HexMapView, HexMapComp],
+        listen: {
+            added:true,
+            removed:false
+        }
     },
     highlighted: {
         components: [Highlighted],

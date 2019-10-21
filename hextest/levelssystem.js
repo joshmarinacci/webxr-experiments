@@ -1,22 +1,6 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {GameState, GameStateEnums, HexMapComp} from './logic2.js'
 
-/*
-
-possible win types
-
-- Gen map for level
-- prop win conditions
-- Check if won yet
-- Overlay instructions 2d
-- Prop instructions
-- Humans by timeout
-- Cities by time out
-- Wood by time out
-- tiles farmed by time out
-
-
- */
 export class Level {
     constructor() {
         this.map = null
