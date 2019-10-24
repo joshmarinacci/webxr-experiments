@@ -1,21 +1,24 @@
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {
     BoxGeometry,
+    CanvasTexture,
     ConeGeometry,
     CylinderBufferGeometry,
     CylinderGeometry,
     Geometry,
     Group,
     Mesh,
+    MeshBasicMaterial,
     MeshLambertMaterial,
-    CanvasTexture, MeshBasicMaterial, PlaneGeometry,
+    PlaneGeometry,
     VertexColors
 } from "./node_modules/three/build/three.module.js"
 import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
-import {FarmTile, ForestTile, HexMapComp} from './logic2.js'
+import {FarmTile, ForestTile, GameState, HexMapComp} from './logic2.js'
 import {ThreeCore} from './threesystem.js'
+import {Level} from './levelssystem.js'
 
 export class Highlighted {
 
@@ -195,6 +198,9 @@ export class Hex3dsystem extends System {
                 button.obj.userData.selected = button.selected
             }
         })
+
+        this.queries.levels.removed.forEach(ent => this.removeLevel(ent))
+        this.queries.levels.added.forEach(ent => this.setupLevel(ent))
     }
 
     initMapView(view, mapComp) {
@@ -235,6 +241,20 @@ export class Hex3dsystem extends System {
         c.fillText(button.text,10,30+10)
         button.ctex.needsUpdate = true
     }
+
+    setupLevel(ent) {
+        const mapView = ent.getMutableComponent(HexMapView)
+        const mapComp = ent.getMutableComponent(HexMapComp)
+        if(!mapComp.map) return
+        console.log("initing =========")
+        this.initMapView(mapView, mapComp)
+    }
+
+    removeLevel(ent) {
+        const view = ent.getMutableComponent(HexMapView)
+        const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
+        core.stage.remove(view.threeNode)
+    }
 }
 
 Hex3dsystem.queries = {
@@ -246,6 +266,13 @@ Hex3dsystem.queries = {
         listen: {
             added:true,
             removed:false
+        }
+    },
+    levels: {
+        components:[GameState,Level,HexMapView,HexMapComp],
+        listen: {
+            added:true,
+            removed:true,
         }
     },
     highlighted: {

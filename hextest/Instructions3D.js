@@ -19,6 +19,9 @@ export  class Instructions3D {
 
 }
 export class Instructions3DSystem extends System {
+    init() {
+        this.lastMode = GameStateEnums.NONE
+    }
     execute() {
         this.queries.instructions.added.forEach(ent => {
             const inst = ent.getMutableComponent(Instructions3D)
@@ -56,15 +59,19 @@ export class Instructions3DSystem extends System {
             const state = ent.getMutableComponent(GameState)
             this.queries.instructions.results.forEach(ent2 => {
                 const inst = ent2.getMutableComponent(Instructions3D)
-                if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) {
-                    if(inst.obj.visible === false) {
+                if(state.mode !== this.lastMode) {
+                    if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) {
                         inst.obj.visible = true
-                        this.drawInstructions(inst, ent.getComponent(Level))
+                        this.drawInstructions(inst,ent.getComponent(Level))
                     }
-                } else {
-                    if(inst.obj.visible === true) {
+                    if(state.isMode(GameStateEnums.SHOW_WIN)) {
+                        inst.obj.visible = true
+                        this.drawWinLevel(inst,ent.getComponent(Level))
+                    }
+                    if(state.isMode(GameStateEnums.PLAY)) {
                         inst.obj.visible = false
                     }
+                    this.lastMode = state.mode
                 }
             })
         })
@@ -86,8 +93,28 @@ export class Instructions3DSystem extends System {
         c.font = '25px serif'
         c.fillText(level.instructions, padding.left, padding.top+lineHeight)
         c.restore()
+        view.ctex.needsUpdate = true
     }
 
+    drawWinLevel(view, component) {
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'white'
+        const s = 10
+        c.save()
+        c.translate(s,s)
+        c.fillRect(0,0,view.width-s*2,view.height-s*2)
+        c.fillStyle = 'black'
+        c.strokeRect(0,0,view.width-s*2,view.height-s*2)
+
+        const padding = {left:5, top:5}
+        const lineHeight = 20
+        c.font = '25px serif'
+        c.fillText('Level complete!', padding.left, padding.top+lineHeight)
+        c.fillText('Click to continue', padding.left, padding.top+lineHeight*2)
+        c.restore()
+        view.ctex.needsUpdate = true
+    }
 }
 
 Instructions3DSystem.queries = {
