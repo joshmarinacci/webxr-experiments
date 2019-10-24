@@ -2,7 +2,7 @@ import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {Highlighted} from './hexsystem.js'
-import {CommandComp, COMMANDS, DirtTile, HexMapComp} from './logic2.js'
+import {CommandComp, COMMANDS, DirtTile, GameState, GameStateEnums, HexMapComp} from './logic2.js'
 
 export class MouseInputSystem extends System {
 
@@ -39,6 +39,11 @@ export class MouseInputSystem extends System {
 
     setupListeners(core) {
         core.getCanvas().addEventListener('mousemove',(e)=>{
+            const state = this.queries.state.results[0].getMutableComponent(GameState)
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return
+            if(state.isMode(GameStateEnums.SHOW_WIN)) return
+            if(state.isMode(GameStateEnums.WON_GAME)) return
+
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
@@ -53,6 +58,11 @@ export class MouseInputSystem extends System {
             }
         })
         core.getCanvas().addEventListener('mousedown',(e)=>{
+            const state = this.queries.state.results[0].getMutableComponent(GameState)
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return state.toMode(GameStateEnums.PLAY)
+            if(state.isMode(GameStateEnums.SHOW_WIN)) return state.toMode(GameStateEnums.NEXT_LEVEL)
+            if(state.isMode(GameStateEnums.WON_GAME)) return
+
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
@@ -67,6 +77,9 @@ export class MouseInputSystem extends System {
 MouseInputSystem.queries = {
     three: {
         components:[ThreeCore]
+    },
+    state: {
+        components:[GameState]
     },
     map: {
         components: [HexMapComp]
