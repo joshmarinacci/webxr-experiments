@@ -68,6 +68,10 @@ export class Instructions3DSystem extends System {
                         inst.obj.visible = true
                         this.drawWinLevel(inst,ent.getComponent(Level))
                     }
+                    if(state.isMode(GameStateEnums.WON_GAME)) {
+                        inst.obj.visible = true
+                        this.drawWonGame(inst,ent.getComponent(Level))
+                    }
                     if(state.isMode(GameStateEnums.PLAY)) {
                         inst.obj.visible = false
                     }
@@ -112,6 +116,26 @@ export class Instructions3DSystem extends System {
         c.font = '25px serif'
         c.fillText('Level complete!', padding.left, padding.top+lineHeight)
         c.fillText('Click to continue', padding.left, padding.top+lineHeight*2)
+        c.restore()
+        view.ctex.needsUpdate = true
+    }
+
+    drawWonGame(view, component) {
+        const c = view.getContext2D()
+        const can = view.getCanvas()
+        c.fillStyle = 'white'
+        const s = 10
+        c.save()
+        c.translate(s,s)
+        c.fillRect(0,0,view.width-s*2,view.height-s*2)
+        c.fillStyle = 'black'
+        c.strokeRect(0,0,view.width-s*2,view.height-s*2)
+
+        const padding = {left:5, top:5}
+        const lineHeight = 20
+        c.font = '25px serif'
+        c.fillText('You won the game!', padding.left, padding.top+lineHeight)
+        c.fillText('Click to restart', padding.left, padding.top+lineHeight*2)
         c.restore()
         view.ctex.needsUpdate = true
     }

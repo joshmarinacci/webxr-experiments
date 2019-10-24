@@ -74,9 +74,29 @@ function setupGame() {
         }
     })
     buttons.push(treeButton)
+
+    const chopButton = world.createEntity().addComponent(Button3D,{text:'chop',
+        onClick:()=>{
+            buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
+            chopButton.getMutableComponent(Button3D).selected = true
+            game.getMutableComponent(GameState).inputMode = InputModes.CHOP_WOOD
+        }
+    })
+    buttons.push(chopButton)
+    const cityButton = world.createEntity().addComponent(Button3D,{text:'city',
+        onClick:()=>{
+            buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
+            cityButton.getMutableComponent(Button3D).selected = true
+            game.getMutableComponent(GameState).inputMode = InputModes.BUILD_CITY
+        }
+    })
+    buttons.push(cityButton)
+
     setTimeout(()=>{
         farmButton.getComponent(Button3D).obj.position.x = -2.5
         treeButton.getComponent(Button3D).obj.position.x = -1
+        chopButton.getComponent(Button3D).obj.position.x = 1
+        cityButton.getComponent(Button3D).obj.position.x = +2.5
 
     },100)
 

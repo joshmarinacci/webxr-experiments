@@ -16,7 +16,7 @@ import {
 import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
-import {FarmTile, ForestTile, GameState, HexMapComp} from './logic2.js'
+import {CityTile, FarmTile, ForestTile, GameState, HexMapComp} from './logic2.js'
 import {ThreeCore} from './threesystem.js'
 import {Level} from './levelssystem.js'
 
@@ -159,11 +159,21 @@ export class Hex3dsystem extends System {
                 tile.threeNode.add(tile.treeNode)
             }
         })
+        this.queries.forest.removed.forEach(ent => {
+            const tile = ent.getMutableComponent(HexTileGroup)
+            tile.threeNode.remove(tile.treeNode)
+        })
         this.queries.farm.added.forEach(ent => {
             const tile = ent.getMutableComponent(HexTileGroup)
             const farm = ent.getComponent(FarmTile)
             tile.farmNode =  makeFarm(ent)
             tile.threeNode.add(tile.farmNode)
+        })
+        this.queries.city.added.forEach(ent => {
+            const tile = ent.getMutableComponent(HexTileGroup)
+            const city = ent.getComponent(CityTile)
+            tile.cityNode =  makeHouse(ent)
+            tile.threeNode.add(tile.cityNode)
         })
         this.queries.buttons.added.forEach(ent => {
             const button = ent.getMutableComponent(Button3D)
@@ -291,6 +301,13 @@ Hex3dsystem.queries = {
     },
     farm: {
         components: [FarmTile, HexTileGroup],
+        listen: {
+            added:true,
+            removed:true,
+        }
+    },
+    city: {
+        components: [CityTile, HexTileGroup],
         listen: {
             added:true,
             removed:true,
