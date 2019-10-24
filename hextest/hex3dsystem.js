@@ -8,6 +8,7 @@ import {
     Group,
     Mesh,
     MeshLambertMaterial,
+    CanvasTexture, MeshBasicMaterial, PlaneGeometry,
     VertexColors
 } from "./node_modules/three/build/three.module.js"
 import {pointy_hex_to_pixel, toRad} from './hex.js'
@@ -26,6 +27,15 @@ export class HexMapView {
         this.started = false
         this.size = 2
         this.map = null
+    }
+}
+
+export class Button3D {
+    constructor() {
+        this.text = "foo"
+        this.obj = null
+        this.onClick = null
+        this.selected = false
     }
 }
 
@@ -94,7 +104,7 @@ class HexTileGroup {
 }
 
 
-export class HexSystem extends System {
+export class Hex3dsystem extends System {
     execute(delta,time) {
         this.queries.maps.results.forEach(ent => {
             const mapView = ent.getMutableComponent(HexMapView)
@@ -126,6 +136,39 @@ export class HexSystem extends System {
                 tile.threeNode.add(tile.treeNode)
             }
         })
+        this.queries.buttons.added.forEach(ent => {
+            const button = ent.getMutableComponent(Button3D)
+            button.canvas = document.createElement('canvas')
+            button.width = 128
+            button.height = 64
+            button.canvas.width = button.width
+            button.canvas.height = button.height
+            button.context = button.canvas.getContext('2d')
+            button.lastDraw = 0
+            button.ctex = new CanvasTexture(button.canvas)
+            button.obj = new Mesh(
+                new PlaneGeometry(1.0,0.5),
+                new MeshBasicMaterial({map:button.ctex})
+            )
+            button.obj.position.z = -3
+            button.obj.position.y = 1.0
+            button.obj.position.x = 0
+            button.obj.userData.type = 'Button3D'
+            button.obj.userData.ent = ent
+            button.obj.userData.selected = button.selected
+
+            this.drawButton(button)
+
+            const core = this.queries.three.results[0].getComponent(ThreeCore)
+            core.scene.add(button.obj)
+        })
+        this.queries.buttons.results.forEach(ent => {
+            const button = ent.getComponent(Button3D)
+            if(button.selected !== button.obj.userData.selected) {
+                this.drawButton(button)
+                button.obj.userData.selected = button.selected
+            }
+        })
     }
 
     initMapView(view, mapComp) {
@@ -150,9 +193,25 @@ export class HexSystem extends System {
         const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
         core.stage.add(view.threeNode)
     }
+
+
+    drawButton(button) {
+        const c = button.context
+        c.fillStyle = 'white'
+        c.fillRect(0,0,button.canvas.width,button.canvas.height)
+        if(button.selected) {
+            c.fillStyle = 'red'
+            c.fillRect(10,10,button.canvas.width-20,button.canvas.height-20)
+        }
+
+        c.fillStyle = 'black'
+        c.font = '30pt sans-serif'
+        c.fillText(button.text,10,30+10)
+        button.ctex.needsUpdate = true
+    }
 }
 
-HexSystem.queries = {
+Hex3dsystem.queries = {
     three: {
         components: [ThreeCore]
     },
@@ -175,6 +234,13 @@ HexSystem.queries = {
         listen: {
             added:true,
             removed:true,
+        }
+    },
+    buttons: {
+        components:[Button3D],
+        listen: {
+            added:true,
+            removed:false,
         }
     }
 }

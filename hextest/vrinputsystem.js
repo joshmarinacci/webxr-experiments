@@ -9,9 +9,9 @@ import {
 } from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {HexMapView} from './hexsystem.js'
+import {HexMapView} from './hex3dsystem.js'
 import {TERRAINS} from './globals.js'
-import {makeTree} from './hexsystem.js'
+import {makeTree} from './hex3dsystem.js'
 
 class VRController {
     constructor() {

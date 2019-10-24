@@ -1,7 +1,7 @@
 import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {Highlighted} from './hexsystem.js'
+import {Button3D, Highlighted} from './hex3dsystem.js'
 import {CommandComp, COMMANDS, DirtTile, GameState, GameStateEnums, HexMapComp} from './logic2.js'
 
 export class MouseInputSystem extends System {
@@ -18,7 +18,7 @@ export class MouseInputSystem extends System {
         }
     }
 
-    findHexAtMouseEvent(e) {
+    findObjectAtMouseEvent(e,filter) {
         this.mouse = new Vector2()
         const bounds = e.target.getBoundingClientRect()
         this.mouse.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1
@@ -29,11 +29,13 @@ export class MouseInputSystem extends System {
         const intersects = this.raycaster.intersectObjects(core.scene.children,true)
         for(let i=0; i<intersects.length; i++) {
             const it = intersects[i]
-            if(it.object.userData.hex) {
-                return {hex:it.object.userData.hex, node:it.object}
-            }
+            if(filter(it)) return it
         }
-
+        return null
+    }
+    findHexAtMouseEvent(e) {
+        const it = this.findObjectAtMouseEvent(e,(int => int.object.userData.hex))
+        if(it) return {hex:it.object.userData.hex, node:it.object}
         return {}
     }
 
@@ -62,6 +64,13 @@ export class MouseInputSystem extends System {
             if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return state.toMode(GameStateEnums.PLAY)
             if(state.isMode(GameStateEnums.SHOW_WIN)) return state.toMode(GameStateEnums.NEXT_LEVEL)
             if(state.isMode(GameStateEnums.WON_GAME)) return
+
+            const it = this.findObjectAtMouseEvent(e,(i => i.object.userData.type === 'Button3D'))
+            if(it) {
+                const button = it.object.userData.ent.getComponent(Button3D)
+                if(button.onClick) button.onClick()
+                return
+            }
 
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return

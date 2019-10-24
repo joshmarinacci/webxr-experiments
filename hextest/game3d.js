@@ -1,7 +1,7 @@
 import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
-import {HexSystem} from './hexsystem.js'
+import {Button3D, Hex3dsystem} from './hex3dsystem.js'
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
@@ -11,7 +11,7 @@ import {VRStats, VRStatsSystem} from './vrstats.js'
 import {setupLevels} from './levels.js'
 import {Instructions3D, Instructions3DSystem} from './Instructions3D.js'
 import {HexMapComp} from './logic2.js'
-import {HexMapView} from './hexsystem.js'
+import {HexMapView} from './hex3dsystem.js'
 
 
 let game
@@ -31,7 +31,7 @@ function setupGame() {
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(LogicSystem)
-    world.registerSystem(HexSystem)
+    world.registerSystem(Hex3dsystem)
     world.registerSystem(MouseInputSystem)
     world.registerSystem(KeyboardInputSystem)
     world.registerSystem(VRInputSystem)
@@ -56,6 +56,30 @@ function setupGame() {
     game.addComponent(VRStats)
     game.addComponent(Instructions3D)
     game.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_INSTRUCTIONS)
+
+    let mode = 'none'
+    let buttons = []
+    const farmButton = world.createEntity().addComponent(Button3D,{text:'farm',
+        onClick:()=>{
+            buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
+            farmButton.getMutableComponent(Button3D).selected = true
+            mode = 'farm'
+        }
+    })
+    buttons.push(farmButton)
+    const treeButton = world.createEntity().addComponent(Button3D,{text:'tree',
+        onClick:()=>{
+            buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
+            treeButton.getMutableComponent(Button3D).selected = true
+            mode = 'tree'
+        }
+    })
+    buttons.push(treeButton)
+    setTimeout(()=>{
+        farmButton.getComponent(Button3D).obj.position.x = -2.5
+        treeButton.getComponent(Button3D).obj.position.x = -1
+
+    },100)
 
 
     setupLights(core)
