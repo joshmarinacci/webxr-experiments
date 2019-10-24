@@ -63,8 +63,6 @@ export function makeTree(ent, size) {
     const material = new MeshLambertMaterial({vertexColors: VertexColors})
     const obj = new Mesh(geo,material)
     obj.userData.level = forest.treeLevel
-    obj.position.x = center.x*1.05
-    obj.position.z = center.y*1.05
     obj.position.y = h/2 + 1
     return obj
 }
