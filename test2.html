@@ -32,14 +32,13 @@
     d.onpushstate({state:r}),setTimeout(n,c.delay||10),i.apply(d,arguments)},n(),
         a.ma={trackEvent:function o(r,s,t,u){console.log(`trackevent ${r} ${s} ${t} ${u}`); return n("event",r,s,t,u)},
             trackException:function q(r,s){return n("exception",null,null,null,null,r,s)}}})
-    (window,"UA-122855516-1",{anonymizeIp:true,colorDepth:true,characterSet:true,screenSize:true,language:true});
-
+    (window,"UA-122855516-1",{anonymizeIp:false,colorDepth:true,characterSet:true,screenSize:true,language:true});
     ma.trackEvent('navigation','pageload','main','value')
 
     document.querySelectorAll('a').forEach(a => {
         console.log("got a link",a.getAttribute('href'))
         a.addEventListener('click',(e)=>{
-            e.preventDefault()
+            // e.preventDefault()
             console.log("intercepting the post")
             ma.trackEvent('navigation','navlink','href',a.getAttribute('href'))
         })
