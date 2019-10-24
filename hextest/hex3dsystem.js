@@ -14,7 +14,7 @@ import {
 import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
-import {ForestTile, HexMapComp} from './logic2.js'
+import {FarmTile, ForestTile, HexMapComp} from './logic2.js'
 import {ThreeCore} from './threesystem.js'
 
 export class Highlighted {
@@ -77,6 +77,26 @@ export function makeTree(ent, size) {
     return obj
 }
 
+export function makeFarm(ent) {
+    const tile = ent.getComponent(HexTileGroup)
+    const farm = ent.getComponent(FarmTile)
+    const h = terrainToHeight(tile.data.terrain)
+    const geo = new Geometry()
+    for(let i=0; i<4; i++) {
+        const c1 = new CylinderGeometry(0.25, 0.25, 2.0)
+        c1.faces.forEach(f => f.color.set(COLORS.DARK_BROWN))
+        c1.rotateZ(toRad(90))
+        c1.translate(0,0,i*0.5)
+        geo.merge(c1)
+    }
+
+    const material = new MeshLambertMaterial({vertexColors: VertexColors})
+    const obj = new Mesh(geo,material)
+    obj.userData.level = farm.treeLevel
+    obj.position.y = h/2
+    obj.position.z = -1.0
+    return obj
+}
 export function makeHouse(data) {
     const geo = new Geometry()
     const sides = new BoxGeometry(1,1,1)
@@ -135,6 +155,12 @@ export class Hex3dsystem extends System {
                 tile.treeNodeLevel = forest.treeLevel
                 tile.threeNode.add(tile.treeNode)
             }
+        })
+        this.queries.farm.added.forEach(ent => {
+            const tile = ent.getMutableComponent(HexTileGroup)
+            const farm = ent.getComponent(FarmTile)
+            tile.farmNode =  makeFarm(ent)
+            tile.threeNode.add(tile.farmNode)
         })
         this.queries.buttons.added.forEach(ent => {
             const button = ent.getMutableComponent(Button3D)
@@ -231,6 +257,13 @@ Hex3dsystem.queries = {
     },
     forest: {
         components: [ForestTile, HexTileGroup],
+        listen: {
+            added:true,
+            removed:true,
+        }
+    },
+    farm: {
+        components: [FarmTile, HexTileGroup],
         listen: {
             added:true,
             removed:true,

@@ -59,6 +59,12 @@ GameStateMachine[GameStateEnums.WON_GAME] = []
 GameStateMachine[GameStateEnums.NONE] = [GameStateEnums.SHOW_INSTRUCTIONS]
 GameStateMachine[GameStateEnums.PLAY] = [GameStateEnums.SHOW_WIN]
 
+export const InputModes = {
+    NONE:'NONE',
+    PLANT_FOREST:'PLANT_FOREST',
+    PLANT_FARM:'PLANT_FARM',
+}
+
 export class GameState {
     constructor() {
         this.levelIndex = 0
@@ -66,6 +72,7 @@ export class GameState {
         this.wood = 0
         this.mode = GameStateEnums.NONE
         this.levels = []
+        this.inputMode = InputModes.NONE
     }
     isMode(val) {
         return this.mode === val

@@ -2,7 +2,7 @@ import {Raycaster, Vector2} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {Button3D, Highlighted} from './hex3dsystem.js'
-import {CommandComp, COMMANDS, DirtTile, GameState, GameStateEnums, HexMapComp} from './logic2.js'
+import {CommandComp, COMMANDS, DirtTile, GameState, GameStateEnums, HexMapComp, InputModes} from './logic2.js'
 
 export class MouseInputSystem extends System {
 
@@ -78,7 +78,11 @@ export class MouseInputSystem extends System {
             const data = mapView.map.get(hex)
             const ent = data.ent
             if(ent.hasComponent(DirtTile)) {
-                ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
+                console.log("checking input",state.inputMode)
+                if(state.inputMode === InputModes.PLANT_FOREST)
+                    ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
+                if(state.inputMode === InputModes.PLANT_FARM)
+                    ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FARM, hex: hex, data: data })
             }
         })
     }

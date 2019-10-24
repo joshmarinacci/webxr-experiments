@@ -5,7 +5,7 @@ import {Button3D, Hex3dsystem} from './hex3dsystem.js'
 import {MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
-import {GameState, GameStateEnums, LogicSystem} from "./logic2.js"
+import {GameState, GameStateEnums, InputModes, LogicSystem} from "./logic2.js"
 import {Level, LevelsSystem} from './levelssystem.js'
 import {VRStats, VRStatsSystem} from './vrstats.js'
 import {setupLevels} from './levels.js'
@@ -57,13 +57,12 @@ function setupGame() {
     game.addComponent(Instructions3D)
     game.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_INSTRUCTIONS)
 
-    let mode = 'none'
     let buttons = []
     const farmButton = world.createEntity().addComponent(Button3D,{text:'farm',
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             farmButton.getMutableComponent(Button3D).selected = true
-            mode = 'farm'
+            game.getMutableComponent(GameState).inputMode = InputModes.PLANT_FARM
         }
     })
     buttons.push(farmButton)
@@ -71,7 +70,7 @@ function setupGame() {
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             treeButton.getMutableComponent(Button3D).selected = true
-            mode = 'tree'
+            game.getMutableComponent(GameState).inputMode = InputModes.PLANT_FOREST
         }
     })
     buttons.push(treeButton)
