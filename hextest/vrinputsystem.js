@@ -9,9 +9,19 @@ import {
 } from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {HexMapView} from './hex3dsystem.js'
+import {Button3D, HexMapView} from './hex3dsystem.js'
 import {TERRAINS} from './globals.js'
 import {makeTree} from './hex3dsystem.js'
+import {
+    CommandComp,
+    COMMANDS,
+    DirtTile,
+    ForestTile,
+    GameState,
+    GameStateEnums,
+    HexMapComp,
+    InputModes
+} from './logic2.js'
 
 class VRController {
     constructor() {
@@ -83,26 +93,52 @@ export class VRInputSystem extends System {
         }
     }
 
+    findObjectAtController(core,controller,filter) {
+        const dir = new Vector3(0, 0, -1)
+        dir.applyQuaternion(controller.quaternion)
+        this.raycaster.set(controller.position, dir)
+        const intersects = this.raycaster.intersectObjects(core.scene.children,true)
+        for(let i=0; i<intersects.length; i++) {
+            const it = intersects[i]
+            if(filter(it)) return it
+        }
+        return null
+    }
+
     updateClick(core, cont) {
         if(cont.prevPressed === false && cont.pressed === true) {
+            console.log("Processing a controller click")
             cont.prevPressed = cont.pressed
-            const {hex,node} = this.findHexAtController(core,cont.controller)
-            if(!hex) return
-            const mapView = this.queries.map.results[0].getMutableComponent(HexMapView)
-            const data = mapView.map.get(hex)
-            if(data.terrain === TERRAINS.GRASS && data.tree === false) {
-                data.tree = true
-                data.treeNode = makeTree(hex,data,2)
-                mapView.threeNode.add(data.treeNode)
+            const state = this.queries.state.results[0].getMutableComponent(GameState)
+            if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return state.toMode(GameStateEnums.PLAY)
+            if(state.isMode(GameStateEnums.SHOW_WIN)) return state.toMode(GameStateEnums.NEXT_LEVEL)
+            if(state.isMode(GameStateEnums.WON_GAME)) return
+
+
+            const it = this.findObjectAtController(core,cont.controller,(i => i.object.userData.type === 'Button3D'))
+            if(it) {
+                const button = it.object.userData.ent.getComponent(Button3D)
+                if(button.onClick) button.onClick()
                 return
             }
-            if(data.terrain === TERRAINS.GRASS && data.tree === true) {
-                const tree = data.treeNode
-                data.tree = false
-                data.treeNode = null
-                data.treeLevel = 0
-                mapView.threeNode.remove(tree)
-                return
+
+            const {hex,node} = this.findHexAtController(core,cont.controller)
+            if(!hex) return
+            const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
+            const data = mapView.map.get(hex)
+            const ent = data.ent
+            if(ent.hasComponent(DirtTile)) {
+                console.log("checking input",state.inputMode)
+                if(state.inputMode === InputModes.PLANT_FOREST)
+                    ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
+                if(state.inputMode === InputModes.PLANT_FARM)
+                    ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FARM, hex: hex, data: data })
+            }
+            if(state.inputMode === InputModes.CHOP_WOOD && ent.hasComponent(ForestTile)) {
+                ent.addComponent(CommandComp, { type: COMMANDS.CHOP_WOOD, hex: hex, data: data })
+            }
+            if(state.inputMode === InputModes.BUILD_CITY && ent.hasComponent(DirtTile)) {
+                ent.addComponent(CommandComp, { type: COMMANDS.BUILD_CITY, hex: hex, data: data })
             }
         }
         cont.prevPressed = cont.pressed
@@ -162,7 +198,10 @@ VRInputSystem.queries = {
             removed:true,
         }
     },
+    state: {
+        components:[GameState]
+    },
     map: {
-        components: [HexMapView]
+        components: [HexMapComp]
     }
 }
