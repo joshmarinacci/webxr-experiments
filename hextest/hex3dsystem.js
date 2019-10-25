@@ -206,13 +206,15 @@ export class Hex3dsystem extends System {
         this.queries.buttons.results.forEach(ent => {
             const button = ent.getComponent(Button3D)
             if(button.selected !== button.obj.userData.selected) {
-                this.drawButton(button)
+                this.drawButton(button,ent.hasComponent(Highlighted),button.selected)
                 button.obj.userData.selected = button.selected
             }
-            if(button.hovered !== button.obj.userData.hovered) {
-                this.drawButton(button)
-                button.obj.userData.hovered = button.hovered
-            }
+        })
+        this.queries.highlighted_buttons.added.forEach(ent => {
+            this.drawButton(ent.getComponent(Button3D),true,false)
+        })
+        this.queries.highlighted_buttons.removed.forEach(ent => {
+            this.drawButton(ent.getComponent(Button3D),false,false)
         })
 
         this.queries.levels.removed.forEach(ent => this.removeLevel(ent))
@@ -236,6 +238,7 @@ export class Hex3dsystem extends System {
             hexView.userData.hex = hex
             hexView.userData.data = data
             hexView.userData.regularColor = terrainToColor(data.terrain)
+            hexView.userData.ent = data.ent
             data.ent.addComponent(HexTileGroup, {threeNode:hexView, hex:hex,data:data})
         })
         const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
@@ -243,17 +246,17 @@ export class Hex3dsystem extends System {
     }
 
 
-    drawButton(button) {
+    drawButton(button,hovered,selected) {
         const c = button.context
         c.fillStyle = 'white'
         c.fillRect(0,0,button.canvas.width,button.canvas.height)
-        if(button.hovered === true) {
+        if(hovered) {
             c.strokeStyle = 'black'
             c.lineWidth = 5
             c.strokeRect(5,5,button.canvas.width-10,button.canvas.height-10)
         }
 
-        if(button.selected) {
+        if(selected) {
             c.fillStyle = 'red'
             c.fillRect(10,10,button.canvas.width-20,button.canvas.height-20)
         }
@@ -298,7 +301,7 @@ Hex3dsystem.queries = {
         }
     },
     highlighted: {
-        components: [Highlighted],
+        components: [Highlighted, HexTileGroup],
         listen: {
             added:true,
             removed:true,
@@ -330,6 +333,13 @@ Hex3dsystem.queries = {
         listen: {
             added:true,
             removed:false,
+        }
+    },
+    highlighted_buttons: {
+        components:[Button3D,Highlighted],
+        listen: {
+            added:true,
+            removed:true
         }
     }
 }
