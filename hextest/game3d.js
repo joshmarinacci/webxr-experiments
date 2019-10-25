@@ -1,7 +1,7 @@
 import {AmbientLight, Clock, Color, DirectionalLight} from "./node_modules/three/build/three.module.js"
 import {World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore, ThreeSystem} from "./threesystem.js"
-import {Button3D, Hex3dsystem} from './hex3dsystem.js'
+import {Button3D, Hex3dsystem, ScoreBoard} from './hex3dsystem.js'
 import {MouseInputDevice, MouseInputSystem} from './mousesystem.js'
 import {KeyboardInputSystem} from "./keyboardsystem.js"
 import {VRInputSystem} from './vrinputsystem.js'
@@ -56,6 +56,7 @@ function setupGame() {
     game.addComponent(VRStats)
     game.addComponent(Instructions3D)
     game.addComponent(MouseInputDevice)
+    game.addComponent(ScoreBoard)
     game.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_INSTRUCTIONS)
 
     let buttons = []

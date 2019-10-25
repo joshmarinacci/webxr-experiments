@@ -43,6 +43,13 @@ export class Button3D {
     }
 }
 
+export class ScoreBoard {
+    constructor() {
+        this.bank = -1
+        this.wood = -1
+    }
+}
+
 export function makeTree(ent, size) {
     const tile = ent.getComponent(HexTileGroup)
     const forest = ent.getComponent(ForestTile)
@@ -217,6 +224,43 @@ export class Hex3dsystem extends System {
             this.drawButton(ent.getComponent(Button3D),false,false)
         })
 
+        this.queries.scoreboards.added.forEach(ent => {
+            const sb = ent.getMutableComponent(ScoreBoard)
+            sb.canvas = document.createElement('canvas')
+            sb.width = 128*2
+            sb.height = 64*2
+            sb.canvas.width = sb.width
+            sb.canvas.height = sb.height
+            sb.context = sb.canvas.getContext('2d')
+            sb.lastDraw = 0
+            sb.ctex = new CanvasTexture(sb.canvas)
+            sb.obj = new Mesh(
+                new PlaneGeometry(1.0,0.5),
+                new MeshBasicMaterial({map:sb.ctex})
+            )
+            sb.obj.position.z = -2
+            sb.obj.position.y = 1.0
+            sb.obj.position.x = 1
+            sb.obj.userData.type = 'Button3D'
+            sb.obj.userData.ent = ent
+            sb.obj.userData.selected = sb.selected
+            sb.obj.userData.hovered = sb.hovered
+
+            this.drawScoreboard(sb,ent.getComponent(GameState))
+            const core = this.queries.three.results[0].getComponent(ThreeCore)
+            core.scene.add(sb.obj)
+        })
+
+        this.queries.scoreboards.results.forEach(ent => {
+            const sb = ent.getMutableComponent(ScoreBoard)
+            const state = ent.getComponent(GameState)
+            if(sb.bank !== state.bank || sb.wood !== state.wood) {
+                this.drawScoreboard(sb,state)
+                sb.bank = state.bank
+                sb.wood = state.wood
+            }
+        })
+
         this.queries.levels.removed.forEach(ent => this.removeLevel(ent))
         this.queries.levels.added.forEach(ent => this.setupLevel(ent))
     }
@@ -280,6 +324,19 @@ export class Hex3dsystem extends System {
         const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
         core.stage.remove(view.threeNode)
     }
+
+    drawScoreboard(sb, state) {
+        const c = sb.context
+        c.fillStyle = 'white'
+        c.fillRect(0,0,sb.canvas.width,sb.canvas.height)
+
+        c.fillStyle = 'black'
+        c.font = '30pt sans-serif'
+        const lineHeight = 40
+        c.fillText(`bank ${state.bank}`,10,lineHeight*1)
+        c.fillText(`wood ${state.wood}`,10,lineHeight*2)
+        sb.ctex.needsUpdate = true
+    }
 }
 
 Hex3dsystem.queries = {
@@ -337,6 +394,13 @@ Hex3dsystem.queries = {
     },
     highlighted_buttons: {
         components:[Button3D,Highlighted],
+        listen: {
+            added:true,
+            removed:true
+        }
+    },
+    scoreboards: {
+        components:[ScoreBoard,GameState],
         listen: {
             added:true,
             removed:true
