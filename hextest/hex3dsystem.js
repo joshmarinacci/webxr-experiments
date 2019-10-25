@@ -39,6 +39,7 @@ export class Button3D {
         this.obj = null
         this.onClick = null
         this.selected = false
+        this.hovered = false
     }
 }
 
@@ -195,6 +196,7 @@ export class Hex3dsystem extends System {
             button.obj.userData.type = 'Button3D'
             button.obj.userData.ent = ent
             button.obj.userData.selected = button.selected
+            button.obj.userData.hovered = button.hovered
 
             this.drawButton(button)
 
@@ -206,6 +208,10 @@ export class Hex3dsystem extends System {
             if(button.selected !== button.obj.userData.selected) {
                 this.drawButton(button)
                 button.obj.userData.selected = button.selected
+            }
+            if(button.hovered !== button.obj.userData.hovered) {
+                this.drawButton(button)
+                button.obj.userData.hovered = button.hovered
             }
         })
 
@@ -241,6 +247,12 @@ export class Hex3dsystem extends System {
         const c = button.context
         c.fillStyle = 'white'
         c.fillRect(0,0,button.canvas.width,button.canvas.height)
+        if(button.hovered === true) {
+            c.strokeStyle = 'black'
+            c.lineWidth = 5
+            c.strokeRect(5,5,button.canvas.width-10,button.canvas.height-10)
+        }
+
         if(button.selected) {
             c.fillStyle = 'red'
             c.fillRect(10,10,button.canvas.width-20,button.canvas.height-20)

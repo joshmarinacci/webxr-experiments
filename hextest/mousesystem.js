@@ -38,7 +38,7 @@ export class MouseInputSystem extends System {
         const intersects = this.raycaster.intersectObjects(core.scene.children,true)
         for(let i=0; i<intersects.length; i++) {
             const it = intersects[i]
-            if(filter(it)) return it
+            if(it.object.userData.ent && filter(it.object.userData.ent)) return it
         }
         return null
     }
@@ -54,6 +54,13 @@ export class MouseInputSystem extends System {
             if(state.isMode(GameStateEnums.SHOW_INSTRUCTIONS)) return
             if(state.isMode(GameStateEnums.SHOW_WIN)) return
             if(state.isMode(GameStateEnums.WON_GAME)) return
+
+            const it = this.findObjectAtMouseEvent(e,(ent => ent.hasComponent(Button3D)))
+            if(it) {
+                const button = it.object.userData.ent.getComponent(Button3D)
+                button.hovered = true
+                return
+            }
 
             const {hex,node} = this.findHexAtMouseEvent(e)
             if(!hex) return
@@ -74,7 +81,7 @@ export class MouseInputSystem extends System {
             if(state.isMode(GameStateEnums.SHOW_WIN)) return state.toMode(GameStateEnums.NEXT_LEVEL)
             if(state.isMode(GameStateEnums.WON_GAME)) return
 
-            const it = this.findObjectAtMouseEvent(e,(i => i.object.userData.type === 'Button3D'))
+            const it = this.findObjectAtMouseEvent(e,(ent => ent.hasComponent(Button3D)))
             if(it) {
                 const button = it.object.userData.ent.getComponent(Button3D)
                 if(button.onClick) button.onClick()
@@ -87,7 +94,6 @@ export class MouseInputSystem extends System {
             const data = mapView.map.get(hex)
             const ent = data.ent
             if(ent.hasComponent(DirtTile)) {
-                console.log("checking input",state.inputMode)
                 if(state.inputMode === InputModes.PLANT_FOREST)
                     ent.addComponent(CommandComp, { type: COMMANDS.PLANT_FOREST, hex: hex, data: data })
                 if(state.inputMode === InputModes.PLANT_FARM)

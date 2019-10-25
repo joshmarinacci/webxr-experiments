@@ -9,9 +9,7 @@ import {
 } from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {Button3D, HexMapView} from './hex3dsystem.js'
-import {TERRAINS} from './globals.js'
-import {makeTree} from './hex3dsystem.js'
+import {Button3D} from './hex3dsystem.js'
 import {
     CommandComp,
     COMMANDS,
@@ -83,6 +81,12 @@ export class VRInputSystem extends System {
     }
 
     updatePointing(core,controller) {
+        const it = this.findObjectAtController(core,controller.controller,(ent => ent.hasComponent(Button3D)))
+        if(it) {
+            const button = it.object.userData.ent.getComponent(Button3D)
+            button.hovered = true
+        }
+
         const {hex,node} = this.findHexAtController(core,controller.controller)
         if(hex) {
             if(this.current) {
@@ -100,7 +104,7 @@ export class VRInputSystem extends System {
         const intersects = this.raycaster.intersectObjects(core.scene.children,true)
         for(let i=0; i<intersects.length; i++) {
             const it = intersects[i]
-            if(filter(it)) return it
+            if(it.object.userData.ent && filter(it.object.userData.ent)) return it
         }
         return null
     }
@@ -115,7 +119,7 @@ export class VRInputSystem extends System {
             if(state.isMode(GameStateEnums.WON_GAME)) return
 
 
-            const it = this.findObjectAtController(core,cont.controller,(i => i.object.userData.type === 'Button3D'))
+            const it = this.findObjectAtController(core,cont.controller,(ent => ent.hasComponent(Button3D)))
             if(it) {
                 const button = it.object.userData.ent.getComponent(Button3D)
                 if(button.onClick) button.onClick()
