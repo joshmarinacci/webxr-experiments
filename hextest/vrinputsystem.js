@@ -21,6 +21,10 @@ import {
     InputModes
 } from './logic2.js'
 
+const Y_AXIS = new Vector3(0,1,0)
+const ROT_SPEED = 0.03
+const MOVE_SPEED = 0.2
+
 class VRController {
     constructor() {
         this.raycaster = new Raycaster()
@@ -156,6 +160,40 @@ export class VRInputSystem extends System {
         cont.prevPressed = cont.pressed
     }
 
+    turnLeft() {
+        this.queries.three.results.forEach(ent => {
+            const core = ent.getMutableComponent(ThreeCore)
+            core.stageRot.rotation.y -= ROT_SPEED
+        })
+    }
+
+    turnRight() {
+        this.queries.three.results.forEach(ent => {
+            const core = ent.getMutableComponent(ThreeCore)
+            core.stageRot.rotation.y += ROT_SPEED
+        })
+    }
+
+    moveForward() {
+        this.queries.three.results.forEach(ent => {
+            const core = ent.getMutableComponent(ThreeCore)
+            const dir = new Vector3(0,0,1)
+            dir.applyAxisAngle(Y_AXIS, -core.stageRot.rotation.y)
+            dir.normalize().multiplyScalar(MOVE_SPEED)
+            ent.getMutableComponent(ThreeCore).stagePos.position.add(dir)
+        })
+    }
+
+    moveBackward() {
+        this.queries.three.results.forEach(ent => {
+            const core = ent.getMutableComponent(ThreeCore)
+            const dir = new Vector3(0,0,1)
+            dir.applyAxisAngle(Y_AXIS, -core.stageRot.rotation.y)
+            dir.normalize().multiplyScalar(MOVE_SPEED)
+            ent.getMutableComponent(ThreeCore).stagePos.position.sub(dir)
+        })
+    }
+
     updateGP(core, con) {
         function findGamepad( id ) {
             // Iterate across gamepads as Vive Controllers may not be
@@ -180,19 +218,19 @@ export class VRInputSystem extends System {
             const thresh = 0.4
             if(gamepad.axes[0]>-thresh && gamepad.axes[0]<thresh) {
                 if (gamepad.axes[1] < -thresh) {
-                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stagePos.position.z += 0.2)
+                    this.moveForward()
                 }
                 if (gamepad.axes[1] > +thresh) {
-                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stagePos.position.z -= 0.2)
+                    this.moveBackward()
                 }
                 return
             }
             if(gamepad.axes[1] >-thresh && gamepad.axes[1] < thresh) {
                 if(gamepad.axes[0]<-thresh) {
-                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stageRot.rotation.y -= 0.05)
+                    this.turnLeft()
                 }
                 if(gamepad.axes[0]>+thresh) {
-                    this.queries.three.results.forEach(ent => ent.getMutableComponent(ThreeCore).stageRot.rotation.y += 0.05)
+                    this.turnRight()
                 }
             }
         }
