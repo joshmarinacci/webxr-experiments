@@ -9,7 +9,7 @@ import {
 } from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {Button3D} from './hex3dsystem.js'
+import {Button3D, Highlighted} from './hex3dsystem.js'
 import {
     CommandComp,
     COMMANDS,
@@ -23,6 +23,7 @@ import {
 
 class VRController {
     constructor() {
+        this.raycaster = new Raycaster()
         this.vrid = -1
         this.prevPressed = false
         this.pressed = false
@@ -31,7 +32,7 @@ class VRController {
 
 export class VRInputSystem extends System {
     init() {
-        this.raycaster = new Raycaster()
+        this.started = false
     }
     execute() {
         if(!this.started) {
@@ -66,11 +67,11 @@ export class VRInputSystem extends System {
         })
     }
 
-    findHexAtController(core,controller) {
+    findHexAtController(core,cont) {
         const dir = new Vector3(0, 0, -1)
-        dir.applyQuaternion(controller.quaternion)
-        this.raycaster.set(controller.position, dir)
-        const intersects = this.raycaster.intersectObjects(core.scene.children,true)
+        dir.applyQuaternion(cont.controller.quaternion)
+        cont.raycaster.set(cont.controller.position, dir)
+        const intersects = cont.raycaster.intersectObjects(core.scene.children,true)
         for(let i=0; i<intersects.length; i++) {
             const it = intersects[i]
             if(it.object.userData.hex) {
@@ -80,14 +81,21 @@ export class VRInputSystem extends System {
         return {}
     }
 
-    updatePointing(core,controller) {
-        const it = this.findObjectAtController(core,controller.controller,(ent => ent.hasComponent(Button3D)))
+    updatePointing(core,cont) {
+        const it = this.findObjectAtController(core,cont,(ent => ent.hasComponent(Button3D)))
         if(it) {
-            const button = it.object.userData.ent.getComponent(Button3D)
-            button.hovered = true
+            const ent = it.object.userData.ent
+            if(cont.current && cont.current.hasComponent(Highlighted) && cont.current !== ent) {
+                cont.current.removeComponent(Highlighted)
+            }
+            if(!ent.hasComponent(Highlighted)) {
+                ent.addComponent(Highlighted)
+                cont.current = ent
+            }
+            return
         }
 
-        const {hex,node} = this.findHexAtController(core,controller.controller)
+        const {hex,node} = this.findHexAtController(core,cont)
         if(hex) {
             if(this.current) {
                 this.current.material.color.set(this.current.userData.regularColor)
@@ -97,11 +105,11 @@ export class VRInputSystem extends System {
         }
     }
 
-    findObjectAtController(core,controller,filter) {
+    findObjectAtController(core,cont,filter) {
         const dir = new Vector3(0, 0, -1)
-        dir.applyQuaternion(controller.quaternion)
-        this.raycaster.set(controller.position, dir)
-        const intersects = this.raycaster.intersectObjects(core.scene.children,true)
+        dir.applyQuaternion(cont.controller.quaternion)
+        cont.raycaster.set(cont.controller.position, dir)
+        const intersects = cont.raycaster.intersectObjects(core.scene.children,true)
         for(let i=0; i<intersects.length; i++) {
             const it = intersects[i]
             if(it.object.userData.ent && filter(it.object.userData.ent)) return it
@@ -119,14 +127,14 @@ export class VRInputSystem extends System {
             if(state.isMode(GameStateEnums.WON_GAME)) return
 
 
-            const it = this.findObjectAtController(core,cont.controller,(ent => ent.hasComponent(Button3D)))
+            const it = this.findObjectAtController(core,cont,(ent => ent.hasComponent(Button3D)))
             if(it) {
                 const button = it.object.userData.ent.getComponent(Button3D)
                 if(button.onClick) button.onClick()
                 return
             }
 
-            const {hex,node} = this.findHexAtController(core,cont.controller)
+            const {hex,node} = this.findHexAtController(core,cont)
             if(!hex) return
             const mapView = this.queries.map.results[0].getMutableComponent(HexMapComp)
             const data = mapView.map.get(hex)
