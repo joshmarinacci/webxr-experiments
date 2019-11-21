@@ -23,7 +23,7 @@ export class CustomNodeMaterialSystem extends System {
             )
             mesh.position.z = -10
             mesh.position.y = 2
-            mesh.rotation.x = toRad(-45)
+            // mesh.rotation.x = toRad(-45)
             this.queries.three.results.forEach(ent => {
                 const core = ent.getComponent(ThreeCore)
                 core.getStage().add(mesh)
