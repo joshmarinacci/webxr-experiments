@@ -130,7 +130,6 @@ function setupNodeMaterial(core, world) {
 
     const material = new StandardNodeMaterial();
     const frame = new NodeFrame()
-
     const time = new TimerNode();
 // Basic material properties.
 //     material.color = new ColorNode( 0xffffff * Math.random() );
