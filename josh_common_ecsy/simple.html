@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hello!</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+
+    <!-- include the Glitch button to show what the webpage is about and
+          to make it easier for folks to view source and remix -->
+    <div class="glitchButton" style="position:fixed;top:20px;right:20px;background-color:white;z-index:10;"></div>
+    <script src="https://button.glitch.me/button.js"></script>
+
+<script type="module">
+
+    import {World} from "https://ecsy.io/build/ecsy.module.js"
+    import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
+    import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor} from "./ThreeObjectManager.js"
+    import {AmbientLight
+    } from "https://threejs.org/build/three.module.js"
+
+
+    let world = new World();
+    world.registerSystem(ThreeSystem)
+    world.registerSystem(ThreeObjectManager)
+
+    let game = world.createEntity()
+    game.addComponent(ThreeCore, {debug:true})
+
+
+    oneWorldTick(game,world)
+    const core = game.getMutableComponent(ThreeCore)
+
+    //ambient light
+    const ambient = new AmbientLight(0xffffff,1.0)
+    core.scene.add(ambient)
+
+    //make a plane
+    let plane = world.createEntity()
+    plane.addComponent(ThreeObject, {position:{z:-8, y:3}, rotation: {x:toRad(0)}})
+    plane.addComponent(PlaneGeometry, {width:10, height:10})
+    plane.addComponent(FlatColor, {color:"#ffff00"})
+
+    startWorldLoop(game,world)
+
+
+</script>
+</body>
+</html>

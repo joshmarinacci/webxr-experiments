@@ -1,0 +1,13 @@
+html, body, canvas {
+    padding:0;
+    margin:0;
+}
+canvas {
+    position: fixed;
+}
+.hidden {
+    display: none;
+}
+button {
+    z-index: 5;
+}

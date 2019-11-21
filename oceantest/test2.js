@@ -4,7 +4,8 @@ import {AmbientLight, PlaneBufferGeometry, SphereBufferGeometry, Color, Directio
     RepeatWrapping,
     BackSide,
     Vector3,
-    Mesh} from "./node_modules/three/build/three.module.js"
+    Mesh
+} from "https://threejs.org/build/three.module.js"
 
 import {StandardNodeMaterial,
     ColorNode,
@@ -18,9 +19,9 @@ import {StandardNodeMaterial,
     TextureNode,
     CondNode,
     ConstNode,
-} from "./node_modules/three/examples/jsm/nodes/Nodes.js"
-import {System, World} from "./node_modules/ecsy/build/ecsy.module.js"
-import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
+} from "https://threejs.org/examples/jsm/nodes/Nodes.js"
+import {System, World} from "https://ecsy.io/build/ecsy.module.js"
+import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "../josh_common_ecsy/threesystem.js"
 
 
 function randf(min,max) {
