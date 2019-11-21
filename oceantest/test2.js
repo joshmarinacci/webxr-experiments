@@ -20,9 +20,8 @@ import {
     TimerNode
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
-import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem} from "../josh_common_ecsy/threesystem.js"
-import {ThreeObjectManager} from "../josh_common_ecsy/ThreeObjectManager.js"
-import {CustomNodeMaterial, CustomNodeMaterialSystem} from '../josh_common_ecsy/CustomMaterialManager.js'
+
+import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, ThreeObjectManager, CustomNodeMaterialSystem, CustomNodeMaterial} from "../josh_common_ecsy/index.js"
 
 
 function randf(min,max) {
