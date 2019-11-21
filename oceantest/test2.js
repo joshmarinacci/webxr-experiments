@@ -16,6 +16,8 @@ import {StandardNodeMaterial,
     TimerNode,
     NodeFrame,
     TextureNode,
+    CondNode,
+    ConstNode,
 } from "./node_modules/three/examples/jsm/nodes/Nodes.js"
 import {System, World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
@@ -137,12 +139,31 @@ function setupNodeMaterial(core, world) {
 
     // material.color = new TextureNode( tex1);
     let blend = new MathNode(
-        tex1,
-        tex2,
-        new FloatNode(.5),
+        new TextureNode(tex1),
+        new TextureNode(tex2),
+        new FloatNode(.9),
         MathNode.MIX
     );
-    material.color = blend
+
+    let speed = new FloatNode( 0.1 );
+    let timeSpeed = new OperatorNode(
+        time,
+        speed,
+        OperatorNode.MUL
+    );
+    let sinCycleInSecs = new OperatorNode(
+        timeSpeed,
+        new ConstNode( ConstNode.PI2 ),
+        OperatorNode.MUL
+    )
+    let cycle = new MathNode(sinCycleInSecs, MathNode.SIN)
+    let color = new TextureNode(tex1)
+    let cycleColor = new OperatorNode(cycle,color,OperatorNode.MUL)
+    material.color = new OperatorNode(
+        new TextureNode(tex2),
+        new MathNode(cycleColor, MathNode.ABS),
+        OperatorNode.ADD
+    )
     // material.metalness = new FloatNode( 0.0 );
     // material.roughness = new FloatNode( 1.0 );
 
@@ -172,11 +193,12 @@ class CustomNodeMaterialSystem extends System {
         this.queries.objs.added.forEach(ent => {
             const comp = ent.getComponent(CustomNodeMaterial)
             const mesh = new Mesh(
-                new SphereBufferGeometry(1),
+                new PlaneBufferGeometry(20,20),
                 comp.material,
             )
             mesh.position.z = -10
             mesh.position.y = 2
+            mesh.rotation.x = toRad(-45)
             this.queries.three.results.forEach(ent => {
                 const core = ent.getComponent(ThreeCore)
                 core.getStage().add(mesh)
