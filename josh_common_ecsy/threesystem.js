@@ -1,8 +1,6 @@
-import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer,
-    SphereBufferGeometry, Mesh, MeshLambertMaterial,
-} from "https://threejs.org/build/three.module.js"
+import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer} from "https://threejs.org/build/three.module.js"
 
-import {System, World} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://ecsy.io/build/ecsy.module.js"
 import {WEBVR} from "./WebVRButton.js"
 
 export function toRad(theta) {
