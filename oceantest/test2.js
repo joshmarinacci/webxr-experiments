@@ -15,6 +15,7 @@ import {StandardNodeMaterial,
     MathNode,
     TimerNode,
     NodeFrame,
+    TextureNode,
 } from "./node_modules/three/examples/jsm/nodes/Nodes.js"
 import {System, World} from "./node_modules/ecsy/build/ecsy.module.js"
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
@@ -130,28 +131,38 @@ function setupNodeMaterial(core, world) {
 
     const time = new TimerNode();
 // Basic material properties.
-    material.color = new ColorNode( 0xffffff * Math.random() );
-    material.metalness = new FloatNode( 0.0 );
-    material.roughness = new FloatNode( 1.0 );
+//     material.color = new ColorNode( 0xffffff * Math.random() );
+    const tex1 =new TextureLoader().load("candycane.png")
+    const tex2 =new TextureLoader().load("diffuse_small.png")
 
-    const { MUL, ADD } = OperatorNode;
-    const localPosition = new PositionNode();
-    const localY = new SwitchNode( localPosition, 'y' );
-
-// Modulate vertex position based on time and height.
-// GLSL: vPosition *= sin( vPosition.y * time ) * 0.2 + 1.0;
-    let offset = new MathNode(
-        new OperatorNode( localY, time, MUL ),
-        MathNode.SIN
+    // material.color = new TextureNode( tex1);
+    let blend = new MathNode(
+        tex1,
+        tex2,
+        new FloatNode(.5),
+        MathNode.MIX
     );
-    offset = new OperatorNode( offset, new FloatNode( 0.2 ), MUL );
-    offset = new OperatorNode( offset, new FloatNode( 1.0 ), ADD );
+    material.color = blend
+    // material.metalness = new FloatNode( 0.0 );
+    // material.roughness = new FloatNode( 1.0 );
 
-    material.position = new OperatorNode( localPosition, offset, MUL );
+    // const { MUL, ADD } = OperatorNode;
+    // const localPosition = new PositionNode();
+    // const localY = new SwitchNode( localPosition, 'y' );
+
+    // Modulate vertex position based on time and height.
+    // GLSL: vPosition *= sin( vPosition.y * time ) * 0.2 + 1.0;
+    // let offset = new MathNode(
+    //     new OperatorNode( localY, time, MUL ),
+    //     MathNode.SIN
+    // );
+    // offset = new OperatorNode( offset, new FloatNode( 0.2 ), MUL );
+    // offset = new OperatorNode( offset, new FloatNode( 1.0 ), ADD );
+
+    // material.position = new OperatorNode( localPosition, offset, MUL );
 
     const ent = world.createEntity()
     ent.addComponent(CustomNodeMaterial,{material:material})
-    // core.getStage().add(mesh)
 }
 class CustomNodeMaterialSystem extends System {
     init() {
@@ -160,7 +171,6 @@ class CustomNodeMaterialSystem extends System {
     execute(delta,time) {
         this.queries.objs.added.forEach(ent => {
             const comp = ent.getComponent(CustomNodeMaterial)
-            console.log('added',comp)
             const mesh = new Mesh(
                 new SphereBufferGeometry(1),
                 comp.material,
@@ -170,7 +180,6 @@ class CustomNodeMaterialSystem extends System {
             this.queries.three.results.forEach(ent => {
                 const core = ent.getComponent(ThreeCore)
                 core.getStage().add(mesh)
-                console.log('adding to the stage')
             })
         })
         this.queries.objs.results.forEach(ent => {
@@ -178,9 +187,7 @@ class CustomNodeMaterialSystem extends System {
             this.queries.three.results.forEach(ent => {
                 const core = ent.getComponent(ThreeCore)
                 this.frame.setRenderer(core.renderer).update(delta);
-                // if (mesh.material instanceof Nodes.NodeMaterial) {
                 this.frame.updateNode(comp.material);
-                // }
             })
         })
     }
