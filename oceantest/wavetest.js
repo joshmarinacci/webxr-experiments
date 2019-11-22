@@ -14,14 +14,20 @@ import {
     ConstNode,
     FloatNode,
     MathNode,
+    ColorNode,
     OperatorNode,
     StandardNodeMaterial,
+    SwitchNode,
+    PositionNode,
     TextureNode,
     TimerNode
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, ThreeObjectManager, CustomNodeMaterialSystem, CustomNodeMaterial} from "../josh_common_ecsy/index.js"
+import {CylinderGeometry} from '../josh_common_ecsy/CustomMaterialManager.js'
+
+
 
 
 function randf(min,max) {
@@ -46,35 +52,24 @@ function setupLights(core) {
 
 
 function setupNodeMaterial(core, world) {
-
     const material = new StandardNodeMaterial();
     const time = new TimerNode();
 
-    const tex1 =new TextureLoader().load("candycane.png")
-    const tex2 =new TextureLoader().load("diffuse_small.png")
+    material.color = new ColorNode('green')
 
-    let speed = new FloatNode( 0.1 );
-    let timeSpeed = new OperatorNode(
-        time,
-        speed,
-        OperatorNode.MUL
-    );
-    let sinCycleInSecs = new OperatorNode(
-        timeSpeed,
-        new ConstNode( ConstNode.PI2 ),
-        OperatorNode.MUL
-    )
-    let cycle = new MathNode(sinCycleInSecs, MathNode.SIN)
-    let color = new TextureNode(tex1)
-    let cycleColor = new OperatorNode(cycle,color,OperatorNode.MUL)
-    material.color = new OperatorNode(
-        new TextureNode(tex2),
-        new MathNode(cycleColor, MathNode.ABS),
-        OperatorNode.ADD
-    )
+    const localPos = new PositionNode()
+    const localY = new SwitchNode(localPos,'y')
+    let offset = new MathNode(
+        new OperatorNode(localY,time,OperatorNode.MUL),
+        MathNode.SIN
+        )
+    // offset = new OperatorNode(offset, new FloatNode(2.0),OperatorNode.ADD)
+    offset = new OperatorNode(offset, new FloatNode(0.2),OperatorNode.MUL)
+    material.position = new OperatorNode(localPos,offset,OperatorNode.ADD)
 
     const ent = world.createEntity()
-    ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10, y:2}})
+    ent.addComponent(CylinderGeometry)
+    ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10,y:0}})
 }
 
 
