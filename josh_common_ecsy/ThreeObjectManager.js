@@ -1,13 +1,15 @@
-import {AmbientLight, PlaneBufferGeometry, SphereBufferGeometry, Color, DirectionalLight, MeshLambertMaterial,
-    Fog,
-    TextureLoader,
+import {
+    Mesh,
+    MeshLambertMaterial,
+    PlaneBufferGeometry,
     RepeatWrapping,
-    BackSide,
-    Vector3,
-    Mesh
+    SphereBufferGeometry,
+    TextureLoader,
+    Vector3
 } from "https://threejs.org/build/three.module.js"
-import {ThreeCore, toRad} from './threesystem.js'
-import {System, World} from "https://ecsy.io/build/ecsy.module.js"
+import {GLTFLoader} from "https://threejs.org/examples/jsm/loaders/GLTFLoader.js"
+import {ThreeCore} from './threesystem.js'
+import {System} from "https://ecsy.io/build/ecsy.module.js"
 
 export class ThreeObject {
     constructor() {
@@ -97,3 +99,51 @@ ThreeObjectManager.queries = {
         }
     }
 }
+
+
+
+export class GLTFModel {
+    constructor() {
+        this.src = null
+        this.position = new Vector3()
+    }
+}
+
+export class GLTFModelSystem extends System {
+    execute() {
+        this.queries.three.results.forEach(ent => {
+            const core = ent.getComponent(ThreeCore)
+            this.queries.objs.added.forEach(ent => {
+                const modelComp = ent.getMutableComponent(GLTFModel)
+                new GLTFLoader().load(modelComp.src, (gltf) => {
+                    const obj = gltf.scene.children[0]
+                    core.getStage().add(obj)
+                    obj.position.x = modelComp.position.x
+                    obj.position.y = modelComp.position.y
+                    obj.position.z = modelComp.position.z
+                    let sc = 1.0
+                    if(modelComp.scale) {
+                        sc = modelComp.scale
+                    }
+                    obj.scale.x = sc
+                    obj.scale.y = sc
+                    obj.scale.z = sc
+                })
+            })
+        })
+    }
+}
+
+GLTFModelSystem.queries = {
+    three: {
+        components: [ThreeCore]
+    },
+    objs: {
+        components: [GLTFModel],
+        listen: {
+            added:true,
+            removed:true
+        }
+    }
+}
+

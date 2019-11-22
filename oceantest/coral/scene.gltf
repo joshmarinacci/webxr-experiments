@@ -1,0 +1,239 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 18897,
+      "max": [
+        7.3999800682067871,
+        18.361749649047852,
+        6.4405322074890137
+      ],
+      "min": [
+        -8.5583915710449219,
+        -0.12212227284908295,
+        -7.5252256393432617
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 226764,
+      "componentType": 5126,
+      "count": 18897,
+      "max": [
+        0.99972093105316162,
+        1,
+        0.99993062019348145
+      ],
+      "min": [
+        -0.99974799156188965,
+        -0.9996563196182251,
+        -0.99991238117218018
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 18897,
+      "max": [
+        1,
+        0.99867528676986694,
+        1,
+        1
+      ],
+      "min": [
+        -1,
+        -0.99867534637451172,
+        -1,
+        1
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 18897,
+      "max": [
+        0.99401724338531494,
+        0.99800801277160645
+      ],
+      "min": [
+        0.00198406632989645,
+        0.0019920319318771362
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 19530,
+      "max": [
+        18896
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Sandra_s (https://sketchfab.com/Sandra_sm)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/coral-c26e47859f0945d69a4e2944ee80b995",
+      "title": "Coral"
+    },
+    "generator": "Sketchfab-5.68.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 78120,
+      "byteOffset": 0,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 151176,
+      "byteOffset": 78120,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 453528,
+      "byteOffset": 229296,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 302352,
+      "byteOffset": 682824,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 985176,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "name": "Redd",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.55884642439999999,
+          0.023012407200000001,
+          0.023012407200000001,
+          1
+        ],
+        "metallicFactor": 0.2380681818,
+        "roughnessFactor": 0.91079545449999999
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "pCylinder23_Redd_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "name": "RootNode (gltf orientation matrix)",
+      "rotation": [
+        -0.70710678118654746,
+        -0,
+        -0,
+        0.70710678118654757
+      ]
+    },
+    {
+      "children": [
+        2
+      ],
+      "name": "RootNode (model correction matrix)"
+    },
+    {
+      "children": [
+        3
+      ],
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "name": "3a234e09fdcd4ce3a0893f80bd39b825.fbx"
+    },
+    {
+      "children": [
+        4
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        5
+      ],
+      "name": "pCylinder23"
+    },
+    {
+      "mesh": 0,
+      "name": "pCylinder23_Redd_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "OSG_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
+
