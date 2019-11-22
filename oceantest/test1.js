@@ -72,6 +72,7 @@ function setup() {
     makeRocks(world)
 
     function makeSeaweed(world) {
+        //https://sketchfab.com/3d-models/seaweed-9476ecd2ce3942e0a4c126cfa7d4190c
         let seaweed1 = world.createEntity()
         seaweed1.addComponent(GLTFModel, {
             src:'seaweed/scene.gltf',
@@ -88,6 +89,7 @@ function setup() {
     makeSeaweed(world)
 
     function makeCoral(world) {
+        //https://sketchfab.com/3d-models/coral-c26e47859f0945d69a4e2944ee80b995
         let coral = world.createEntity()
         coral.addComponent(GLTFModel, {
             src:'coral/scene.gltf',
