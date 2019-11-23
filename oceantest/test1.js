@@ -1,21 +1,16 @@
 import {AmbientLight, PlaneBufferGeometry, SphereBufferGeometry, Color, DirectionalLight, MeshLambertMaterial,
     Fog,
-    TextureLoader,
-    RepeatWrapping,
     BackSide,
-    Vector3,
     Mesh} from "https://threejs.org/build/three.module.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad,
     ThreeObjectManager,
     ThreeObject,
     PlaneGeometry,
-    FlatColor,
     TextureMaterial,
     GLTFModelSystem,
     GLTFModel,
 } from "../josh_common_ecsy/index.js"
-import {} from "./threesystem.js"
 import {AudioSystem, SoundEffect} from '../josh_common_ecsy/audio.js'
 import {Position} from '../josh_common_ecsy/ThreeObjectManager.js'
 
