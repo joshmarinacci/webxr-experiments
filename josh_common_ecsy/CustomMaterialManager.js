@@ -21,6 +21,7 @@ export class CustomNodeMaterialSystem extends System {
                 new PlaneBufferGeometry(20,20),
                 comp.material,
             )
+
             mesh.position.z = -10
             mesh.position.y = 2
             // mesh.rotation.x = toRad(-45)

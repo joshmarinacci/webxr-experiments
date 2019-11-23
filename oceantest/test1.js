@@ -17,6 +17,7 @@ import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad,
 } from "../josh_common_ecsy/index.js"
 import {} from "./threesystem.js"
 import {AudioSystem, SoundEffect} from '../josh_common_ecsy/audio.js'
+import {Position} from '../josh_common_ecsy/ThreeObjectManager.js'
 
 function randf(min,max) {
     return min + Math.random()*(max-min)
@@ -61,13 +62,13 @@ function setup() {
         for(let i=0; i<5; i++) {
             let rock = world.createEntity()
             rock.addComponent(GLTFModel, {
-                position:{
-                    x:randf(-5,5),
-                    y:0,
-                    z:randf(-5,-10)
-                },
                 src:'rock1.glb',
                 scale: randf(1.0,3.0)
+            })
+            rock.addComponent(Position,{
+                x:randf(-5,5),
+                y:0,
+                z:randf(-5,-10)
             })
         }
     }
@@ -78,15 +79,16 @@ function setup() {
         let seaweed1 = world.createEntity()
         seaweed1.addComponent(GLTFModel, {
             src:'seaweed/scene.gltf',
-            position:{x:2,y:1.5, z:-5},
+            // position:{x:2,y:1.5, z:-5},
             scale:0.5
         })
+        seaweed1.addComponent(Position, {x:2,y:1.5,z:-5})
         let seaweed2 = world.createEntity()
         seaweed2.addComponent(GLTFModel, {
             src:'seaweed/scene.gltf',
-            position:{x:-2,y:1.5, z:-5},
             scale:0.5
         })
+        seaweed2.addComponent(Position, {x:-2, y:1.5, z:-5})
     }
     makeSeaweed(world)
 
@@ -95,9 +97,10 @@ function setup() {
         let coral = world.createEntity()
         coral.addComponent(GLTFModel, {
             src:'coral/scene.gltf',
-            position:{x:0,y:0, z:-7},
+            // position:{x:0,y:0, z:-7},
             scale:0.2
         })
+        coral.addComponent(Position, {z:-7})
     }
 
     makeCoral(world)
@@ -105,7 +108,6 @@ function setup() {
     function makeAudio(world) {
         const music = world.createEntity()
         music.addComponent(SoundEffect, { name:'bg', src:'./bgmusic.ogg',autoPlay:true,loop:true})
-
     }
 
     makeAudio(world)
