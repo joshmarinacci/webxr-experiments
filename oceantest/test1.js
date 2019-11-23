@@ -5,7 +5,7 @@ import {AmbientLight, PlaneBufferGeometry, SphereBufferGeometry, Color, Directio
     BackSide,
     Vector3,
     Mesh} from "https://threejs.org/build/three.module.js"
-import {System, World} from "./node_modules/ecsy/build/ecsy.module.js"
+import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad,
     ThreeObjectManager,
     ThreeObject,
