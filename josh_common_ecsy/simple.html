@@ -23,7 +23,8 @@
 
     import {World} from "https://ecsy.io/build/ecsy.module.js"
     import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
-    import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor} from "./ThreeObjectManager.js"
+    import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor, Position} from "./ThreeObjectManager.js"
+    import {AudioSystem, SoundEffect} from './audio.js'
     import {AmbientLight
     } from "https://threejs.org/build/three.module.js"
 
@@ -31,6 +32,7 @@
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(ThreeObjectManager)
+    world.registerSystem(AudioSystem)
 
     let game = world.createEntity()
     game.addComponent(ThreeCore, {debug:true})
@@ -45,9 +47,14 @@
 
     //make a plane
     let plane = world.createEntity()
-    plane.addComponent(ThreeObject, {position:{z:-8, y:3}, rotation: {x:toRad(0)}})
+    plane.addComponent(ThreeObject)
+    plane.addComponent(Position,{z:-8, y:3})
     plane.addComponent(PlaneGeometry, {width:10, height:10})
     plane.addComponent(FlatColor, {color:"#ffff00"})
+
+
+    const music = world.createEntity()
+    music.addComponent(SoundEffect, { name:'bg', src:'./sugarplum.mp3',autoPlay:true,loop:true})
 
     startWorldLoop(game,world)
 

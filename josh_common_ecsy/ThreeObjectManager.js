@@ -19,6 +19,14 @@ export class ThreeObject {
     }
 }
 
+export class Position {
+    constructor() {
+        this.x = 0
+        this.y = 0
+        this.z = 0
+    }
+}
+
 export class PlaneGeometry {
     constructor() {
         this.width = 1
@@ -38,8 +46,6 @@ export class TextureMaterial {
         this.wrapH = 1
     }
 }
-
-
 
 export class ThreeObjectManager extends System {
     execute() {
@@ -70,19 +76,13 @@ export class ThreeObjectManager extends System {
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
             if(geo == null) geo = new SphereBufferGeometry(0.5)
             obj.mesh = new Mesh(geo,mat)
-            if(obj.position.x) obj.mesh.position.x = obj.position.x
-            if(obj.position.y) obj.mesh.position.y = obj.position.y
-            if(obj.position.z) obj.mesh.position.z = obj.position.z
 
-            if(obj.rotation.x) obj.mesh.rotation.x = obj.rotation.x
-
-            // obj.mesh.rotation.x = toRad(-90)
-
-
+            if(ent.hasComponent(Position)) {
+                const pos = ent.getComponent(Position)
+                obj.mesh.position.copy(pos)
+            }
             this.queries.three.results.forEach(ent => {
-                const core = ent.getComponent(ThreeCore)
-                core.getStage().add(obj.mesh)
-                console.log('adding to the stage')
+                ent.getComponent(ThreeCore).getStage().add(obj.mesh)
             })
         })
     }
@@ -118,9 +118,14 @@ export class GLTFModelSystem extends System {
                 new GLTFLoader().load(modelComp.src, (gltf) => {
                     const obj = gltf.scene.children[0]
                     core.getStage().add(obj)
-                    obj.position.x = modelComp.position.x
-                    obj.position.y = modelComp.position.y
-                    obj.position.z = modelComp.position.z
+
+                    if(ent.hasComponent(Position)) {
+                        const pos = ent.getComponent(Position)
+                        obj.position.copy(pos)
+                    }
+                    // obj.position.x = modelComp.position.x
+                    // obj.position.y = modelComp.position.y
+                    // obj.position.z = modelComp.position.z
                     let sc = 1.0
                     if(modelComp.scale) {
                         sc = modelComp.scale
