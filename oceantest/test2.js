@@ -21,7 +21,16 @@ import {
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
-import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, ThreeObjectManager, CustomNodeMaterialSystem, CustomNodeMaterial} from "../josh_common_ecsy/index.js"
+import {
+    CustomNodeMaterial,
+    CustomNodeMaterialSystem,
+    oneWorldTick,
+    Position,
+    startWorldLoop,
+    ThreeCore,
+    ThreeObjectManager,
+    ThreeSystem
+} from "../josh_common_ecsy/index.js"
 
 
 function randf(min,max) {
@@ -74,7 +83,8 @@ function setupNodeMaterial(core, world) {
     )
 
     const ent = world.createEntity()
-    ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10, y:2}})
+    ent.addComponent(CustomNodeMaterial,{material:material})
+    ent.addComponent(Position,{z:-10, y:2})
 }
 
 

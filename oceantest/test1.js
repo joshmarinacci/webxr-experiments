@@ -1,17 +1,29 @@
-import {AmbientLight, PlaneBufferGeometry, SphereBufferGeometry, Color, DirectionalLight, MeshLambertMaterial,
-    Fog,
+import {
+    AmbientLight,
     BackSide,
-    Mesh} from "https://threejs.org/build/three.module.js"
+    Color,
+    DirectionalLight,
+    Fog,
+    Mesh,
+    MeshLambertMaterial,
+    SphereBufferGeometry
+} from "https://threejs.org/build/three.module.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
-import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad,
-    ThreeObjectManager,
-    ThreeObject,
-    PlaneGeometry,
-    TextureMaterial,
-    GLTFModelSystem,
+import {
+    AudioSystem,
     GLTFModel,
+    GLTFModelSystem,
+    oneWorldTick,
+    PlaneGeometry,
+    SoundEffect,
+    startWorldLoop,
+    TextureMaterial,
+    ThreeCore,
+    ThreeObject,
+    ThreeObjectManager,
+    ThreeSystem,
+    toRad
 } from "../josh_common_ecsy/index.js"
-import {AudioSystem, SoundEffect} from '../josh_common_ecsy/audio.js'
 import {Position} from '../josh_common_ecsy/ThreeObjectManager.js'
 
 function randf(min,max) {
