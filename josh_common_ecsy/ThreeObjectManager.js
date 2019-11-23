@@ -34,6 +34,13 @@ export class PlaneGeometry {
     }
 }
 
+export class CylinderGeometry {
+    constructor() {
+        this.rad1 = 0.5
+        this.rad2 = 0.5
+    }
+}
+
 export class FlatColor {
     constructor() {
         this.color = 'green'

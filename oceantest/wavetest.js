@@ -25,7 +25,8 @@ import {
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
 import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, ThreeObjectManager, CustomNodeMaterialSystem, CustomNodeMaterial} from "../josh_common_ecsy/index.js"
-import {CylinderGeometry} from '../josh_common_ecsy/CustomMaterialManager.js'
+import {CylinderGeometry, Position} from '../josh_common_ecsy/ThreeObjectManager.js'
+
 
 
 
@@ -67,10 +68,11 @@ function setupNodeMaterial(core, world) {
     offset = new OperatorNode(offset, new FloatNode(0.2),OperatorNode.MUL)
     material.position = new OperatorNode(localPos,offset,OperatorNode.ADD)
 
-    for(let i=0; i<3; i++) {
+    for(let i=-2; i<3; i++) {
         const ent = world.createEntity()
         ent.addComponent(CylinderGeometry)
-        ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10,y:0,x:i*2}})
+        ent.addComponent(CustomNodeMaterial,{material:material})
+        ent.addComponent(Position, {z:-10,y:0,x:i*2})
     }
 
 }
