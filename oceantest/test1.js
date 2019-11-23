@@ -16,6 +16,7 @@ import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad,
     GLTFModel,
 } from "../josh_common_ecsy/index.js"
 import {} from "./threesystem.js"
+import {AudioSystem, SoundEffect} from '../josh_common_ecsy/audio.js'
 
 function randf(min,max) {
     return min + Math.random()*(max-min)
@@ -40,6 +41,7 @@ function setup() {
     world.registerSystem(ThreeSystem)
     world.registerSystem(ThreeObjectManager)
     world.registerSystem(GLTFModelSystem)
+    world.registerSystem(AudioSystem)
 
     let game = world.createEntity()
     //  Setting debug to true will move the camera to point down from above and turn on wireframes for all materials
@@ -99,6 +101,15 @@ function setup() {
     }
 
     makeCoral(world)
+
+    function makeAudio(world) {
+        const music = world.createEntity()
+        music.addComponent(SoundEffect, { name:'bg', src:'./bgmusic.ogg',autoPlay:true,loop:true})
+
+    }
+
+    makeAudio(world)
+
 
     startWorldLoop(game,world)
 

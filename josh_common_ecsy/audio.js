@@ -42,6 +42,7 @@ export class AudioSystem extends System {
     playSound(sound) {
         const source = this.context.createBufferSource();
         source.buffer = sound.data
+        if(sound.loop) source.loop = true
         source.connect(this.context.destination);
         source.start(0)
         return source
