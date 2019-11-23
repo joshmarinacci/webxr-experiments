@@ -67,9 +67,12 @@ function setupNodeMaterial(core, world) {
     offset = new OperatorNode(offset, new FloatNode(0.2),OperatorNode.MUL)
     material.position = new OperatorNode(localPos,offset,OperatorNode.ADD)
 
-    const ent = world.createEntity()
-    ent.addComponent(CylinderGeometry)
-    ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10,y:0}})
+    for(let i=0; i<3; i++) {
+        const ent = world.createEntity()
+        ent.addComponent(CylinderGeometry)
+        ent.addComponent(CustomNodeMaterial,{material:material, position:{z:-10,y:0,x:i*2}})
+    }
+
 }
 
 
