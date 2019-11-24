@@ -6,37 +6,35 @@ import {
     Fog,
     Mesh,
     MeshLambertMaterial,
-    SphereBufferGeometry,
-    TextureLoader
+    SphereBufferGeometry
 } from "https://threejs.org/build/three.module.js"
 
 import {
-    ConstNode,
+    ColorNode,
     FloatNode,
     MathNode,
-    ColorNode,
     OperatorNode,
+    PositionNode,
     StandardNodeMaterial,
     SwitchNode,
-    PositionNode,
-    TextureNode,
     TimerNode
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
-import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, ThreeObjectManager, CustomNodeMaterialSystem, CustomNodeMaterial} from "../josh_common_ecsy/index.js"
+import {
+    CustomNodeMaterial,
+    CustomNodeMaterialSystem,
+    oneWorldTick,
+    startWorldLoop,
+    ThreeCore,
+    ThreeObjectManager,
+    ThreeSystem
+} from "../josh_common_ecsy/index.js"
 import {CylinderGeometry, Position} from '../josh_common_ecsy/ThreeObjectManager.js'
-
-
-
-
 
 function randf(min,max) {
     return min + Math.random()*(max-min)
 }
-
-
-
 
 function setupLights(core) {
     //set the background color of the scene
@@ -50,7 +48,6 @@ function setupLights(core) {
     core.scene.add(skybox)
     core.scene.fog = new Fog('#5aabff', 10, 50)
 }
-
 
 function setupNodeMaterial(core, world) {
     const material = new StandardNodeMaterial();

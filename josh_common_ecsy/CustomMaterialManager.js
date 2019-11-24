@@ -38,12 +38,10 @@ export class CustomNodeMaterialSystem extends System {
                 core.getStage().add(mesh)
             })
         })
-        this.queries.objs.results.forEach(ent => {
-            const comp = ent.getComponent(CustomNodeMaterial)
-            this.queries.three.results.forEach(ent => {
-                const core = ent.getComponent(ThreeCore)
-                this.frame.setRenderer(core.renderer).update(delta);
-                this.frame.updateNode(comp.material);
+        this.queries.three.results.forEach(ent => {
+            this.frame.setRenderer(ent.getComponent(ThreeCore).renderer).update(delta);
+            this.queries.objs.results.forEach(ent => {
+                this.frame.updateNode(ent.getComponent(CustomNodeMaterial).material)
             })
         })
     }
