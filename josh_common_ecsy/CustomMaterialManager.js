@@ -24,10 +24,7 @@ export class CustomNodeMaterialSystem extends System {
                 geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height)
             }
             if(!geo) geo = new PlaneBufferGeometry(20,20)
-            const mesh = new Mesh(
-                geo,
-                comp.material,
-            )
+            const mesh = new Mesh(geo,comp.material)
 
             if(ent.hasComponent(Position)) {
                 mesh.position.copy(ent.getComponent(Position))
@@ -35,8 +32,7 @@ export class CustomNodeMaterialSystem extends System {
 
             // mesh.rotation.x = toRad(-45)
             this.queries.three.results.forEach(ent => {
-                const core = ent.getComponent(ThreeCore)
-                core.getStage().add(mesh)
+                ent.getComponent(ThreeCore).getStage().add(mesh)
             })
         })
         this.queries.three.results.forEach(ent => {
