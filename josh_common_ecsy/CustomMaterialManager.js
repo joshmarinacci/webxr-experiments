@@ -20,7 +20,8 @@ export class CustomNodeMaterialSystem extends System {
             const comp = ent.getComponent(CustomNodeMaterial)
             let geo = null
             if(ent.hasComponent(CylinderGeometry)) {
-                geo = new CylinderBufferGeometry(0.5,0.5,2)
+                const cg = ent.getComponent(CylinderGeometry)
+                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height)
             }
             if(!geo) geo = new PlaneBufferGeometry(20,20)
             const mesh = new Mesh(

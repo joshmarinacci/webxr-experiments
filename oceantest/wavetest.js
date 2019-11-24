@@ -57,17 +57,18 @@ function setupNodeMaterial(core, world) {
 
     const localPos = new PositionNode()
     const localY = new SwitchNode(localPos,'y')
-    let offset = new MathNode(
-        new OperatorNode(localY,time,OperatorNode.MUL),
-        MathNode.SIN
-        )
-    // offset = new OperatorNode(offset, new FloatNode(2.0),OperatorNode.ADD)
-    offset = new OperatorNode(offset, new FloatNode(0.2),OperatorNode.MUL)
-    material.position = new OperatorNode(localPos,offset,OperatorNode.ADD)
+    const mul = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.MUL)
+    const add = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.ADD)
+    const f = (v1) => new FloatNode(v1)
+    const sin = (v1) => new MathNode(v1,MathNode.SIN)
+
+    const h = 3
+    let offset = sin(mul(add(localY,f(h/2)),time))
+    material.position = add(localPos,offset)
 
     for(let i=-2; i<3; i++) {
         const ent = world.createEntity()
-        ent.addComponent(CylinderGeometry)
+        ent.addComponent(CylinderGeometry, {rad1: 0, height: h})
         ent.addComponent(CustomNodeMaterial,{material:material})
         ent.addComponent(Position, {z:-10,y:0,x:i*2})
     }

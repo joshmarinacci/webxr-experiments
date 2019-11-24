@@ -38,6 +38,7 @@ export class CylinderGeometry {
     constructor() {
         this.rad1 = 0.5
         this.rad2 = 0.5
+        this.height = 1.0
     }
 }
 
