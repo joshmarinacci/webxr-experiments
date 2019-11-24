@@ -17,7 +17,9 @@ import {
     PositionNode,
     StandardNodeMaterial,
     SwitchNode,
-    TimerNode
+    TimerNode,
+    Vector3Node,
+    JoinNode,
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
@@ -49,6 +51,12 @@ function setupLights(core) {
     core.scene.fog = new Fog('#5aabff', 10, 50)
 }
 
+const mul = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.MUL)
+const add = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.ADD)
+const f = (v1) => new FloatNode(v1)
+const sin = (v1) => new MathNode(v1,MathNode.SIN)
+const cos = (v1) => new MathNode(v1,MathNode.COS)
+
 function setupNodeMaterial(core, world) {
     const material = new StandardNodeMaterial();
     const time = new TimerNode();
@@ -57,13 +65,11 @@ function setupNodeMaterial(core, world) {
 
     const localPos = new PositionNode()
     const localY = new SwitchNode(localPos,'y')
-    const mul = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.MUL)
-    const add = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.ADD)
-    const f = (v1) => new FloatNode(v1)
-    const sin = (v1) => new MathNode(v1,MathNode.SIN)
 
     const h = 3
-    let offset = sin(mul(add(localY,f(h/2)),time))
+    //off = (localy+h/2) * (time*0.2)
+    let off = mul(add(localY,f(h/2)),mul(time,f(0.2)))
+    let offset = new JoinNode(sin(off),0,cos(off))
     material.position = add(localPos,offset)
 
     for(let i=-2; i<3; i++) {
