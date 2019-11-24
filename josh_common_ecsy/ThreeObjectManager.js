@@ -41,6 +41,7 @@ export class CylinderGeometry {
         this.rad1 = 0.5
         this.rad2 = 0.5
         this.height = 1.0
+        this.heightSegments = 1.0
     }
 }
 
@@ -87,7 +88,7 @@ export class ThreeObjectManager extends System {
             }
             if(ent.hasComponent(CylinderGeometry)) {
                 const cg = ent.getComponent(CylinderGeometry)
-                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height)
+                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height, 8, cg.heightSegments)
             }
 
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
