@@ -16,25 +16,6 @@ export class CustomNodeMaterialSystem extends System {
         this.frame = new NodeFrame()
     }
     execute(delta,time) {
-        this.queries.objs.added.forEach(ent => {
-            const comp = ent.getComponent(CustomNodeMaterial)
-            let geo = null
-            if(ent.hasComponent(CylinderGeometry)) {
-                const cg = ent.getComponent(CylinderGeometry)
-                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height)
-            }
-            if(!geo) geo = new PlaneBufferGeometry(20,20)
-            const mesh = new Mesh(geo,comp.material)
-
-            if(ent.hasComponent(Position)) {
-                mesh.position.copy(ent.getComponent(Position))
-            }
-
-            // mesh.rotation.x = toRad(-45)
-            this.queries.three.results.forEach(ent => {
-                ent.getComponent(ThreeCore).getStage().add(mesh)
-            })
-        })
         this.queries.three.results.forEach(ent => {
             this.frame.setRenderer(ent.getComponent(ThreeCore).renderer).update(delta);
             this.queries.objs.results.forEach(ent => {

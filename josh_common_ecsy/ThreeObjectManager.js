@@ -4,12 +4,14 @@ import {
     PlaneBufferGeometry,
     RepeatWrapping,
     SphereBufferGeometry,
+    CylinderBufferGeometry,
     TextureLoader,
     Vector3
 } from "https://threejs.org/build/three.module.js"
 import {GLTFLoader} from "https://threejs.org/examples/jsm/loaders/GLTFLoader.js"
 import {ThreeCore} from './threesystem.js'
 import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {CustomNodeMaterial} from './CustomMaterialManager.js'
 
 export class ThreeObject {
     constructor() {
@@ -76,9 +78,16 @@ export class ThreeObjectManager extends System {
                     map:tex
                 })
             }
+            if(ent.hasComponent(CustomNodeMaterial)) {
+                mat = ent.getComponent(CustomNodeMaterial).material
+            }
             if(ent.hasComponent(PlaneGeometry)) {
                 const plane = ent.getComponent(PlaneGeometry)
                 geo = new PlaneBufferGeometry(plane.width,plane.height)
+            }
+            if(ent.hasComponent(CylinderGeometry)) {
+                const cg = ent.getComponent(CylinderGeometry)
+                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height)
             }
 
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
@@ -117,6 +126,15 @@ export class GLTFModel {
     }
 }
 
+function findChildMesh(obj) {
+    if(obj.type === 'Mesh') return obj
+    for(let i=0; i<obj.children.length; i++) {
+        const ch = findChildMesh(obj.children[i])
+        if(ch) return ch
+    }
+    return null
+}
+
 export class GLTFModelSystem extends System {
     execute() {
         this.queries.three.results.forEach(ent => {
@@ -131,9 +149,7 @@ export class GLTFModelSystem extends System {
                         const pos = ent.getComponent(Position)
                         obj.position.copy(pos)
                     }
-                    // obj.position.x = modelComp.position.x
-                    // obj.position.y = modelComp.position.y
-                    // obj.position.z = modelComp.position.z
+
                     let sc = 1.0
                     if(modelComp.scale) {
                         sc = modelComp.scale
@@ -141,6 +157,17 @@ export class GLTFModelSystem extends System {
                     obj.scale.x = sc
                     obj.scale.y = sc
                     obj.scale.z = sc
+
+                    if(ent.hasComponent(CustomNodeMaterial)) {
+                        const comp = ent.getComponent(CustomNodeMaterial)
+                        console.log("setting up custom node material",obj)
+                        const ch = findChildMesh(obj)
+                        if(ch) {
+                            ch.material = comp.material
+                            console.log("the mesh child is",ch)
+                        }
+                    }
+
                 })
             })
         })

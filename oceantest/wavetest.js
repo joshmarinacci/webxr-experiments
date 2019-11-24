@@ -29,6 +29,7 @@ import {
     oneWorldTick,
     startWorldLoop,
     ThreeCore,
+    ThreeObject,
     ThreeObjectManager,
     ThreeSystem
 } from "../josh_common_ecsy/index.js"
@@ -74,6 +75,7 @@ function setupNodeMaterial(core, world) {
 
     for(let i=-2; i<3; i++) {
         const ent = world.createEntity()
+        ent.addComponent(ThreeObject)
         ent.addComponent(CylinderGeometry, {rad1: 0, height: h})
         ent.addComponent(CustomNodeMaterial,{material:material})
         ent.addComponent(Position, {z:-10,y:0,x:i*2})

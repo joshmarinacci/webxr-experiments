@@ -24,10 +24,10 @@ import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {
     CustomNodeMaterial,
     CustomNodeMaterialSystem,
-    oneWorldTick,
+    oneWorldTick, PlaneGeometry,
     Position,
     startWorldLoop,
-    ThreeCore,
+    ThreeCore, ThreeObject,
     ThreeObjectManager,
     ThreeSystem
 } from "../josh_common_ecsy/index.js"
@@ -83,6 +83,8 @@ function setupNodeMaterial(core, world) {
     )
 
     const ent = world.createEntity()
+    ent.addComponent(ThreeObject)
+    ent.addComponent(PlaneGeometry, {width: 10, height: 10})
     ent.addComponent(CustomNodeMaterial,{material:material})
     ent.addComponent(Position,{z:-10, y:2})
 }
