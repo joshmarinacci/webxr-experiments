@@ -22,6 +22,8 @@ import {
     TextureNode,
     TimerNode,
     UVTransformNode,
+    UVNode,
+    Vector2Node,
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {
     AudioSystem, CustomNodeMaterial, CustomNodeMaterialSystem,
@@ -75,22 +77,11 @@ function setup() {
     oneWorldTick(game,world)
 
     function makeGround(world) {
-
         const material = new StandardNodeMaterial();
         const time = new TimerNode();
+        let uv = new UVNode()
 
-        const tex1Resource =new TextureLoader().load("candycane.png")
-        tex1Resource.wrapS = tex1Resource.wrapT = RepeatWrapping;
-        const tex1 = new TextureNode(tex1Resource)
-        tex1.uv = new UVTransformNode()
-        tex1.uv.setUvTransform(0,0,100,100,0)
-        const tex2Resource =new TextureLoader().load("diffuse_small.png")
-        tex2Resource.wrapS = tex2Resource.wrapT = RepeatWrapping;
-        const tex2 = new TextureNode(tex2Resource)
-        tex2.uv = new UVTransformNode()
-        tex2.uv.setUvTransform(0,0,10,10,0)
-
-        let speed = new FloatNode( 0.1 );
+        let speed = new FloatNode( 0.05 );
         let timeSpeed = new OperatorNode(
             time,
             speed,
@@ -102,9 +93,28 @@ function setup() {
             OperatorNode.MUL
         )
         let cycle = new MathNode(sinCycleInSecs, MathNode.SIN)
+        let cycle2 = new OperatorNode(cycle,new FloatNode(0.05),OperatorNode.MUL)
+
+
+        const tex1Resource =new TextureLoader().load("Caustics_Caustics_Grayscale2.jpg")
+        tex1Resource.wrapS = tex1Resource.wrapT = RepeatWrapping;
+        const tex2Resource =new TextureLoader().load("diffuse_small.png")
+        tex2Resource.wrapS = tex2Resource.wrapT = RepeatWrapping;
+
+
+        // let timeSpeedA = new OperatorNode(time, new Vector2Node(0.01,0.01),OperatorNode.MUL)
+        let uv2 = new OperatorNode(uv,new FloatNode(10),OperatorNode.MUL)
+        let uvOffsetA = new OperatorNode(cycle2,uv2,OperatorNode.ADD)
+        const tex1 = new TextureNode(tex1Resource, uvOffsetA)
+        // tex1.uv = new UVTransformNode()
+        // tex1.uv.setUvTransform(0,0,10,10,0)
+        const tex2 = new TextureNode(tex2Resource)
+        tex2.uv = new UVTransformNode()
+        tex2.uv.setUvTransform(0,0,10,10,0)
+
         // let color = new TextureNode(tex1)
-        let cycleColor = new OperatorNode(cycle,tex1,OperatorNode.MUL)
-        let black = new ColorNode('black')
+        // let cycleColor = new OperatorNode(cycle,tex1,OperatorNode.MUL)
+        // let black = new ColorNode('black')
         material.color = new OperatorNode(
             // new TextureNode(tex2),
             tex2,
