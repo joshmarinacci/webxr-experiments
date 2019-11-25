@@ -57,6 +57,7 @@ const add = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.ADD)
 const f = (v1) => new FloatNode(v1)
 const sin = (v1) => new MathNode(v1,MathNode.SIN)
 const cos = (v1) => new MathNode(v1,MathNode.COS)
+const square = (v1) => new OperatorNode(v1,v1,OperatorNode.MUL)
 
 function setupNodeMaterial(core, world) {
     const material = new StandardNodeMaterial();
@@ -76,7 +77,7 @@ function setupNodeMaterial(core, world) {
     for(let i=-2; i<3; i++) {
         const ent = world.createEntity()
         ent.addComponent(ThreeObject)
-        ent.addComponent(CylinderGeometry, {rad1: 0, height: h})
+        ent.addComponent(CylinderGeometry, {rad1: 0, height: h, radialSegments: 8, heightSegments: 16})
         ent.addComponent(CustomNodeMaterial,{material:material})
         ent.addComponent(Position, {z:-10,y:0,x:i*2})
     }
