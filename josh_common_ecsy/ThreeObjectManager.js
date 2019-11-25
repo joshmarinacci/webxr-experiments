@@ -29,6 +29,14 @@ export class Position {
     }
 }
 
+export class Rotation {
+    constructor() {
+        this.x = 0
+        this.y = 0
+        this.z = 0
+    }
+}
+
 export class PlaneGeometry {
     constructor() {
         this.width = 1
@@ -99,6 +107,10 @@ export class ThreeObjectManager extends System {
             if(ent.hasComponent(Position)) {
                 const pos = ent.getComponent(Position)
                 obj.mesh.position.copy(pos)
+            }
+            if(ent.hasComponent(Rotation)) {
+                const rot = ent.getComponent(Rotation)
+                obj.mesh.rotation.set(rot.x,rot.y,rot.z)
             }
             this.queries.three.results.forEach(ent => {
                 ent.getComponent(ThreeCore).getStage().add(obj.mesh)

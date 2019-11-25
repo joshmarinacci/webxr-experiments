@@ -24,7 +24,7 @@ import {
     ThreeSystem,
     toRad
 } from "../josh_common_ecsy/index.js"
-import {Position} from '../josh_common_ecsy/ThreeObjectManager.js'
+import {Position, Rotation} from '../josh_common_ecsy/ThreeObjectManager.js'
 
 function randf(min,max) {
     return min + Math.random()*(max-min)
@@ -59,8 +59,10 @@ function setup() {
     oneWorldTick(game,world)
 
     let ground = world.createEntity()
-    ground.addComponent(ThreeObject, {position:{x:-0, y:0, z:0}, rotation:{x:toRad(-90)}})
+    ground.addComponent(ThreeObject)
     ground.addComponent(PlaneGeometry, {width:100, height:100})
+    ground.addComponent(Position,{x:0,y:0,z:0})
+    ground.addComponent(Rotation,{x:toRad(-90)})
     ground.addComponent(TextureMaterial, { src:"diffuse_small.png", wrapW:50, wrapH: 50 })
 
     setupLights(game.getMutableComponent(ThreeCore))
