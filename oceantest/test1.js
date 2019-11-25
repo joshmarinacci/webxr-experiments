@@ -1,4 +1,5 @@
 import {
+    RepeatWrapping,
     AmbientLight,
     BackSide,
     Color,
@@ -6,11 +7,24 @@ import {
     Fog,
     Mesh,
     MeshLambertMaterial,
-    SphereBufferGeometry
+    SphereBufferGeometry,
+    TextureLoader,
+    Vector2,
 } from "https://threejs.org/build/three.module.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {
-    AudioSystem,
+    ConstNode,
+    ColorNode,
+    FloatNode,
+    MathNode,
+    OperatorNode,
+    StandardNodeMaterial,
+    TextureNode,
+    TimerNode,
+    UVTransformNode,
+} from "https://threejs.org/examples/jsm/nodes/Nodes.js"
+import {
+    AudioSystem, CustomNodeMaterial, CustomNodeMaterialSystem,
     GLTFModel,
     GLTFModelSystem,
     oneWorldTick,
@@ -25,6 +39,7 @@ import {
     toRad
 } from "../josh_common_ecsy/index.js"
 import {Position, Rotation} from '../josh_common_ecsy/ThreeObjectManager.js'
+
 
 function randf(min,max) {
     return min + Math.random()*(max-min)
@@ -50,6 +65,7 @@ function setup() {
     world.registerSystem(ThreeObjectManager)
     world.registerSystem(GLTFModelSystem)
     world.registerSystem(AudioSystem)
+    world.registerSystem(CustomNodeMaterialSystem)
 
     let game = world.createEntity()
     //  Setting debug to true will move the camera to point down from above and turn on wireframes for all materials
@@ -58,13 +74,55 @@ function setup() {
 
     oneWorldTick(game,world)
 
-    let ground = world.createEntity()
-    ground.addComponent(ThreeObject)
-    ground.addComponent(PlaneGeometry, {width:100, height:100})
-    ground.addComponent(Position,{x:0,y:0,z:0})
-    ground.addComponent(Rotation,{x:toRad(-90)})
-    ground.addComponent(TextureMaterial, { src:"diffuse_small.png", wrapW:50, wrapH: 50 })
+    function makeGround(world) {
 
+        const material = new StandardNodeMaterial();
+        const time = new TimerNode();
+
+        const tex1Resource =new TextureLoader().load("candycane.png")
+        tex1Resource.wrapS = tex1Resource.wrapT = RepeatWrapping;
+        const tex1 = new TextureNode(tex1Resource)
+        tex1.uv = new UVTransformNode()
+        tex1.uv.setUvTransform(0,0,100,100,0)
+        const tex2Resource =new TextureLoader().load("diffuse_small.png")
+        tex2Resource.wrapS = tex2Resource.wrapT = RepeatWrapping;
+        const tex2 = new TextureNode(tex2Resource)
+        tex2.uv = new UVTransformNode()
+        tex2.uv.setUvTransform(0,0,10,10,0)
+
+        let speed = new FloatNode( 0.1 );
+        let timeSpeed = new OperatorNode(
+            time,
+            speed,
+            OperatorNode.MUL
+        );
+        let sinCycleInSecs = new OperatorNode(
+            timeSpeed,
+            new ConstNode( ConstNode.PI2 ),
+            OperatorNode.MUL
+        )
+        let cycle = new MathNode(sinCycleInSecs, MathNode.SIN)
+        // let color = new TextureNode(tex1)
+        let cycleColor = new OperatorNode(cycle,tex1,OperatorNode.MUL)
+        let black = new ColorNode('black')
+        material.color = new OperatorNode(
+            // new TextureNode(tex2),
+            tex2,
+            //new MathNode(cycleColor, MathNode.ABS),
+            // black,
+            tex1,
+            OperatorNode.ADD
+        )
+
+        let ground = world.createEntity()
+        ground.addComponent(ThreeObject)
+        ground.addComponent(PlaneGeometry, {width: 100, height: 100})
+        ground.addComponent(Position, {x: 0, y: 0, z: -10})
+        ground.addComponent(Rotation, {x: toRad(-90)})
+        ground.addComponent(CustomNodeMaterial,{material:material})
+        // ground.addComponent(TextureMaterial, {src: "diffuse_small.png", wrapW: 50, wrapH: 50})
+    }
+    makeGround(world)
     setupLights(game.getMutableComponent(ThreeCore))
 
     function makeRocks(world) {
