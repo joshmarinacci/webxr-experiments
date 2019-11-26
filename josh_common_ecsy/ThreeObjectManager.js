@@ -47,6 +47,7 @@ export class BoxGeometry {
         this.width = 1
         this.height = 1
         this.depth = 1
+        this.widthSegments = 1
     }
 }
 export class SphereGeometry {
@@ -76,6 +77,7 @@ export class TextureMaterial {
         this.wrapH = 1
     }
 }
+export class Wireframe {}
 
 export class ThreeObjectManager extends System {
     execute() {
@@ -107,7 +109,7 @@ export class ThreeObjectManager extends System {
             }
             if(ent.hasComponent(BoxGeometry)) {
                 const plane = ent.getComponent(BoxGeometry)
-                geo = new BoxBufferGeometry(plane.width,plane.height,plane.length)
+                geo = new BoxBufferGeometry(plane.width,plane.height,plane.length, plane.widthSegments)
             }
             if(ent.hasComponent(SphereGeometry)) {
                 const plane = ent.getComponent(SphereGeometry)
@@ -119,6 +121,10 @@ export class ThreeObjectManager extends System {
             }
 
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
+            if(ent.hasComponent(Wireframe)) {
+                mat.wireframe = true
+            }
+
             if(geo == null) geo = new SphereBufferGeometry(0.5)
             obj.mesh = new Mesh(geo,mat)
 
