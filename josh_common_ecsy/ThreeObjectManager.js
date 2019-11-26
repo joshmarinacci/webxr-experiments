@@ -64,6 +64,11 @@ export class CylinderGeometry {
         this.heightSegments = 1;
     }
 }
+export class CustomGeometry {
+    constructor() {
+        this.geometry = null
+    }
+}
 
 export class FlatColor {
     constructor() {
@@ -118,6 +123,9 @@ export class ThreeObjectManager extends System {
             if(ent.hasComponent(CylinderGeometry)) {
                 const cg = ent.getComponent(CylinderGeometry)
                 geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height,cg.radialSegments, cg.heightSegments)
+            }
+            if(ent.hasComponent(CustomGeometry)) {
+                geo = ent.getComponent(CustomGeometry).geometry
             }
 
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
