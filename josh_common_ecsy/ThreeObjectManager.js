@@ -16,8 +16,6 @@ import {CustomNodeMaterial} from './CustomMaterialManager.js'
 export class ThreeObject {
     constructor() {
         this.mesh = null
-        this.position = new Vector3()
-        this.rotation = new Vector3()
     }
 }
 
@@ -43,7 +41,11 @@ export class PlaneGeometry {
         this.height = 1
     }
 }
-
+export class SphereGeometry {
+    constructor() {
+        this.radius = 1.0
+    }
+}
 export class CylinderGeometry {
     constructor() {
         this.rad1 = 0.5
@@ -94,6 +96,10 @@ export class ThreeObjectManager extends System {
             if(ent.hasComponent(PlaneGeometry)) {
                 const plane = ent.getComponent(PlaneGeometry)
                 geo = new PlaneBufferGeometry(plane.width,plane.height)
+            }
+            if(ent.hasComponent(SphereGeometry)) {
+                const plane = ent.getComponent(SphereGeometry)
+                geo = new SphereBufferGeometry(plane.radius)
             }
             if(ent.hasComponent(CylinderGeometry)) {
                 const cg = ent.getComponent(CylinderGeometry)
