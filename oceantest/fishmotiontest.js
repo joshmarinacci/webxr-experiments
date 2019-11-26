@@ -41,13 +41,19 @@ import {
     ThreeSystem,
     toRad
 } from "../josh_common_ecsy/index.js"
-import {Position, Rotation, CylinderGeometry,SphereGeometry} from '../josh_common_ecsy/ThreeObjectManager.js'
+import {
+    Position,
+    Rotation,
+    CylinderGeometry,
+    SphereGeometry,
+    BoxGeometry
+} from '../josh_common_ecsy/ThreeObjectManager.js'
 
 function setupLights(core) {
     //set the background color of the scene
     core.scene.background = new Color( 0xcccccc );
-    // const light = new DirectionalLight( 0xffffff, 0.5 );
-    // core.scene.add(light)
+    const light = new DirectionalLight( 0xffffff, 0.5 );
+    core.scene.add(light)
     const ambient = new AmbientLight(0xffffff,0.3)
     core.scene.add(ambient)
 
@@ -72,10 +78,8 @@ class Fish {
 class FishSystem extends System {
     execute() {
         this.queries.fish.added.forEach(ent => {
-            console.log("a fish was added")
             const fish = ent.getComponent(Fish)
-            const obj = ent.getComponent(ThreeObject)
-            obj.mesh.position.x = randf(-10,10)
+            fish.speed = randf(0.01,0.04)
             this.startWaypoint(ent,this.findWaypoint())
         })
         this.queries.fish.results.forEach(ent => {
@@ -84,8 +88,7 @@ class FishSystem extends System {
             const temp = new Vector3()
             temp.copy(obj.mesh.position)
             temp.sub(fish.targetWaypoint.getComponent(Position))
-            if(temp.length() < 1) {
-                console.log('switching')
+            if(temp.length() < 0.25) {
                 this.startWaypoint(ent,this.findWaypoint())
             } else {
                 let temp2 = new Vector3()
@@ -107,8 +110,11 @@ class FishSystem extends System {
         fish.targetWaypoint = wp
         fish.direction = new Vector3()
         fish.direction.copy(obj.mesh.position)
-        fish.direction.sub(fish.targetWaypoint.getComponent(Position))
+        const wppos = new Vector3()
+        wppos.copy(fish.targetWaypoint.getComponent(Position))
+        fish.direction.sub(wppos)
         fish.direction.normalize()
+        obj.mesh.lookAt(wppos)
         fish.moving = true
     }
 }
@@ -125,45 +131,29 @@ FishSystem.queries = {
 }
 
 function setupFish(world) {
-    const fish = world.createEntity()
-    fish.addComponent(ThreeObject)
-    fish.addComponent(Position, {y:2, z: -10})
-    fish.addComponent(CylinderGeometry)
-    fish.addComponent(FlatColor,{color:'green'})
-    fish.addComponent(Rotation,{z:toRad(90)})
-    fish.addComponent(Fish)
 
-    const fish2 = world.createEntity()
-    fish2.addComponent(ThreeObject)
-    fish2.addComponent(Position, {y:2, z: -10})
-    fish2.addComponent(CylinderGeometry)
-    fish2.addComponent(FlatColor,{color:'green'})
-    fish2.addComponent(Rotation,{z:toRad(90)})
-    fish2.addComponent(Fish)
+    // make fish
+    for(let i=0; i<10; i++) {
+        const fish2 = world.createEntity()
+        fish2.addComponent(ThreeObject)
+        fish2.addComponent(Position, {y: 2, z: randf(-5,-10), x: randf(-10,10)})
+        fish2.addComponent(BoxGeometry, { width: 0.2, height: 0.2, length: 1})
+        fish2.addComponent(FlatColor, {color: 'green'})
+        fish2.addComponent(Rotation, {z: toRad(90)})
+        fish2.addComponent(Fish)
+    }
 
-    const waypoint1 = world.createEntity()
-    waypoint1.addComponent(ThreeObject)
-    waypoint1.addComponent(Position, {x: -3, y: 0, z: -10})
-    waypoint1.addComponent(SphereGeometry, {radius: 0.5})
-    waypoint1.addComponent(Waypoint)
-
-    const waypoint2 = world.createEntity()
-    waypoint2.addComponent(ThreeObject)
-    waypoint2.addComponent(Position, {x: 3, y: 0, z: -10})
-    waypoint2.addComponent(SphereGeometry, {radius: 0.5})
-    waypoint2.addComponent(Waypoint)
-
-    const waypoint3 = world.createEntity()
-    waypoint3.addComponent(ThreeObject)
-    waypoint3.addComponent(Position, {x: 0, y: 0, z: -5})
-    waypoint3.addComponent(SphereGeometry, {radius: 0.5})
-    waypoint3.addComponent(Waypoint)
-
-    const waypoint4 = world.createEntity()
-    waypoint4.addComponent(ThreeObject)
-    waypoint4.addComponent(Position, {x: 0, y: 0, z: -15})
-    waypoint4.addComponent(SphereGeometry, {radius: 0.5})
-    waypoint4.addComponent(Waypoint)
+    // make waypoints
+    for(let i=0; i<10; i++) {
+        const waypoint1 = world.createEntity()
+        waypoint1.addComponent(ThreeObject)
+        waypoint1.addComponent(Position, {
+            x: randf(-10,10),
+            y: randf(0,5),
+            z: randf(-10,-20)})
+        waypoint1.addComponent(SphereGeometry, {radius: 0.5})
+        waypoint1.addComponent(Waypoint)
+    }
 }
 
 function setup() {

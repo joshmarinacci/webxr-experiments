@@ -2,6 +2,7 @@ import {
     Mesh,
     MeshLambertMaterial,
     PlaneBufferGeometry,
+    BoxBufferGeometry,
     RepeatWrapping,
     SphereBufferGeometry,
     CylinderBufferGeometry,
@@ -39,6 +40,13 @@ export class PlaneGeometry {
     constructor() {
         this.width = 1
         this.height = 1
+    }
+}
+export class BoxGeometry {
+    constructor() {
+        this.width = 1
+        this.height = 1
+        this.depth = 1
     }
 }
 export class SphereGeometry {
@@ -96,6 +104,10 @@ export class ThreeObjectManager extends System {
             if(ent.hasComponent(PlaneGeometry)) {
                 const plane = ent.getComponent(PlaneGeometry)
                 geo = new PlaneBufferGeometry(plane.width,plane.height)
+            }
+            if(ent.hasComponent(BoxGeometry)) {
+                const plane = ent.getComponent(BoxGeometry)
+                geo = new BoxBufferGeometry(plane.width,plane.height,plane.length)
             }
             if(ent.hasComponent(SphereGeometry)) {
                 const plane = ent.getComponent(SphereGeometry)
