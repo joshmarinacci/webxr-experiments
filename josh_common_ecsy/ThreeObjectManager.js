@@ -1,11 +1,11 @@
 import {
+    BoxBufferGeometry,
+    CylinderBufferGeometry,
     Mesh,
     MeshLambertMaterial,
     PlaneBufferGeometry,
-    BoxBufferGeometry,
     RepeatWrapping,
     SphereBufferGeometry,
-    CylinderBufferGeometry,
     TextureLoader,
     Vector3
 } from "https://threejs.org/build/three.module.js"
