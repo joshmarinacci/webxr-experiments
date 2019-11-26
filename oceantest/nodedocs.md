@@ -1,3 +1,8 @@
+
+## some random notes
+
+PositionNode takes a scope which can be WORLD, VIEW, PROJECTION, or LOCAL. LOCAL is the default. 
+
 # ThreeJS Node Material System
 
 Despite the name ‘Node’ it has nothing todo with NodeJS. “Node” refers to the draggable lines and boxes system that many visual editors use to create custom materials.

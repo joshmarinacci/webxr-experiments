@@ -1,10 +1,11 @@
 import {
+    BoxBufferGeometry,
+    CylinderBufferGeometry,
     Mesh,
     MeshLambertMaterial,
     PlaneBufferGeometry,
     RepeatWrapping,
     SphereBufferGeometry,
-    CylinderBufferGeometry,
     TextureLoader,
     Vector3
 } from "https://threejs.org/build/three.module.js"
@@ -16,12 +17,18 @@ import {CustomNodeMaterial} from './CustomMaterialManager.js'
 export class ThreeObject {
     constructor() {
         this.mesh = null
-        this.position = new Vector3()
-        this.rotation = new Vector3()
     }
 }
 
 export class Position {
+    constructor() {
+        this.x = 0
+        this.y = 0
+        this.z = 0
+    }
+}
+
+export class Rotation {
     constructor() {
         this.x = 0
         this.y = 0
@@ -35,13 +42,31 @@ export class PlaneGeometry {
         this.height = 1
     }
 }
-
+export class BoxGeometry {
+    constructor() {
+        this.width = 1
+        this.height = 1
+        this.depth = 1
+        this.widthSegments = 1
+    }
+}
+export class SphereGeometry {
+    constructor() {
+        this.radius = 1.0
+    }
+}
 export class CylinderGeometry {
     constructor() {
         this.rad1 = 0.5
         this.rad2 = 0.5
         this.height = 1.0
-        this.heightSegments = 1.0
+        this.radialSegments = 8;
+        this.heightSegments = 1;
+    }
+}
+export class CustomGeometry {
+    constructor() {
+        this.geometry = null
     }
 }
 
@@ -57,6 +82,7 @@ export class TextureMaterial {
         this.wrapH = 1
     }
 }
+export class Wireframe {}
 
 export class ThreeObjectManager extends System {
     execute() {
@@ -86,18 +112,37 @@ export class ThreeObjectManager extends System {
                 const plane = ent.getComponent(PlaneGeometry)
                 geo = new PlaneBufferGeometry(plane.width,plane.height)
             }
+            if(ent.hasComponent(BoxGeometry)) {
+                const plane = ent.getComponent(BoxGeometry)
+                geo = new BoxBufferGeometry(plane.width,plane.height,plane.length, plane.widthSegments)
+            }
+            if(ent.hasComponent(SphereGeometry)) {
+                const plane = ent.getComponent(SphereGeometry)
+                geo = new SphereBufferGeometry(plane.radius)
+            }
             if(ent.hasComponent(CylinderGeometry)) {
                 const cg = ent.getComponent(CylinderGeometry)
-                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height, 8, cg.heightSegments)
+                geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height,cg.radialSegments, cg.heightSegments)
+            }
+            if(ent.hasComponent(CustomGeometry)) {
+                geo = ent.getComponent(CustomGeometry).geometry
             }
 
             if(mat == null) mat = new MeshLambertMaterial({color:'red'})
+            if(ent.hasComponent(Wireframe)) {
+                mat.wireframe = true
+            }
+
             if(geo == null) geo = new SphereBufferGeometry(0.5)
             obj.mesh = new Mesh(geo,mat)
 
             if(ent.hasComponent(Position)) {
                 const pos = ent.getComponent(Position)
                 obj.mesh.position.copy(pos)
+            }
+            if(ent.hasComponent(Rotation)) {
+                const rot = ent.getComponent(Rotation)
+                obj.mesh.rotation.set(rot.x,rot.y,rot.z)
             }
             this.queries.three.results.forEach(ent => {
                 ent.getComponent(ThreeCore).getStage().add(obj.mesh)

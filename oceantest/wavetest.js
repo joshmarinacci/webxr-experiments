@@ -53,7 +53,6 @@ function setupLights(core) {
 }
 
 const mul = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.MUL)
-const div = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.DIV)
 const add = (v1,v2) => new OperatorNode(v1,v2,OperatorNode.ADD)
 const f = (v1) => new FloatNode(v1)
 const sin = (v1) => new MathNode(v1,MathNode.SIN)
@@ -70,15 +69,15 @@ function setupNodeMaterial(core, world) {
     const localY = new SwitchNode(localPos,'y')
 
     const h = 3
-    let freq = time
-    let voff = mul(square(add(localY,f(h/2))),f(0.2))
-    let offset = new JoinNode(mul(sin(freq),voff),0,mul(cos(freq),voff))
+    //off = (localy+h/2) * (time*0.2)
+    let off = mul(add(localY,f(h/2)),mul(time,f(0.2)))
+    let offset = new JoinNode(sin(off),0,cos(off))
     material.position = add(localPos,offset)
 
     for(let i=-2; i<3; i++) {
         const ent = world.createEntity()
         ent.addComponent(ThreeObject)
-        ent.addComponent(CylinderGeometry, {rad1: 0, height: h, heightSegments:10})
+        ent.addComponent(CylinderGeometry, {rad1: 0, height: h, radialSegments: 8, heightSegments: 16})
         ent.addComponent(CustomNodeMaterial,{material:material})
         ent.addComponent(Position, {z:-10,y:0,x:i*2})
     }
