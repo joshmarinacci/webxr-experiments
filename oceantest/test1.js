@@ -1,4 +1,6 @@
 import {
+    AdditiveBlending,
+    Vector3,
     RepeatWrapping,
     AmbientLight,
     BackSide,
@@ -10,6 +12,7 @@ import {
     SphereBufferGeometry,
     TextureLoader,
     Vector2,
+    NormalBlending,
 } from "https://threejs.org/build/three.module.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {
@@ -41,6 +44,7 @@ import {
     toRad
 } from "../josh_common_ecsy/index.js"
 import {Position, Rotation} from '../josh_common_ecsy/ThreeObjectManager.js'
+import {ParticleEmitter, ParticleSystem} from '../josh_common_ecsy/particles.js'
 
 
 function randf(min,max) {
@@ -68,6 +72,7 @@ function setup() {
     world.registerSystem(GLTFModelSystem)
     world.registerSystem(AudioSystem)
     world.registerSystem(CustomNodeMaterialSystem)
+    world.registerSystem(ParticleSystem)
 
     let game = world.createEntity()
     //  Setting debug to true will move the camera to point down from above and turn on wireframes for all materials
@@ -189,6 +194,48 @@ function setup() {
 
     makeAudio(world)
 
+    function makeBubbles(world) {
+        const parts = world.createEntity()
+        const vel = new Vector3()
+        function randf(min,max) {
+            return Math.random()*(max-min)+min
+        }
+
+        let tick = 0
+        let color = new Color()
+        let pos = new Vector3(0,0,0)
+        parts.addComponent(ParticleEmitter, {
+            blendMode: AdditiveBlending,
+            texture:"./BubbleSimple.png",
+            // velocity: 0.1,
+            lifetime: 100,
+            size: 100,
+            fadeOut: 100,
+            particlesPerTick: 1,
+            onSpawn: (emitter,spawn) => {
+                if(tick % 100 === 0) {
+                    pos.x = randf(-1,1)
+                    pos.z = -8
+                    pos.y = -3
+                    vel.x = randf(-0.1, 0.1)
+                    vel.y = randf(0.5, 0.8)
+                    vel.z = 0
+                    color.set(0xFFFFFF)
+                    spawn({
+                        velocity: vel,
+                        position: pos,
+                        size: randf(40, 70),
+                        lifetime: emitter.lifetime,
+                        color: color
+                    })
+                }
+                tick++
+            }
+        })
+        parts.addComponent(Position, {y:2,z:-5})
+    }
+
+    makeBubbles(world)
 
     startWorldLoop(game,world)
 

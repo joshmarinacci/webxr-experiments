@@ -341,6 +341,7 @@ export class ParticleEmitter {
         this.velocity = 1
         this.lifetime = 3
         this.size = 10
+        this.fadeOut = 0.1
         let position = new Vector3(0,0,0)
         let velocity = new Vector3(0,0,0)
         this.onSpawn = (emitter,spawn) => {
@@ -369,6 +370,7 @@ export class ParticleSystem extends System {
             emitter.parts = new GPUParticleSystem({
                 maxParticles:10000,
                 blending: emitter.blendMode,
+                fadeOut: emitter.fadeOut,
                 particleSpriteTex: new TextureLoader().load(emitter.texture),
                 onTick:(system,time) => {
                     for (let i = 0; i < emitter.particlesPerTick; i++) {
