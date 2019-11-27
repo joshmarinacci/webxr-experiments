@@ -19,6 +19,7 @@ import {
 } from "https://threejs.org/build/three.module.js"
 import {ThreeCore} from './threesystem.js'
 import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {Position} from './ThreeObjectManager.js'
 // import GPUPositionParticleSystem from '../particles/GPUPositionParticleSystem.js'
 
 
@@ -67,7 +68,8 @@ const GPUParticleShader = {
                     }
                     
                     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
-                    gl_PointSize = ( uScale * size ) * lifeLeft;
+                    gl_PointSize = ( uScale * size );// * lifeLeft;
+                    // gl_PointSize = 100.0;
                     newPosition = positionStart 
                         + (velocity * timeElapsed)
                         + (acceleration * 0.5 * timeElapsed * timeElapsed)
@@ -337,8 +339,22 @@ export class ParticleEmitter {
         this.blendMode = NormalBlending
         this.positionSpread = 0
         this.velocity = 1
-        this.lifetime = 1
+        this.lifetime = 3
         this.size = 10
+        let position = new Vector3(0,0,0)
+        let velocity = new Vector3(0,0,0)
+        this.onSpawn = (emitter,spawn) => {
+            let v = emitter.velocity
+            velocity.x = randf(-v,v)
+            velocity.y = randf(-v,v)
+            velocity.z = randf(-v,v)
+            spawn({
+                size:emitter.size,
+                position: position,
+                velocity: velocity,
+                lifetime: emitter.lifetime
+            });
+        }
     }
 }
 
@@ -350,27 +366,19 @@ export class ParticleSystem extends System {
     execute(delta,time) {
         this.queries.emitters.added.forEach(ent => {
             const emitter = ent.getMutableComponent(ParticleEmitter)
-            let position = new Vector3(0,3,-3)
-            let velocity = new Vector3(0,0,0)
             emitter.parts = new GPUParticleSystem({
                 maxParticles:10000,
                 blending: emitter.blendMode,
                 particleSpriteTex: new TextureLoader().load(emitter.texture),
                 onTick:(system,time) => {
                     for (let i = 0; i < emitter.particlesPerTick; i++) {
-                        let v = emitter.velocity
-                        velocity.x = randf(-v,v)
-                        velocity.y = randf(-v,v)
-                        velocity.z = randf(-v,v)
-                        system.spawnParticle({
-                            size:emitter.size,
-                            position: position,
-                            velocity: velocity,
-                            lifetime: emitter.lifetime
-                        });
+                        emitter.onSpawn(emitter,(args)=>{
+                            system.spawnParticle(args)
+                        })
                     }
                 }
             })
+            if(ent.hasComponent(Position)) emitter.parts.position.copy(ent.getComponent(Position))
             this.queries.three.results.forEach(ent => ent.getComponent(ThreeCore).getStage().add(emitter.parts))
         })
         this.queries.emitters.results.forEach(ent => ent.getMutableComponent(ParticleEmitter).parts.update(time))

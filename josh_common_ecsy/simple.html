@@ -26,7 +26,7 @@
     import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
     import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor, Position} from "./ThreeObjectManager.js"
     import {AudioSystem, SoundEffect} from './audio.js'
-    import {AmbientLight, AdditiveBlending } from "https://threejs.org/build/three.module.js"
+    import {Color, AmbientLight, AdditiveBlending, NormalBlending, Vector3 } from "https://threejs.org/build/three.module.js"
     import {ParticleEmitter, ParticleSystem} from './particles.js'
 
 
@@ -60,13 +60,41 @@
     music.addComponent(SoundEffect, { name:'bg', src:'./sugarplum.mp3',autoPlay:true,loop:true})
 
     const parts = world.createEntity()
+    const vel = new Vector3()
+    let pos = new Vector3(0,0,0)
+    function randf(min,max) {
+        return Math.random()*(max-min)+min
+    }
+
+
+    let tick = 0
+    let color = new Color()
     parts.addComponent(ParticleEmitter, {
-        blendMode: AdditiveBlending,
+        blendMode: NormalBlending,
         texture:"./particle.png",
-        velocity: 0.1,
-        lifetime: 20,
-        size: 20,
+        // velocity: 0.1,
+        // lifetime: 100,
+        size: 100,
+        particlesPerTick: 1,
+        onSpawn: (emitter,spawn) => {
+            if(tick % 100 === 0) {
+                pos.x = randf(-1,1)
+                vel.x = randf(-0.1, 0.1)
+                vel.y = randf(0.1, 0.2)
+                vel.z = 0
+                color.set(0x00FF00)
+                spawn({
+                    velocity: vel,
+                    position: pos,
+                    size: randf(100, 200),
+                    lifetime: 100,
+                    color: color
+                })
+            }
+            tick++
+        }
     })
+    parts.addComponent(Position, {y:2,z:-3})
     startWorldLoop(game,world)
 
 
