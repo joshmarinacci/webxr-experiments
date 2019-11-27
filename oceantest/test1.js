@@ -189,7 +189,7 @@ function setup() {
 
     function makeAudio(world) {
         const music = world.createEntity()
-        music.addComponent(SoundEffect, { name:'bg', src:'./bgmusic.ogg',autoPlay:true,loop:true})
+        music.addComponent(SoundEffect, { name:'bg', src:'./bgmusic.mp3',autoPlay:true,loop:true})
     }
 
     makeAudio(world)
