@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+
+<script type="module">
+    import {World} from "https://ecsy.io/build/ecsy.module.js"
+    import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
+    import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor, Position} from "./ThreeObjectManager.js"
+    import {AudioSystem, SoundEffect} from './audio.js'
+    import {Color, AmbientLight, AdditiveBlending, NormalBlending, Vector3 } from "https://threejs.org/build/three.module.js"
+    import {ParticleEmitter, ParticleSystem} from './particles.js'
+    import {} from "./aframe_environment.js"
+    import {AframeEnvironmentSystem} from './aframe_environment.js'
+    import {AframeEnvironment} from './aframe_environment.js'
+
+    let world = new World();
+    world.registerSystem(ThreeSystem)
+    world.registerSystem(ThreeObjectManager)
+    world.registerSystem(AframeEnvironmentSystem)
+
+
+    let game = world.createEntity()
+    game.addComponent(ThreeCore, {debug:true})
+    game.addComponent(AframeEnvironment,{preset:'egypt'})
+    oneWorldTick(game,world)
+
+    //ambient light
+    const core = game.getComponent(ThreeCore)
+    const ambient = new AmbientLight(0xffffff,1.0)
+    core.scene.add(ambient)
+    startWorldLoop(game,world)
+
+
+</script>
+</body>
+</html>
