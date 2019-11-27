@@ -118,8 +118,7 @@ export default class GPUParticleSystem extends Object3D {
         options = options || {};
 
 
-        //this.blending = options.blending? options.blending : NormalBlending
-        this.blending = AdditiveBlending
+        this.blending = options.blending? options.blending : NormalBlending
         this.PARTICLE_COUNT = options.maxParticles || 1000000;
         this.PARTICLE_CURSOR = 0;
         this.time = 0;
@@ -334,6 +333,12 @@ export default class GPUParticleSystem extends Object3D {
 export class ParticleEmitter {
     constructor() {
         this.texture = null
+        this.particlesPerTick = 10
+        this.blendMode = NormalBlending
+        this.positionSpread = 0
+        this.velocity = 1
+        this.lifetime = 1
+        this.size = 10
     }
 }
 
@@ -345,36 +350,30 @@ export class ParticleSystem extends System {
     execute(delta,time) {
         this.queries.emitters.added.forEach(ent => {
             const emitter = ent.getMutableComponent(ParticleEmitter)
-            console.log("using",emitter.texture)
             let position = new Vector3(0,3,-3)
             let velocity = new Vector3(0,0,0)
             emitter.parts = new GPUParticleSystem({
+                maxParticles:10000,
+                blending: emitter.blendMode,
                 particleSpriteTex: new TextureLoader().load(emitter.texture),
                 onTick:(system,time) => {
-                    for (let i = 0; i < 100; i++) {
-                        const v = 3.0
-                        // options.velocity.x = remap(Math.random(),0,1,-v,v)
-                        // options.velocity.y = remap(Math.random(),0,1,-v,v)
-                        // options.velocity.z = remap(Math.random(),0,1,-v,v)
-                        velocity.x = randf(-1,1)
+                    for (let i = 0; i < emitter.particlesPerTick; i++) {
+                        let v = emitter.velocity
+                        velocity.x = randf(-v,v)
+                        velocity.y = randf(-v,v)
+                        velocity.z = randf(-v,v)
                         system.spawnParticle({
-                            size:40,
+                            size:emitter.size,
                             position: position,
                             velocity: velocity,
+                            lifetime: emitter.lifetime
                         });
                     }
                 }
             })
-            this.queries.three.results.forEach(ent => {
-                // ent.getComponent(ThreeCore).scene.background = new Color(0xff0000)
-                ent.getComponent(ThreeCore).getStage().add(emitter.parts)
-            })
+            this.queries.three.results.forEach(ent => ent.getComponent(ThreeCore).getStage().add(emitter.parts))
         })
-        this.queries.emitters.results.forEach(ent => {
-            // console.log("updaating",time)
-            const emitter = ent.getMutableComponent(ParticleEmitter)
-            emitter.parts.update(time)
-        })
+        this.queries.emitters.results.forEach(ent => ent.getMutableComponent(ParticleEmitter).parts.update(time))
     }
 }
 

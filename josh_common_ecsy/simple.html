@@ -26,8 +26,7 @@
     import {oneWorldTick, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
     import {ThreeObjectManager, ThreeObject, PlaneGeometry, FlatColor, Position} from "./ThreeObjectManager.js"
     import {AudioSystem, SoundEffect} from './audio.js'
-    import {AmbientLight
-    } from "https://threejs.org/build/three.module.js"
+    import {AmbientLight, AdditiveBlending } from "https://threejs.org/build/three.module.js"
     import {ParticleEmitter, ParticleSystem} from './particles.js'
 
 
@@ -62,7 +61,11 @@
 
     const parts = world.createEntity()
     parts.addComponent(ParticleEmitter, {
-        texture:"./particle.png"
+        blendMode: AdditiveBlending,
+        texture:"./particle.png",
+        velocity: 0.1,
+        lifetime: 20,
+        size: 20,
     })
     startWorldLoop(game,world)
 
