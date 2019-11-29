@@ -177,7 +177,6 @@ export class AframeEnvironmentSystem extends System {
                 new MeshLambertMaterial({color:env.data.skyColor, side: BackSide})
             )
             this.queries.three.results.forEach(ent => {
-                console.log("added",skybox)
                 ent.getComponent(ThreeCore).getStage().add(skybox)
             })
         })
