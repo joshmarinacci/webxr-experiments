@@ -56,6 +56,7 @@ function setupLights(core) {
 }
 
 const f = (val) => new FloatNode(val)
+const add = (a,b) => new OperatorNode(a,b,OperatorNode.ADD)
 const mul = (a,b) => new OperatorNode(a,b,OperatorNode.MUL)
 const div = (a,b) => new OperatorNode(a,b,OperatorNode.DIV)
 const mod = (a,b) => new MathNode(a,b,MathNode.MOD)
@@ -70,7 +71,7 @@ function setupNodeMaterial(core, world) {
 
     const size = f(20)
     const patternTex =new TextureLoader().load("sweater.png")
-    const colorTex =new TextureLoader().load("color.png")
+    const colorTex =new TextureLoader().load("Player.png")
     patternTex.wrapS = patternTex.wrapT = RepeatWrapping;
     colorTex.wrapS = colorTex.wrapT = RepeatWrapping;
     let uv2 = mul(new UVNode(),size)
@@ -106,6 +107,12 @@ function setupNodeMaterial(core, world) {
     const hsv2rgb_call = new FunctionCallNode(hsv2rgb)
     hsv2rgb_call.inputs.c = new JoinNode(hue,sat,val)
     material.color = hsv2rgb_call
+
+    // material.color = new MathNode(
+    //     new TextureNode(colorTex,uvColor),
+    //     new TextureNode(patternTex,uv2),
+    //     f(0.5),
+    //     MathNode.MIX)
 
 
     const ent = world.createEntity()
