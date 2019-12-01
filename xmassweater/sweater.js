@@ -27,6 +27,7 @@ import {
     TimerNode,
     ColorAdjustmentNode,
     SwitchNode,
+    Vector2Node,
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 
@@ -56,6 +57,7 @@ function setupLights(core) {
 }
 
 const f = (val) => new FloatNode(val)
+const v2 = (a,b) => new Vector2Node(a,b)
 const add = (a,b) => new OperatorNode(a,b,OperatorNode.ADD)
 const mul = (a,b) => new OperatorNode(a,b,OperatorNode.MUL)
 const div = (a,b) => new OperatorNode(a,b,OperatorNode.DIV)
@@ -64,62 +66,30 @@ const fract = (a) => new MathNode(a,MathNode.FRACT)
 const floor = (a) => new MathNode(a,MathNode.FLOOR)
 
 
+
 function setupNodeMaterial(core, world) {
 
     const material = new StandardNodeMaterial();
     const time = new TimerNode();
 
-    const size = f(20)
+    const size = f(128)
+    const pixelOff = f(1/128/2)
     const patternTex =new TextureLoader().load("sweater.png")
-    const colorTex =new TextureLoader().load("Player.png")
+    const colorTex =new TextureLoader().load("merrychristmas.png")
     patternTex.wrapS = patternTex.wrapT = RepeatWrapping;
     colorTex.wrapS = colorTex.wrapT = RepeatWrapping;
     let uv2 = mul(new UVNode(),size)
-    let uvColor = div(floor(mul(new UVNode(),size)),size)
+    let uvColor = add(div(floor(mul(new UVNode(),size)),size),pixelOff)
 
-    let rgb2hsv = new FunctionNode(`vec3 rgb2hsv(vec3 c){
-        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-    
-        float d = q.x - min(q.w, q.y);
-        float e = 1.0e-10;
-        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-    }`)
+    material.color = mul(new TextureNode(patternTex,uv2), new TextureNode(colorTex,uvColor))
 
-    let hsv2rgb = new FunctionNode(`vec3 hsv2rgb(vec3 c){
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }`)
-
-    const hsv_col = new FunctionCallNode(rgb2hsv)
-    hsv_col.inputs.c = new TextureNode(colorTex,uvColor)
-    let hue = new SwitchNode(hsv_col,'x')
-    let sat = new SwitchNode(hsv_col,'y')
-    // let val = new SwitchNode(hsv_col,'z')
-
-    const hsv_pat = new FunctionCallNode(rgb2hsv)
-    hsv_pat.inputs.c = new TextureNode(patternTex,uv2)
-    // let sat = new SwitchNode(hsv_pat,'y')
-    let val = new SwitchNode(hsv_pat,'z')
-
-    const hsv2rgb_call = new FunctionCallNode(hsv2rgb)
-    hsv2rgb_call.inputs.c = new JoinNode(hue,sat,val)
-    material.color = hsv2rgb_call
-
-    // material.color = new MathNode(
-    //     new TextureNode(colorTex,uvColor),
-    //     new TextureNode(patternTex,uv2),
-    //     f(0.5),
-    //     MathNode.MIX)
 
 
     const ent = world.createEntity()
     ent.addComponent(ThreeObject)
     ent.addComponent(PlaneGeometry, {width: 10, height: 10})
     ent.addComponent(CustomNodeMaterial,{material:material})
-    ent.addComponent(Position,{z:-10, y:2})
+    ent.addComponent(Position,{z:-7, y:1.5})
 }
 
 

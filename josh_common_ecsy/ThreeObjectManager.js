@@ -1,4 +1,6 @@
 import {
+    BufferGeometry,
+    TubeBufferGeometry,
     BoxBufferGeometry,
     CylinderBufferGeometry,
     Mesh,
@@ -7,7 +9,8 @@ import {
     RepeatWrapping,
     SphereBufferGeometry,
     TextureLoader,
-    Vector3
+    Vector3,
+    SplineCurve,
 } from "https://threejs.org/build/three.module.js"
 import {GLTFLoader} from "https://threejs.org/examples/jsm/loaders/GLTFLoader.js"
 import {ThreeCore} from './threesystem.js'
@@ -62,6 +65,11 @@ export class CylinderGeometry {
         this.height = 1.0
         this.radialSegments = 8;
         this.heightSegments = 1;
+    }
+}
+export class TubeGeometry {
+    constructor() {
+        this.curve = null
     }
 }
 export class CustomGeometry {
@@ -123,6 +131,12 @@ export class ThreeObjectManager extends System {
             if(ent.hasComponent(CylinderGeometry)) {
                 const cg = ent.getComponent(CylinderGeometry)
                 geo = new CylinderBufferGeometry(cg.rad1,cg.rad2,cg.height,cg.radialSegments, cg.heightSegments)
+            }
+            if(ent.hasComponent(TubeGeometry)) {
+                const cg = ent.getComponent(TubeGeometry)
+                console.log("making geo with",cg.curve)
+                geo = new BufferGeometry().setFromPoints(cg.curve.getPoints(50))
+                // geo = new TubeBufferGeometry(cg.curve)//, 20, 2, 8, false)
             }
             if(ent.hasComponent(CustomGeometry)) {
                 geo = ent.getComponent(CustomGeometry).geometry
