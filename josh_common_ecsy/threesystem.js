@@ -1,4 +1,5 @@
 import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer} from "https://threejs.org/build/three.module.js"
+import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js"
 
 import {System} from "https://ecsy.io/build/ecsy.module.js"
 import {WEBVR} from "./WebVRButton.js"
@@ -29,6 +30,9 @@ export class ThreeCore {
     getCamera() {
         return this.camera
     }
+    getScene() {
+        return this.scene
+    }
 }
 
 export class InsideVR {
@@ -36,9 +40,23 @@ export class InsideVR {
 }
 
 
+export class OrbitalControls {
+
+}
 export class ThreeSystem extends System {
     execute(delta,time) {
         this.queries.three.results.forEach(ent => this.setupThree(ent))
+        this.queries.orbit.added.forEach(ent => {
+            const orbit = ent.getMutableComponent(OrbitalControls)
+            const three = ent.getComponent(ThreeCore)
+            orbit.controls = new OrbitControls(three.camera, three.renderer.domElement)
+            three.getCamera().position.set(0,0,10)
+            orbit.controls.autoRotate = true
+        })
+        this.queries.orbit.results.forEach(ent => {
+            const orbit = ent.getComponent(OrbitalControls)
+            orbit.controls.update()
+        })
     }
     setupThree(ent) {
         const app = ent.getMutableComponent(ThreeCore)
@@ -81,12 +99,23 @@ export class ThreeSystem extends System {
 
 ThreeSystem.queries = {
     three: {
-        components:[ThreeCore]
+        components:[ThreeCore],
+        listen: {
+            added:true,
+        }
+    },
+    orbit: {
+        components:[OrbitalControls, ThreeCore],
+        listen: {
+            added:true,
+        }
+
     }
 }
 
 
 export function startWorldLoop(app, world) {
+    oneWorldTick(app,world)
     const core = app.getMutableComponent(ThreeCore)
     const clock = new Clock();
     core.renderer.setAnimationLoop(()=> {

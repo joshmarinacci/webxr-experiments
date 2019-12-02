@@ -12,6 +12,7 @@ import {
     Vector3,
     SplineCurve,
 } from "https://threejs.org/build/three.module.js"
+import {AmbientLight as AmbientLight3} from "https://threejs.org/build/three.module.js"
 import {GLTFLoader} from "https://threejs.org/examples/jsm/loaders/GLTFLoader.js"
 import {ThreeCore} from './threesystem.js'
 import {System} from "https://ecsy.io/build/ecsy.module.js"
@@ -90,12 +91,15 @@ export class TextureMaterial {
         this.wrapH = 1
     }
 }
+export class AmbientLight {
+
+}
+
 export class Wireframe {}
 
 export class ThreeObjectManager extends System {
     execute() {
         this.queries.objs.added.forEach(ent => {
-            console.log("added an object",ent)
             const obj = ent.getMutableComponent(ThreeObject)
             let mat = null
             let geo = null
@@ -159,10 +163,18 @@ export class ThreeObjectManager extends System {
                 obj.mesh.rotation.set(rot.x,rot.y,rot.z)
             }
             this.queries.three.results.forEach(ent => {
-                ent.getComponent(ThreeCore).getStage().add(obj.mesh)
+                ent.getComponent(ThreeCore).getScene().add(obj.mesh)
+            })
+        })
+        this.queries.lights.added.forEach(ent => {
+            const light = ent.getMutableComponent(AmbientLight)
+            light.light = new AmbientLight3(0xffffff,1.0)
+            this.queries.three.results.forEach(ent => {
+                ent.getComponent(ThreeCore).getStage().add(light.light)
             })
         })
     }
+
 }
 ThreeObjectManager.queries = {
     three: {
@@ -170,6 +182,13 @@ ThreeObjectManager.queries = {
     },
     objs: {
         components: [ThreeObject],
+        listen: {
+            added:true,
+            removed:true
+        }
+    },
+    lights: {
+        components:[AmbientLight],
         listen: {
             added:true,
             removed:true
