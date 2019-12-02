@@ -138,7 +138,6 @@ export class ThreeObjectManager extends System {
             }
             if(ent.hasComponent(TubeGeometry)) {
                 const cg = ent.getComponent(TubeGeometry)
-                console.log("making geo with",cg.curve)
                 geo = new BufferGeometry().setFromPoints(cg.curve.getPoints(50))
                 // geo = new TubeBufferGeometry(cg.curve)//, 20, 2, 8, false)
             }
@@ -163,7 +162,7 @@ export class ThreeObjectManager extends System {
                 obj.mesh.rotation.set(rot.x,rot.y,rot.z)
             }
             this.queries.three.results.forEach(ent => {
-                ent.getComponent(ThreeCore).getScene().add(obj.mesh)
+                ent.getComponent(ThreeCore).getStage().add(obj.mesh)
             })
         })
         this.queries.lights.added.forEach(ent => {

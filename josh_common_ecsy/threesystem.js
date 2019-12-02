@@ -51,6 +51,7 @@ export class ThreeSystem extends System {
             const three = ent.getComponent(ThreeCore)
             orbit.controls = new OrbitControls(three.camera, three.renderer.domElement)
             three.getCamera().position.set(0,0,10)
+            three.stagePos.position.y = 0
             orbit.controls.autoRotate = true
         })
         this.queries.orbit.results.forEach(ent => {
