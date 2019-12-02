@@ -75,7 +75,7 @@ function setupNodeMaterial(core, world) {
     const size = f(128)
     const pixelOff = f(1/128/2)
     const patternTex =new TextureLoader().load("sweater.png")
-    const colorTex =new TextureLoader().load("merrychristmas.png")
+    const colorTex =new TextureLoader().load("IMG_0517.jpg")
     patternTex.wrapS = patternTex.wrapT = RepeatWrapping;
     colorTex.wrapS = colorTex.wrapT = RepeatWrapping;
     let uv2 = mul(new UVNode(),size)
