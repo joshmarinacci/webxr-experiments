@@ -1,4 +1,6 @@
 import {
+    Spherical,
+    Euler,
     BoxBufferGeometry,
     CylinderBufferGeometry,
     Mesh,
@@ -342,17 +344,36 @@ export class ParticleEmitter {
         this.lifetime = 3
         this.size = 10
         this.fadeOut = 0.1
+        this.direction = new Vector3(0,0,0)
+        this.directionSpread = 0
+        this.positionSpread = 0
         let position = new Vector3(0,0,0)
-        let velocity = new Vector3(0,0,0)
         this.onSpawn = (emitter,spawn) => {
-            let v = emitter.velocity
-            velocity.x = randf(-v,v)
-            velocity.y = randf(-v,v)
-            velocity.z = randf(-v,v)
+            position.x = randf(-this.positionSpread,this.positionSpread)
+            position.y = randf(-this.positionSpread,this.positionSpread)
+            position.z = randf(-this.positionSpread,this.positionSpread)
+            let vel = emitter.velocity
+            let ds = this.directionSpread
+
+
+            // equation from https://mathworld.wolfram.com/SpherePointPicking.html
+            const random = Math.random
+            const acos = Math.acos
+            const PI = Math.PI
+
+            let u = random()
+            let v = randf(0,ds/PI)
+            const theta = 2 * PI * u;
+            const phi = acos(2*v-1)
+            const dir = new Vector3()
+            dir.copy(this.direction)
+            // dir.applyEuler(new Euler(0,theta,phi,'XYZ'))
+            dir.multiplyScalar(this.velocity)
+
             spawn({
                 size:emitter.size,
                 position: position,
-                velocity: velocity,
+                velocity: dir,
                 lifetime: emitter.lifetime
             });
         }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Particle Test</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+
+<script type="module">
+
+    import {World} from "https://ecsy.io/build/ecsy.module.js"
+    import {OrbitalControls, startWorldLoop, ThreeCore, ThreeSystem, toRad} from "./threesystem.js"
+    import {
+        ThreeObjectManager,
+        Position,
+        AmbientLight, ThreeObject, BoxGeometry, FlatColor
+    } from "./ThreeObjectManager.js"
+    import {Color, AdditiveBlending, NormalBlending, Vector3 } from "https://threejs.org/build/three.module.js"
+    import {ParticleEmitter, ParticleSystem} from './particles.js'
+
+
+    let world = new World();
+    world.registerSystem(ThreeSystem)
+    world.registerSystem(ThreeObjectManager)
+    world.registerSystem(ParticleSystem)
+
+    let game = world.createEntity()
+    game.addComponent(ThreeCore, {debug:true})
+    game.addComponent(AmbientLight)
+    game.addComponent(OrbitalControls)
+
+    let cube = world.createEntity()
+    cube.addComponent(ThreeObject)
+    cube.addComponent(BoxGeometry)
+    cube.addComponent(Position)
+
+    let parts = world.createEntity()
+    let tick = 0
+    let pos = new Vector3(0,0,0)
+    const vel = new Vector3()
+    let color = new Color()
+    function randf(min,max) {
+        return Math.random()*(max-min)+min
+    }
+    parts.addComponent(ParticleEmitter, {
+        blendMode: AdditiveBlending,
+        texture:"./particle.png",
+        size: 50,
+        particlesPerTick: 10,
+        lifetime: 0.5,
+
+        direction: new Vector3(0,1,0),
+        velocity: 3.5,
+        directionSpread: toRad(40),
+        positionSpread: 0.0,
+    })
+    parts.addComponent(Position)
+
+    startWorldLoop(game,world)
+
+</script>
+</body>
+</html>
