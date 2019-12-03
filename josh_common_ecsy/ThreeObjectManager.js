@@ -1,9 +1,11 @@
 import {
+    Box3,
     BufferGeometry,
     TubeBufferGeometry,
     BoxBufferGeometry,
     CylinderBufferGeometry,
     Mesh,
+    Object3D,
     MeshLambertMaterial,
     PlaneBufferGeometry,
     RepeatWrapping,
@@ -200,11 +202,12 @@ ThreeObjectManager.queries = {
 export class GLTFModel {
     constructor() {
         this.src = null
-        this.position = new Vector3()
+        this.onLoad = null
+        this.recenter = false
     }
 }
 
-function findChildMesh(obj) {
+export function findChildMesh(obj) {
     if(obj.type === 'Mesh') return obj
     for(let i=0; i<obj.children.length; i++) {
         const ch = findChildMesh(obj.children[i])
@@ -220,7 +223,26 @@ export class GLTFModelSystem extends System {
             this.queries.objs.added.forEach(ent => {
                 const modelComp = ent.getMutableComponent(GLTFModel)
                 new GLTFLoader().load(modelComp.src, (gltf) => {
-                    const obj = gltf.scene.children[0]
+                    let obj = gltf.scene.children[0]
+
+                    if(modelComp.scale) {
+                        let sc = modelComp.scale
+                        obj.scale.x = sc
+                        obj.scale.y = sc
+                        obj.scale.z = sc
+                    }
+
+                    if(modelComp.recenter) {
+                        const box = new Box3().setFromObject(obj)
+                        const center = box.getCenter()
+                        obj.position.sub(center)
+                        const wrapper = new Object3D()
+                        wrapper.add(obj)
+                        obj = wrapper
+                    }
+                    if(modelComp.onLoad) {
+                        modelComp.onLoad(obj)
+                    }
                     core.getStage().add(obj)
 
                     if(ent.hasComponent(Position)) {
@@ -228,13 +250,6 @@ export class GLTFModelSystem extends System {
                         obj.position.copy(pos)
                     }
 
-                    let sc = 1.0
-                    if(modelComp.scale) {
-                        sc = modelComp.scale
-                    }
-                    obj.scale.x = sc
-                    obj.scale.y = sc
-                    obj.scale.z = sc
 
                     if(ent.hasComponent(CustomNodeMaterial)) {
                         const comp = ent.getComponent(CustomNodeMaterial)
