@@ -62,17 +62,29 @@ export class ThreeSystem extends System {
     setupThree(ent) {
         const app = ent.getMutableComponent(ThreeCore)
         if(app.initialized) return
-        const container = document.createElement( 'div' );
-        document.body.appendChild( container );
+        if(!app.canvas) {
+            app.container = document.createElement('div');
+            document.body.appendChild(app.container)
+        }
         app.scene = new Scene();
-        app.camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
-        app.renderer = new WebGLRenderer( { antialias: true } );
+        let width = 400
+        let height = 400
+        if(app.container) {
+            width = app.container.width
+            height = app.container.height
+        }
+        if(app.canvas) {
+            width = app.canvas.width
+            height = app.canvas.height
+        }
+        app.renderer = new WebGLRenderer( { antialias: true, canvas:app.canvas } );
+        app.canvas = app.renderer.domElement
+        app.camera = new PerspectiveCamera( 70, width / height, 0.1, 100 );
         app.renderer.setPixelRatio( window.devicePixelRatio );
-        app.renderer.setSize( window.innerWidth, window.innerHeight );
+        app.renderer.setSize( width, height );
         app.renderer.gammaOutput = true
         app.renderer.vr.enabled = true;
-        container.appendChild( app.renderer.domElement );
-        app.canvas = app.renderer.domElement
+        if(app.container) app.container.appendChild( app.renderer.domElement );
         app.stage = new Group()
         app.stagePos = new Group()
         app.stageRot = new Group()
