@@ -215,6 +215,16 @@ export function findChildMesh(obj) {
     }
     return null
 }
+export function findChildMeshes(obj, results) {
+    if(!results) results = []
+    if(obj.type === 'Mesh') {
+        results.push(obj)
+    }
+    for(let i=0; i<obj.children.length; i++) {
+        findChildMeshes(obj.children[i],results)
+    }
+    return results
+}
 
 export class GLTFModelSystem extends System {
     execute() {

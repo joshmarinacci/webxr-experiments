@@ -1,5 +1,4 @@
 import {
-    AmbientLight,
     BackSide,
     Color,
     DirectionalLight,
@@ -33,7 +32,7 @@ import {World} from "https://ecsy.io/build/ecsy.module.js"
 
 import {
     CustomNodeMaterial,
-    CustomNodeMaterialSystem,
+    CustomNodeMaterialSystem, GLTFModel, GLTFModelSystem,
     oneWorldTick, PlaneGeometry,
     Position,
     startWorldLoop,
@@ -41,20 +40,9 @@ import {
     ThreeObjectManager,
     ThreeSystem
 } from "../josh_common_ecsy/index.js"
+import {OrbitalControls} from '../josh_common_ecsy/threesystem.js'
+import {AmbientLight, findChildMeshes} from '../josh_common_ecsy/ThreeObjectManager.js'
 
-
-function setupLights(core) {
-    //set the background color of the scene
-    core.scene.background = new Color( 0xcccccc );
-    // const light = new DirectionalLight( 0xffffff, 0.5 );
-    // core.scene.add(light)
-    const ambient = new AmbientLight(0xffffff,1.0)
-    core.scene.add(ambient)
-
-    const skybox = new Mesh(new SphereBufferGeometry(100),new MeshLambertMaterial({color:'white', side:BackSide}))
-    core.scene.add(skybox)
-    core.scene.fog = new Fog('#5aabff', 10, 50)
-}
 
 const f = (val) => new FloatNode(val)
 const v2 = (a,b) => new Vector2Node(a,b)
@@ -66,46 +54,71 @@ const fract = (a) => new MathNode(a,MathNode.FRACT)
 const floor = (a) => new MathNode(a,MathNode.FLOOR)
 
 
+let sweaterMaterial
 
 function setupNodeMaterial(core, world) {
 
     const material = new StandardNodeMaterial();
     const time = new TimerNode();
 
-    const size = f(128)
-    const pixelOff = f(1/128/2)
+    const pxsize = 64*4
+    const size = f(pxsize)
+    //add  -0.25 to center it
+    const pixelOff = f(1/pxsize/2-0.25)
     const patternTex =new TextureLoader().load("sweater.png")
-    const colorTex =new TextureLoader().load("IMG_0517.jpg")
+    const colorTex =new TextureLoader().load("merrychristmas.png")
     patternTex.wrapS = patternTex.wrapT = RepeatWrapping;
     colorTex.wrapS = colorTex.wrapT = RepeatWrapping;
     let uv2 = mul(new UVNode(),size)
-    let uvColor = add(div(floor(mul(new UVNode(),size)),size),pixelOff)
+    let uvColor = mul(add(div(floor(mul(new UVNode(),size)),size),pixelOff),f(2))
 
-    material.color = mul(new TextureNode(patternTex,uv2), new TextureNode(colorTex,uvColor))
-
-
+    material.color = mul(
+        new TextureNode(patternTex,uv2),
+        new TextureNode(colorTex,uvColor)
+    )
 
     const ent = world.createEntity()
     ent.addComponent(ThreeObject)
     ent.addComponent(PlaneGeometry, {width: 10, height: 10})
     ent.addComponent(CustomNodeMaterial,{material:material})
-    ent.addComponent(Position,{z:-7, y:1.5})
+    ent.addComponent(Position,{x: 0, z:-0, y:0})
+    sweaterMaterial = material
 }
 
+
+function setupModel(core, world) {
+    let model = world.createEntity()
+    model.addComponent(ThreeObject)
+    model.addComponent(GLTFModel, {
+        src:"shirt_hung/scene.gltf",
+        scale: 0.05*2,
+        recenter:true,
+        onLoad:(obj)=>{
+            const meshes = findChildMeshes(obj)
+            console.log("meshes",meshes)
+            meshes.forEach(m => {
+                m.material = sweaterMaterial
+            })
+        }})
+    model.addComponent(Position,{x: 4, z:0, y:0})
+}
 
 function setup() {
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(ThreeObjectManager)
     world.registerSystem(CustomNodeMaterialSystem)
+    world.registerSystem(GLTFModelSystem)
 
     let game = world.createEntity()
     game.addComponent(ThreeCore)
+    game.addComponent(OrbitalControls)
+    game.addComponent(AmbientLight)
 
     oneWorldTick(game,world)
     const core = game.getMutableComponent(ThreeCore)
-    setupLights(core)
     setupNodeMaterial(core, world)
+    // setupModel(core,world)
     startWorldLoop(game,world)
 }
 
