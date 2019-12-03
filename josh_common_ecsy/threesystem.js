@@ -41,6 +41,9 @@ export class InsideVR {
 
 
 export class OrbitalControls {
+    constructor() {
+        this.autoRotate = false
+    }
 
 }
 export class ThreeSystem extends System {
@@ -52,7 +55,7 @@ export class ThreeSystem extends System {
             orbit.controls = new OrbitControls(three.camera, three.renderer.domElement)
             three.getCamera().position.set(0,0,10)
             three.stagePos.position.y = 0
-            orbit.controls.autoRotate = true
+            orbit.controls.autoRotate = orbit.autoRotate
         })
         this.queries.orbit.results.forEach(ent => {
             const orbit = ent.getComponent(OrbitalControls)
