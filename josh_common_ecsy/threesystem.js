@@ -10,6 +10,7 @@ export function toRad(theta) {
 
 export class ThreeCore {
     constructor() {
+        this.vrenabled = true
         this.scene = null
         this.camera = null
         this.renderer = null
@@ -65,29 +66,36 @@ export class ThreeSystem extends System {
     setupThree(ent) {
         const app = ent.getMutableComponent(ThreeCore)
         if(app.initialized) return
-        if(!app.canvas) {
-            app.container = document.createElement('div');
-            document.body.appendChild(app.container)
-        }
         app.scene = new Scene();
         let width = 400
         let height = 400
-        if(app.container) {
-            width = app.container.width
-            height = app.container.height
+        const options = {
+             antialias: true
         }
         if(app.canvas) {
+            options.canvas = app.canvas
             width = app.canvas.width
             height = app.canvas.height
+            app.renderer = new WebGLRenderer( options );
+        } else {
+            app.container = document.createElement('div');
+            document.body.appendChild(app.container)
+            width = window.innerWidth
+            height = window.innerHeight
+            app.renderer = new WebGLRenderer( options );
+            app.canvas = app.renderer.domElement
+            app.container.appendChild( app.renderer.domElement );
+            window.addEventListener( 'resize', ()=>{
+                app.camera.aspect = window.innerWidth / window.innerHeight;
+                app.camera.updateProjectionMatrix();
+                app.renderer.setSize( window.innerWidth, window.innerHeight );
+            }, false );
         }
-        app.renderer = new WebGLRenderer( { antialias: true, canvas:app.canvas } );
-        app.canvas = app.renderer.domElement
         app.camera = new PerspectiveCamera( 70, width / height, 0.1, 100 );
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( width, height );
         app.renderer.gammaOutput = true
-        app.renderer.vr.enabled = true;
-        if(app.container) app.container.appendChild( app.renderer.domElement );
+        if(app.vrenabled)  app.renderer.vr.enabled = true;
         app.stage = new Group()
         app.stagePos = new Group()
         app.stageRot = new Group()
@@ -96,16 +104,13 @@ export class ThreeSystem extends System {
         app.stagePos.add(app.stage)
         app.stagePos.position.y = -1.5
 
-        window.addEventListener( 'resize', ()=>{
-            app.camera.aspect = window.innerWidth / window.innerHeight;
-            app.camera.updateProjectionMatrix();
-            app.renderer.setSize( window.innerWidth, window.innerHeight );
-        }, false );
         app.initialized = true
-        document.body.appendChild(WEBVR.createButton(app.renderer,{
-            onSessionStarted:() => ent.addComponent(InsideVR),
-            onSessionEnded:() =>  ent.removeComponent(InsideVR),
-        }))
+        if(app.vrenabled) {
+            document.body.appendChild(WEBVR.createButton(app.renderer, {
+                onSessionStarted: () => ent.addComponent(InsideVR),
+                onSessionEnded: () => ent.removeComponent(InsideVR),
+            }))
+        }
     }
 
     render(ent) {

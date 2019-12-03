@@ -100,7 +100,7 @@ function setup() {
     world.registerSystem(CustomNodeMaterialSystem)
 
     let game = world.createEntity()
-    game.addComponent(ThreeCore, {debug:true})
+    game.addComponent(ThreeCore)
 
     oneWorldTick(game,world)
     const core = game.getMutableComponent(ThreeCore)
