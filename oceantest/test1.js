@@ -61,6 +61,8 @@ function setupLights(game, world) {
     const skybox = new Mesh(new SphereBufferGeometry(100),new MeshLambertMaterial({color:'white', side:BackSide}))
     core.scene.add(skybox)
     core.scene.fog = new Fog('#5aabff', 10, 50)
+    const light = new DirectionalLight( 0xffffff, 0.5 );
+    core.scene.add(light)
     game.addComponent(AmbientLight, {intensity:0.8})
 }
 
@@ -256,16 +258,15 @@ function setup() {
         let seaweed1 = world.createEntity()
         seaweed1.addComponent(GLTFModel, {
             src:'seaweed/scene.gltf',
-            // position:{x:2,y:1.5, z:-5},
             scale:0.5
         })
-        seaweed1.addComponent(Position, {x:2,y:1.5,z:-5})
+        seaweed1.addComponent(Position, {x:2,y:0,z:-5})
         let seaweed2 = world.createEntity()
         seaweed2.addComponent(GLTFModel, {
             src:'seaweed/scene.gltf',
             scale:0.5
         })
-        seaweed2.addComponent(Position, {x:-2, y:1.5, z:-5})
+        seaweed2.addComponent(Position, {x:-2, y:0, z:-5})
     }
     makeSeaweed(world)
 
@@ -274,7 +275,6 @@ function setup() {
         let coral = world.createEntity()
         coral.addComponent(GLTFModel, {
             src:'coral/scene.gltf',
-            // position:{x:0,y:0, z:-7},
             scale:0.2
         })
         coral.addComponent(Position, {z:-7})
