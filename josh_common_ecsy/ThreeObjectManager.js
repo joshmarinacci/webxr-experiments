@@ -94,6 +94,10 @@ export class TextureMaterial {
     }
 }
 export class AmbientLight {
+    constructor() {
+        this.color = 0xffffff
+        this.intensity = 1.0
+    }
 
 }
 
@@ -169,7 +173,7 @@ export class ThreeObjectManager extends System {
         })
         this.queries.lights.added.forEach(ent => {
             const light = ent.getMutableComponent(AmbientLight)
-            light.light = new AmbientLight3(0xffffff,1.0)
+            light.light = new AmbientLight3(light.color, light.intensity)
             this.queries.three.results.forEach(ent => {
                 ent.getComponent(ThreeCore).getStage().add(light.light)
             })
