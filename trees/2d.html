@@ -45,7 +45,8 @@
     // const random =sfc32(seed(),seed(),seed(),seed())
 
     let opts = {
-        trunkWidth:80,
+        trunkWidth:30,
+        trunkHeight:80,
         leafSize:20,
         seed:'apple',
         // random: random
@@ -58,36 +59,37 @@
 
     const randf = (random, min,max) => min + random()*(max-min)
 
-    function leaf(ctx, w) {
+    function leaf(ctx, w,h) {
         ctx.fillStyle = 'blue'
         let s = opts.leafSize
         ctx.fillRect(-s,-s,s*2,s*2)
     }
 
-    function branch(ctx, w, depth) {
+    function branch(ctx, w, h,depth) {
         ctx.save()
         const nw = w*randf(opts.random,0.5,0.9)
-        ctx.translate(-nw/2,nw+2)
+        const nh = h*randf(opts.random,0.5,0.9)
+        ctx.translate(-nw/2,nh+2)
         ctx.rotate(randf(opts.random,0.2,0.8))
-        trunk(ctx,nw,depth-1)
+        trunk(ctx,nw,nh,depth-1)
         ctx.restore()
         ctx.save()
-        ctx.translate(+nw/2,nw+2)
+        ctx.translate(+nw/2,nh+2)
         ctx.rotate(randf(opts.random,-0.2,-0.8))
-        trunk(ctx,nw,depth-1)
+        trunk(ctx,nw,nh,depth-1)
         ctx.restore()
     }
 
-    function trunk(ctx, w, depth) {
+    function trunk(ctx, w, h, depth) {
         if(depth === 0) return leaf(ctx,w)
         ctx.fillStyle = 'brown'
-        ctx.fillRect(-w/4,-w/2,w/2,w)
+        ctx.fillRect(-w/4,-h/2,w/2,h)
         ctx.fillStyle = 'black'
         // ctx.fillRect(0,0,1,1)
         ctx.fillStyle = 'green'
         // ctx.fillRect(-2-w/2,w/2,w+4,2)
         if(depth > 0) {
-            branch(ctx,w,depth)
+            branch(ctx,w,h,depth)
         }
     }
 
@@ -142,14 +144,16 @@
         ctx.fillRect(0,0,w,h)
 
         let width = opts.trunkWidth
+        let height = opts.trunkHeight
         ctx.save()
         ctx.translate(w/2,h/2+h/3)
         ctx.scale(1,-1)
-        trunk(ctx, width, 3)
+        trunk(ctx, width, height, 3)
         ctx.restore()
     }
 
     makeSlider(opts,'trunkWidth',gen)
+    makeSlider(opts,'trunkHeight',gen)
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeButton(opts,'randomize',gen,{action:()=>{
         console.log("randomizing")
