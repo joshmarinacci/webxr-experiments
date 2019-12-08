@@ -195,10 +195,10 @@
             opts.seed = ""+Math.random()
             gen(opts)
         }})
+    makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
     makeSlider(opts,'trunkWidth',gen)
     makeSlider(opts,'trunkHeight',gen)
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
-    makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
 
     gen(opts)
