@@ -59,7 +59,7 @@
         // random: random
     }
 
-    const LEAF_TYPES = ['square','circle']
+    const LEAF_TYPES = ['square','circle','triangle']
     const COLORS = ['red','green','blue','white','black','gray','brown']
 
     const canvas = document.getElementById('canvas')
@@ -80,18 +80,27 @@
             ctx.arc(0,0,s,0,toRad(360))
             ctx.fill()
         }
+        if(opts.leafType === 'triangle') {
+            ctx.beginPath()
+            for(let i=0; i<=3; i++) {
+                let theta = toRad(360/3*i)
+                let x = s*Math.sin(theta)
+                let y = s*Math.cos(theta)
+                if(i === 0) ctx.moveTo(x,y)
+                ctx.lineTo(x,y)
+            }
+            ctx.fill()
+        }
     }
 
     function branch(ctx, w, h,depth, opts) {
         ctx.save()
-        ctx.translate(0,h)
         const nw = w*randf(opts.random,0.5,0.9)
         const nh = h*randf(opts.random,0.5,0.9)
         ctx.rotate(randf(opts.random,0.2,0.8))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
         ctx.save()
-        ctx.translate(0,h)
         ctx.rotate(randf(opts.random,-0.2,-0.8))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
@@ -99,12 +108,13 @@
 
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
-        if(depth === 0) return leaf(ctx,w, h,opts)
         ctx.fillStyle = opts.trunkColor
         ctx.fillRect(-w/2,0,w,h)
-        if(depth > 0) {
-            branch(ctx,w,h,depth, opts)
-        }
+        ctx.save()
+        ctx.translate(0,h)
+        if(depth === 0) leaf(ctx,w, h,opts)
+        if(depth > 0) branch(ctx,w,h,depth, opts)
+        ctx.restore()
     }
 
 
