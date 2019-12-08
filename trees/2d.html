@@ -79,14 +79,14 @@
 
     function branch(ctx, w, h,depth, opts) {
         ctx.save()
+        ctx.translate(0,h)
         const nw = w*randf(opts.random,0.5,0.9)
         const nh = h*randf(opts.random,0.5,0.9)
-        ctx.translate(-nw/2,nh+2)
         ctx.rotate(randf(opts.random,0.2,0.8))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
         ctx.save()
-        ctx.translate(+nw/2,nh+2)
+        ctx.translate(0,h)
         ctx.rotate(randf(opts.random,-0.2,-0.8))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
@@ -96,7 +96,7 @@
         // console.log(depth,opts)
         if(depth === 0) return leaf(ctx,w, h,opts)
         ctx.fillStyle = 'brown'
-        ctx.fillRect(-w/4,-h/2,w/2,h)
+        ctx.fillRect(-w/2,0,w,h)
         if(depth > 0) {
             branch(ctx,w,h,depth, opts)
         }
@@ -182,10 +182,13 @@
         ctx.fillStyle = '#f0f0f0'
         ctx.fillRect(0,0,w,h)
 
+        ctx.fillStyle = '#d0d0d0'
+        ctx.fillRect(0,h-10,w,10)
+
         let width = opts.trunkWidth
         let height = opts.trunkHeight
         ctx.save()
-        ctx.translate(w/2,h/2+h/3)
+        ctx.translate(w/2,h-10)
         ctx.scale(1,-1)
         trunk(ctx, width, height, opts.maxDepth, opts)
         ctx.restore()
