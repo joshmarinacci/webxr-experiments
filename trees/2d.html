@@ -62,6 +62,10 @@
 
     const LEAF_TYPES = ['square','circle','triangle']
     const COLORS = ['red','green','blue','white','black','gray','brown']
+    const PHASES = {
+        TRUNK:'TRUNK',
+        LEAF:'LEAF'
+    }
 
     const canvas = document.getElementById('canvas')
     const ctx = canvas.getContext('2d')
@@ -71,6 +75,7 @@
     const randf = (random, min,max) => min + random()*(max-min)
 
     function leaf(ctx, w,h, opts) {
+        if(opts.phase !== PHASES.LEAF) return
         ctx.fillStyle = opts.leafColor
         let s = opts.leafSize
         if(opts.leafType === 'square') {
@@ -111,8 +116,10 @@
 
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
-        ctx.fillStyle = opts.trunkColor
-        ctx.fillRect(-w/2,0,w,h)
+        if(opts.phase === PHASES.TRUNK) {
+            ctx.fillStyle = opts.trunkColor
+            ctx.fillRect(-w / 2, 0, w, h)
+        }
         ctx.save()
         ctx.translate(0,h)
         if(depth === 0) leaf(ctx,w, h,opts)
@@ -194,22 +201,30 @@
     }
 
 
-    function gen(opts) {
-        const seed = xmur3(opts.seed)
-        opts.random =sfc32(seed(),seed(),seed(),seed())
-        ctx.fillStyle = '#f0f0f0'
-        ctx.fillRect(0,0,w,h)
-
-        ctx.fillStyle = '#d0d0d0'
-        ctx.fillRect(0,h-10,w,10)
-
-        let width = opts.trunkWidth
-        let height = opts.trunkHeight
+    function firstTrunk(opts,phase) {
+        opts.phase = phase
         ctx.save()
         ctx.translate(w/2,h-10)
         ctx.scale(1,-1)
+        const seed = xmur3(opts.seed)
+        opts.random =sfc32(seed(),seed(),seed(),seed())
+        let width = opts.trunkWidth
+        let height = opts.trunkHeight
         trunk(ctx, width, height, opts.maxDepth, opts)
         ctx.restore()
+    }
+    function gen(opts) {
+        //background
+        ctx.fillStyle = '#f0f0f0'
+        ctx.fillRect(0,0,w,h)
+
+        //floor
+        ctx.fillStyle = '#d0d0d0'
+        ctx.fillRect(0,h-10,w,10)
+
+        //draw the two phases
+        firstTrunk(opts,PHASES.TRUNK)
+        firstTrunk(opts,PHASES.LEAF)
     }
 
     makeButton(opts,'randomize',gen,{action:()=>{
