@@ -43,12 +43,15 @@
 
     // const seed = xmur3('apple')
     // const random =sfc32(seed(),seed(),seed(),seed())
+    const toRad = (deg) => deg/180*Math.PI
 
     let opts = {
         trunkWidth:30,
         trunkHeight:80,
         leafSize:20,
         seed:'apple',
+        leafType:'circle',
+        maxDepth:4,
         // random: random
     }
 
@@ -62,7 +65,14 @@
     function leaf(ctx, w,h, opts) {
         ctx.fillStyle = 'blue'
         let s = opts.leafSize
-        ctx.fillRect(-s,-s,s*2,s*2)
+        if(opts.leafType === 'square') {
+            ctx.fillRect(-s, -s, s * 2, s * 2)
+        }
+        if(opts.leafType === 'circle') {
+            ctx.beginPath()
+            ctx.arc(0,0,s,0,toRad(360))
+            ctx.fill()
+        }
     }
 
     function branch(ctx, w, h,depth, opts) {
@@ -107,6 +117,7 @@
         elem.setAttribute('type','range')
         elem.setAttribute('value',initialValue)
         elem.setAttribute('step',0.1)
+        if('step' in config) elem.setAttribute('step',config.step)
         if('min' in config) elem.setAttribute('min',config.min)
         if('max' in config) elem.setAttribute('max',config.max)
 
@@ -146,7 +157,7 @@
         ctx.save()
         ctx.translate(w/2,h/2+h/3)
         ctx.scale(1,-1)
-        trunk(ctx, width, height, 3, opts)
+        trunk(ctx, width, height, opts.maxDepth, opts)
         ctx.restore()
     }
 
@@ -157,6 +168,7 @@
     makeSlider(opts,'trunkWidth',gen)
     makeSlider(opts,'trunkHeight',gen)
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
+    makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
 
     gen(opts)
 
