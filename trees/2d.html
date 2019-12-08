@@ -46,16 +46,21 @@
     const toRad = (deg) => deg/180*Math.PI
 
     let opts = {
+        maxDepth:4,
+        seed:'apple',
+
         trunkWidth:30,
         trunkHeight:80,
+        trunkColor:'brown',
+
         leafSize:20,
-        seed:'apple',
         leafType:'square',
-        maxDepth:4,
+        leafColor: 'red'
         // random: random
     }
 
     const LEAF_TYPES = ['square','circle']
+    const COLORS = ['red','green','blue','white','black','gray','brown']
 
     const canvas = document.getElementById('canvas')
     const ctx = canvas.getContext('2d')
@@ -65,7 +70,7 @@
     const randf = (random, min,max) => min + random()*(max-min)
 
     function leaf(ctx, w,h, opts) {
-        ctx.fillStyle = 'blue'
+        ctx.fillStyle = opts.leafColor
         let s = opts.leafSize
         if(opts.leafType === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
@@ -95,7 +100,7 @@
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
         if(depth === 0) return leaf(ctx,w, h,opts)
-        ctx.fillStyle = 'brown'
+        ctx.fillStyle = opts.trunkColor
         ctx.fillRect(-w/2,0,w,h)
         if(depth > 0) {
             branch(ctx,w,h,depth, opts)
@@ -201,8 +206,10 @@
     makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
     makeSlider(opts,'trunkWidth',gen)
     makeSlider(opts,'trunkHeight',gen)
+    makeSelect(opts,'trunkColor',gen, {values:COLORS})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
+    makeSelect(opts,'leafColor',gen, {values:COLORS})
 
     gen(opts)
 
