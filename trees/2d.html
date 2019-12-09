@@ -80,9 +80,9 @@
     const randSpread = (random, base, spread) => randRange(random,base-spread,base+spread)
 
     function leaf(ctx, w,h, opts) {
-        if(opts.phase !== PHASES.LEAF) return
         const sat = randSpread(opts.random,0.5,0.2)
         ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
+        if(opts.phase !== PHASES.LEAF) return
         let s = opts.leafSize
         if(opts.leafType === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
