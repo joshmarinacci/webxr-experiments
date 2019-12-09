@@ -56,7 +56,11 @@
 
         leafSize:20,
         leafType:'square',
-        leafColor: 'red'
+        leafColor: 'red',
+
+        branchAngleBaseDegrees:25,
+        branchAngleSpreadDegrees:8,
+        // phase: PHASE.TRUNK
         // random: random
     }
 
@@ -72,7 +76,8 @@
     let w = 400
     let h = 400
 
-    const randf = (random, min,max) => min + random()*(max-min)
+    const randRange = (random, min, max) => min + random()*(max-min)
+    const randSpread = (random, base, spread) => randRange(random,base-spread,base+spread)
 
     function leaf(ctx, w,h, opts) {
         if(opts.phase !== PHASES.LEAF) return
@@ -101,15 +106,15 @@
 
     function branch(ctx, w, h,depth, opts) {
         ctx.save()
-        // const nw = w*randf(opts.random,0.5,opts.trunkAttenuation)
         const nw = w * opts.trunkAttenuation
         const nh = h * opts.trunkAttenuation
-        // const nh = h*randf(opts.random,0.5,0.9)
-        ctx.rotate(randf(opts.random,0.2,0.8))
+        const angle = toRad(opts.branchAngleBaseDegrees)
+        const spread = toRad(opts.branchAngleSpreadDegrees)
+        ctx.rotate(randSpread(opts.random,+angle,spread))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
         ctx.save()
-        ctx.rotate(randf(opts.random,-0.2,-0.8))
+        ctx.rotate(randSpread(opts.random,-angle,spread))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
     }
@@ -239,6 +244,8 @@
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
     makeSelect(opts,'leafColor',gen, {values:COLORS})
+    makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-90, max:90})
+    makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:-90, max:90})
 
     gen(opts)
 
