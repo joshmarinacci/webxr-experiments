@@ -161,7 +161,8 @@
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
         if(opts.phase === PHASES.TRUNK) {
-            ctx.fillStyle = hsvToCanvas(opts.trunkColor,0.5,0.8)
+            const step = 0.5/opts.maxDepth
+            ctx.fillStyle = hsvToCanvas(opts.trunkColor,0.8,1.0-depth*step)
             ctx.fillRect(-w / 2, 0, w, h)
         }
         ctx.save()
@@ -257,6 +258,7 @@
 
         opts.trunkColor = randRange(opts.random,0,1)
         opts.leafColor = 1.0-opts.trunkColor
+        if(opts.leafColor < 0) opts.leafColor = opts.leafColor + 1.0
 
         trunk(ctx, width, height, opts.maxDepth, opts)
         ctx.restore()
@@ -282,11 +284,11 @@
     makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
     makeSlider(opts,'trunkWidth',gen)
     makeSlider(opts,'trunkHeight',gen, {max:200})
-    makeSelect(opts,'trunkColor',gen, {values:HUES})
+    // makeSelect(opts,'trunkColor',gen, {values:HUES})
     makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
-    makeSelect(opts,'leafColor',gen, {values:HUES})
+    // makeSelect(opts,'leafColor',gen, {values:HUES})
     makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-90, max:90})
     makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:-90, max:90})
 
