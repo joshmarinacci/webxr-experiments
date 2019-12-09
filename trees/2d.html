@@ -51,12 +51,12 @@
 
         trunkWidth:30,
         trunkHeight:80,
-        trunkColor:'brown',
+        trunkColor:0.1,
         trunkAttenuation:0.8,
 
         leafSize:20,
         leafType:'square',
-        leafColor: 'red',
+        leafColor: 0.5,
 
         branchAngleBaseDegrees:25,
         branchAngleSpreadDegrees:8,
@@ -65,7 +65,7 @@
     }
 
     const LEAF_TYPES = ['square','circle','triangle']
-    const COLORS = ['red','green','blue','white','black','gray','brown']
+    const HUES = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
     const PHASES = {
         TRUNK:'TRUNK',
         LEAF:'LEAF'
@@ -81,7 +81,8 @@
 
     function leaf(ctx, w,h, opts) {
         if(opts.phase !== PHASES.LEAF) return
-        ctx.fillStyle = opts.leafColor
+        const sat = randSpread(opts.random,0.5,0.2)
+        ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
         let s = opts.leafSize
         if(opts.leafType === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
@@ -105,11 +106,11 @@
     }
 
     function branch(ctx, w, h,depth, opts) {
-        ctx.save()
         const nw = w * opts.trunkAttenuation
         const nh = h * opts.trunkAttenuation
         const angle = toRad(opts.branchAngleBaseDegrees)
         const spread = toRad(opts.branchAngleSpreadDegrees)
+        ctx.save()
         ctx.rotate(randSpread(opts.random,+angle,spread))
         trunk(ctx,nw,nh,depth-1, opts)
         ctx.restore()
@@ -119,10 +120,48 @@
         ctx.restore()
     }
 
+    // https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+    /**
+     * Converts an HSV color value to RGB. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+     * Assumes h, s, and v are contained in the set [0, 1] and
+     * returns r, g, and b in the set [0, 255].
+     *
+     * @param   Number  h       The hue
+     * @param   Number  s       The saturation
+     * @param   Number  v       The value
+     * @return  Array           The RGB representation
+     */
+    function hsvToRgb(h, s, v){
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch(i % 6){
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+
+        return [r * 255, g * 255, b * 255];
+    }
+
+    function hsvToCanvas(h, s, v) {
+        const rgb = hsvToRgb(h,s,v)
+        return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+    }
+
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
         if(opts.phase === PHASES.TRUNK) {
-            ctx.fillStyle = opts.trunkColor
+            ctx.fillStyle = hsvToCanvas(opts.trunkColor,0.5,0.8)
             ctx.fillRect(-w / 2, 0, w, h)
         }
         ctx.save()
@@ -239,11 +278,11 @@
     makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
     makeSlider(opts,'trunkWidth',gen)
     makeSlider(opts,'trunkHeight',gen, {max:200})
-    makeSelect(opts,'trunkColor',gen, {values:COLORS})
+    makeSelect(opts,'trunkColor',gen, {values:HUES})
     makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
-    makeSelect(opts,'leafColor',gen, {values:COLORS})
+    makeSelect(opts,'leafColor',gen, {values:HUES})
     makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-90, max:90})
     makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:-90, max:90})
 
