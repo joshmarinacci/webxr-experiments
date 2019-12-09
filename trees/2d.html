@@ -254,6 +254,10 @@
         opts.random =sfc32(seed(),seed(),seed(),seed())
         let width = opts.trunkWidth
         let height = opts.trunkHeight
+
+        opts.trunkColor = randRange(opts.random,0,1)
+        opts.leafColor = 1.0-opts.trunkColor
+
         trunk(ctx, width, height, opts.maxDepth, opts)
         ctx.restore()
     }
