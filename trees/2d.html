@@ -52,6 +52,7 @@
         trunkWidth:10,
         trunkHeight:70,
         trunkColor:0.1,
+        trunkType:'trapezoid',
         trunkAttenuation:0.8,
         trunkAttenuationSpread:0.1,
 
@@ -69,6 +70,7 @@
     }
 
     const LEAF_TYPES = ['square','circle','triangle','ellipse']
+    const TRUNK_TYPES = ['rectangle','trapezoid']
     const HUES = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
     const PHASES = {
         TRUNK:'TRUNK',
@@ -125,17 +127,15 @@
 
     function branch(ctx, w, h,depth, opts) {
         // const nw = w * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
-        const nw = w * opts.trunkAttenuation
-        const nh = h * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
         const angle = toRad(opts.branchAngleBaseDegrees)
         const spread = toRad(opts.branchAngleSpreadDegrees)
         ctx.save()
         ctx.rotate(randSpread(opts.random,+angle,spread))
-        trunk(ctx,nw,nh,depth-1, opts)
+        trunk(ctx,w,h,depth-1, opts)
         ctx.restore()
         ctx.save()
         ctx.rotate(randSpread(opts.random,-angle,spread))
-        trunk(ctx,nw,nh,depth-1, opts)
+        trunk(ctx,w,h,depth-1, opts)
         ctx.restore()
     }
 
@@ -179,15 +179,28 @@
 
     function trunk(ctx, w, h, depth, opts) {
         // console.log(depth,opts)
+        const nw = w * opts.trunkAttenuation
+        const nh = h * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
+
         if(opts.phase === PHASES.TRUNK) {
             const step = 0.5/opts.maxDepth
             ctx.fillStyle = hsvToCanvas(opts.trunkColor,0.8,1.0-depth*step)
-            ctx.fillRect(-w / 2, 0, w, h)
+            if(opts.trunkType === 'rectangle') {
+                ctx.fillRect(-w / 2, 0, w, nh)
+            }
+            if(opts.trunkType === 'trapezoid') {
+                ctx.beginPath()
+                ctx.moveTo(-w/2,0)
+                ctx.lineTo(-nw/2,nh)
+                ctx.lineTo(nw/2,nh)
+                ctx.lineTo(w/2,0)
+                ctx.fill()
+            }
         }
         ctx.save()
-        ctx.translate(0,h)
-        if(depth === 0) leaf(ctx,w, h,opts)
-        if(depth > 0) branch(ctx,w,h,depth, opts)
+        ctx.translate(0,nh)
+        if(depth === 0) leaf(ctx,nw, nh,opts)
+        if(depth > 0) branch(ctx,nw,nh,depth, opts)
         ctx.restore()
     }
 
@@ -306,6 +319,7 @@
     // makeSelect(opts,'trunkColor',gen, {values:HUES})
     makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
     makeSlider(opts,'trunkAttenuationSpread',gen,{min:0, max:0.5,step:0.05})
+    makeSelect(opts,'trunkType',gen, {values:TRUNK_TYPES})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSlider(opts,'leafSizeSpread',gen, {min:0, max:20})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
