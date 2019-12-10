@@ -57,6 +57,8 @@
         leafSize:20,
         leafType:'square',
         leafColor: 0.5,
+        leafAngleBaseDegrees:0,
+        leafAngleSpreadDegrees:45,
 
         branchAngleBaseDegrees:25,
         branchAngleSpreadDegrees:8,
@@ -64,7 +66,7 @@
         // random: random
     }
 
-    const LEAF_TYPES = ['square','circle','triangle']
+    const LEAF_TYPES = ['square','circle','triangle','ellipse']
     const HUES = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
     const PHASES = {
         TRUNK:'TRUNK',
@@ -79,10 +81,16 @@
     const randRange = (random, min, max) => min + random()*(max-min)
     const randSpread = (random, base, spread) => randRange(random,base-spread,base+spread)
 
+
     function leaf(ctx, w,h, opts) {
+        ctx.save()
+        const angle = randSpread(opts.random,opts.leafAngleBaseDegrees, opts.leafAngleSpreadDegrees)
+        ctx.rotate(toRad(angle))
         const sat = randSpread(opts.random,0.5,0.2)
         ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
-        if(opts.phase !== PHASES.LEAF) return
+        if(opts.phase !== PHASES.LEAF) {
+            return ctx.restore()
+        }
         let s = opts.leafSize
         if(opts.leafType === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
@@ -103,6 +111,12 @@
             }
             ctx.fill()
         }
+        if(opts.leafType === 'ellipse') {
+            ctx.beginPath()
+            ctx.ellipse(0,0,s,s/2,0,0,toRad(360))
+            ctx.fill()
+        }
+        ctx.restore()
     }
 
     function branch(ctx, w, h,depth, opts) {
@@ -265,7 +279,7 @@
     }
     function gen(opts) {
         //background
-        ctx.fillStyle = '#f0f0f0'
+        ctx.fillStyle = '#cccccc'
         ctx.fillRect(0,0,w,h)
 
         //floor
@@ -291,6 +305,8 @@
     // makeSelect(opts,'leafColor',gen, {values:HUES})
     makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-90, max:90})
     makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:-90, max:90})
+    makeSlider(opts,'leafAngleBaseDegrees',gen, {min:-90, max:90})
+    makeSlider(opts,'leafAngleSpreadDegrees',gen, {min:-90, max:90})
 
     gen(opts)
 
