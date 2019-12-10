@@ -55,6 +55,7 @@
         trunkAttenuation:0.8,
 
         leafSize:20,
+        leafSizeSpread:20,
         leafType:'square',
         leafColor: 0.5,
         leafAngleBaseDegrees:0,
@@ -88,10 +89,11 @@
         ctx.rotate(toRad(angle))
         const sat = randSpread(opts.random,0.5,0.2)
         ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
+        let s = randSpread(opts.random,opts.leafSize,opts.leafSizeSpread)
+
         if(opts.phase !== PHASES.LEAF) {
             return ctx.restore()
         }
-        let s = opts.leafSize
         if(opts.leafType === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
         }
@@ -301,10 +303,11 @@
     // makeSelect(opts,'trunkColor',gen, {values:HUES})
     makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
+    makeSlider(opts,'leafSizeSpread',gen, {min:0, max:20})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
     // makeSelect(opts,'leafColor',gen, {values:HUES})
-    makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-90, max:90})
-    makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:-90, max:90})
+    makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-0, max:90})
+    makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:0, max:90})
     makeSlider(opts,'leafAngleBaseDegrees',gen, {min:-90, max:90})
     makeSlider(opts,'leafAngleSpreadDegrees',gen, {min:-90, max:90})
 
