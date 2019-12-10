@@ -49,13 +49,14 @@
         maxDepth:4,
         seed:'apple',
 
-        trunkWidth:30,
-        trunkHeight:80,
+        trunkWidth:10,
+        trunkHeight:70,
         trunkColor:0.1,
         trunkAttenuation:0.8,
+        trunkAttenuationSpread:0.1,
 
         leafSize:20,
-        leafSizeSpread:20,
+        leafSizeSpread:3,
         leafType:'square',
         leafColor: 0.5,
         leafAngleBaseDegrees:0,
@@ -90,6 +91,7 @@
         const sat = randSpread(opts.random,0.5,0.2)
         ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
         let s = randSpread(opts.random,opts.leafSize,opts.leafSizeSpread)
+        if(s <0) s = 0
 
         if(opts.phase !== PHASES.LEAF) {
             return ctx.restore()
@@ -122,8 +124,9 @@
     }
 
     function branch(ctx, w, h,depth, opts) {
+        // const nw = w * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
         const nw = w * opts.trunkAttenuation
-        const nh = h * opts.trunkAttenuation
+        const nh = h * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
         const angle = toRad(opts.branchAngleBaseDegrees)
         const spread = toRad(opts.branchAngleSpreadDegrees)
         ctx.save()
@@ -302,6 +305,7 @@
     makeSlider(opts,'trunkHeight',gen, {max:200})
     // makeSelect(opts,'trunkColor',gen, {values:HUES})
     makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
+    makeSlider(opts,'trunkAttenuationSpread',gen,{min:0, max:0.5,step:0.05})
     makeSlider(opts,'leafSize',gen, {min:0, max:30})
     makeSlider(opts,'leafSizeSpread',gen, {min:0, max:20})
     makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
