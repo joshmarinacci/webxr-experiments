@@ -238,6 +238,7 @@ export class GLTFModelSystem extends System {
                 const modelComp = ent.getMutableComponent(GLTFModel)
                 new GLTFLoader().load(modelComp.src, (gltf) => {
                     let obj = gltf.scene.children[0]
+                    console.log("Loadded model",gltf)
 
                     if(modelComp.scale) {
                         let sc = modelComp.scale
