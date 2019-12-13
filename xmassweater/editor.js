@@ -28,6 +28,12 @@ const $ = (sel) => document.querySelector(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 let colorTex =new TextureLoader().load("IMG_0517.jpg")
+let textureCanvas
+let canvasOffset = {
+    x:25,
+    y:30,
+}
+let canvasScale = 6
 
 const PALETTE = ['black','white','red','green']
 let selectedColor = 1
@@ -38,7 +44,7 @@ class DataGrid {
         this.h = h
         this.data = []
         for(let i=0; i<w*h; i++) {
-            this.data.push(0)
+            this.data.push(2)
         }
     }
     getWidth() {
@@ -58,6 +64,16 @@ class DataGrid {
 const data = new DataGrid(32,32)
 data.setValue(3,3,1)
 
+function drawDataToCanvas(ctx, data, scale, offx, offy) {
+    for(let j=0; j<data.getHeight(); j++) {
+        for(let i=0; i<data.getWidth(); i++) {
+            const color = data.getValue(i,j)
+            ctx.fillStyle = PALETTE[color]
+            ctx.fillRect(i*scale+offx,j*scale+offy,scale,scale)
+        }
+    }
+}
+
 function drawCanvas() {
     const canvas = $("#canvas")
     const ctx = canvas.getContext('2d')
@@ -67,14 +83,18 @@ function drawCanvas() {
     ctx.imageSmoothingEnabled = false
     ctx.fillStyle = 'green'
     ctx.fillRect(0,0,w,h)
-    for(let j=0; j<data.getHeight(); j++) {
-        for(let i=0; i<data.getWidth(); i++) {
-            const color = data.getValue(i,j)
-            ctx.fillStyle = PALETTE[color]
-            ctx.fillRect(i*scale,j*scale,scale,scale)
-        }
+    drawDataToCanvas(ctx,data,scale,0,0)
+    if(textureCanvas){
+        const c = textureCanvas.getContext('2d')
+        c.save()
+        c.scale(1,-1)
+        c.translate(0,-256)
+        c.imageSmoothingEnabled = false
+        const gap = Math.floor((256-data.getWidth())/2)
+        drawDataToCanvas(c,data,canvasScale,canvasOffset.x,canvasOffset.y)
+        c.restore()
+        colorTex.needsUpdate = true
     }
-    colorTex.needsUpdate = true
 }
 
 
@@ -94,7 +114,6 @@ on($('#canvas'),'click',(e)=>{
 })
 let mousePressed = false
 on($('#canvas'),'mousedown',(e)=>{
-    console.log("pressed")
     mousePressed = true
 })
 on($('#canvas'),'mouseup',(e)=>{
@@ -103,7 +122,6 @@ on($('#canvas'),'mouseup',(e)=>{
 
 on($('#canvas'),'mousemove',(e)=>{
     if(!mousePressed) return
-    console.log("drawing")
     const rect = e.target.getBoundingClientRect()
     const pt = {
         x:e.clientX - rect.left,
@@ -135,7 +153,15 @@ const floor = (a) => new MathNode(a,MathNode.FLOOR)
 let sweaterMaterial
 
 function generateTexture(core,world) {
-    colorTex = new CanvasTexture($("#canvas"))
+    const canvas = document.createElement('canvas')
+    canvas.width = 256
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = 'red'
+    ctx.fillRect(0,0,canvas.width,canvas.height)
+    textureCanvas = canvas
+    drawDataToCanvas(ctx,data,canvasScale,canvasOffset.x,canvasOffset.y)
+    colorTex = new CanvasTexture(canvas)
 }
 function setupNodeMaterial(core, world) {
 
