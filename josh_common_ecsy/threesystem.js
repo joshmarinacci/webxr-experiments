@@ -76,6 +76,7 @@ export class ThreeSystem extends System {
             options.canvas = app.canvas
             width = app.canvas.width
             height = app.canvas.height
+            console.log("setting size to",width,height)
             app.renderer = new WebGLRenderer( options );
         } else {
             app.container = document.createElement('div');

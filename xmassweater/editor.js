@@ -149,20 +149,6 @@ function drawCanvas() {
 
 
 drawCanvas()
-/*
-on($('#canvas'),'click',(e)=>{
-    const rect = e.target.getBoundingClientRect()
-    const pt = {
-        x:e.clientX - rect.left,
-        y:e.clientY - rect.top
-    }
-    let scale = Math.floor(e.target.width / data.getWidth())
-    pt.x = Math.floor(pt.x/scale)
-    pt.y = Math.floor(pt.y/scale)
-    data.setValue(pt.x,pt.y,selectedColor)
-    drawCanvas()
-})
- */
 let mousePressed = false
 on($('#canvas'),'mousedown',(e)=>{
     mousePressed = true
@@ -277,6 +263,9 @@ function setup() {
     game.addComponent(OrbitalControls)
     game.addComponent(AmbientLight)
 
+    $("#viewer-canvas").width = $("#viewer").offsetWidth
+    $("#viewer-canvas").height = $("#viewer").offsetHeight
+
     oneWorldTick(game,world)
     const core = game.getMutableComponent(ThreeCore)
     generateTexture()
@@ -296,6 +285,7 @@ function loadDoc() {
         })
     }
     console.log("query is",query)
+    if(query.count) count = query.count
     if(query.data) {
         console.log("loading data",query.data)
         data.fromDataURL(query.data)
@@ -303,3 +293,12 @@ function loadDoc() {
 }
 
 loadDoc()
+
+
+on($("#share"),'click',()=>{
+    $("#dialog").classList.toggle('hidden')
+    $("#url").value = document.location.toString()
+})
+on($("#close"),'click',()=>{
+    $("#dialog").classList.toggle('hidden')
+})
