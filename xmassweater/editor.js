@@ -43,7 +43,7 @@ function rgbToPalette(r, g, b,a) {
         if(g === 255) return PALETTE.indexOf('white')
         return PALETTE.indexOf('red')
     }
-    if(g === 255) {
+    if(g === 128) {
         return PALETTE.indexOf('green')
     }
     return PALETTE.indexOf('black')
@@ -162,7 +162,7 @@ function updateURL() {
         count:count
     }
     const url = `./editor.html?count=${count}&data=${data.toDataURL()}`
-    console.log("location is",url)
+    // console.log(url)
     history.pushState(state,"",url)
 }
 
@@ -284,12 +284,8 @@ function loadDoc() {
             query[parts[0]] = parts[1]
         })
     }
-    console.log("query is",query)
     if(query.count) count = query.count
-    if(query.data) {
-        console.log("loading data",query.data)
-        data.fromDataURL(query.data)
-    }
+    if(query.data) data.fromDataURL(query.data)
 }
 
 loadDoc()
