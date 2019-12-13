@@ -38,13 +38,24 @@ let canvasScale = 6
 const PALETTE = ['black','white','red','green']
 let selectedColor = 1
 
+function rgbToPalette(r, g, b,a) {
+    if(r === 255 ) {
+        if(g === 255) return PALETTE.indexOf('white')
+        return PALETTE.indexOf('red')
+    }
+    if(g === 255) {
+        return PALETTE.indexOf('green')
+    }
+    return PALETTE.indexOf('black')
+}
+
 class DataGrid {
     constructor(w,h) {
         this.w = w
         this.h = h
         this.data = []
         for(let i=0; i<w*h; i++) {
-            this.data.push(2)
+            this.data.push(0)
         }
     }
     getWidth() {
@@ -59,7 +70,46 @@ class DataGrid {
     setValue(x,y,val) {
         this.data[y*this.w+x] = val
     }
+    toDataURL() {
+        const canvas = document.createElement('canvas')
+        canvas.width = this.w
+        canvas.height = this.h
+        const ctx = canvas.getContext('2d')
+        for(let x=0; x<this.w; x++) {
+            for(let y =0; y<this.h; y++) {
+                const v = this.getValue(x,y)
+                ctx.fillStyle = PALETTE[v]
+                ctx.fillRect(x,y,1,1)
+            }
+        }
+        return canvas.toDataURL('png')
+    }
 
+    fromDataURL(dataURL) {
+        const img = new Image()
+        img.onload = () => {
+            console.log("loaded the image",img)
+            const can = document.createElement('canvas')
+            can.width = img.width
+            can.height = img.height
+            const c = can.getContext('2d')
+            c.drawImage(img,0,0)
+            const id = c.getImageData(0,0,can.width,can.height)
+            for(let x=0; x<id.width; x++) {
+                for(let y=0;y<id.height; y++) {
+                    const n = (y*id.width+x)*4
+                    const r = id.data[n+0]
+                    const g = id.data[n+1]
+                    const b = id.data[n+2]
+                    const a = id.data[n+3]
+                    const val = rgbToPalette(r,g,b,a)
+                    this.setValue(x,y,val)
+                }
+            }
+            drawCanvas()
+        }
+        img.src = dataURL
+    }
 }
 const data = new DataGrid(32,32)
 data.setValue(3,3,1)
@@ -99,7 +149,7 @@ function drawCanvas() {
 
 
 drawCanvas()
-
+/*
 on($('#canvas'),'click',(e)=>{
     const rect = e.target.getBoundingClientRect()
     const pt = {
@@ -112,12 +162,27 @@ on($('#canvas'),'click',(e)=>{
     data.setValue(pt.x,pt.y,selectedColor)
     drawCanvas()
 })
+ */
 let mousePressed = false
 on($('#canvas'),'mousedown',(e)=>{
     mousePressed = true
 })
+
+let count = 0
+function updateURL() {
+    count++
+    // document.location.search = "data=somecooldata"
+    const state = {
+        count:count
+    }
+    const url = `./editor.html?count=${count}&data=${data.toDataURL()}`
+    console.log("location is",url)
+    history.pushState(state,"",url)
+}
+
 on($('#canvas'),'mouseup',(e)=>{
     mousePressed = false
+    updateURL()
 })
 
 on($('#canvas'),'mousemove',(e)=>{
@@ -221,3 +286,20 @@ function setup() {
 }
 
 setup()
+
+function loadDoc() {
+    const query = {}
+    if(document.location.search.startsWith("?")) {
+        document.location.search.substring(1).split("&").forEach(s => {
+            const parts = s.split('=')
+            query[parts[0]] = parts[1]
+        })
+    }
+    console.log("query is",query)
+    if(query.data) {
+        console.log("loading data",query.data)
+        data.fromDataURL(query.data)
+    }
+}
+
+loadDoc()
