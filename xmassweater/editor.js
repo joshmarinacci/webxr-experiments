@@ -36,19 +36,18 @@ let canvasOffset = {
 }
 let canvasScale = 6
 
-const PALETTE = ['black','white','red','green']
+const PALETTE = [
+    '#000000',
+    '#8f8e95',
+    '#ffffff',
+    '#da131b',
+    '#3bc452',
+    '#955100',
+    '#16b7c8',
+    '#276fff',
+    '#ffda15',
+]
 let selectedColor = 1
-
-function rgbToPalette(r, g, b,a) {
-    if(r === 255 ) {
-        if(g === 255) return PALETTE.indexOf('white')
-        return PALETTE.indexOf('red')
-    }
-    if(g === 128) {
-        return PALETTE.indexOf('green')
-    }
-    return PALETTE.indexOf('black')
-}
 
 class DataGrid {
     constructor(w,h) {
@@ -71,6 +70,7 @@ class DataGrid {
     setValue(x,y,val) {
         this.data[y*this.w+x] = val
     }
+    //this stores the indexed value in the red channel
     toDataURL() {
         const canvas = document.createElement('canvas')
         canvas.width = this.w
@@ -79,7 +79,7 @@ class DataGrid {
         for(let x=0; x<this.w; x++) {
             for(let y =0; y<this.h; y++) {
                 const v = this.getValue(x,y)
-                ctx.fillStyle = PALETTE[v]
+                ctx.fillStyle = `rgb(${v},${v},${v})`
                 ctx.fillRect(x,y,1,1)
             }
         }
@@ -100,11 +100,7 @@ class DataGrid {
                 for(let y=0;y<id.height; y++) {
                     const n = (y*id.width+x)*4
                     const r = id.data[n+0]
-                    const g = id.data[n+1]
-                    const b = id.data[n+2]
-                    const a = id.data[n+3]
-                    const val = rgbToPalette(r,g,b,a)
-                    this.setValue(x,y,val)
+                    this.setValue(x,y,r)
                 }
             }
             drawCanvas()
@@ -218,7 +214,7 @@ function generateTexture(core,world) {
     canvas.width = 256
     canvas.height = 256
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = 'red'
+    ctx.fillStyle = PALETTE[3]
     ctx.fillRect(0,0,canvas.width,canvas.height)
     textureCanvas = canvas
     drawDataToCanvas(ctx,data,canvasScale,canvasOffset.x,canvasOffset.y)
