@@ -24,11 +24,6 @@ import {
 import {AmbientLight, findChildMeshes} from '../josh_common_ecsy/ThreeObjectManager.js'
 import {OrbitalControls} from '../josh_common_ecsy/threesystem.js'
 
-let finished = false
-
-window._photomnemonicReady = function() {
-    return finished
-}
 
 
 const $ = (sel) => document.querySelector(sel)
@@ -310,7 +305,7 @@ function loadDoc() {
         data.fromDataURL(query.data)
     } else {
         console.log("quick finish")
-        finished = true
+        window.joshfinished = true
     }
     if(query.debug) {
     }
