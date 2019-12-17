@@ -124,9 +124,12 @@
 <script>
     window.joshfinished = false
 
+    const $ = (sel) => document.querySelector(sel)
+    $("#debug p").innerText = `loading = ${document.location}`
     window._photomnemonicReady = function() {
         return window.joshfinished
     }
+
 </script>
 
 <script src="editor.js" type="module"></script>
