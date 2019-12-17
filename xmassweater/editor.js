@@ -152,6 +152,7 @@ drawCanvas()
 let mousePressed = false
 on($('#canvas'),'mousedown',(e)=>{
     mousePressed = true
+    setPixelFromMouse(e)
 })
 
 let count = 0
@@ -171,8 +172,7 @@ on($('#canvas'),'mouseup',(e)=>{
     updateURL()
 })
 
-on($('#canvas'),'mousemove',(e)=>{
-    if(!mousePressed) return
+function setPixelFromMouse(e) {
     const rect = e.target.getBoundingClientRect()
     const pt = {
         x:e.clientX - rect.left,
@@ -183,6 +183,11 @@ on($('#canvas'),'mousemove',(e)=>{
     pt.y = Math.floor(pt.y/scale)
     data.setValue(pt.x,pt.y,selectedColor)
     drawCanvas()
+}
+
+on($('#canvas'),'mousemove',(e)=>{
+    if(!mousePressed) return
+    setPixelFromMouse(e)
 })
 
 function setupButtons() {
