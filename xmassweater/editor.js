@@ -7,15 +7,16 @@ import {
     TextureNode,
     UVNode,
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
-import {World} from "https://ecsy.io/build/ecsy.module.js"
+import {World, System} from "https://ecsy.io/build/ecsy.module.js"
 import {
-    CustomNodeMaterialSystem,
+    BoxGeometry,
+    CustomNodeMaterialSystem, FlatColor,
     GLTFModel,
-    GLTFModelSystem,
+    GLTFModelSystem, InsideVR,
     oneWorldTick,
     Position,
     startWorldLoop,
-    ThreeCore,
+    ThreeCore, ThreeObject,
     ThreeObjectManager,
     ThreeSystem
 } from '../josh_common_ecsy/index.js'
@@ -245,13 +246,14 @@ function setupNodeMaterial(core, world) {
 
     sweaterMaterial = material
 }
+let model
 
 function setupModel(core, world) {
-    let model = world.createEntity()
+    model = world.createEntity()
     // model.addComponent(ThreeObject)
     model.addComponent(GLTFModel, {
         src:"sweater1.glb",
-        scale: 5,
+        scale: 2,
         recenter:true,
         onLoad:(obj)=>{
             findChildMeshes(obj).forEach(m => {
@@ -261,16 +263,45 @@ function setupModel(core, world) {
     model.addComponent(Position,{x: 0, z:0, y:0})
 }
 
+let game
+
+class VRChanger extends System {
+    execute() {
+        this.queries.inside.added.forEach(ent => {
+            const pos = model.getMutableComponent(Position)
+            pos.z = -2
+            pos.y = 1
+            if(game.hasComponent(OrbitalControls)) game.getComponent(OrbitalControls).controls.enabled = false
+        })
+        this.queries.inside.removed.forEach(ent => {
+            const pos = model.getMutableComponent(Position)
+            pos.z = 0
+            pos.y = 0
+            if(game.hasComponent(OrbitalControls)) game.getComponent(OrbitalControls).controls.enabled = true
+        })
+    }
+}
+VRChanger.queries = {
+    inside: {
+        components:[InsideVR],
+        listen: {
+            added:true,
+            removed:true,
+        }
+    }
+}
+
 function setup() {
     let world = new World();
     world.registerSystem(ThreeSystem)
     world.registerSystem(ThreeObjectManager)
     world.registerSystem(CustomNodeMaterialSystem)
     world.registerSystem(GLTFModelSystem)
+    world.registerSystem(VRChanger)
 
-    let game = world.createEntity()
+    game = world.createEntity()
     game.addComponent(ThreeCore, {canvas: $("#viewer-canvas"), backgroundColor: '#222222'})
-    game.addComponent(OrbitalControls, {min: 2, max: 5})
+    game.addComponent(OrbitalControls, {min: 0.5, max: 5})
     game.addComponent(AmbientLight)
 
     $("#viewer-canvas").width = $("#viewer").offsetWidth

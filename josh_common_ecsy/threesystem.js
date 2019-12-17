@@ -74,8 +74,7 @@ export class ThreeSystem extends System {
             const orbit = ent.getMutableComponent(OrbitalControls)
             const three = ent.getComponent(ThreeCore)
             orbit.controls = new OrbitControls(three.camera, three.renderer.domElement)
-            three.getCamera().position.set(0,0,10)
-            three.stagePos.position.y = 0
+            three.getCamera().position.set(0,0,3)
             orbit.controls.autoRotate = orbit.autoRotate
             orbit.controls.maxDistance = orbit.max
             orbit.controls.minDistance = orbit.min
@@ -126,7 +125,6 @@ export class ThreeSystem extends System {
         app.scene.add(app.stageRot)
         app.stageRot.add(app.stagePos)
         app.stagePos.add(app.stage)
-        app.stagePos.position.y = -1.5
 
         app.initialized = true
         if(app.vrenabled) {
@@ -153,6 +151,7 @@ ThreeSystem.queries = {
         components:[OrbitalControls, ThreeCore],
         listen: {
             added:true,
+            removed:true,
         }
 
     }

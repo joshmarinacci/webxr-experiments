@@ -208,6 +208,7 @@ export class GLTFModel {
         this.src = null
         this.onLoad = null
         this.recenter = false
+        this.obj = null
     }
 }
 
@@ -275,8 +276,12 @@ export class GLTFModelSystem extends System {
                             console.log("the mesh child is",ch)
                         }
                     }
-
+                    modelComp.obj = obj
                 })
+            })
+            this.queries.posobjs.changed.forEach(ent => {
+                const obj = ent.getComponent(GLTFModel).obj
+                if(obj) obj.position.copy(ent.getComponent(Position))
             })
         })
     }
@@ -292,6 +297,14 @@ GLTFModelSystem.queries = {
             added:true,
             removed:true
         }
-    }
+    },
+    posobjs: {
+        components: [GLTFModel, Position],
+        listen: {
+            added:true,
+            removed:true,
+            changed:true
+        }
+    },
 }
 
