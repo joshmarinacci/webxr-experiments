@@ -260,7 +260,7 @@ function setup() {
 
     let game = world.createEntity()
     game.addComponent(ThreeCore, {canvas: $("#viewer-canvas"), backgroundColor: '#f0f0f0'})
-    game.addComponent(OrbitalControls)
+    game.addComponent(OrbitalControls, {})
     game.addComponent(AmbientLight)
 
     $("#viewer-canvas").width = $("#viewer").offsetWidth
