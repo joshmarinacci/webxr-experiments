@@ -35,6 +35,9 @@ const $ = (sel) => document.querySelector(sel)
 const $$ = (sel) => document.querySelectorAll(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
+
+$("#debug p").innerText = `loading = ${document.location}`
+
 let colorTex =new TextureLoader().load("IMG_0517.jpg")
 let textureCanvas
 let canvasSize = {
@@ -308,6 +311,8 @@ function loadDoc() {
     } else {
         console.log("quick finish")
         finished = true
+    }
+    if(query.debug) {
     }
 }
 

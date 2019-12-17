@@ -20,15 +20,16 @@
             background-color: #f0f0f0;
         }
 
-        #dialog {
+        #dialog, .dialog {
             position: fixed;
             top:2em;
             left: 25vw;
             width: 50vw;
             background-color: white;
             border: 1px solid black;
+            color: black;
         }
-        #dialog.hidden{
+        #dialog.hidden, .dialog.hidden{
             display:none;
         }
 
@@ -107,10 +108,17 @@
     </div>
 </div>
 
-<div id="dialog" class="vbox hidden">
+<div id="dialog" class="vbox dialog hidden">
     <h3>the dialog</h3>
     <input type="text" id="url">
     <button id="close">close</button>
+</div>
+
+<div id="debug" class="vbox dialog">
+    <h3>debug info</h3>
+    <p>
+        logging info
+    </p>
 </div>
 
 <script src="editor.js" type="module"></script>
