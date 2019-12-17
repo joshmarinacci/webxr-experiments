@@ -44,7 +44,8 @@ export class InsideVR {
 export class OrbitalControls {
     constructor() {
         this.autoRotate = false
-        this.startZoom = 10
+        this.min = 0
+        this.max = 10
     }
 
 }
@@ -75,8 +76,9 @@ export class ThreeSystem extends System {
             three.getCamera().position.set(0,0,10)
             three.stagePos.position.y = 0
             orbit.controls.autoRotate = orbit.autoRotate
-            orbit.controls.maxDistance = 5
-            orbit.controls.minDistance = 2
+            console.log("minmax",orbit)
+            orbit.controls.maxDistance = orbit.max
+            orbit.controls.minDistance = orbit.min
         })
         this.queries.orbit.results.forEach(ent => {
             const orbit = ent.getComponent(OrbitalControls)

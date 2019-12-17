@@ -6,7 +6,6 @@ import {
     StandardNodeMaterial,
     TextureNode,
     UVNode,
-    Vector2Node
 } from "https://threejs.org/examples/jsm/nodes/Nodes.js"
 import {World} from "https://ecsy.io/build/ecsy.module.js"
 import {
@@ -24,12 +23,9 @@ import {
 import {AmbientLight, findChildMeshes} from '../josh_common_ecsy/ThreeObjectManager.js'
 import {OrbitalControls} from '../josh_common_ecsy/threesystem.js'
 
-
-
 const $ = (sel) => document.querySelector(sel)
 const $$ = (sel) => document.querySelectorAll(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
-
 
 $("#debug p").innerText = `loading = ${document.location}`
 
@@ -57,7 +53,7 @@ const PALETTE = [
     '#ffda15',
 ]
 let selectedColor = 1
-//http://localhost/webxr-experiments/xmassweater/editor.html?count=114&data=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAs0lEQVRYhe2SUQrAIAxDxSp4/wtvXwUn2satnUP2EbRzkmdICCEci/UDbAxQSrEFiDFOmbOWAJgk0Bpqs0sHapPRfqSUkk0H2KxdXwNgUxZqzlqSgBnAnQ7U5gAEZo7M5gAaEGquQNgBSOYCBA4wq5wz8t/GAKA+AEBEBxFdDnrfXAGk9TUAbe8ENH5pLwktLenOI4BavUR6synA6AyZHwNoL5Qggd74NRws7VJz3wR+AEQnS5QA1cVcc1QAAAAASUVORK5CYII=
+
 class DataGrid {
     constructor(w,h) {
         this.w = w
@@ -164,12 +160,10 @@ on($('#canvas'),'mousedown',(e)=>{
 let count = 0
 function updateURL() {
     count++
-    // document.location.search = "data=somecooldata"
     const state = {
         count:count
     }
     const url = `./editor.html?count=${count}&data=${data.toDataURL()}`
-    // console.log(url)
     history.pushState(state,"",url)
 }
 
@@ -276,7 +270,7 @@ function setup() {
 
     let game = world.createEntity()
     game.addComponent(ThreeCore, {canvas: $("#viewer-canvas"), backgroundColor: '#f0f0f0'})
-    game.addComponent(OrbitalControls, {})
+    game.addComponent(OrbitalControls, {min: 2, max: 5})
     game.addComponent(AmbientLight)
 
     $("#viewer-canvas").width = $("#viewer").offsetWidth
