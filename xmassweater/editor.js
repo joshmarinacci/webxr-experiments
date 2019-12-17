@@ -25,6 +25,7 @@ import {AmbientLight, findChildMeshes} from '../josh_common_ecsy/ThreeObjectMana
 import {OrbitalControls} from '../josh_common_ecsy/threesystem.js'
 
 const $ = (sel) => document.querySelector(sel)
+const $$ = (sel) => document.querySelectorAll(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 let colorTex =new TextureLoader().load("IMG_0517.jpg")
@@ -195,7 +196,11 @@ function setupButtons() {
         const button = document.createElement('button')
         button.style.backgroundColor = color
         $("#buttons").appendChild(button)
-        on(button,'click',()=> selectedColor = index)
+        on(button,'click',()=> {
+            $$("#buttons button").forEach(el => el.classList.remove('selected'))
+            button.classList.add('selected')
+            selectedColor = index
+        })
     })
 }
 setupButtons()
