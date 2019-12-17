@@ -48,14 +48,14 @@ const PALETTE = [
     '#ffda15',
 ]
 let selectedColor = 1
-
+//http://localhost/webxr-experiments/xmassweater/editor.html?count=114&data=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAs0lEQVRYhe2SUQrAIAxDxSp4/wtvXwUn2satnUP2EbRzkmdICCEci/UDbAxQSrEFiDFOmbOWAJgk0Bpqs0sHapPRfqSUkk0H2KxdXwNgUxZqzlqSgBnAnQ7U5gAEZo7M5gAaEGquQNgBSOYCBA4wq5wz8t/GAKA+AEBEBxFdDnrfXAGk9TUAbe8ENH5pLwktLenOI4BavUR6synA6AyZHwNoL5Qggd74NRws7VJz3wR+AEQnS5QA1cVcc1QAAAAASUVORK5CYII=
 class DataGrid {
     constructor(w,h) {
         this.w = w
         this.h = h
         this.data = []
         for(let i=0; i<w*h; i++) {
-            this.data.push(0)
+            this.data.push(2)
         }
     }
     getWidth() {
@@ -109,7 +109,6 @@ class DataGrid {
     }
 }
 const data = new DataGrid(32,32)
-data.setValue(3,3,1)
 
 function drawDataToCanvas(ctx, data, scale, offx, offy) {
     for(let j=0; j<data.getHeight(); j++) {
@@ -214,7 +213,7 @@ function generateTexture(core,world) {
     canvas.width = 256
     canvas.height = 256
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = PALETTE[3]
+    ctx.fillStyle = PALETTE[2]
     ctx.fillRect(0,0,canvas.width,canvas.height)
     textureCanvas = canvas
     drawDataToCanvas(ctx,data,canvasScale,canvasOffset.x,canvasOffset.y)
