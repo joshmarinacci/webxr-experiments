@@ -42,7 +42,7 @@ let canvasOffset = {
 let canvasScale = 4
 
 const PALETTE = [
-    '#000000',
+    '#101010',
     '#8f8e95',
     '#ffffff',
     '#da131b',
@@ -60,7 +60,7 @@ class DataGrid {
         this.h = h
         this.data = []
         for(let i=0; i<w*h; i++) {
-            this.data.push(2)
+            this.data.push(3)
         }
     }
     getWidth() {
@@ -217,7 +217,7 @@ function generateTexture(core,world) {
     canvas.width = canvasSize.w*canvasScale
     canvas.height = canvasSize.h*canvasScale
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = PALETTE[2]
+    ctx.fillStyle = PALETTE[3]
     ctx.fillRect(0,0,canvas.width,canvas.height)
     textureCanvas = canvas
     drawDataToCanvas(ctx,data,canvasScale,canvasOffset.x,canvasOffset.y)
@@ -238,10 +238,10 @@ function setupNodeMaterial(core, world) {
     let uv2 = mul(new UVNode(),size)
     let uvColor = mul(add(div(floor(mul(new UVNode(),size)),size),pixelOff),f(2))
 
-    material.color = mul(
+    material.color = mul(mul(
         new TextureNode(patternTex,uv2),
         new TextureNode(colorTex,uvColor)
-    )
+    ),f(2.2))
 
     sweaterMaterial = material
 }
@@ -269,7 +269,7 @@ function setup() {
     world.registerSystem(GLTFModelSystem)
 
     let game = world.createEntity()
-    game.addComponent(ThreeCore, {canvas: $("#viewer-canvas"), backgroundColor: '#f0f0f0'})
+    game.addComponent(ThreeCore, {canvas: $("#viewer-canvas"), backgroundColor: '#222222'})
     game.addComponent(OrbitalControls, {min: 2, max: 5})
     game.addComponent(AmbientLight)
 
