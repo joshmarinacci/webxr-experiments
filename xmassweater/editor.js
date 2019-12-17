@@ -30,11 +30,15 @@ const on = (elem, type, cb) => elem.addEventListener(type,cb)
 
 let colorTex =new TextureLoader().load("IMG_0517.jpg")
 let textureCanvas
-let canvasOffset = {
-    x:25,
-    y:30,
+let canvasSize = {
+    w:64,
+    h:64
 }
-let canvasScale = 6
+let canvasOffset = {
+    x:16,
+    y:16,
+}
+let canvasScale = 4
 
 const PALETTE = [
     '#000000',
@@ -134,9 +138,8 @@ function drawCanvas() {
         const c = textureCanvas.getContext('2d')
         c.save()
         c.scale(1,-1)
-        c.translate(0,-256)
+        c.translate(32+16,-canvasSize.h-64-64-16)
         c.imageSmoothingEnabled = false
-        const gap = Math.floor((256-data.getWidth())/2)
         drawDataToCanvas(c,data,canvasScale,canvasOffset.x,canvasOffset.y)
         c.restore()
         colorTex.needsUpdate = true
@@ -210,20 +213,21 @@ let sweaterMaterial
 
 function generateTexture(core,world) {
     const canvas = document.createElement('canvas')
-    canvas.width = 256
-    canvas.height = 256
+    canvas.width = canvasSize.w*canvasScale
+    canvas.height = canvasSize.h*canvasScale
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = PALETTE[2]
     ctx.fillRect(0,0,canvas.width,canvas.height)
     textureCanvas = canvas
     drawDataToCanvas(ctx,data,canvasScale,canvasOffset.x,canvasOffset.y)
     colorTex = new CanvasTexture(canvas)
+    // $("body").appendChild(canvas)
 }
 function setupNodeMaterial(core, world) {
 
     const material = new StandardNodeMaterial();
 
-    const pxsize = 64*4
+    const pxsize = 32*4
     const size = f(pxsize)
     //add  -0.25 to center it
     const pixelOff = f(1/pxsize/2-0.25)
