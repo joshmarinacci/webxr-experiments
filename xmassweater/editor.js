@@ -24,6 +24,13 @@ import {
 import {AmbientLight, findChildMeshes} from '../josh_common_ecsy/ThreeObjectManager.js'
 import {OrbitalControls} from '../josh_common_ecsy/threesystem.js'
 
+let finished = false
+
+window._photomnemonicReady = function() {
+    return finished
+}
+
+
 const $ = (sel) => document.querySelector(sel)
 const $$ = (sel) => document.querySelectorAll(sel)
 const on = (elem, type, cb) => elem.addEventListener(type,cb)
@@ -108,6 +115,8 @@ class DataGrid {
                 }
             }
             drawCanvas()
+            finished = true
+            console.log("truly finished")
         }
         img.src = dataURL
     }
@@ -294,7 +303,12 @@ function loadDoc() {
         })
     }
     if(query.count) count = query.count
-    if(query.data) data.fromDataURL(query.data)
+    if(query.data) {
+        data.fromDataURL(query.data)
+    } else {
+        console.log("quick finish")
+        finished = true
+    }
 }
 
 loadDoc()
@@ -307,3 +321,4 @@ on($("#share"),'click',()=>{
 on($("#close"),'click',()=>{
     $("#dialog").classList.toggle('hidden')
 })
+
