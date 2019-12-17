@@ -61,9 +61,10 @@ export class ThreeSystem extends System {
             this.count++
             if(this.count % 10 === 0) {
                 const ch = app.canvas.clientHeight
+                const cw = app.canvas.clientWidth
                 const h = app.container.clientHeight
-                if(ch === h) return
                 const w = app.container.clientWidth
+                if(ch === h && cw === w) return
                 app.camera.aspect = w/h
                 app.camera.updateProjectionMatrix();
                 app.renderer.setSize(w,h);
@@ -76,7 +77,6 @@ export class ThreeSystem extends System {
             three.getCamera().position.set(0,0,10)
             three.stagePos.position.y = 0
             orbit.controls.autoRotate = orbit.autoRotate
-            console.log("minmax",orbit)
             orbit.controls.maxDistance = orbit.max
             orbit.controls.minDistance = orbit.min
         })

@@ -109,7 +109,7 @@ class DataGrid {
                 }
             }
             drawCanvas()
-            finished = true
+            window.finished = true
             console.log("truly finished")
         }
         img.src = dataURL

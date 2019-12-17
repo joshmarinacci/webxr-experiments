@@ -5,7 +5,7 @@
     <title>Title</title>
     <style type="text/css">
         html, body, .fill {
-            background-color: lightblue;
+            background-color: #1c9d17;
             color: white;
             padding: 0;
             margin: 0;
@@ -53,10 +53,16 @@
         .col2 {
             grid-column-start: 2;
         }
-        #title {
+        #title, #subtitle {
+            color: black;
             margin: 0;
             padding: 0.5em;
             line-height: 1.5em;
+            font-size: 200%;
+        }
+
+        #subtitle {
+            font-size: 150%;
         }
 
 
@@ -72,6 +78,7 @@
 
         .round {
             /*border-radius: 0.5rem;*/
+            border: 1px solid black;
         }
         .toolbar {
             padding-bottom: 10px;
@@ -93,9 +100,6 @@
             border-width: 3px;
         }
 
-        #title {
-            color: green;
-        }
 
 
         .vbox {
@@ -106,20 +110,26 @@
         .hbox {
             display: flex;
             flex-direction: row;
-            justify-content: center;
-            padding: 1rem;
+            align-content: baseline;
+            align-items: baseline;
         }
 
 
-        #share, .bigbutton {
+        .bigbutton {
             font-size: 200%;
-            border: 3px solid #555;
+            border: 5px solid #78130e;
             border-radius: 1rem;
-            background-color: #61dafb;
-            color: white;
+            background-color: #d62024;
+            color: #e3e3e3;
             padding: 0.5rem;
             align-self: center;
             justify-self: center;
+        }
+        .bigbutton:hover {
+            background-color: #ff786d;
+        }
+        #share {
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -127,18 +137,21 @@
 
 
 <div id="main" class="fill">
-    <h1 id="title" class="col1 span gray-bg round">Xmas Sweater Builder</h1>
+    <div class="hbox col1 span gray-bg round">
+        <div id="title" class="">Xmas Sweater Builder</div>
+        <div id="subtitle">Draw art, view in VR, share!</div>
+    </div>
     <div id='editor' class="col1 vbox gray-bg round">
         <div class="hbox toolbar" id="buttons"></div>
         <canvas class="col1" id="canvas" width="320" height="320"></canvas>
-        <div class="hbox toolbar"><button id="share">Share</button></div>
+        <button id="share" class="bigbutton">Share</button>
     </div>
-    <div class="col2" id="viewer">
+    <div class="col2 round" id="viewer">
         <canvas id="viewer-canvas" width="100" height="100"></canvas>
     </div>
 </div>
 
-<div id="dialog" class="vbox dialog stretch">
+<div id="dialog" class="vbox dialog stretch hidden">
     <div class="title">Share this URL</div>
     <p>All the data is in the URL. There is no server state.</p>
     <input type="text" id="url">
