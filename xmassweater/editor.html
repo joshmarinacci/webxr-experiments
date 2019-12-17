@@ -4,67 +4,20 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style type="text/css">
-        body {
-            background-color: black;
-            color: white;
-        }
-        #main {
-            display: flex;
-        }
-        #editor, #viewer {
-            border: 1px solid black;
-        }
-        #editor {
-            background-color: #555555;
-        }
-        .hbox {
-            display: flex;
-            flex-direction: row;
-        }
-        .vbox {
-            display: flex;
-            flex-direction: column;
-        }
         html, body, .fill {
-            padding:0;
-            margin:0;
+            background-color: lightblue;
+            color: white;
+            padding: 0;
+            margin: 0;
             border-width: 0;
         }
         .fill {
-            width: 99vw;
-            height: 98vh;
-            border: 0px solid yellow;
-        }
-        .grow {
-            flex: 1.0;
+            width: 96vw;
+            height: 96vh;
         }
 
-        #canvas {
-            border: 1px solid red;
-            width: 320px;
-        }
-
-        #editor {
-            width: 340px;
-        }
-        #viewer {
-            flex: 1.0;
-        }
-        #viewer-canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        #buttons button {
-            border: 1px solid black;
-            min-width: 2em;
-            min-height: 2em;
-            padding: 0;
-            margin:0;
-        }
-        .toolbar {
-            background-color: #555555;
-            padding: 5px;
+        .gray-bg {
+            background-color: #f0f0f0;
         }
 
         #dialog {
@@ -79,22 +32,74 @@
             display:none;
         }
 
+        #main {
+            display: grid;
+            margin: 10px;
+            box-sizing: content-box;
+            grid-gap: 10px;
+            grid-template-columns: 340px 1fr;
+            grid-template-rows: 5em 2em 2em 1fr;
+        }
+        .col1 {
+            grid-column-start: 1;
+        }
+        .col2 {
+            grid-column-start: 2;
+        }
+        #title {
+            margin: 0;
+            padding: 0.5em;
+            line-height: 1.5em;
+        }
+
+
+        #viewer {
+            grid-row-start: 2;
+            grid-row-end: 5;
+        }
+        #editor {
+            grid-row-start: 2;
+            grid-row-end: 5;
+            padding: 10px;
+        }
+
+        .round {
+            /*border-radius: 0.5rem;*/
+        }
+        .toolbar {
+            padding-bottom: 10px;
+        }
+        .span {
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        #buttons button {
+            border: 1px solid black;
+            min-width: 2em;
+            min-height: 2em;
+            padding: 0;
+            margin:0;
+        }
+
+        #title {
+            color: green;
+            font-family: sans-serif;
+        }
     </style>
 </head>
 <body>
 
 
-<div id="main" class="vbox fill">
-    <h3>Xmas Sweater Builder</h3>
-    <div class="hbox grow">
-        <div id="editor" class="vbox">
-            <div class="hbox toolbar" id="buttons">   </div>
-            <div class="hbox toolbar"><button id="share">share</button></div>
-            <canvas id="canvas" width="320" height="320"/>
-        </div>
-        <div id="viewer" class="grow">
-            <canvas id="viewer-canvas" width="100" height="100"/>
-        </div>
+<div id="main" class="fill">
+    <h1 id="title" class="col1 span gray-bg round">Xmas Sweater Builder</h1>
+    <div id='editor' class="col1 vbox gray-bg round">
+        <div class="hbox toolbar" id="buttons"></div>
+        <canvas class="col1" id="canvas" width="320" height="320"></canvas>
+        <div class="hbox toolbar"><button id="share">share</button></div>
+    </div>
+    <div class="col2" id="viewer">
+        <canvas id="viewer-canvas" width="100" height="100"></canvas>
     </div>
 </div>
 

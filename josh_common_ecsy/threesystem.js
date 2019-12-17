@@ -1,4 +1,4 @@
-import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer} from "https://threejs.org/build/three.module.js"
+import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "https://threejs.org/build/three.module.js"
 import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js"
 
 import {System} from "https://ecsy.io/build/ecsy.module.js"
@@ -48,8 +48,25 @@ export class OrbitalControls {
 
 }
 export class ThreeSystem extends System {
+    init() {
+        this.count = 0
+    }
     execute(delta,time) {
         this.queries.three.results.forEach(ent => this.setupThree(ent))
+        this.queries.three.results.forEach(ent => {
+            const app = ent.getComponent(ThreeCore)
+            if(!app.initialized) return
+            this.count++
+            if(this.count % 10 === 0) {
+                const ch = app.canvas.clientHeight
+                const h = app.container.clientHeight
+                if(ch === h) return
+                const w = app.container.clientWidth
+                app.camera.aspect = w/h
+                app.camera.updateProjectionMatrix();
+                app.renderer.setSize(w,h);
+            }
+        })
         this.queries.orbit.added.forEach(ent => {
             const orbit = ent.getMutableComponent(OrbitalControls)
             const three = ent.getComponent(ThreeCore)
@@ -76,8 +93,8 @@ export class ThreeSystem extends System {
             options.canvas = app.canvas
             width = app.canvas.width
             height = app.canvas.height
-            console.log("setting size to",width,height)
             app.renderer = new WebGLRenderer( options );
+            app.container = app.canvas.parentNode
         } else {
             app.container = document.createElement('div');
             document.body.appendChild(app.container)
@@ -93,6 +110,7 @@ export class ThreeSystem extends System {
             }, false );
         }
         app.camera = new PerspectiveCamera( 70, width / height, 0.1, 100 );
+        if(app.backgroundColor)  app.scene.background = new Color(app.backgroundColor)
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( width, height );
         app.renderer.gammaOutput = true
