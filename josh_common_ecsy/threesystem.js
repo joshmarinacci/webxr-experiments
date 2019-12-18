@@ -2,7 +2,7 @@ import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer} from "https://thr
 import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js"
 
 import {System} from "https://ecsy.io/build/ecsy.module.js"
-import {WEBVR} from "./WebVRButton.js"
+import {VRButton} from "./WebVRButton.js"
 
 export function toRad(theta) {
     return theta*Math.PI/180.0
@@ -102,7 +102,7 @@ export class ThreeSystem extends System {
             app.renderer.setSize( window.innerWidth, window.innerHeight );
         }, false );
         app.initialized = true
-        document.body.appendChild(WEBVR.createButton(app.renderer,{
+        document.body.appendChild(VRButton.createButton(app.renderer,{
             onSessionStarted:() => ent.addComponent(InsideVR),
             onSessionEnded:() =>  ent.removeComponent(InsideVR),
         }))
