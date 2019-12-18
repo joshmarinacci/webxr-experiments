@@ -128,15 +128,11 @@ export class ThreeSystem extends System {
 
         app.initialized = true
         if(app.vrenabled) {
-            document.body.appendChild(WEBVR.createButton(app.renderer, {
-                onSessionStarted: () => ent.addComponent(InsideVR),
-                onSessionEnded: () => ent.removeComponent(InsideVR),
+            document.body.appendChild(VRButton.createButton(app.renderer,{
+                onSessionStarted:() => ent.addComponent(InsideVR),
+                onSessionEnded:() =>  ent.removeComponent(InsideVR),
             }))
         }
-        document.body.appendChild(VRButton.createButton(app.renderer,{
-            onSessionStarted:() => ent.addComponent(InsideVR),
-            onSessionEnded:() =>  ent.removeComponent(InsideVR),
-        }))
     }
 
     render(ent) {
