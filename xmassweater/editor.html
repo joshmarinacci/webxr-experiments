@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Fathom - simple website analytics - https://github.com/usefathom/fathom -->
+    <script>
+        (function(f, a, t, h, o, m){
+            a[h]=a[h]||function(){
+                (a[h].q=a[h].q||[]).push(arguments)
+            };
+            o=f.createElement('script'),
+                m=f.getElementsByTagName('script')[0];
+            o.async=1; o.src=t; o.id='fathom-script';
+            m.parentNode.insertBefore(o,m)
+        })(document, window, '//stats.josh.earth/tracker.js', 'fathom');
+        fathom('set', 'siteId', 'GISNV');
+        fathom('trackPageview');
+    </script>
+    <!-- / Fathom -->
+    <meta charset="UTF-8">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@joshmarinacci" />
+    <meta name="twitter:title" content="Xmas Sweater Builder" />
+    <meta name="twitter:image" content="https://vr.josh.earth/webxr-experiments/xmassweater/screenshot.png" />
+    <title>WebXR Xmas Sweater Builder</title>
+    <style type="text/css">
+        html, body, .fill {
+            background-color: #1c9d17;
+            color: white;
+            padding: 0;
+            margin: 0;
+            border-width: 0;
+            font-family: sans-serif;
+        }
+        .fill {
+            width: 96vw;
+            height: 96vh;
+        }
+
+        .gray-bg {
+            background-color: #f0f0f0;
+        }
+
+        .dialog {
+            position: fixed;
+            top:2em;
+            left: 25vw;
+            width: 50vw;
+            background-color: white;
+            border: 3px solid #555;
+            border-radius: 1rem;
+            padding: 1rem;
+            color: black;
+        }
+        .dialog.hidden{
+            display:none;
+        }
+        .dialog .title {
+            font-size: 200%;
+        }
+
+        #main {
+            display: grid;
+            margin: 10px;
+            box-sizing: content-box;
+            grid-gap: 10px;
+            grid-template-columns: 340px 1fr;
+            grid-template-rows: 5em 2em 2em 1fr;
+        }
+        .col1 {
+            grid-column-start: 1;
+        }
+        .col2 {
+            grid-column-start: 2;
+        }
+        #title, #subtitle {
+            color: black;
+            margin: 0;
+            padding: 0.5em;
+            line-height: 1.5em;
+            font-size: 200%;
+        }
+
+        #subtitle {
+            font-size: 150%;
+        }
+
+
+        #viewer {
+            grid-row-start: 2;
+            grid-row-end: 5;
+        }
+        #editor {
+            grid-row-start: 2;
+            grid-row-end: 5;
+            padding: 10px;
+        }
+
+        .round {
+            /*border-radius: 0.5rem;*/
+            border: 1px solid black;
+        }
+        .toolbar {
+            padding-bottom: 10px;
+        }
+        .span {
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        #buttons button {
+            border: 1px solid #888;
+            min-width: 2em;
+            min-height: 2em;
+            padding: 0px;
+            margin:1px;
+        }
+        #buttons button.selected {
+            border-color: black;
+            border-width: 3px;
+        }
+
+
+
+        .vbox {
+            /*border: 3px solid red;*/
+            display: flex;
+            flex-direction: column;
+        }
+        .hbox {
+            display: flex;
+            flex-direction: row;
+            align-content: baseline;
+            align-items: baseline;
+        }
+
+
+        .bigbutton {
+            font-size: 200%;
+            border: 5px solid #78130e;
+            border-radius: 1rem;
+            background-color: #d62024;
+            color: #e3e3e3;
+            padding: 0.5rem;
+            align-self: center;
+            justify-self: center;
+        }
+        .bigbutton:hover {
+            background-color: #ff786d;
+        }
+        #share {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+
+<div id="main" class="fill">
+    <div class="hbox col1 span gray-bg round">
+        <div id="title" class="">Xmas Sweater Builder</div>
+        <div id="subtitle">Draw art, view in VR, share!</div>
+    </div>
+    <div id='editor' class="col1 vbox gray-bg round">
+        <div class="hbox toolbar" id="buttons"></div>
+        <canvas class="col1" id="canvas" width="320" height="320"></canvas>
+        <button id="share" class="bigbutton">Share</button>
+    </div>
+    <div class="col2 round" id="viewer">
+        <canvas id="viewer-canvas" width="100" height="100"></canvas>
+    </div>
+</div>
+
+<div id="dialog" class="vbox dialog stretch hidden">
+    <div class="title">Share this URL</div>
+    <p>All the data is in the URL. There is no server state.</p>
+    <input type="text" id="url">
+    <button id="close" class="bigbutton">close</button>
+</div>
+
+<div id="debug" class="vbox dialog hidden">
+    <h3>debug info</h3>
+    <p>
+        logging info
+    </p>
+</div>
+
+<script>
+    window.joshfinished = false
+
+    const $ = (sel) => document.querySelector(sel)
+    $("#debug p").innerText = `loading = ${document.location}`
+    window._photomnemonicReady = function() {
+        return window.joshfinished
+    }
+
+</script>
+
+<script src="editor.js" type="module"></script>
+
+</body>
+</html>

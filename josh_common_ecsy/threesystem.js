@@ -1,4 +1,4 @@
-import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer} from "https://threejs.org/build/three.module.js"
+import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "https://threejs.org/build/three.module.js"
 import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js"
 
 import {System} from "https://ecsy.io/build/ecsy.module.js"
@@ -10,6 +10,7 @@ export function toRad(theta) {
 
 export class ThreeCore {
     constructor() {
+        this.vrenabled = true
         this.scene = null
         this.camera = null
         this.renderer = null
@@ -43,19 +44,40 @@ export class InsideVR {
 export class OrbitalControls {
     constructor() {
         this.autoRotate = false
+        this.min = 0
+        this.max = 10
     }
 
 }
 export class ThreeSystem extends System {
+    init() {
+        this.count = 0
+    }
     execute(delta,time) {
         this.queries.three.results.forEach(ent => this.setupThree(ent))
+        this.queries.three.results.forEach(ent => {
+            const app = ent.getComponent(ThreeCore)
+            if(!app.initialized) return
+            this.count++
+            if(this.count % 10 === 0) {
+                const ch = app.canvas.clientHeight
+                const cw = app.canvas.clientWidth
+                const h = app.container.clientHeight
+                const w = app.container.clientWidth
+                if(ch === h && cw === w) return
+                app.camera.aspect = w/h
+                app.camera.updateProjectionMatrix();
+                app.renderer.setSize(w,h);
+            }
+        })
         this.queries.orbit.added.forEach(ent => {
             const orbit = ent.getMutableComponent(OrbitalControls)
             const three = ent.getComponent(ThreeCore)
             orbit.controls = new OrbitControls(three.camera, three.renderer.domElement)
-            three.getCamera().position.set(0,0,10)
-            three.stagePos.position.y = 0
+            three.getCamera().position.set(0,0,3)
             orbit.controls.autoRotate = orbit.autoRotate
+            orbit.controls.maxDistance = orbit.max
+            orbit.controls.minDistance = orbit.min
         })
         this.queries.orbit.results.forEach(ent => {
             const orbit = ent.getComponent(OrbitalControls)
@@ -65,43 +87,52 @@ export class ThreeSystem extends System {
     setupThree(ent) {
         const app = ent.getMutableComponent(ThreeCore)
         if(app.initialized) return
-        if(!app.canvas) {
-            app.container = document.createElement('div');
-            document.body.appendChild(app.container)
-        }
         app.scene = new Scene();
         let width = 400
         let height = 400
-        if(app.container) {
-            width = app.container.width
-            height = app.container.height
+        const options = {
+             antialias: true
         }
         if(app.canvas) {
+            options.canvas = app.canvas
             width = app.canvas.width
             height = app.canvas.height
+            app.renderer = new WebGLRenderer( options );
+            app.container = app.canvas.parentNode
+        } else {
+            app.container = document.createElement('div');
+            document.body.appendChild(app.container)
+            width = window.innerWidth
+            height = window.innerHeight
+            app.renderer = new WebGLRenderer( options );
+            app.canvas = app.renderer.domElement
+            app.container.appendChild( app.renderer.domElement );
+            window.addEventListener( 'resize', ()=>{
+                app.camera.aspect = window.innerWidth / window.innerHeight;
+                app.camera.updateProjectionMatrix();
+                app.renderer.setSize( window.innerWidth, window.innerHeight );
+            }, false );
         }
-        app.renderer = new WebGLRenderer( { antialias: true, canvas:app.canvas } );
-        app.canvas = app.renderer.domElement
         app.camera = new PerspectiveCamera( 70, width / height, 0.1, 100 );
+        if(app.backgroundColor)  app.scene.background = new Color(app.backgroundColor)
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( width, height );
         app.renderer.gammaOutput = true
-        app.renderer.vr.enabled = true;
-        if(app.container) app.container.appendChild( app.renderer.domElement );
+        if(app.vrenabled)  app.renderer.vr.enabled = true;
         app.stage = new Group()
         app.stagePos = new Group()
         app.stageRot = new Group()
         app.scene.add(app.stageRot)
         app.stageRot.add(app.stagePos)
         app.stagePos.add(app.stage)
-        app.stagePos.position.y = -1.5
 
-        window.addEventListener( 'resize', ()=>{
-            app.camera.aspect = window.innerWidth / window.innerHeight;
-            app.camera.updateProjectionMatrix();
-            app.renderer.setSize( window.innerWidth, window.innerHeight );
-        }, false );
         app.initialized = true
+        if(app.vrenabled) {
+            document.body.appendChild(WEBVR.createButton(app.renderer, {
+                onSessionStarted: () => ent.addComponent(InsideVR),
+                onSessionEnded: () => ent.removeComponent(InsideVR),
+            }))
+        }
         document.body.appendChild(VRButton.createButton(app.renderer,{
             onSessionStarted:() => ent.addComponent(InsideVR),
             onSessionEnded:() =>  ent.removeComponent(InsideVR),
@@ -124,6 +155,7 @@ ThreeSystem.queries = {
         components:[OrbitalControls, ThreeCore],
         listen: {
             added:true,
+            removed:true,
         }
 
     }

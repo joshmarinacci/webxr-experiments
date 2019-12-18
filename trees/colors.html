@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        canvas { border: 1px solid black;}
+        .wrapper {
+            border: 1px solid red;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <canvas id="random" width="300" height="300"></canvas>
+    <h3>random </h3>
+</div>
+<div class="wrapper">
+<canvas id="stripes" width="300" height="300"></canvas>
+    <h3>pick hue, random saturation</h3>
+</div>
+
+<script type="module">
+
+    const toRad = (deg) => deg/180*Math.PI
+    const rand = () => Math.random()
+    const randf = (min,max) => min + Math.random()*(max-min)
+    const randi = (min,max) => Math.floor(randf(min,max))
+    const randSpread = (value,spread) => randf(value-spread,value+spread)
+
+
+
+    // https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+    /**
+     * Converts an HSV color value to RGB. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+     * Assumes h, s, and v are contained in the set [0, 1] and
+     * returns r, g, and b in the set [0, 255].
+     *
+     * @param   Number  h       The hue
+     * @param   Number  s       The saturation
+     * @param   Number  v       The value
+     * @return  Array           The RGB representation
+     */
+    function hsvToRgb(h, s, v){
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch(i % 6){
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+
+        return [r * 255, g * 255, b * 255];
+    }
+
+
+    function drawUnit(ctx) {
+        let hue = randf(0.0,0.5)
+        for(let i=0; i<1000; i++) {
+            const thirty = 30/360
+            const rgb = hsvToRgb(randf(hue,thirty),1.0,1.0)
+            ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+            ctx.fillRect(randi(-100,500),randi(-100,500),randi(10,100),randi(10,100))
+        }
+    }
+
+    function drawRandom() {
+        const canvas = document.getElementById('random')
+        const ctx = canvas.getContext('2d')
+        let w = 400
+        let h = 400
+        ctx.fillStyle = 'white'
+        ctx.fillRect(0,0,w,h)
+        drawUnit(ctx)
+    }
+
+    drawRandom()
+
+    function drawStripes() {
+        const canvas = document.getElementById('stripes')
+        const ctx = canvas.getContext('2d')
+        // ctx.fillStyle = 'blue'
+        // ctx.fillRect(0,0,canvas.width,canvas.height)
+        let hue = randf(0,1.0)
+        let step = 100
+        for(let i=0; i<canvas.width; i+=step) {
+            const rgb = hsvToRgb(hue,rand(0.1,1.0),1.0)
+            ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+            ctx.fillRect(i,0,step,canvas.height)
+        }
+    }
+
+    drawStripes()
+
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .wrapper {
+            border: 1px solid lightblue;
+            border-width: 1px 1px 0 1px;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas" width="400" height="400"></canvas>
+<div id="controls"></div>
+<script type="module">
+    function xmur3(str) {
+        for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++)
+            h = Math.imul(h ^ str.charCodeAt(i), 3432918353),
+                h = h << 13 | h >>> 19;
+        return function() {
+            h = Math.imul(h ^ h >>> 16, 2246822507);
+            h = Math.imul(h ^ h >>> 13, 3266489909);
+            return (h ^= h >>> 16) >>> 0;
+        }
+    }
+
+    function sfc32(a, b, c, d) {
+        return function() {
+            a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+            var t = (a + b) | 0;
+            a = b ^ b >>> 9;
+            b = c + (c << 3) | 0;
+            c = (c << 21 | c >>> 11);
+            d = d + 1 | 0;
+            t = t + d | 0;
+            c = c + t | 0;
+            return (t >>> 0) / 4294967296;
+        }
+    }
+
+    // const seed = xmur3('apple')
+    // const random =sfc32(seed(),seed(),seed(),seed())
+    const toRad = (deg) => deg/180*Math.PI
+
+    let opts = {
+        maxDepth:4,
+        seed:'apple',
+
+        trunkWidth:10,
+        trunkHeight:70,
+        trunkColor:0.1,
+        trunkType:'trapezoid',
+        trunkAttenuation:0.8,
+        trunkAttenuationSpread:0.1,
+
+        leafSize:20,
+        leafSizeSpread:3,
+        leafType:'square',
+        leafColor: 0.5,
+        leafAngleBaseDegrees:0,
+        leafAngleSpreadDegrees:45,
+
+        branchAngleBaseDegrees:25,
+        branchAngleSpreadDegrees:8,
+        // phase: PHASE.TRUNK
+        // random: random
+    }
+
+    const LEAF_TYPES = ['square','circle','triangle','ellipse']
+    const TRUNK_TYPES = ['rectangle','trapezoid']
+    const HUES = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+    const PHASES = {
+        TRUNK:'TRUNK',
+        LEAF:'LEAF'
+    }
+
+    const canvas = document.getElementById('canvas')
+    const ctx = canvas.getContext('2d')
+    let w = 400
+    let h = 400
+
+    const randRange = (random, min, max) => min + random()*(max-min)
+    const randSpread = (random, base, spread) => randRange(random,base-spread,base+spread)
+
+
+    function leaf(ctx, w,h, opts) {
+        ctx.save()
+        const angle = randSpread(opts.random,opts.leafAngleBaseDegrees, opts.leafAngleSpreadDegrees)
+        ctx.rotate(toRad(angle))
+        const sat = randSpread(opts.random,0.5,0.2)
+        ctx.fillStyle = hsvToCanvas(opts.leafColor,sat,1.0)
+        let s = randSpread(opts.random,opts.leafSize,opts.leafSizeSpread)
+        if(s <0) s = 0
+
+        if(opts.phase !== PHASES.LEAF) {
+            return ctx.restore()
+        }
+        if(opts.leafType === 'square') {
+            ctx.fillRect(-s, -s, s * 2, s * 2)
+        }
+        if(opts.leafType === 'circle') {
+            ctx.beginPath()
+            ctx.arc(0,0,s,0,toRad(360))
+            ctx.fill()
+        }
+        if(opts.leafType === 'triangle') {
+            ctx.beginPath()
+            for(let i=0; i<=3; i++) {
+                let theta = toRad(360/3*i)
+                let x = s*Math.sin(theta)
+                let y = s*Math.cos(theta)
+                if(i === 0) ctx.moveTo(x,y)
+                ctx.lineTo(x,y)
+            }
+            ctx.fill()
+        }
+        if(opts.leafType === 'ellipse') {
+            ctx.beginPath()
+            ctx.ellipse(0,0,s,s/2,0,0,toRad(360))
+            ctx.fill()
+        }
+        ctx.restore()
+    }
+
+    function branch(ctx, w, h,depth, opts) {
+        // const nw = w * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
+        const angle = toRad(opts.branchAngleBaseDegrees)
+        const spread = toRad(opts.branchAngleSpreadDegrees)
+        ctx.save()
+        ctx.rotate(randSpread(opts.random,+angle,spread))
+        trunk(ctx,w,h,depth-1, opts)
+        ctx.restore()
+        ctx.save()
+        ctx.rotate(randSpread(opts.random,-angle,spread))
+        trunk(ctx,w,h,depth-1, opts)
+        ctx.restore()
+    }
+
+    // https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+    /**
+     * Converts an HSV color value to RGB. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+     * Assumes h, s, and v are contained in the set [0, 1] and
+     * returns r, g, and b in the set [0, 255].
+     *
+     * @param   Number  h       The hue
+     * @param   Number  s       The saturation
+     * @param   Number  v       The value
+     * @return  Array           The RGB representation
+     */
+    function hsvToRgb(h, s, v){
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch(i % 6){
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+
+        return [r * 255, g * 255, b * 255];
+    }
+
+    function hsvToCanvas(h, s, v) {
+        const rgb = hsvToRgb(h,s,v)
+        return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+    }
+
+    function trunk(ctx, w, h, depth, opts) {
+        // console.log(depth,opts)
+        const nw = w * opts.trunkAttenuation
+        const nh = h * randSpread(opts.random,opts.trunkAttenuation,opts.trunkAttenuationSpread)
+
+        if(opts.phase === PHASES.TRUNK) {
+            const step = 0.5/opts.maxDepth
+            ctx.fillStyle = hsvToCanvas(opts.trunkColor,0.8,1.0-depth*step)
+            if(opts.trunkType === 'rectangle') {
+                ctx.fillRect(-w / 2, 0, w, nh)
+            }
+            if(opts.trunkType === 'trapezoid') {
+                ctx.beginPath()
+                ctx.moveTo(-w/2,0)
+                ctx.lineTo(-nw/2,nh)
+                ctx.lineTo(nw/2,nh)
+                ctx.lineTo(w/2,0)
+                ctx.fill()
+            }
+        }
+        ctx.save()
+        ctx.translate(0,nh)
+        if(depth === 0) leaf(ctx,nw, nh,opts)
+        if(depth > 0) branch(ctx,nw,nh,depth, opts)
+        ctx.restore()
+    }
+
+
+    function makeSlider(opts,name, updateFun, config) {
+        if(!config) config = {}
+        let initialValue = opts[name]
+        let wrapper = document.createElement('div')
+        wrapper.classList.add('wrapper')
+
+        let label = document.createElement('label')
+        label.innerText = name
+        wrapper.appendChild(label)
+
+        let valueLabel = document.createElement('label')
+
+        let elem = document.createElement('input')
+        elem.setAttribute('type','range')
+        elem.setAttribute('value',initialValue)
+        elem.setAttribute('step',0.1)
+        if('step' in config) elem.setAttribute('step',config.step)
+        if('min' in config) elem.setAttribute('min',config.min)
+        if('max' in config) elem.setAttribute('max',config.max)
+
+        valueLabel.innerText = elem.getAttribute('value')
+        wrapper.appendChild(elem)
+        elem.addEventListener('input',()=>{
+            valueLabel.innerText = elem.value
+            const val = parseFloat(elem.value)
+            opts[name] = val
+            updateFun(opts)
+        })
+
+        wrapper.appendChild(valueLabel)
+        document.getElementById('controls').appendChild(wrapper)
+    }
+
+    function makeSelect(opts,name,updateFun,config) {
+        if(!config) config = {}
+        let initialValue = opts[name]
+        let wrapper = document.createElement('div')
+        wrapper.classList.add('wrapper')
+
+        let label = document.createElement('label')
+        label.innerText = name
+        wrapper.appendChild(label)
+
+        let elem = document.createElement('select')
+        if(!('values' in config)) throw new Error("makeSelect missing config.values")
+        config.values.forEach(v => {
+            let opt = document.createElement('option')
+            opt.setAttribute('value',v)
+            opt.innerText = v
+            if(v === initialValue) opt.setAttribute('selected',true)
+            elem.appendChild(opt)
+        })
+        elem.addEventListener('input',()=>{
+            opts[name] = elem.value
+            updateFun(opts)
+        })
+        wrapper.appendChild(elem)
+
+        document.getElementById('controls').appendChild(wrapper)
+    }
+
+    function makeButton(opts,name,updateFun,config) {
+        let wrapper = document.createElement('div')
+        wrapper.classList.add('wrapper')
+        let button = document.createElement('button')
+        button.innerText = name
+        button.addEventListener('click',config.action)
+        wrapper.appendChild(button)
+        document.getElementById('controls').appendChild(wrapper)
+
+    }
+
+
+    function firstTrunk(opts,phase) {
+        opts.phase = phase
+        ctx.save()
+        ctx.translate(w/2,h-10)
+        ctx.scale(1,-1)
+        const seed = xmur3(opts.seed)
+        opts.random =sfc32(seed(),seed(),seed(),seed())
+        let width = opts.trunkWidth
+        let height = opts.trunkHeight
+
+        opts.trunkColor = randRange(opts.random,0,1)
+        opts.leafColor = 1.0-opts.trunkColor
+        if(opts.leafColor < 0) opts.leafColor = opts.leafColor + 1.0
+
+        trunk(ctx, width, height, opts.maxDepth, opts)
+        ctx.restore()
+    }
+    function gen(opts) {
+        //background
+        ctx.fillStyle = '#cccccc'
+        ctx.fillRect(0,0,w,h)
+
+        //floor
+        ctx.fillStyle = '#d0d0d0'
+        ctx.fillRect(0,h-10,w,10)
+
+        //draw the two phases
+        firstTrunk(opts,PHASES.TRUNK)
+        firstTrunk(opts,PHASES.LEAF)
+    }
+
+    makeButton(opts,'randomize',gen,{action:()=>{
+            opts.seed = ""+Math.random()
+            gen(opts)
+        }})
+    makeSlider(opts,'maxDepth',gen, {min:1, max:8, step:1})
+    makeSlider(opts,'trunkWidth',gen)
+    makeSlider(opts,'trunkHeight',gen, {max:200})
+    // makeSelect(opts,'trunkColor',gen, {values:HUES})
+    makeSlider(opts,'trunkAttenuation',gen,{min:0.1, max:1.5,step:0.1})
+    makeSlider(opts,'trunkAttenuationSpread',gen,{min:0, max:0.5,step:0.05})
+    makeSelect(opts,'trunkType',gen, {values:TRUNK_TYPES})
+    makeSlider(opts,'leafSize',gen, {min:0, max:30})
+    makeSlider(opts,'leafSizeSpread',gen, {min:0, max:20})
+    makeSelect(opts,'leafType',gen, {values:LEAF_TYPES})
+    // makeSelect(opts,'leafColor',gen, {values:HUES})
+    makeSlider(opts,'branchAngleBaseDegrees',gen, {min:-0, max:90})
+    makeSlider(opts,'branchAngleSpreadDegrees',gen, {min:0, max:90})
+    makeSlider(opts,'leafAngleBaseDegrees',gen, {min:-90, max:90})
+    makeSlider(opts,'leafAngleSpreadDegrees',gen, {min:-90, max:90})
+
+    gen(opts)
+
+
+</script>
+
+</body>
+</html>

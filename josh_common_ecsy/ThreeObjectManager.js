@@ -1,9 +1,11 @@
 import {
+    Box3,
     BufferGeometry,
     TubeBufferGeometry,
     BoxBufferGeometry,
     CylinderBufferGeometry,
     Mesh,
+    Object3D,
     MeshLambertMaterial,
     PlaneBufferGeometry,
     RepeatWrapping,
@@ -92,6 +94,10 @@ export class TextureMaterial {
     }
 }
 export class AmbientLight {
+    constructor() {
+        this.color = 0xffffff
+        this.intensity = 1.0
+    }
 
 }
 
@@ -167,7 +173,7 @@ export class ThreeObjectManager extends System {
         })
         this.queries.lights.added.forEach(ent => {
             const light = ent.getMutableComponent(AmbientLight)
-            light.light = new AmbientLight3(0xffffff,1.0)
+            light.light = new AmbientLight3(light.color, light.intensity)
             this.queries.three.results.forEach(ent => {
                 ent.getComponent(ThreeCore).getStage().add(light.light)
             })
@@ -200,17 +206,29 @@ ThreeObjectManager.queries = {
 export class GLTFModel {
     constructor() {
         this.src = null
-        this.position = new Vector3()
+        this.onLoad = null
+        this.recenter = false
+        this.obj = null
     }
 }
 
-function findChildMesh(obj) {
+export function findChildMesh(obj) {
     if(obj.type === 'Mesh') return obj
     for(let i=0; i<obj.children.length; i++) {
         const ch = findChildMesh(obj.children[i])
         if(ch) return ch
     }
     return null
+}
+export function findChildMeshes(obj, results) {
+    if(!results) results = []
+    if(obj.type === 'Mesh') {
+        results.push(obj)
+    }
+    for(let i=0; i<obj.children.length; i++) {
+        findChildMeshes(obj.children[i],results)
+    }
+    return results
 }
 
 export class GLTFModelSystem extends System {
@@ -220,7 +238,27 @@ export class GLTFModelSystem extends System {
             this.queries.objs.added.forEach(ent => {
                 const modelComp = ent.getMutableComponent(GLTFModel)
                 new GLTFLoader().load(modelComp.src, (gltf) => {
-                    const obj = gltf.scene.children[0]
+                    let obj = gltf.scene.children[0]
+                    console.log("Loadded model",gltf)
+
+                    if(modelComp.scale) {
+                        let sc = modelComp.scale
+                        obj.scale.x = sc
+                        obj.scale.y = sc
+                        obj.scale.z = sc
+                    }
+
+                    if(modelComp.recenter) {
+                        const box = new Box3().setFromObject(obj)
+                        const center = box.getCenter()
+                        obj.position.sub(center)
+                        const wrapper = new Object3D()
+                        wrapper.add(obj)
+                        obj = wrapper
+                    }
+                    if(modelComp.onLoad) {
+                        modelComp.onLoad(obj)
+                    }
                     core.getStage().add(obj)
 
                     if(ent.hasComponent(Position)) {
@@ -228,13 +266,6 @@ export class GLTFModelSystem extends System {
                         obj.position.copy(pos)
                     }
 
-                    let sc = 1.0
-                    if(modelComp.scale) {
-                        sc = modelComp.scale
-                    }
-                    obj.scale.x = sc
-                    obj.scale.y = sc
-                    obj.scale.z = sc
 
                     if(ent.hasComponent(CustomNodeMaterial)) {
                         const comp = ent.getComponent(CustomNodeMaterial)
@@ -245,8 +276,12 @@ export class GLTFModelSystem extends System {
                             console.log("the mesh child is",ch)
                         }
                     }
-
+                    modelComp.obj = obj
                 })
+            })
+            this.queries.posobjs.changed.forEach(ent => {
+                const obj = ent.getComponent(GLTFModel).obj
+                if(obj) obj.position.copy(ent.getComponent(Position))
             })
         })
     }
@@ -262,6 +297,14 @@ GLTFModelSystem.queries = {
             added:true,
             removed:true
         }
-    }
+    },
+    posobjs: {
+        components: [GLTFModel, Position],
+        listen: {
+            added:true,
+            removed:true,
+            changed:true
+        }
+    },
 }
 
