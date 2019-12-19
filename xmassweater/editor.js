@@ -353,5 +353,7 @@ on($("#tweet"),'click',()=>{
     const url = encodeURIComponent(document.location.toString())
     const hashtags = "webxr,xmas,webdev"
     const via = "joshmarinacci"
-    window.open(`https://twitter.com/intent/tweet?text=${msg}&url=${url}&hashtags=${hashtags}&via=${via}`,"_blank")
+    const furl = `https://twitter.com/intent/tweet?text=${msg}&url=${url}&hashtags=${hashtags}&via=${via}`
+    console.log("opening the final url",furl)
+    window.open(furl,'_blank')
 })
