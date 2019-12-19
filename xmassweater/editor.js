@@ -347,3 +347,11 @@ on($("#close"),'click',()=>{
     $("#dialog").classList.toggle('hidden')
 })
 
+on($("#tweet"),'click',()=>{
+    console.log("opening a tweet")
+    const msg = encodeURIComponent("I made an Xmas Sweater to share in VR.")
+    const url = encodeURIComponent(document.location.toString())
+    const hashtags = "webxr,xmas,webdev"
+    const via = "joshmarinacci"
+    window.open(`https://twitter.com/intent/tweet?text=${msg}&url=${url}&hashtags=${hashtags}&via=${via}`,"_blank")
+})
