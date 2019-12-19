@@ -13,9 +13,10 @@ import {
     TextureLoader,
     Vector3,
     SplineCurve,
-} from "https://threejs.org/build/three.module.js"
-import {AmbientLight as AmbientLight3} from "https://threejs.org/build/three.module.js"
-import {GLTFLoader} from "https://threejs.org/examples/jsm/loaders/GLTFLoader.js"
+    AmbientLight as AmbientLight3,
+} from "./node_modules/three/build/three.module.js"
+//import {AmbientLight as AmbientLight3} from "https://threejs.org/build/three.module.js"
+import {GLTFLoader} from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js"
 import {ThreeCore} from './threesystem.js'
 import {System} from "https://ecsy.io/build/ecsy.module.js"
 import {CustomNodeMaterial} from './CustomMaterialManager.js'

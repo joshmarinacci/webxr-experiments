@@ -1,8 +1,8 @@
-import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "https://threejs.org/build/three.module.js"
-import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js"
+import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "./node_modules/three/build/three.module.js"
+import {VRButton} from "./node_modules/three/examples/jsm/webxr/VRButton.js";
+import {OrbitControls} from "./node_modules/three/examples/jsm/controls/OrbitControls.js";
 
 import {System} from "https://ecsy.io/build/ecsy.module.js"
-import {VRButton} from "./WebVRButton.js"
 
 export function toRad(theta) {
     return theta*Math.PI/180.0
@@ -128,10 +128,10 @@ export class ThreeSystem extends System {
 
         app.initialized = true
         if(app.vrenabled) {
-            document.body.appendChild(VRButton.createButton(app.renderer,{
-                onSessionStarted:() => ent.addComponent(InsideVR),
-                onSessionEnded:() =>  ent.removeComponent(InsideVR),
-            }))
+            const btn = VRButton.createButton(app.renderer,{mode:'immersive-vr'})
+            $("body").appendChild(btn)
+            app.renderer.vr.addEventListener('sessionstart',()=> ent.addComponent(InsideVR))
+            app.renderer.vr.addEventListener('sessionend',()=> ent.removeComponent(InsideVR))
         }
     }
 

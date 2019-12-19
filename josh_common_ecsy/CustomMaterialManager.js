@@ -1,8 +1,6 @@
 import {ThreeCore, toRad} from './threesystem.js'
 import {System} from "https://ecsy.io/build/ecsy.module.js"
-import {Mesh, PlaneBufferGeometry, CylinderBufferGeometry} from "https://threejs.org/build/three.module.js"
-import {NodeFrame} from "https://threejs.org/examples/jsm/nodes/Nodes.js"
-import {CylinderGeometry, Position} from './ThreeObjectManager.js'
+import {NodeFrame} from "./node_modules/three/examples/jsm/nodes/Nodes.js"
 
 export class CustomNodeMaterial {
     constructor() {
