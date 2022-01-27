@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.101.1",
+    "three": "^0.137.0",
     "webxr-boilerplate": "^0.1.6"
   }
 }
