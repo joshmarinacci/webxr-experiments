@@ -1,0 +1,11 @@
+{
+  "name": "webxr-experiments",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "publish": "scp -i ../deployman_private.key -r boilerplate nonogram xmassweater deployman@josh.earth:/sites/apps.josh.earth/webxr-experiments"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
