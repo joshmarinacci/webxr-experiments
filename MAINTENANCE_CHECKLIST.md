@@ -35,6 +35,20 @@ here was already broken or missing on `master` before that work.
   - `particles/tex/test1.png`: requested by `snow.html` and `snow2.html`.
   - `canvas2vr` requests `BoxCat_Games_-_10_-_Epic_Song` without its `.mp3` extension.
 
+## Root index.html links
+
+The root `index.html` links to three folders that aren't in this repo and never were in its
+git history. They were probably deployed separately next to it on the server.
+
+- [ ] **2D / 3D Sim Game cards.** They link to `webxr-simgame/2dgame.html` and `3dgame.html`
+      plus `webxr-simgame/images/*_thumb.png`. The same games appear to live in
+      `hextest/2dgame.html` and `hextest/3dgame.html`. Repoint the links and add thumbnails,
+      since `hextest` has none.
+- [ ] **Whack an Imp card.** `whack-an-imp/step7.html` and `whack-an-imp/whack-an-imp.png` are
+      missing. Link to where it's hosted now, or remove the card.
+- [ ] **Jingle Smash card.** `jinglesmash-ecs/` is missing; only its thumbnail exists
+      (`physics/jinglesmash.thumbnail.png`). Link to where it's hosted now, or remove the card.
+
 ## Xmas sweater beyond r137
 
 - [ ] Optional, and large. The old node-material library is gone from three r138 on. Going
