@@ -4,10 +4,17 @@
   "scripts": {
     "start": "node server.js",
     "build": "node --experimental-strip-types scripts/build.mts",
+    "typecheck": "tsc",
+    "test:smoke": "npm run build -- --skip-install && playwright test",
     "deploy:setup": "pm2 deploy ecosystem.config.cjs production setup",
     "deploy": "pm2 deploy ecosystem.config.cjs production"
   },
   "dependencies": {
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
   }
 }

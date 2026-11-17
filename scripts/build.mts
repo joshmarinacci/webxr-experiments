@@ -68,6 +68,11 @@ const EXCLUDED_AT_ROOT = new Set([
     'ecosystem.config.cjs',
     'package.json',
     'package-lock.json',
+    'tsconfig.json',
+    'playwright.config.ts',
+    'tests',
+    'test-results',
+    'playwright-report',
     'MAINTENANCE_CHECKLIST.md',
     // copied separately from their own checkouts
     ...EXTERNAL_GAMES.map((game) => game.name),
