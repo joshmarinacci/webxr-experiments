@@ -5,20 +5,23 @@ import {
     ConeGeometry,
     CylinderBufferGeometry,
     CylinderGeometry,
-    Geometry,
     Group,
     Mesh,
     MeshBasicMaterial,
     MeshLambertMaterial,
     PlaneGeometry,
-    VertexColors
 } from "./node_modules/three/build/three.module.js"
+import {Geometry} from "./node_modules/three/examples/jsm/deprecated/Geometry.js"
+
 import {pointy_hex_to_pixel, toRad} from './hex.js'
 import {terrainToColor, terrainToHeight} from './globals.js'
 import {COLORS} from "./gfx.js"
 import {CityTile, FarmTile, ForestTile, GameState, HexMapComp} from './logic2.js'
 import {ThreeCore} from './threesystem.js'
 import {Level} from './levelssystem.js'
+
+// r125 primitives are BufferGeometry; convert so faces can be colored and merged.
+const legacy = (bufferGeometry) => new Geometry().fromBufferGeometry(bufferGeometry)
 
 export class Highlighted {
 
@@ -58,31 +61,31 @@ export function makeTree(ent, size) {
 
     const geo = new Geometry()
     if(forest.treeLevel >= 3) {
-        const level1 = new ConeGeometry(1.5, 2, 8)
+        const level1 = legacy(new ConeGeometry(1.5, 2, 8))
         level1.faces.forEach(f => f.color.set(COLORS.GREEN))
         level1.translate(0, 4, 0)
         geo.merge(level1)
     }
     if(forest.treeLevel >= 2) {
-        const level2 = new ConeGeometry(2,2,8)
+        const level2 = legacy(new ConeGeometry(2,2,8))
         level2.faces.forEach(f => f.color.set(COLORS.GREEN))
         level2.translate(0,3,0)
         geo.merge(level2)
     }
     if(forest.treeLevel >= 1) {
-        const level3 = new ConeGeometry(3, 2, 8)
+        const level3 = legacy(new ConeGeometry(3, 2, 8))
         level3.faces.forEach(f => f.color.set(COLORS.GREEN))
         level3.translate(0, 2, 0)
         geo.merge(level3)
     }
 
-    const trunk = new CylinderGeometry(0.5,0.5,2)
+    const trunk = legacy(new CylinderGeometry(0.5,0.5,2))
     trunk.faces.forEach(f => f.color.set(COLORS.BROWN))
     trunk.translate(0,0,0)
     geo.merge(trunk)
 
-    const material = new MeshLambertMaterial({vertexColors: VertexColors})
-    const obj = new Mesh(geo,material)
+    const material = new MeshLambertMaterial({vertexColors: true})
+    const obj = new Mesh(geo.toBufferGeometry(),material)
     obj.userData.level = forest.treeLevel
     obj.position.y = h/2 + 1
     return obj
@@ -94,15 +97,15 @@ export function makeFarm(ent) {
     const h = terrainToHeight(tile.data.terrain)
     const geo = new Geometry()
     for(let i=0; i<4; i++) {
-        const c1 = new CylinderGeometry(0.25, 0.25, 2.0)
+        const c1 = legacy(new CylinderGeometry(0.25, 0.25, 2.0))
         c1.faces.forEach(f => f.color.set(COLORS.DARK_BROWN))
         c1.rotateZ(toRad(90))
         c1.translate(0,0,i*0.5)
         geo.merge(c1)
     }
 
-    const material = new MeshLambertMaterial({vertexColors: VertexColors})
-    const obj = new Mesh(geo,material)
+    const material = new MeshLambertMaterial({vertexColors: true})
+    const obj = new Mesh(geo.toBufferGeometry(),material)
     obj.userData.level = farm.treeLevel
     obj.position.y = h/2
     obj.position.z = -1.0
@@ -110,19 +113,19 @@ export function makeFarm(ent) {
 }
 export function makeHouse(data) {
     const geo = new Geometry()
-    const sides = new BoxGeometry(1,1,1)
+    const sides = legacy(new BoxGeometry(1,1,1))
     sides.faces.forEach(f => f.color.set(COLORS.RED))
     sides.translate(0,0.5,0)
     sides.rotateY(toRad(45))
     geo.merge(sides)
 
-    const top = new ConeGeometry(1.2,1.0,8)
+    const top = legacy(new ConeGeometry(1.2,1.0,8))
     top.faces.forEach(f => f.color.set(COLORS.DARK_BROWN))
     top.translate(0,1.5,0,)
     geo.merge(top)
 
-    const material = new MeshLambertMaterial({vertexColors: VertexColors})
-    const obj = new Mesh(geo,material)
+    const material = new MeshLambertMaterial({vertexColors: true})
+    const obj = new Mesh(geo.toBufferGeometry(),material)
     obj.position.y = 0
     return obj
 }

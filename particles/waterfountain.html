@@ -203,7 +203,7 @@ https://sketchfab.com/models/fd5cd30b8aac444982965aabe2f59f23
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

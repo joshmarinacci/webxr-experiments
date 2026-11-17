@@ -76,11 +76,11 @@ void main() {
             // const c = rand(0.0,0.5)
             colors.push(1.0,1.0,1.0)
         }
-        geo.addAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
-        geo.addAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
-        geo.addAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
-        geo.addAttribute('delay', new THREE.Float32BufferAttribute(delays,1))
-        geo.addAttribute('color', new THREE.Float32BufferAttribute(colors,3))
+        geo.setAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
+        geo.setAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
+        geo.setAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
+        geo.setAttribute('delay', new THREE.Float32BufferAttribute(delays,1))
+        geo.setAttribute('color', new THREE.Float32BufferAttribute(colors,3))
         const mat = new THREE.ShaderMaterial( {
             uniforms: {
                 time: { value: 12.0},

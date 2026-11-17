@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "webxr-boilerplate": "^0.2.0"
+    "three": "^0.125.0"
   },
   "devDependencies": {},
   "scripts": {

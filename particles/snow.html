@@ -64,9 +64,10 @@
 </div>
 
 <script type="module">
+    import "../boilerplate/legacy-geometry.js"
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
-    import {FaceColors, Vector3, Vector2, Face3, Color} from "./node_modules/three/build/three.module.js"
+    import {Vector3, Vector2, Face3, Color} from "./node_modules/three/build/three.module.js"
 
     const clickStartEnabled = false
     //JQuery-like selector
@@ -205,7 +206,7 @@
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

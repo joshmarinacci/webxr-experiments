@@ -15,9 +15,16 @@ var WEBVR = {
         //
         // }
 
+        var button = document.createElement( 'button' );
+
         function showEnterVR( device ) {
 
             button.style.display = '';
+            button.disabled = false;
+            button.removeAttribute( 'aria-disabled' );
+            button.style.pointerEvents = '';
+            button.tabIndex = 0;
+            delete button.dataset.desktopFallback;
 
             button.style.cursor = 'pointer';
             // button.style.left = 'calc(50% - 50px)';
@@ -38,60 +45,20 @@ var WEBVR = {
 
         }
 
-        function showEnterXR( device ) {
+        function showDesktopFallback( message ) {
 
-            var currentSession = null;
-
-            function onSessionStarted( session ) {
-
-                session.addEventListener( 'end', onSessionEnded );
-
-                renderer.vr.setSession( session );
-                button.textContent = 'EXIT VR';
-
-                currentSession = session;
-
-            }
-
-            function onSessionEnded( event ) {
-
-                currentSession.removeEventListener( 'end', onSessionEnded );
-
-                renderer.vr.setSession( null );
-                button.textContent = 'ENTER VR';
-
-                currentSession = null;
-
-            }
-
-            //
-
+            button.id = 'enter-vr';
+            button.disabled = true;
+            button.dataset.desktopFallback = 'true';
+            button.setAttribute( 'aria-disabled', 'true' );
+            button.tabIndex = -1;
             button.style.display = '';
-
-            button.style.cursor = 'pointer';
-            button.style.left = 'calc(50% - 50px)';
-            button.style.width = '100px';
-
-            button.textContent = 'ENTER VR';
-
-            button.onmouseenter = function () { button.style.opacity = '1.0'; };
-            button.onmouseleave = function () { button.style.opacity = '0.5'; };
-
-            button.onclick = function () {
-
-                if ( currentSession === null ) {
-
-                    device.requestSession( { immersive: true, exclusive: true /* DEPRECATED */ } ).then( onSessionStarted );
-
-                } else {
-
-                    currentSession.end();
-
-                }
-
-            };
-
-            renderer.vr.setDevice( device );
+            button.style.cursor = 'not-allowed';
+            button.style.pointerEvents = 'none';
+            button.style.opacity = '0.7';
+            button.textContent = 'VR UNAVAILABLE — DESKTOP MODE';
+            button.title = message;
+            button.onclick = function ( event ) { event.preventDefault(); };
 
         }
 
@@ -107,6 +74,11 @@ var WEBVR = {
 
             button.onmouseenter = null;
             button.onmouseleave = null;
+            button.disabled = true;
+            button.dataset.desktopFallback = 'true';
+            button.setAttribute( 'aria-disabled', 'true' );
+            button.tabIndex = -1;
+            button.style.pointerEvents = 'none';
 
             button.onclick = null;
 
@@ -133,26 +105,97 @@ var WEBVR = {
 
         }
 
-        if ( 'xr' in navigator ) {
+        if ( navigator.xr && renderer.xr ) {
 
-            var button = document.createElement( 'button' );
+            button.id = 'enter-vr';
             button.style.display = 'none';
-
             stylizeElement( button );
 
-            navigator.xr.requestDevice().then( function ( device ) {
+            var currentSession = null;
 
-                device.supportsSession( { immersive: true, exclusive: true /* DEPRECATED */ } )
-                    .then( function () { showEnterXR( device ); } )
-                    .catch( showVRNotFound );
+            function showEnterXR() {
 
-            } ).catch( showVRNotFound );
+                button.style.display = '';
+                button.disabled = false;
+                button.removeAttribute( 'aria-disabled' );
+                button.tabIndex = 0;
+                button.style.cursor = 'pointer';
+                button.textContent = 'ENTER VR';
+
+                button.onclick = function () {
+
+                    if ( currentSession ) {
+
+                        currentSession.end();
+
+                    } else {
+
+                        navigator.xr.requestSession( 'immersive-vr', {
+                            optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking' ]
+                        } ).then( function ( session ) {
+
+                            session.addEventListener( 'end', function () {
+
+                                currentSession = null;
+                                button.textContent = 'ENTER VR';
+
+                            } );
+
+                            return renderer.xr.setSession( session ).then( function () {
+
+                                currentSession = session;
+                                button.textContent = 'EXIT VR';
+
+                            } );
+
+                        } ).catch( function ( error ) {
+
+                            console.error( 'Unable to start an immersive WebXR session.', error );
+
+                        } );
+
+                    }
+
+                };
+
+            }
+
+            if ( typeof navigator.xr.isSessionSupported === 'function' ) {
+
+                navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+
+                    if ( supported ) {
+
+                        showEnterXR();
+
+                    } else {
+
+                        showDesktopFallback( 'Immersive VR is not supported here. The example will run in desktop mode.' );
+
+                    }
+
+                } ).catch( function () {
+
+                    showDesktopFallback( 'WebXR support could not be detected. The example will run in desktop mode.' );
+
+                } );
+
+            } else {
+
+                showDesktopFallback( 'WebXR is not supported here. The example will run in desktop mode.' );
+
+            }
+
+            return button;
+
+        } else if ( navigator.xr ) {
+
+            showDesktopFallback( 'This renderer does not support WebXR. The example will run in desktop mode.' );
 
             return button;
 
         } else if ( 'getVRDisplays' in navigator ) {
 
-            var button = document.createElement( 'button' );
             button.setAttribute("id","enter-vr")
             button.setAttribute("disabled",true)
             button.style.display = 'none';
@@ -202,17 +245,9 @@ var WEBVR = {
 
         } else {
 
-            var message = document.createElement( 'a' );
-            message.href = 'https://webvr.info';
-            message.innerHTML = 'WEBVR NOT SUPPORTED';
+            showDesktopFallback( 'This browser does not support immersive VR. The example will run in desktop mode.' );
 
-            message.style.left = 'calc(50% - 90px)';
-            message.style.width = '180px';
-            message.style.textDecoration = 'none';
-
-            stylizeElement( message );
-
-            return message;
+            return button;
 
         }
 

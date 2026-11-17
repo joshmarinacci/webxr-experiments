@@ -17,8 +17,8 @@ export class PubnubNetworkplay extends ECSComp {
         this.pubnub = new PubNub({
             publishKey: pubkey,
             subscribeKey: subkey,
+            userId: 'voxeluser_'+Math.floor(Math.random()*1000000),
         })
-        this.pubnub.setUUID('voxeluser_'+Math.floor(Math.random()*1000000))
         this.pubnub.addListener({
             status:(e) => {
                 console.log("PUBNUB status",e)
@@ -27,7 +27,7 @@ export class PubnubNetworkplay extends ECSComp {
                 }
             },
             message: (msg) =>{
-                if(msg.publisher !== this.pubnub.getUUID()) {
+                if(msg.publisher !== this.pubnub.getUserId()) {
                     // console.log("someone else moved",msg.publisher)
                     // console.log("PUBNUB message",msg)
                     if(msg.message.type === 'movement') this._fire('remote-player-moved',msg)

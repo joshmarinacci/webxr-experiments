@@ -180,7 +180,7 @@
 
     import WebXRBoilerPlate from "./WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, PlaneGeometry,
-        CubeGeometry,
+        BoxGeometry,
         Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group} from "./node_modules/three/build/three.module.js"
     import VRControls from "./VRControls.js"
     import { DesktopControls} from './DesktopControls.js'
@@ -402,7 +402,7 @@
             lastPos.copy(app.stagePos.position)
         }
 
-        const highlight_geo = new CubeGeometry(1.1,1.1,1.1, 4,4)
+        const highlight_geo = new BoxGeometry(1.1,1.1,1.1, 4,4)
         highlight_geo.translate(0.5,0.5,0.5)
         const highlight_cube = new Mesh(highlight_geo,
             new MeshLambertMaterial({color:'green',

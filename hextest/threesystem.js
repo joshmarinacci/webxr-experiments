@@ -1,6 +1,6 @@
-import {Group, PerspectiveCamera, Scene, WebGLRenderer} from "./node_modules/three/build/three.module.js"
+import {Group, PerspectiveCamera, Scene, sRGBEncoding, WebGLRenderer} from "./node_modules/three/build/three.module.js"
 import {System} from "./node_modules/ecsy/build/ecsy.module.js"
-import {WEBVR} from "./node_modules/three/examples/jsm/vr/WebVR.js"
+import {VRButton} from "./node_modules/three/examples/jsm/webxr/VRButton.js"
 
 export class ThreeCore {
     constructor() {
@@ -35,8 +35,8 @@ export class ThreeSystem extends System {
         app.renderer = new WebGLRenderer( { antialias: true } );
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( window.innerWidth, window.innerHeight );
-        app.renderer.gammaOutput = true
-        app.renderer.vr.enabled = true;
+        app.renderer.outputEncoding = sRGBEncoding
+        app.renderer.xr.enabled = true;
         container.appendChild( app.renderer.domElement );
         app.canvas = app.renderer.domElement
         app.stage = new Group()
@@ -53,7 +53,7 @@ export class ThreeSystem extends System {
             app.renderer.setSize( window.innerWidth, window.innerHeight );
         }, false );
         app.initialized = true
-        document.body.appendChild(WEBVR.createButton(app.renderer))
+        document.body.appendChild(VRButton.createButton(app.renderer))
     }
 
     render(ent) {

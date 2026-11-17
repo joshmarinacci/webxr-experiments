@@ -21,9 +21,9 @@
 <!--<script src="./node_modules/three/examples/js/controls/TrackballControls.js"></script>-->
 <!--<script src="./node_modules/three/examples/js/libs/dat.gui.min.js"></script>-->
 <!--<script src="./node_modules/three/examples/js/libs/stats.min.js"></script>-->
-<script src="./node_modules/three/examples/js/GPUParticleSystem.js"></script>
+<script type="module">
+    import GPUParticleSystem from "./GPUParticleSystem.js"
 
-<script>
     var camera, tick = 0,
         scene, renderer, clock = new THREE.Clock(),
         controls, container,
@@ -77,7 +77,7 @@
             timeScale: 1
         };
 
-        particleSystem = new THREE.GPUParticleSystem( options)
+        particleSystem = new GPUParticleSystem( options)
         scene.add( particleSystem );
 
         // gui.add( options, "velocityRandomness", 0, 3 );

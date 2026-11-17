@@ -110,7 +110,7 @@ void main() {
         for (var i = 0; i < vertexDisplacement.length; i ++) {
             vertexDisplacement[i] = i//Math.sin(i)
         }
-        dodeca_geo.addAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
+        dodeca_geo.setAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
 
         // const dodeca_mat = new THREE.MeshLambertMaterial({color:0xff0000})
         // const dodeca_mat = new THREE.LineBasicMaterial({color:0x0000FF})

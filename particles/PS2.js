@@ -201,25 +201,25 @@ export default class PS2 extends THREE.Object3D {
         this.geometry = new THREE.BufferGeometry();
 
         //vec3 attributes
-        this.geometry.addAttribute('position',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.setAttribute('position',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
 
         VATTS.forEach(name => {
-            this.geometry.addAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setDynamic(true))
+            this.geometry.setAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setUsage(THREE.DynamicDrawUsage))
         })
         CATTS.forEach(name => {
-            this.geometry.addAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setDynamic(true))
+            this.geometry.setAttribute(name, new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT*3),3).setUsage(THREE.DynamicDrawUsage))
         })
-        // this.geometry.addAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        // this.geometry.addAttribute('positionEnd', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('velocity',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('acceleration',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('color',         new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('endColor',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        // this.geometry.setAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        // this.geometry.setAttribute('positionEnd', new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('velocity',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('acceleration',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('color',         new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('endColor',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
 
         //scalar attributes
-        this.geometry.addAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.geometry.addAttribute('size',          new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.geometry.addAttribute('lifeTime',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
+        this.geometry.setAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('size',          new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('lifeTime',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
 
 
         this.particleSystem = new THREE.Points(this.geometry, this.material);

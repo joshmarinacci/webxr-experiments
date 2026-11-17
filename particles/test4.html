@@ -30,11 +30,11 @@ void main() {
 }
 </script>
 <script type="x-shader/x-fragment" id="fragmentshader">
-uniform sampler2D texture;
+uniform sampler2D pointTexture;
 varying vec3 vColor;
 void main() {
     //gl_FragColor = vec4( vColor, 1.0 );
-    //gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+    //gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord );
     gl_FragColor = vec4(0,1.0,0,1.0);
 }
 </script>
@@ -65,9 +65,9 @@ void main() {
             accelerations.push(-9.8)
             accelerations.push(0)
         }
-        geo.addAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
-        geo.addAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
-        geo.addAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
+        geo.setAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
+        geo.setAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
+        geo.setAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
         const mat = new THREE.ShaderMaterial( {
             uniforms: {
                 time: { value: 12.0}
