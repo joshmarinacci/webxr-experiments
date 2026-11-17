@@ -1,4 +1,4 @@
-import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "./node_modules/three/build/three.module.js"
+import {Clock, Group, PerspectiveCamera, Scene, sRGBEncoding, WebGLRenderer, Color} from "./node_modules/three/build/three.module.js"
 import {VRButton} from "./node_modules/three/examples/jsm/webxr/VRButton.js";
 import {OrbitControls} from "./node_modules/three/examples/jsm/controls/OrbitControls.js";
 
@@ -117,8 +117,8 @@ export class ThreeSystem extends System {
         if(app.backgroundColor)  app.scene.background = new Color(app.backgroundColor)
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( width, height );
-        app.renderer.gammaOutput = true
-        if(app.vrenabled)  app.renderer.vr.enabled = true;
+        app.renderer.outputEncoding = sRGBEncoding
+        if(app.vrenabled)  app.renderer.xr.enabled = true;
         app.stage = new Group()
         app.stagePos = new Group()
         app.stageRot = new Group()
@@ -128,10 +128,10 @@ export class ThreeSystem extends System {
 
         app.initialized = true
         if(app.vrenabled) {
-            const btn = VRButton.createButton(app.renderer,{mode:'immersive-vr'})
-            $("body").appendChild(btn)
-            app.renderer.vr.addEventListener('sessionstart',()=> ent.addComponent(InsideVR))
-            app.renderer.vr.addEventListener('sessionend',()=> ent.removeComponent(InsideVR))
+            const btn = VRButton.createButton(app.renderer)
+            document.body.appendChild(btn)
+            app.renderer.xr.addEventListener('sessionstart',()=> ent.addComponent(InsideVR))
+            app.renderer.xr.addEventListener('sessionend',()=> ent.removeComponent(InsideVR))
         }
     }
 
