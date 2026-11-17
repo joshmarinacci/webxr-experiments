@@ -67,7 +67,7 @@ git history. They were probably deployed separately next to it on the server.
       `scripts/build.mts`, which builds the static site into `<path>/current/dist`. The same
       build runs locally with `npm run build`.
 - [ ] **First pm2 deploy.** Needs, on the server: git, Node 22.6+ and pm2. Confirm the deploy
-      path or set `WEBXR_DEPLOY_PATH` (default `/home/deployman/apps/webxr-experiments`). Then
+      path or set `WEBXR_DEPLOY_PATH` (default `/projects/webxr-experiments`). Then
       point the web server for apps.josh.earth/webxr-experiments at
       `<path>/current/dist`. It must follow symlinks: `current` and `dist` are both symlinks.
 - [ ] **Keep the separately deployed projects reachable.** The old web root likely also holds
