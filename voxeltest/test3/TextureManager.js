@@ -1,7 +1,6 @@
 import {
     Color,
     DoubleSide,
-    FaceColors,
     LinearMipMapLinearFilter,
     MeshBasicMaterial,
     MeshLambertMaterial,
@@ -10,7 +9,6 @@ import {
     Texture,
     ShaderMaterial,
     Vector2,
-    VertexColors,
 } from "./node_modules/three/build/three.module.js"
 
 const createAtlas = window.atlaspack
@@ -46,10 +44,10 @@ export class TextureManager {
         this.material = new ShaderMaterial( {
             uniforms: {
                 'uTime': { value: 0.0 },
-                texture: { value: this.texture},
+                atlasTexture: { value: this.texture},
                 texturesEnabled: { value: this.texturesEnabled },
             },
-            vertexColors:VertexColors,
+            vertexColors:true,
             vertexShader: `
             attribute vec2 repeat;
             attribute vec4 subrect;
@@ -71,7 +69,7 @@ export class TextureManager {
             } 
             `,
             fragmentShader: `
-                uniform sampler2D texture;
+                uniform sampler2D atlasTexture;
                 uniform float uTime;
                 uniform bool texturesEnabled;
                 varying vec2 vUv;
@@ -94,7 +92,7 @@ export class TextureManager {
                     fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
                     vec4 color = vec4(1.0,1.0,1.0,1.0);
                     if(texturesEnabled) {
-                        color = texture2D(texture, fuv);
+                        color = texture2D(atlasTexture, fuv);
                     }
                     color = color*(vOcclusion);
                     gl_FragColor = vec4(color.xyz,1.0);

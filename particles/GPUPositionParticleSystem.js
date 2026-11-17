@@ -110,15 +110,15 @@ export default class GPUPositionParticleSystem extends THREE.Object3D {
         this.geometry = new THREE.BufferGeometry();
 
         //vec3 attributes
-        this.geometry.addAttribute('startPosition',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('endPosition',    new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('startColor',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('endColor',       new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.setAttribute('startPosition',  new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('endPosition',    new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('startColor',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
+        this.geometry.setAttribute('endColor',       new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(THREE.DynamicDrawUsage));
 
         //scalar attributes
-        // this.geometry.addAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        // this.geometry.addAttribute('size',          new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        // this.geometry.addAttribute('lifeTime',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
+        // this.geometry.setAttribute('startTime',     new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
+        // this.geometry.setAttribute('size',          new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
+        // this.geometry.setAttribute('lifeTime',      new THREE.BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(THREE.DynamicDrawUsage));
 
         this.particleSystem = new THREE.Points(this.geometry, this.material);
         this.particleSystem.frustumCulled = false;

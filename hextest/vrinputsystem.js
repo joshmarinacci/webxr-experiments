@@ -48,7 +48,7 @@ export class VRInputSystem extends System {
         const core = this.queries.three.results[0].getMutableComponent(ThreeCore)
         this.queries.controllers.added.forEach(ent => {
             const con = ent.getMutableComponent(VRController)
-            con.controller = core.renderer.vr.getController(con.vrid)
+            con.controller = core.renderer.xr.getController(con.vrid)
             con.controller.addEventListener('selectstart', () => {
                 con.pressed = true
             })
@@ -58,8 +58,8 @@ export class VRInputSystem extends System {
             core.scene.add(con.controller)
 
             const geometry = new BufferGeometry()
-            geometry.addAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0,  0, 0,-4], 3 ) );
-            geometry.addAttribute( 'color', new Float32BufferAttribute( [ 0.5, 0.5, 0.5, 0, 0, 0 ], 3 ) );
+            geometry.setAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0,  0, 0,-4], 3 ) );
+            geometry.setAttribute( 'color', new Float32BufferAttribute( [ 0.5, 0.5, 0.5, 0, 0, 0 ], 3 ) );
             const material = new LineBasicMaterial( { vertexColors: true, blending: AdditiveBlending } );
             con.controller.add( new Line( geometry, material ) );
         })

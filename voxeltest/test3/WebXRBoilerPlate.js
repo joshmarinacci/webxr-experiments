@@ -1,4 +1,4 @@
-import {DefaultLoadingManager, PerspectiveCamera, Scene, WebGLRenderer,} from "./node_modules/three/build/three.module.js"
+import {DefaultLoadingManager, PerspectiveCamera, Scene, sRGBEncoding, WebGLRenderer,} from "./node_modules/three/build/three.module.js"
 
 import VRManager, {VR_DETECTED} from "./vrmanager.js";
 
@@ -19,8 +19,8 @@ export default class WebXRBoilerPlate {
         this.renderer = new WebGLRenderer({antialias: true});
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.renderer.gammaOutput = true
-        this.renderer.vr.enabled = true;
+        this.renderer.outputEncoding = sRGBEncoding
+        this.renderer.xr.enabled = true;
         this.container.appendChild(this.renderer.domElement);
         this.vrmanager = new VRManager(this.renderer)
         this.vrmanager.addEventListener(VR_DETECTED, ()=>{

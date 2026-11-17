@@ -1282,8 +1282,8 @@ https://freesound.org/people/HF2010/sounds/110497/
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.gammaOutput = true
-        renderer.vr.enabled = true;
+        renderer.outputEncoding = THREE.sRGBEncoding
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         vrmanager = new VRManager(renderer)
 

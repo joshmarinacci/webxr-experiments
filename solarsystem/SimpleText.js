@@ -7,7 +7,7 @@ import {Mesh, BoxBufferGeometry, MeshLambertMaterial,
     CanvasTexture,
     PlaneBufferGeometry,
 } from "./node_modules/three/build/three.module.js"
-import {POINTER_EXIT, POINTER_ENTER} from "./node_modules/webxr-boilerplate/Pointer.js"
+import {POINTER_EXIT, POINTER_ENTER} from "./webxr-boilerplate/Pointer.js"
 
 const toRad = (deg) => deg*Math.PI/180
 

@@ -32,7 +32,7 @@ void main() {
 }
 </script>
 <script type="x-shader/x-fragment" id="fragmentshader">
-uniform sampler2D texture;
+uniform sampler2D pointTexture;
 uniform float time;
 varying float fDelay;
 varying vec3 fColor;
@@ -44,7 +44,7 @@ void main() {
     if( t > lifetime-1.0) a = lifetime-t;
     a = clamp(a,0.0,1.0);
     gl_FragColor = vec4(fColor, a); // green
-    gl_FragColor = gl_FragColor * texture2D(texture, gl_PointCoord);
+    gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
 }
 </script>
 
@@ -76,15 +76,15 @@ void main() {
             const c = rand(0.0,0.1)
             colors.push(c,c,c)
         }
-        geo.addAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
-        geo.addAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
-        geo.addAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
-        geo.addAttribute('delay', new THREE.Float32BufferAttribute(delays,1))
-        geo.addAttribute('color', new THREE.Float32BufferAttribute(colors,3))
+        geo.setAttribute('position',new THREE.Float32BufferAttribute(initialPositions,3))
+        geo.setAttribute('velocity',new THREE.Float32BufferAttribute(velocities,3))
+        geo.setAttribute('acceleration',new THREE.Float32BufferAttribute(accelerations,3))
+        geo.setAttribute('delay', new THREE.Float32BufferAttribute(delays,1))
+        geo.setAttribute('color', new THREE.Float32BufferAttribute(colors,3))
         const mat = new THREE.ShaderMaterial( {
             uniforms: {
                 time: { value: 12.0},
-                texture: { value: new THREE.TextureLoader().load("./particle2.png")},
+                pointTexture: { value: new THREE.TextureLoader().load("./particle2.png")},
                 lifetime: { value: LIFETIME},
             },
             vertexShader:   document.getElementById( 'vertexshader' ).textContent,

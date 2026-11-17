@@ -24,7 +24,9 @@
     const MAX = 100
     function setupScene() {
         particles = []
-        const geo = new THREE.Geometry()
+        const geo = new THREE.BufferGeometry()
+        const positions = new THREE.BufferAttribute(new Float32Array(MAX * 3), 3).setUsage(THREE.DynamicDrawUsage)
+        geo.setAttribute('position', positions)
         for(let i=0; i<MAX; i++) {
             const particle = {
                 initialPosition: new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)),
@@ -34,7 +36,7 @@
             particle.position = new THREE.Vector3()
             particle.position.copy(particle.initialPosition)
             particles.push(particle)
-            geo.vertices.push(particle.position)
+            positions.setXYZ(i, particle.position.x, particle.position.y, particle.position.z)
         }
 
         const mat = new THREE.PointsMaterial({
@@ -86,7 +88,9 @@
             acc.add(p.initialPosition)
             p.position.copy(acc)
         })
-        mesh.geometry.verticesNeedUpdate = true
+        const positions = mesh.geometry.getAttribute('position')
+        particles.forEach((p, i) => positions.setXYZ(i, p.position.x, p.position.y, p.position.z))
+        positions.needsUpdate = true
         renderer.render( scene, camera );
     }
 

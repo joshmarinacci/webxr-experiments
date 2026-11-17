@@ -99,7 +99,7 @@ void main() {
             // vertexDisplacement[i] = (i%2===0)?0:1.0
             vertexDisplacement[i] = 0.5;
         }
-        geo.addAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
+        geo.setAttribute('vertexDisplacement', new THREE.BufferAttribute(vertexDisplacement, 1));
 
         // const dodeca_mat = new THREE.MeshLambertMaterial({color:0xff0000})
         // const dodeca_mat = new THREE.LineBasicMaterial({color:0x0000FF})

@@ -27,6 +27,7 @@
 <body>
 
 <script type="module">
+    import "../boilerplate/legacy-geometry.js"
     let scene, camera, renderer
     let mesh
 
@@ -35,7 +36,7 @@
         geo.faces.forEach(face => {
             face.color.setRGB(Math.random(),Math.random(),Math.random())
         })
-        const mat = new THREE.MeshLambertMaterial({ vertexColors:THREE.FaceColors})
+        const mat = new THREE.MeshLambertMaterial({ vertexColors:true})
         mesh = new THREE.Mesh(geo,mat)
         mesh.position.z = -4
         scene.add(mesh)

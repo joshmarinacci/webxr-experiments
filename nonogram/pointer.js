@@ -26,12 +26,12 @@ export class Pointer {
         this.canvas.addEventListener('click', this.mouseClick.bind(this))
 
         // setup the VR controllers
-        this.controller1 = this.renderer.vr.getController(0);
+        this.controller1 = this.renderer.xr.getController(0);
         this.controller1.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller1.addEventListener('selectend', this.controllerSelectEnd.bind(this));
         this.scene.add(this.controller1);
 
-        this.controller2 = this.renderer.vr.getController(1);
+        this.controller2 = this.renderer.xr.getController(1);
         this.controller2.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller2.addEventListener('selectend', this.controllerSelectEnd.bind(this));
         this.scene.add(this.controller2);
@@ -39,8 +39,8 @@ export class Pointer {
 
         //create visible lines for the two controllers
         const geometry = new THREE.BufferGeometry()
-        geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
-        geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -4], 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
 
         const material = new THREE.LineBasicMaterial({
             vertexColors: false,

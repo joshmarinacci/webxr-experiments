@@ -13,21 +13,19 @@ export const VR_ACTIVATED = "activated"
 export default class VRManager {
     constructor(renderer) {
         this.device = null
+        this.session = null
         this.renderer = renderer
         if(!this.renderer) throw new Error("VR Manager requires a valid ThreeJS renderer instance")
         this.listeners = {}
 
-        if ('xr' in navigator) {
+        if ('xr' in navigator && this.renderer.xr && typeof navigator.xr.isSessionSupported === 'function') {
             console.log("has webxr")
-            navigator.xr.requestDevice().then((device) => {
-                device.supportsSession({immersive: true, exclusive: true /* DEPRECATED */})
-                    .then(() => {
-                        this.device = device
-                        this.fire(VR_DETECTED,{})
-                    })
-                    .catch(printError);
-
-            }).catch(printError);
+            navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                if (supported) {
+                    this.device = { isWebXR: true }
+                    this.fire(VR_DETECTED,{})
+                }
+            }).catch(printError)
         } else if ('getVRDisplays' in navigator) {
             console.log("has webvr")
 
@@ -56,7 +54,7 @@ export default class VRManager {
                     if ( displays.length > 0 ) {
 
                         // showEnterVR( displays[ 0 ] );
-                        console.log("found vr")
+                        console.log("found vr",displays[0])
                         this.device = displays[0]
                         this.fire(VR_DETECTED,{})
 
@@ -85,12 +83,34 @@ export default class VRManager {
     }
 
     enterVR() {
+        if (this.renderer.xr && 'xr' in navigator) {
+            if (this.session) {
+                this.session.end()
+                return
+            }
+
+            navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking']
+            }).then((session) => {
+                session.addEventListener('end', () => {
+                    this.session = null
+                    this.fire(VR_PRESENTCHANGE, {isPresenting: false})
+                })
+                return this.renderer.xr.setSession(session).then(() => {
+                    this.session = session
+                    this.fire(VR_PRESENTCHANGE, {isPresenting: true})
+                })
+            }).catch(printError)
+            return
+        }
+
         if(!this.device) {
             console.warn("tried to connect VR on an invalid device")
             return
         }
         console.log("entering VR")
-        this.renderer.vr.setDevice( this.device );
+        const prom = this.renderer.vr.setDevice( this.device );
+        console.log('promise is',prom)
 
         if(this.device.isPresenting) {
             this.device.exitPresent()
