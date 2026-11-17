@@ -201,7 +201,7 @@ https://sketchfab.com/models/61795e3426cb464e9ffb10c398de136b?ref=related
         particleSystem = new GPUParticleSystem(options)
         scene.add(particleSystem)
 
-        if($('#enter-vr'))  $('#enter-vr').removeAttribute('disabled')
+        if($('#enter-vr') && !$('#enter-vr').dataset.desktopFallback)  $('#enter-vr').removeAttribute('disabled')
     }
 
     //called on every frame. customize this
