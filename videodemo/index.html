@@ -275,8 +275,8 @@ http://freemusicarchive.org/music/Michael_Lynch/The_New_Birthday_Song_Contest/Ha
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.gammaOutput = true
-        renderer.vr.enabled = true;
+        renderer.outputEncoding = THREE.sRGBEncoding
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

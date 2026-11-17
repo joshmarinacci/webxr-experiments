@@ -105,34 +105,92 @@ var WEBVR = {
 
         }
 
-        if ( navigator.xr ) {
+        if ( navigator.xr && renderer.xr ) {
 
-            var message = 'This example uses Three.js r96, whose renderer cannot start a modern WebXR session.';
-            showDesktopFallback( message );
+            button.id = 'enter-vr';
+            button.style.display = 'none';
+            stylizeElement( button );
+
+            var currentSession = null;
+
+            function showEnterXR() {
+
+                button.style.display = '';
+                button.disabled = false;
+                button.removeAttribute( 'aria-disabled' );
+                button.tabIndex = 0;
+                button.style.cursor = 'pointer';
+                button.textContent = 'ENTER VR';
+
+                button.onclick = function () {
+
+                    if ( currentSession ) {
+
+                        currentSession.end();
+
+                    } else {
+
+                        navigator.xr.requestSession( 'immersive-vr', {
+                            optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking' ]
+                        } ).then( function ( session ) {
+
+                            session.addEventListener( 'end', function () {
+
+                                currentSession = null;
+                                button.textContent = 'ENTER VR';
+
+                            } );
+
+                            return renderer.xr.setSession( session ).then( function () {
+
+                                currentSession = session;
+                                button.textContent = 'EXIT VR';
+
+                            } );
+
+                        } ).catch( function ( error ) {
+
+                            console.error( 'Unable to start an immersive WebXR session.', error );
+
+                        } );
+
+                    }
+
+                };
+
+            }
 
             if ( typeof navigator.xr.isSessionSupported === 'function' ) {
 
-                try {
+                navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
 
-                    navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+                    if ( supported ) {
 
-                        button.title = supported
-                            ? 'WebXR is available, but this example uses a legacy renderer. It will run in desktop mode.'
-                            : 'Immersive VR is not supported here. The example will run in desktop mode.';
+                        showEnterXR();
 
-                    } ).catch( function () {
+                    } else {
 
-                        // Keep the desktop fallback if WebXR support detection fails.
+                        showDesktopFallback( 'Immersive VR is not supported here. The example will run in desktop mode.' );
 
-                    } );
+                    }
 
-                } catch ( error ) {
+                } ).catch( function () {
 
-                    // Some incomplete WebXR implementations may throw during feature detection.
+                    showDesktopFallback( 'WebXR support could not be detected. The example will run in desktop mode.' );
 
-                }
+                } );
+
+            } else {
+
+                showDesktopFallback( 'WebXR is not supported here. The example will run in desktop mode.' );
 
             }
+
+            return button;
+
+        } else if ( navigator.xr ) {
+
+            showDesktopFallback( 'This renderer does not support WebXR. The example will run in desktop mode.' );
 
             return button;
 

@@ -19,7 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <script src="../boilerplate/node_modules/three/build/three.module.js" type="module"></script>
+    <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
     <script src="../boilerplate/webvr.js"></script>
 
     <style type="text/css">
@@ -59,14 +59,14 @@
 
 
 <script type="module">
-    import {
+    const {
         Color, Mesh, SphereBufferGeometry, Group, BoxBufferGeometry,
         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial,
         Scene, PerspectiveCamera, WebGLRenderer,
         DefaultLoadingManager, TextureLoader,
         DirectionalLight, AmbientLight, PointLight,
         Quaternion, Vector3, Spherical,
-    } from "../boilerplate/node_modules/three/build/three.module.js"
+    } = globalThis.THREE
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
 
     //JQuery-like selector
@@ -215,7 +215,7 @@ https://hbfs.wordpress.com/2010/10/12/random-points-on-a-sphere-generating-rando
         renderer = new WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

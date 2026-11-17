@@ -19,9 +19,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <!-- required -->
-    <script src="./node_modules/three/build/three.js"></script>
+    <script src="../boilerplate/node_modules/three/build/three.min.js"></script>
     <!-- needed for loading GLTF files -->
-    <script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="../boilerplate/node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 
     <!-- needed to enter VR -->
     <script src="../boilerplate/webvr.js"></script>
@@ -74,7 +74,7 @@
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, POINTER_MOVE,
     POINTER_RELEASE,
         POINTER_PRESS, Pointer} from '../boilerplate/pointer.js'
-    import {
+    const {
         Color, Mesh, SphereBufferGeometry, Group, BoxBufferGeometry,
         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial,
         Scene, PerspectiveCamera, WebGLRenderer,
@@ -83,7 +83,7 @@
         Quaternion, Vector3, Spherical,
         MeshPhongMaterial,
         CylinderBufferGeometry
-    } from "../boilerplate/node_modules/three/build/three.module.js"
+    } = globalThis.THREE
 
     // import VRStats from "../boilerplate/vrstats.js"
 
@@ -150,7 +150,7 @@
         const glow = new Mesh(
             new BoxBufferGeometry(0.7,5,0.7),
             new MeshLambertMaterial({
-                color:'0xffffff',
+                color:0xffffff,
                 opacity:0.3,
                 transparent:true
             })
@@ -353,8 +353,8 @@
         renderer = new WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
-        renderer.gammaOutput = true
+        renderer.xr.enabled = true;
+        renderer.outputEncoding = THREE.sRGBEncoding
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 
