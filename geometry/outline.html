@@ -76,6 +76,7 @@
 <script type="module">
     import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from '../boilerplate/pointer.js'
     import VRStats from "../boilerplate/vrstats.js"
+    import {VRButton} from '../boilerplate/node_modules/three/examples/jsm/webxr/VRButton.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -146,10 +147,10 @@
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.gammaOutput = true
-        renderer.vr.enabled = true;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
-        document.body.appendChild( WEBVR.createButton( renderer ) );
+        document.body.appendChild( VRButton.createButton( renderer ) );
 
         initContent(scene,camera,renderer)
 

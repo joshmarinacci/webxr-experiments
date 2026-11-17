@@ -7,11 +7,12 @@
 * install threejs using `npm install`
 * customize `initContent()` with whatever you want
 
-`WEBVR.createButton(renderer)` keeps legacy WebVR available when the browser
-provides it. In browsers with the current WebXR API, the helper checks
-`navigator.xr.isSessionSupported('immersive-vr')` and falls back to desktop
-mode. This boilerplate uses Three.js r96, whose renderer predates current
-WebXR sessions, so the support check does not enable immersive WebXR.
+This boilerplate uses Three.js r125. For immersive VR, enable `renderer.xr`
+and use Three.js's `VRButton`; the old WebVR `renderer.vr` API is not available
+in this release. Three.js r125 also removes `THREE.Geometry` from the core, so
+older pages using it need to migrate their geometry to `BufferGeometry`.
+See the [Three.js migration guide](https://github.com/mrdoob/three.js/wiki/Migration-Guide)
+when updating older examples.
 
 
 
