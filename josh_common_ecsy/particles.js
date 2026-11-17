@@ -20,7 +20,7 @@ import {
     ShaderMaterial,
 } from "https://threejs.org/build/three.module.js"
 import {ThreeCore} from './threesystem.js'
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {Position} from './ThreeObjectManager.js'
 // import GPUPositionParticleSystem from '../particles/GPUPositionParticleSystem.js'
 

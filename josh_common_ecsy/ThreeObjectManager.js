@@ -18,7 +18,7 @@ import {
 //import {AmbientLight as AmbientLight3} from "https://threejs.org/build/three.module.js"
 import {GLTFLoader} from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js"
 import {ThreeCore} from './threesystem.js'
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {CustomNodeMaterial} from './CustomMaterialManager.js'
 
 export class ThreeObject {
