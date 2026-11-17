@@ -44,8 +44,11 @@ git history. They were probably deployed separately next to it on the server.
       plus `webxr-simgame/images/*_thumb.png`. The same games appear to live in
       `hextest/2dgame.html` and `hextest/3dgame.html`. Repoint the links and add thumbnails,
       since `hextest` has none.
-- [ ] **Whack an Imp card.** `whack-an-imp/step7.html` and `whack-an-imp/whack-an-imp.png` are
-      missing. Link to where it's hosted now, or remove the card.
+- [x] **Whack an Imp card.** The game lives in
+      [joshmarinacci/whack-an-imp](https://github.com/joshmarinacci/whack-an-imp).
+      `scripts/build.mts` checks it out and puts it at `dist/whack-an-imp/`, and the card's
+      thumbnail now uses the game's `images/screenshot-final.png`. Locally, `npm run build`
+      also clones it into `whack-an-imp/` (gitignored), so `npm start` serves it too.
 - [ ] **Jingle Smash card.** `jinglesmash-ecs/` is missing; only its thumbnail exists
       (`physics/jinglesmash.thumbnail.png`). Link to where it's hosted now, or remove the card.
 
@@ -59,14 +62,20 @@ git history. They were probably deployed separately next to it on the server.
 
 ## Deployment
 
-- [ ] **Publish script misses the shared library.** `npm run publish` copies `xmassweater` but
-      not `josh_common_ecsy`, which the sweater pages import from `../josh_common_ecsy/`.
-      Add it to the scp list, or confirm it already exists on the server.
-- [ ] **pm2 ecosystem file.** The project guidelines ask for pm2 deployment with an ecosystem
-      file. Today it's scp of whole folders, including `node_modules`.
-- [ ] **Install before publishing.** Until the deploy changes, run `npm install` in each
-      published folder (`boilerplate`, `nonogram`, `xmassweater`'s `josh_common_ecsy`) before
-      `npm run publish`.
+- [x] **pm2 ecosystem file.** `ecosystem.config.cjs` deploys with `npm run deploy:setup` (first
+      time), then `npm run deploy`. No pm2 app runs: the deploy checks out the repo and runs
+      `scripts/build.mts`, which builds the static site into `<path>/current/dist`. The same
+      build runs locally with `npm run build`.
+- [ ] **First pm2 deploy.** Needs, on the server: git, Node 22.6+ and pm2. Confirm the deploy
+      path or set `WEBXR_DEPLOY_PATH` (default `/home/deployman/apps/webxr-experiments`). Then
+      point the web server for apps.josh.earth/webxr-experiments at
+      `<path>/current/dist`. It must follow symlinks: `current` and `dist` are both symlinks.
+- [ ] **Keep the separately deployed projects reachable.** The old web root likely also holds
+      `jinglesmash-ecs/` and `webxr-simgame/`, which aren't in this repo (see "Root index.html
+      links" above). Pointing the site at `dist` hides them unless they're moved or aliased.
+- [ ] **Retire the scp `publish` script** once the pm2 deploy is live. It only copies
+      `boilerplate`, `nonogram` and `xmassweater`, and it misses `josh_common_ecsy`, which the
+      sweater pages import from `../josh_common_ecsy/`.
 
 ## Tooling
 
