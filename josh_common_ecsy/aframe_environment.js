@@ -1,4 +1,4 @@
-import {World, System} from "https://ecsy.io/build/ecsy.module.js"
+import {World, System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
 import {Mesh, SphereBufferGeometry, MeshLambertMaterial, BackSide, Color, AmbientLight, AdditiveBlending, NormalBlending, Vector3 } from "https://threejs.org/build/three.module.js"
 

@@ -2,7 +2,7 @@ import {Clock, Group, PerspectiveCamera, Scene, WebGLRenderer, Color} from "./no
 import {VRButton} from "./node_modules/three/examples/jsm/webxr/VRButton.js";
 import {OrbitControls} from "./node_modules/three/examples/jsm/controls/OrbitControls.js";
 
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 
 export function toRad(theta) {
     return theta*Math.PI/180.0

@@ -1,4 +1,4 @@
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 
 export class SoundEffect {
     constructor() {
