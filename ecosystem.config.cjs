@@ -19,7 +19,7 @@ module.exports = {
             key: process.env.WEBXR_DEPLOY_KEY || '../deployman_private.key',
             ref: 'origin/master',
             repo: 'https://github.com/joshmarinacci/webxr-experiments.git',
-            path: process.env.WEBXR_DEPLOY_PATH || '/home/deployman/apps/webxr-experiments',
+            path: process.env.WEBXR_DEPLOY_PATH || '/projects/webxr-experiments',
             'post-deploy': 'node --experimental-strip-types scripts/build.mts',
         },
     },
