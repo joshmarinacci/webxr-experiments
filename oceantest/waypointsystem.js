@@ -1,5 +1,5 @@
-import {Vector3} from "https://threejs.org/build/three.module.js"
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {Vector3} from "../josh_common_ecsy/node_modules/three/build/three.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {Position, ThreeObject} from '../josh_common_ecsy/index.js'
 
 const randf = (min,max) => Math.random()*(max-min) + min

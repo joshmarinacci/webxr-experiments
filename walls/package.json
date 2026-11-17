@@ -9,10 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.125.0",
-    "webxr-boilerplate": "^0.1.6"
-  },
-  "overrides": {
-    "three": "$three"
+    "three": "^0.125.0"
   }
 }

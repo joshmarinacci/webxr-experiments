@@ -14,8 +14,8 @@ import {
     TextureLoader,
     Vector2,
     NormalBlending,
-} from "https://threejs.org/build/three.module.js"
-import {World} from "https://ecsy.io/build/ecsy.module.js"
+} from "../josh_common_ecsy/node_modules/three/build/three.module.js"
+import {World} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {
     ConstNode,
     ColorNode,
@@ -31,7 +31,7 @@ import {
     UVTransformNode,
     UVNode,
     Vector2Node,
-} from "https://threejs.org/examples/jsm/nodes/Nodes.js"
+} from "../josh_common_ecsy/node_modules/three/examples/jsm/nodes/Nodes.js"
 import {
     AudioSystem, BoxGeometry, CustomNodeMaterial, CustomNodeMaterialSystem, FlatColor,
     GLTFModel,

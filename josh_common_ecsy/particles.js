@@ -18,7 +18,8 @@ import {
     Vector3,
     Object3D,
     ShaderMaterial,
-} from "https://threejs.org/build/three.module.js"
+    DynamicDrawUsage,
+} from "./node_modules/three/build/three.module.js"
 import {ThreeCore} from './threesystem.js'
 import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {Position} from './ThreeObjectManager.js'
@@ -190,17 +191,17 @@ export default class GPUParticleSystem extends Object3D {
         this.geometry = new BufferGeometry();
 
         //vec3 attributes
-        this.geometry.addAttribute('position',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('positionStart', new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('velocity',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('acceleration',  new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('color',         new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
-        this.geometry.addAttribute('endColor',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setDynamic(true));
+        this.geometry.setAttribute('position',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('positionStart', new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('velocity',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('acceleration',  new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('color',         new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('endColor',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT * 3), 3).setUsage(DynamicDrawUsage));
 
         //scalar attributes
-        this.geometry.addAttribute('startTime',     new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.geometry.addAttribute('size',          new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
-        this.geometry.addAttribute('lifeTime',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setDynamic(true));
+        this.geometry.setAttribute('startTime',     new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('size',          new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(DynamicDrawUsage));
+        this.geometry.setAttribute('lifeTime',      new BufferAttribute(new Float32Array(this.PARTICLE_COUNT), 1).setUsage(DynamicDrawUsage));
 
 
         this.particleSystem = new Points(this.geometry, this.material);

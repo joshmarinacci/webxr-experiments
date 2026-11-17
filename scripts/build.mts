@@ -6,7 +6,8 @@
 // Steps:
 //   1. Install dependencies for every demo folder (pages load scripts from their own
 //      node_modules), unless --skip-install is passed.
-//   2. Check out the whack-an-imp repo, which the root index.html links to.
+//   2. Check out the games that live in their own repos (EXTERNAL_GAMES), which the root
+//      index.html links to.
 //   3. Assemble the public files into builds/<timestamp>/ and point the dist symlink at it.
 //      Swapping a symlink is atomic, so the live site never sees a half-built folder.
 //
@@ -27,9 +28,30 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
-const WHACK_AN_IMP_REPO = 'https://github.com/joshmarinacci/whack-an-imp.git'
-// Pinned so a deploy always serves the same game; the repo hasn't changed since 2018.
-const WHACK_AN_IMP_COMMIT = 'f20ff583ccf4195420406cc05bf8f596f3bedd60'
+interface ExternalGame {
+    // Folder name in the site, matching the root index.html link.
+    name: string
+    repo: string
+    // Pinned so a deploy always serves the same version.
+    commit: string
+    // Run npm ci in the checkout; set for games that load from their own node_modules.
+    install: boolean
+}
+
+const EXTERNAL_GAMES: ExternalGame[] = [
+    {
+        name: 'whack-an-imp',
+        repo: 'https://github.com/joshmarinacci/whack-an-imp.git',
+        commit: 'f20ff583ccf4195420406cc05bf8f596f3bedd60', // last commit, 2018
+        install: false,
+    },
+    {
+        name: 'jinglesmash-ecs',
+        repo: 'https://github.com/joshmarinacci/jinglesmash-ecs.git',
+        commit: 'a49ab6a13875d5d4ca970a7b63cc3715405b58e5', // bundled level data (jinglesmash-ecs PR #3)
+        install: true,
+    },
+]
 const KEEP_OLD_BUILDS = 1
 
 const root = realpathSync(path.resolve(import.meta.dirname, '..'))
@@ -47,7 +69,8 @@ const EXCLUDED_AT_ROOT = new Set([
     'package.json',
     'package-lock.json',
     'MAINTENANCE_CHECKLIST.md',
-    'whack-an-imp', // copied separately from its own checkout
+    // copied separately from their own checkouts
+    ...EXTERNAL_GAMES.map((game) => game.name),
 ])
 
 function log(message: string): void {
@@ -72,31 +95,34 @@ function findPackageDirs(dir: string, depth: number): string[] {
     return found
 }
 
-function installDependencies(): void {
-    for (const dir of findPackageDirs(root, 2)) {
-        const common = ['--omit=dev', '--no-audit', '--no-fund']
-        if (existsSync(path.join(dir, 'package-lock.json'))) {
-            run('npm', ['ci', ...common], dir)
-        } else {
-            // No committed lock file yet (see MAINTENANCE_CHECKLIST.md); don't create one here.
-            run('npm', ['install', '--no-package-lock', ...common], dir)
-        }
+function installPackage(dir: string): void {
+    const common = ['--omit=dev', '--no-audit', '--no-fund']
+    if (existsSync(path.join(dir, 'package-lock.json'))) {
+        run('npm', ['ci', ...common], dir)
+    } else {
+        // No lock file to install from; don't create one here.
+        run('npm', ['install', '--no-package-lock', ...common], dir)
     }
 }
 
+function installDependencies(): void {
+    for (const dir of findPackageDirs(root, 2)) installPackage(dir)
+}
+
 // Under pm2 deploy, root is <path>/source and <path>/shared survives between deploys, so the
-// checkout lives there. Run locally, it goes in ./whack-an-imp (gitignored), which also lets
-// the local dev server (npm start) serve it.
-function checkoutWhackAnImp(): string {
+// checkouts live there. Run locally, they go in ./<name> (gitignored), which also lets the
+// local dev server (npm start) serve them.
+function checkoutGame(game: ExternalGame, install: boolean): string {
     const sharedDir = path.resolve(root, '..', 'shared')
-    const checkout = existsSync(sharedDir)
-        ? path.join(sharedDir, 'whack-an-imp')
-        : path.join(root, 'whack-an-imp')
+    const checkout = existsSync(sharedDir) ? path.join(sharedDir, game.name) : path.join(root, game.name)
     if (!existsSync(path.join(checkout, '.git'))) {
-        run('git', ['clone', '--quiet', WHACK_AN_IMP_REPO, checkout], root)
+        run('git', ['clone', '--quiet', game.repo, checkout], root)
     }
     run('git', ['fetch', '--quiet', 'origin'], checkout)
-    run('git', ['checkout', '--quiet', '--force', WHACK_AN_IMP_COMMIT], checkout)
+    run('git', ['checkout', '--quiet', '--force', game.commit], checkout)
+    if (game.install && (install || !existsSync(path.join(checkout, 'node_modules')))) {
+        installPackage(checkout)
+    }
     return checkout
 }
 
@@ -127,11 +153,11 @@ function linkTree(src: string, dest: string, exclude: Set<string> = new Set()): 
     return files
 }
 
-function assembleBuild(whackAnImp: string): string {
+function assembleBuild(games: Map<string, string>): string {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     const buildDir = path.join(buildsDir, stamp)
     let files = linkTree(root, buildDir, EXCLUDED_AT_ROOT)
-    files += linkTree(whackAnImp, path.join(buildDir, 'whack-an-imp'))
+    for (const [name, checkout] of games) files += linkTree(checkout, path.join(buildDir, name))
     log(`assembled ${files} files in ${path.relative(root, buildDir)}`)
     return buildDir
 }
@@ -152,7 +178,8 @@ function activate(buildDir: string): void {
     }
 }
 
-if (!process.argv.includes('--skip-install')) installDependencies()
-const whackAnImp = checkoutWhackAnImp()
-activate(assembleBuild(whackAnImp))
+const install = !process.argv.includes('--skip-install')
+if (install) installDependencies()
+const games = new Map(EXTERNAL_GAMES.map((game) => [game.name, checkoutGame(game, install)]))
+activate(assembleBuild(games))
 log('done')

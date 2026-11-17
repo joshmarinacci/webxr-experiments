@@ -63,8 +63,9 @@ typings/
 # macos filesytem
 .DS_Store
 
-# build output and the whack-an-imp checkout (scripts/build.mts)
+# build output and the external game checkouts (scripts/build.mts)
 dist
 dist.tmp
 builds/
 whack-an-imp
+jinglesmash-ecs

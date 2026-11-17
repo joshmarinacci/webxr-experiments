@@ -71,20 +71,21 @@
 
 
 <script type="module">
-    import {GLTFLoader} from "./GLTFLoader";
+    import {GLTFLoader} from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
 
     // for pointer (mouse, controller, touch) support
-    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from "./node_modules/webxr-boilerplate/pointer.js";
+    import {POINTER_CLICK, POINTER_ENTER, POINTER_EXIT, Pointer} from "./webxr-boilerplate/pointer.js";
     // calculate FPS and other stats
-    import VRStats from "./node_modules/webxr-boilerplate/vrstats.js";
+    import VRStats from "./webxr-boilerplate/vrstats.js";
     // enter and exit VR
-    import VRManager, {VR_DETECTED} from "./node_modules/webxr-boilerplate/vrmanager.js";
+    import VRManager, {VR_DETECTED} from "./webxr-boilerplate/vrmanager.js";
     import {PerspectiveCamera, Scene, WebGLRenderer, Color, DirectionalLight,
         Mesh,
         CylinderBufferGeometry,
         MeshLambertMaterial,
         DefaultLoadingManager,
-    } from './node_modules/three/build/three.module'
+        sRGBEncoding,
+    } from './node_modules/three/build/three.module.js'
 
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
@@ -102,7 +103,7 @@
         scene.background = new Color( 0xcccccc );
 
         const loader = new GLTFLoader()
-        loader.load("./wall1.glb",(m)=> {
+        loader.load("./wall1.gltf",(m)=> {
             console.log("loaded",m)
             for(let i=0; i<3; i++) {
                 const obj = m.scene.children[0].clone()
@@ -207,8 +208,8 @@
         renderer = new WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.gammaOutput = true
-        renderer.vr.enabled = true;
+        renderer.outputEncoding = sRGBEncoding
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         vrmanager = new VRManager(renderer)
         // document.body.appendChild( WEBVR.createButton( renderer ) );
