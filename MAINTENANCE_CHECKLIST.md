@@ -42,10 +42,14 @@ here was already broken or missing on `master` before that work.
 - [x] **Jingle Smash card.** The game lives in
       [joshmarinacci/jinglesmash-ecs](https://github.com/joshmarinacci/jinglesmash-ecs); the
       build checks it out (pinned), runs `npm ci` in it, and puts it at `dist/jinglesmash-ecs/`.
-  - [ ] Jingle Smash loads its level data from `https://vr.josh.earth/360/doc/<id>`
-        (`common.js` `BASE_URL`). That host currently fails TLS (`ERR_CERT_COMMON_NAME_INVALID`),
-        so the game renders but can't start a level. Fix the certificate, or bundle the level
-        JSON into the jinglesmash-ecs repo.
+  - [x] Its levels used to load from `https://vr.josh.earth/360/doc/<id>`, which is gone.
+        jinglesmash-ecs PR #3 bundles them in `levels/`, and the build pins that commit.
+- [ ] **Other pages still using the vr.josh.earth doc store.** `physics/player.html` (older
+      tumble player) could load the same level JSON locally. `physics/editor.html` (level
+      editor) and `voxeltest/test3/PersistenceManager.js` (voxel world saves) need a writable
+      server, so they stay broken until one exists.
+- [ ] **Back up `general-editor/docs/`.** That repo gitignores it, so its 258 documents (360
+      editor docs, tumble levels, voxel saves) exist only in `~/portfolio-new/webxr/general-editor`.
 
 Locally, `npm run build` clones the external games into `whack-an-imp/` and `jinglesmash-ecs/`
 (gitignored), so `npm start` serves them too.

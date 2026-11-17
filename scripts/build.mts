@@ -48,7 +48,7 @@ const EXTERNAL_GAMES: ExternalGame[] = [
     {
         name: 'jinglesmash-ecs',
         repo: 'https://github.com/joshmarinacci/jinglesmash-ecs.git',
-        commit: 'c010c3a6637810c937d2d5cb5dddb6bdb29728f2', // last commit, 2020
+        commit: 'a49ab6a13875d5d4ca970a7b63cc3715405b58e5', // bundled level data (jinglesmash-ecs PR #3)
         install: true,
     },
 ]
