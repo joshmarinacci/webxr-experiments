@@ -75,7 +75,15 @@ Locally, `npm run build` clones the external games into `whack-an-imp/` and `jin
 ## Tooling
 
 - [ ] Add ESLint and Prettier.
-- [ ] Add a Playwright smoke test that runs `npm run build`, serves `dist/`, loads every demo
-      page, and fails on uncaught errors and missing local files.
+- [x] **Playwright smoke test.** `npm run test:smoke` builds `dist/`, serves it on port 4173,
+      and checks that the index's links, thumbnails and background exist, that the external
+      games include their data files, and that the index and every page it links to load
+      without uncaught errors, console errors or missing same-origin files. It uses the
+      installed Google Chrome (`PLAYWRIGHT_CHANNEL=chromium` switches to Playwright's own).
+      On a fresh clone, run a full `npm run build` once first so every demo has its
+      `node_modules`. `npm run typecheck` type-checks the tests, config and build script.
+- [ ] Extend the smoke test to demo pages the index doesn't link to (oceantest, walls,
+      hextest, the xmassweater pages, ...). Several only work after a click, so they need
+      per-page steps.
 - [ ] Consider moving shared code (`boilerplate`, `josh_common_ecsy`) to TypeScript, per the
       project guidelines.

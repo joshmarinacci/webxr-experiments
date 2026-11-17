@@ -69,3 +69,7 @@ dist.tmp
 builds/
 whack-an-imp
 jinglesmash-ecs
+
+# Playwright output
+test-results/
+playwright-report/
