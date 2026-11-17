@@ -1,6 +1,6 @@
 import {World, System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 import {ThreeCore} from './threesystem.js'
-import {Mesh, SphereBufferGeometry, MeshLambertMaterial, BackSide, Color, AmbientLight, AdditiveBlending, NormalBlending, Vector3 } from "https://threejs.org/build/three.module.js"
+import {Mesh, SphereBufferGeometry, MeshLambertMaterial, BackSide, Color, AmbientLight, AdditiveBlending, NormalBlending, Vector3 } from "./node_modules/three/build/three.module.js"
 
 const presets = {
     'none' : {},

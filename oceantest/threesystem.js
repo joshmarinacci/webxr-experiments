@@ -1,9 +1,9 @@
 import {
-    Clock, Group, PerspectiveCamera, Scene, WebGLRenderer,
+    Clock, Group, PerspectiveCamera, Scene, sRGBEncoding, WebGLRenderer,
 
-} from "https://threejs.org/build/three.module.js"
+} from "../josh_common_ecsy/node_modules/three/build/three.module.js"
 
-import {System} from "https://ecsy.io/build/ecsy.module.js"
+import {System} from "https://cdn.jsdelivr.net/npm/ecsy@0.2.1/build/ecsy.module.js"
 // import {WEBVR} from "./WebVRButton.js"
 
 export function toRad(theta) {
@@ -73,8 +73,8 @@ export class ThreeSystem extends System {
         app.renderer = new WebGLRenderer( { antialias: true } );
         app.renderer.setPixelRatio( window.devicePixelRatio );
         app.renderer.setSize( window.innerWidth, window.innerHeight );
-        app.renderer.gammaOutput = true
-        app.renderer.vr.enabled = true;
+        app.renderer.outputEncoding = sRGBEncoding
+        app.renderer.xr.enabled = true;
         container.appendChild( app.renderer.domElement );
         app.canvas = app.renderer.domElement
         app.stage = new Group()

@@ -102,7 +102,7 @@
         //load a cat texture
         const texture_loader = new TextureLoader()
         //cat from http://creative-commons-cats.tumblr.com/page/3
-        const texture = texture_loader.load('./cat.jpg')
+        const texture = texture_loader.load('../boilerplate/cat.jpg')
 
         //a standard ambient light
         app.scene.add(new AmbientLight(0xffffff,0.3))
@@ -141,7 +141,7 @@
         }
 
         //http://freemusicarchive.org/music/BoxCat_Games/Nameless_the_Hackers_RPG_Soundtrack/
-        const music = loadBackgroundMusic("./BoxCat_Games_-_10_-_Epic_Song")
+        const music = loadBackgroundMusic("./BoxCat_Games_-_10_-_Epic_Song.mp3")
         //update progress indicator
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 

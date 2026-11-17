@@ -60,7 +60,7 @@ function setupGame() {
     game.getMutableComponent(GameState).toMode(GameStateEnums.SHOW_INSTRUCTIONS)
 
     let buttons = []
-    const farmButton = world.createEntity().addComponent(Button3D,{text:'farm',
+    const farmButton = world.createEntity().addComponent(Button3D,{text:'farm', x:-2.5,
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             farmButton.getMutableComponent(Button3D).selected = true
@@ -68,7 +68,7 @@ function setupGame() {
         }
     })
     buttons.push(farmButton)
-    const treeButton = world.createEntity().addComponent(Button3D,{text:'tree',
+    const treeButton = world.createEntity().addComponent(Button3D,{text:'tree', x:-1,
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             treeButton.getMutableComponent(Button3D).selected = true
@@ -77,7 +77,7 @@ function setupGame() {
     })
     buttons.push(treeButton)
 
-    const chopButton = world.createEntity().addComponent(Button3D,{text:'chop',
+    const chopButton = world.createEntity().addComponent(Button3D,{text:'chop', x:1,
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             chopButton.getMutableComponent(Button3D).selected = true
@@ -85,7 +85,7 @@ function setupGame() {
         }
     })
     buttons.push(chopButton)
-    const cityButton = world.createEntity().addComponent(Button3D,{text:'city',
+    const cityButton = world.createEntity().addComponent(Button3D,{text:'city', x:2.5,
         onClick:()=>{
             buttons.forEach(ent => ent.getMutableComponent(Button3D).selected = false)
             cityButton.getMutableComponent(Button3D).selected = true
@@ -94,13 +94,6 @@ function setupGame() {
     })
     buttons.push(cityButton)
 
-    setTimeout(()=>{
-        farmButton.getComponent(Button3D).obj.position.x = -2.5
-        treeButton.getComponent(Button3D).obj.position.x = -1
-        chopButton.getComponent(Button3D).obj.position.x = 1
-        cityButton.getComponent(Button3D).obj.position.x = +2.5
-
-    },100)
 
 
     setupLights(core)

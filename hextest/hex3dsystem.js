@@ -39,6 +39,7 @@ export class HexMapView {
 export class Button3D {
     constructor() {
         this.text = "foo"
+        this.x = 0
         this.obj = null
         this.onClick = null
         this.selected = false
@@ -202,7 +203,7 @@ export class Hex3dsystem extends System {
             )
             button.obj.position.z = -3
             button.obj.position.y = 1.0
-            button.obj.position.x = 0
+            button.obj.position.x = button.x
             button.obj.userData.type = 'Button3D'
             button.obj.userData.ent = ent
             button.obj.userData.selected = button.selected

@@ -60,7 +60,7 @@
             positionRandomness: .3,
             velocity: new THREE.Vector3(),
             velocityRandomness: .5,
-            color: 0xaa88ff,
+            color: new THREE.Color(0xaa88ff), // spawnParticle copies a Color, not a hex number
             colorRandomness: .2,
             turbulence: .5,
             lifetime: 2,
@@ -153,7 +153,8 @@
 
         }
 
-        particleSystem.update( tick );
+        // the local GPUParticleSystem.update() takes milliseconds; tick is in seconds
+        particleSystem.update( tick * 1000 );
 
         render();
 
