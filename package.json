@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "publish": "scp -i ../deployman_private.key -r boilerplate nonogram xmassweater deployman@josh.earth:/sites/apps.josh.earth/webxr-experiments"
+    "build": "node --experimental-strip-types scripts/build.mts",
+    "publish": "scp -i ../deployman_private.key -r boilerplate nonogram xmassweater deployman@josh.earth:/sites/apps.josh.earth/webxr-experiments",
+    "deploy:setup": "pm2 deploy ecosystem.config.cjs production setup",
+    "deploy": "pm2 deploy ecosystem.config.cjs production"
   },
   "dependencies": {
     "express": "^5.1.0"
