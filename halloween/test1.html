@@ -202,8 +202,8 @@
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
-        renderer.gammaOutput = true
+        renderer.xr.enabled = true;
+        renderer.outputEncoding = THREE.sRGBEncoding
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

@@ -7,11 +7,12 @@
 * install threejs using `npm install`
 * customize `initContent()` with whatever you want
 
-This boilerplate uses Three.js r125. For immersive VR, enable `renderer.xr`
-and use Three.js's `VRButton`; the old WebVR `renderer.vr` API is not available
-in this release. Three.js r125 also removes `THREE.Geometry` from the core, so
-older pages using it need to migrate their geometry to `BufferGeometry`.
-See the [Three.js migration guide](https://github.com/mrdoob/three.js/wiki/Migration-Guide)
+This boilerplate uses Three.js r125. Enable `renderer.xr` for immersive VR;
+`WEBVR.createButton(renderer)` uses WebXR when available and otherwise keeps
+the page in desktop mode. Three.js r125 removes `renderer.vr` and `THREE.Geometry`
+from the core. A few existing pages opt into `legacy-geometry.js` to convert
+their old geometry to `BufferGeometry`; new pages should use `BufferGeometry`
+directly. See the [Three.js migration guide](https://github.com/mrdoob/three.js/wiki/Migration-Guide)
 when updating older examples.
 
 

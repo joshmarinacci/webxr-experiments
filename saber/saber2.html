@@ -65,6 +65,15 @@ https://freesound.org/people/gyzhor/sounds/47125/
 <script type="module">
     import {POINTER_CLICK, Pointer} from '../boilerplate/pointer.js'
 
+    function triangleStripIndices(vertexCount) {
+        const indices = []
+        for (let i = 0; i < vertexCount - 2; i++) {
+            if (i % 2 === 0) indices.push(i, i + 1, i + 2)
+            else indices.push(i + 1, i, i + 2)
+        }
+        return indices
+    }
+
     //JQuery-like selector
     const $ = (sel) => document.querySelector(sel)
 
@@ -104,7 +113,8 @@ https://freesound.org/people/gyzhor/sounds/47125/
         const verts = []
         copyPoints(swoop_points,verts)
         const geo = new THREE.BufferGeometry()
-        geo.addAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3))
+        geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3))
+        geo.setIndex(triangleStripIndices(verts.length / 3))
 
         //make the swoop mesh as a triangle strip
         const mat = new THREE.MeshBasicMaterial({
@@ -116,7 +126,6 @@ https://freesound.org/people/gyzhor/sounds/47125/
         })
         swoop = new THREE.Mesh(geo,mat)
         swoop.visible = false
-        swoop.setDrawMode(THREE.TriangleStripDrawMode)
         scene.add(swoop)
 
         //start and end points of the blade to use with the swoop
@@ -287,7 +296,7 @@ https://freesound.org/people/gyzhor/sounds/47125/
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.vr.enabled = true;
+        renderer.xr.enabled = true;
         container.appendChild( renderer.domElement );
         document.body.appendChild( WEBVR.createButton( renderer ) );
 

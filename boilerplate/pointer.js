@@ -41,13 +41,16 @@ export class Pointer {
         this.canvas.addEventListener('touchmove',this.touchMove.bind(this))
         this.canvas.addEventListener('touchend',this.touchEnd.bind(this))
 
-        // setup the VR controllers
-        this.controller1 = this.renderer.vr.getController(0);
+        // Support both the old WebVR renderer and current WebXRManager.
+        const xrManager = this.renderer.xr || this.renderer.vr
+        if (!xrManager) throw new Error("Three.js renderer has no XR controller manager")
+
+        this.controller1 = xrManager.getController(0);
         this.controller1.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller1.addEventListener('selectend', this.controllerSelectEnd.bind(this));
 
 
-        this.controller2 = this.renderer.vr.getController(1);
+        this.controller2 = xrManager.getController(1);
         this.controller2.addEventListener('selectstart', this.controllerSelectStart.bind(this));
         this.controller2.addEventListener('selectend', this.controllerSelectEnd.bind(this));
 
@@ -61,8 +64,9 @@ export class Pointer {
         if(this.opts.enableLaser) {
             //create visible lines for the two controllers
             const geometry = new THREE.BufferGeometry()
-            geometry.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -this.opts.laserLength], 3));
-            geometry.addAttribute('color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
+            const setAttribute = geometry.setAttribute || geometry.addAttribute
+            setAttribute.call(geometry, 'position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, -this.opts.laserLength], 3));
+            setAttribute.call(geometry, 'color', new THREE.Float32BufferAttribute([1.0, 0.5, 0.5, 0, 0, 0], 3));
 
             const material = new THREE.LineBasicMaterial({
                 vertexColors: false,
