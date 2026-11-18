@@ -94,7 +94,10 @@ test('external games include their data files', async ({ request }) => {
     }
 })
 
-for (const link of pageLinks) {
+// Pages that are live but not linked from the index, so the link scan above misses them.
+const UNLINKED_PAGES = ['xmassweater/editor.html']
+
+for (const link of [...pageLinks, ...UNLINKED_PAGES]) {
     test(`page loads cleanly: ${link}`, async ({ page, baseURL }) => {
         const problems = watchPage(page, new URL(baseURL!).origin)
         await page.goto(`/${link}`)
@@ -103,3 +106,34 @@ for (const link of pageLinks) {
         expect(problems.errors).toEqual([])
     })
 }
+
+// The sweater editor keeps the whole design in the URL. Drawing a pixel should update the
+// URL, and opening that URL should draw the pixel again once the model has loaded.
+test('xmas sweater editor round-trips a design through the share URL', async ({ page, baseURL }) => {
+    const problems = watchPage(page, new URL(baseURL!).origin)
+    const model = page.waitForResponse((response) => response.url().endsWith('/sweater1.glb'))
+    await page.goto('/xmassweater/editor.html')
+    expect((await model).status()).toBe(200)
+
+    // The editor canvas is 320px for a 32x32 grid, so each design pixel is 10px wide.
+    const canvas = page.locator('#canvas')
+    await page.locator('#buttons button').first().click() // black, palette index 0
+    await canvas.click({ position: { x: 55, y: 55 } }) // grid cell (5, 5)
+    await expect(page).toHaveURL(/[?&]data=data:image\/png/)
+
+    const pixelAt = (x: number, y: number) =>
+        page.evaluate(
+            ([px, py]) => {
+                const element = document.querySelector<HTMLCanvasElement>('#canvas')!
+                return [...element.getContext('2d')!.getImageData(px, py, 1, 1).data.slice(0, 3)]
+            },
+            [x, y],
+        )
+    expect(await pixelAt(55, 55)).toEqual([16, 16, 16]) // PALETTE[0] is #101010
+
+    await page.reload()
+    await page.waitForFunction(() => (window as unknown as { finished?: boolean }).finished === true)
+    expect(await pixelAt(55, 55)).toEqual([16, 16, 16])
+    expect(await pixelAt(155, 155)).not.toEqual([16, 16, 16]) // untouched cell stays red
+    expect(problems.errors).toEqual([])
+})
